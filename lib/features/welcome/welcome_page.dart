@@ -1,4 +1,5 @@
 import 'package:cherry_mvp/core/reusablewidgets/primary_button.dart';
+import 'package:cherry_mvp/core/reusablewidgets/social_login_button.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cherry_mvp/core/router/router.dart';
@@ -17,7 +18,7 @@ class WelcomePage extends StatelessWidget {
           // Background Image
           Positioned.fill(
             child: Image.asset(
-            AppImages.welcomeBg,
+              AppImages.welcomeBg,
               fit: BoxFit.cover,
             ),
           ),
@@ -55,7 +56,40 @@ class WelcomePage extends StatelessWidget {
                   ),
                 ),
 
-                const SizedBox(height: 30),
+                const SizedBox(height: 10),
+
+                // Google Login Button
+                SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: SocialLoginButton(
+                    onPressed: () {
+                      print("Google login");
+                    },
+                    buttonText: AppStrings.google_login,
+                    backgroundColor: Colors.blue,
+                    buttonImage: AppImages.googleIcon,
+                  ),
+                ),
+                const SizedBox(height: 10),
+
+                // Apple Login Button
+                SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: SocialLoginButton(
+                    onPressed: () {
+                      print("Apple login");
+                    },
+                    buttonText: AppStrings.apple_login,
+                    backgroundColor: Colors.black,
+                    buttonImage: AppImages.appleIcon,
+                  ),
+                ),
+
+                const SizedBox(
+                  height: 30,
+                ),
 
                 // Register Button
                 GestureDetector(

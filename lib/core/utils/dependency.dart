@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
 import 'package:provider/single_child_widget.dart';
 import 'package:cherry_mvp/core/services/services.dart';
@@ -43,11 +42,12 @@ List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
     ),
     ChangeNotifierProvider<RegisterViewModel>(
       create: (context) => RegisterViewModel(
-        registerRepository: Provider.of<RegisterRepository>(context, listen: false),
+        registerRepository:
+            Provider.of<RegisterRepository>(context, listen: false),
       ),
     ),
     ChangeNotifierProvider<HomeViewModel>(
       create: (context) => HomeViewModel(),
     ),
-   ];
+  ];
 }
