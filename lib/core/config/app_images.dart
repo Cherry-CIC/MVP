@@ -5,6 +5,9 @@ class AppImages {
   static const icHomeSelected = '${_path}ic_home_selected.png';
   static const icButton = '${_path}ic_button.png';
   static const welcomeBg = '${_path}welcome_bg.png';
+  static const bubbles = '${_path}Bubbles.png';
+  static const profileImg = '${_path}image.png';
+  static const password_home = '${_path}password_home.png';
 
   static const clothing1 = '${_path}clothing_1.png';
   static const clothing2 = '${_path}clothing_2.png';
