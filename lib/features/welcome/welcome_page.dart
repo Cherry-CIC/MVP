@@ -56,37 +56,6 @@ class WelcomePage extends StatelessWidget {
                   ),
                 ),
 
-                const SizedBox(height: 10),
-
-                // Google Login Button
-                SizedBox(
-                  width: double.infinity,
-                  height: 50,
-                  child: SocialLoginButton(
-                    onPressed: () {
-                      print("Google login");
-                    },
-                    buttonText: AppStrings.google_login,
-                    backgroundColor: Colors.blue,
-                    buttonImage: AppImages.googleIcon,
-                  ),
-                ),
-                const SizedBox(height: 10),
-
-                // Apple Login Button
-                SizedBox(
-                  width: double.infinity,
-                  height: 50,
-                  child: SocialLoginButton(
-                    onPressed: () {
-                      print("Apple login");
-                    },
-                    buttonText: AppStrings.apple_login,
-                    backgroundColor: Colors.black,
-                    buttonImage: AppImages.appleIcon,
-                  ),
-                ),
-
                 const SizedBox(
                   height: 30,
                 ),

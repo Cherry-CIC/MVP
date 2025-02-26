@@ -218,6 +218,12 @@
       "languageVersion": "2.12"
     },
     {
+      "name": "font_awesome_flutter",
+      "rootUri": "file:///Users/rachelkirkland/.pub-cache/hosted/pub.dev/font_awesome_flutter-10.8.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.0"
+    },
+    {
       "name": "go_router",
       "rootUri": "file:///Users/rachelkirkland/.pub-cache/hosted/pub.dev/go_router-14.8.0",
       "packageUri": "lib/",
@@ -422,6 +428,12 @@
       "languageVersion": "3.3"
     },
     {
+      "name": "sign_in_button",
+      "rootUri": "file:///Users/rachelkirkland/.pub-cache/hosted/pub.dev/sign_in_button-3.2.0",
+      "packageUri": "lib/",
+      "languageVersion": "2.12"
+    },
+    {
       "name": "sky_engine",
       "rootUri": "file:///Users/rachelkirkland/developer/flutter/bin/cache/pkg/sky_engine",
       "packageUri": "lib/",
@@ -500,7 +512,7 @@
       "languageVersion": "3.6"
     }
   ],
-  "generated": "2025-02-25T17:07:51.088868Z",
+  "generated": "2025-02-26T13:03:51.668129Z",
   "generator": "pub",
   "generatorVersion": "3.7.0",
   "flutterRoot": "file:///Users/rachelkirkland/developer/flutter",
