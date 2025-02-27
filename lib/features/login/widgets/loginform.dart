@@ -51,7 +51,7 @@ class LoginFormState extends State<LoginForm> {
               decoration:
                   buildInputDecoration(hintText: 'Email', icon: Icons.email),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 10),
 
             // Password Field
             TextFormField(
@@ -60,7 +60,7 @@ class LoginFormState extends State<LoginForm> {
               decoration:
                   buildInputDecoration(hintText: 'Password', icon: Icons.lock),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 10),
 
             // Consumer to listen to LoginViewModel
             Consumer<LoginViewModel>(
@@ -77,6 +77,22 @@ class LoginFormState extends State<LoginForm> {
 
                 return Column(
                   children: [
+                    GestureDetector(
+                      onTap: () {
+                        navigator.replaceWith(AppRoutes.home);
+                      },
+                      child: Align(
+                        alignment: Alignment.topRight,
+                        child: Text(AppStrings.forgotPassword,
+                            style: Theme.of(context)
+                                .textTheme
+                                .labelSmall
+                                ?.copyWith(color: AppColors.primary)),
+                      ),
+                    ),
+                    SizedBox(
+                      height: 20,
+                    ),
                     viewModel.status.type == StatusType.loading
                         ? const LoadingView()
                         : PrimaryAppButton(
@@ -88,20 +104,50 @@ class LoginFormState extends State<LoginForm> {
                                 );
                               }
                             },
-                            buttonText: "Submit",
+                            buttonText: AppStrings.login,
                           ),
                   ],
                 );
               },
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 24),
+
+            Row(
+              children: [
+                Expanded(
+                  child: Divider(),
+                ),
+                SizedBox(
+                  width: 15,
+                ),
+                Text("OR"),
+                SizedBox(
+                  width: 15,
+                ),
+                Expanded(
+                  child: Divider(),
+                )
+              ],
+            ),
+
+            const SizedBox(
+              height: 24,
+            ),
 
             // Social login buttons
             SizedBox(
-              width: double.infinity,
-              child: SignInButton(Buttons.google, onPressed: () {
-                print("Login with google");
-              }),
+              width: AppMeasurements.getScreenWidth(context),
+              height: 45,
+              child: SignInButton(
+                Buttons.google,
+                onPressed: () {
+                  print("Login with google");
+                },
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10)),
+                elevation: 0,
+                text: "Login with Google",
+              ),
             ),
 
             const SizedBox(
@@ -109,10 +155,18 @@ class LoginFormState extends State<LoginForm> {
             ),
 
             SizedBox(
-              width: double.infinity,
-              child: SignInButton(Buttons.apple, onPressed: () {
-                print("Login with apple");
-              }),
+              width: AppMeasurements.getScreenWidth(context),
+              height: 45,
+              child: SignInButton(
+                Buttons.apple,
+                onPressed: () {
+                  print("Login with apple");
+                },
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10)),
+                elevation: 0,
+                text: "Login with Apple",
+              ),
             ),
 
             const SizedBox(
@@ -127,7 +181,8 @@ class LoginFormState extends State<LoginForm> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(AppStrings.create_account,
+                  Text("Don't have an account? "),
+                  Text(AppStrings.register,
                       style: Theme.of(context)
                           .textTheme
                           .labelSmall
@@ -136,20 +191,6 @@ class LoginFormState extends State<LoginForm> {
               ),
             ),
             const SizedBox(height: 10),
-
-            // Forgot Password
-            GestureDetector(
-              onTap: () {
-                navigator.replaceWith(AppRoutes.home);
-              },
-              child: Center(
-                child: Text(AppStrings.forgotPassword,
-                    style: Theme.of(context)
-                        .textTheme
-                        .labelSmall
-                        ?.copyWith(color: AppColors.black)),
-              ),
-            ),
           ],
         ),
       ),

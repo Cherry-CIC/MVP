@@ -1,5 +1,4 @@
 import 'package:cherry_mvp/core/reusablewidgets/primary_button.dart';
-import 'package:cherry_mvp/core/reusablewidgets/social_login_button.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cherry_mvp/core/router/router.dart';
