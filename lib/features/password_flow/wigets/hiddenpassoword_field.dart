@@ -38,7 +38,6 @@ class _HiddenPasswordFieldState extends State<HiddenPasswordField> {
             maxLength: _maxLength,
             keyboardType: TextInputType.text,
             decoration: const InputDecoration(
-              hintText: 'Enter Password',
               counterText: '',
               border: OutlineInputBorder(),
             ),

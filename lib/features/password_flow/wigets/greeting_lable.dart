@@ -1,3 +1,5 @@
+import 'package:cherry_mvp/core/config/app_text_styles.dart';
+import 'package:cherry_mvp/core/config/config.dart';
 import 'package:flutter/material.dart';
 
 class GreetingLabel extends StatefulWidget {
@@ -26,12 +28,7 @@ class _GreetingLableState extends State<GreetingLabel> {
 
   @override
   Widget build(BuildContext context) {
-    return Text(
-      "Hello $name !!",
-      style: const TextStyle(
-        fontSize: 24,
-        fontWeight: FontWeight.bold,
-      ),
-    );
+    return Text("${AppStrings.greeting} $name${AppStrings.exclamationMark}",
+        style: AppTextStyles.heading1);
   }
 }
