@@ -8,6 +8,8 @@ class AppImages {
   static const bubbles = '${_path}Bubbles.png';
   static const profileImg = '${_path}image.png';
   static const password_home = '${_path}password_home.png';
+  static const not_you_home = '${_path}not_you_bg.png';
+  static const cherry_logo = '${_path}cherry_logo.png';
 
   static const clothing1 = '${_path}clothing_1.png';
   static const clothing2 = '${_path}clothing_2.png';

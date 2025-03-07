@@ -72,12 +72,12 @@ node_modules/
 **/android/.gradle/
 **/android/app/*.keystore
 **/android/key.properties
-**/ios/Pods/
-**/.dart_tool/
+/ios/Pods/
+.dart_tool/
 **/.package/
 pubspec.lock
-**/.flutter-plugins
-**/.flutter-plugins-dependencies
+.flutter-plugins
+.flutter-plugins-dependencies
 **/.metadata
 
 # VS Code
