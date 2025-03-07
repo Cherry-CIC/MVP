@@ -15,4 +15,9 @@ class AppStrings {
   static const forgotPassword = 'Forgot Password?';
   static const greeting = 'Hello';
   static const exclamationMark = '!!';
+  static const userCheck = 'Not you';
+  static const email = 'Email';
+  static const sendEmail = 'Send email';
+  static const forgotPassWordInstruction =
+      'Please type your email and we’ll get in touch';
 }
