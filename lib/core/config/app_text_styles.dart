@@ -8,6 +8,12 @@ class AppTextStyles {
     color: AppColors.black,
   );
 
+  static TextStyle buttonText1 = TextStyle(
+    fontSize: 20,
+    fontWeight: FontWeight.bold,
+    color: AppColors.white,
+  );
+
   // Body Text
   static TextStyle bodyText = TextStyle(
     fontSize: 16,

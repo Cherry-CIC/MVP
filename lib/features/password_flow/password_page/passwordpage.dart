@@ -46,13 +46,11 @@ class PasswordPage extends StatelessWidget {
                     ),
                     SizedBox(height: AppSpacing.large), // TODO: Get from config
 
-                    // Greeting Label
                     GreetingLabel(initialName: 'Romaina'),
 
                     SizedBox(
                         height: AppSpacing.extraLarge), // TODO: Get from config
 
-                    // Password Field
                     HiddenPasswordField(),
                   ],
                 ),
@@ -60,16 +58,14 @@ class PasswordPage extends StatelessWidget {
             ),
           ),
 
-          // Bottom Row ("Not you" and Icon Button)
           Positioned(
-            bottom: 20, // Distance from the bottom
+            bottom: 20,
             left: 0,
             right: 0,
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.large),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
-                //crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   // "Not you" Text
                   Text(
