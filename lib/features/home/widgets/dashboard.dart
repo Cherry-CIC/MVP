@@ -3,6 +3,23 @@ import 'package:flutter/material.dart';
 import 'package:cherry_mvp/core/config/config.dart';
 import 'package:cherry_mvp/data/dummy_categories.dart';
 import 'package:cherry_mvp/features/home/widgets/category.dart';
+import 'package:cherry_mvp/features/home/widgets/app_bar.dart';
+
+class DashboardScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: DashboardAppBar(),
+      body: Center(
+        child: Text('Dashboard Content'),
+      ),
+    );
+  }
+}
+
+
+
+
 
 class DashboardPage extends StatelessWidget {
   @override
