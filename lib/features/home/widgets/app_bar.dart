@@ -14,7 +14,7 @@ class DashboardAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     return AppBar(
-      title: Text('Dashboard'),
+      title: Text(' Your Dashboard'),
       actions: <Widget>[
         IconButton(
           icon: Icon(Icons.notifications),

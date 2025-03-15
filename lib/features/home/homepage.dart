@@ -20,8 +20,8 @@ class HomePageState extends State<HomePage> {
   final PageController _pageController = PageController();
 
   static final List<Widget> _pages = <Widget>[
-    DashboardPage(),
-    ProfilePage()
+    DashboardScreen(),
+    ProfilePage(),
     //add other pages for the bottom sheet here
   ];
 
