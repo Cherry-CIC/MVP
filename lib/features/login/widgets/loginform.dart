@@ -10,6 +10,7 @@ import 'package:cherry_mvp/core/router/router.dart';
 class LoginForm extends StatefulWidget {
   const LoginForm({super.key});
 
+
   @override
   LoginFormState createState() {
     return LoginFormState();
@@ -18,120 +19,305 @@ class LoginForm extends StatefulWidget {
 
 class LoginFormState extends State<LoginForm> {
 
-  final _formKey = GlobalKey<FormState>();
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
+  bool _passwordInvisible = true; 
+  bool? value = true;
 
   @override
-  Widget build(BuildContext context) {
-
-    final navigator = Provider.of<NavigationProvider>(context, listen: false);
-
-    return Form(
-      key: _formKey,
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Text(
-                AppStrings.login,
-                style: Theme.of(context)
-                    .textTheme
-                    .titleLarge
-                    ?.copyWith(color: AppColors.black),
-              ),
-            ),
-            const SizedBox(height: 20),
-
-            // Email Field
-            TextFormField(
-              controller: _emailController,
-              validator: validateEmail,
-              decoration:
-              buildInputDecoration(hintText: 'Email', icon: Icons.email),
-            ),
-            const SizedBox(height: 20),
-
-            // Password Field
-            TextFormField(
-              controller: _passwordController,
-              validator: validatePassword,
-              decoration:
-              buildInputDecoration(hintText: 'Password', icon: Icons.lock),
-            ),
-            const SizedBox(height: 20),
-
-            // Consumer to listen to LoginViewModel
-            Consumer<LoginViewModel>(
-              builder: (context, viewModel, child) {
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  if (viewModel.status.type == StatusType.failure) {
-                    Fluttertoast.showToast(
-                        msg: viewModel.status.message ?? "");
-                  } else if (viewModel.status.type == StatusType.success) {
-                    Fluttertoast.showToast(msg: "Login Successful");
-                    //move to home
-                    navigator.replaceWith(AppRoutes.home);
-                  }
-                });
-
-                return Column(
-                  children: [
-                    viewModel.status.type == StatusType.loading
-                        ? const LoadingView()
-                        : PrimaryAppButton(
-                      onPressed: () {
-                        if (_formKey.currentState!.validate()) {
-                          viewModel.login(
-                            _emailController.text,
-                            _passwordController.text,
-                          );
-                        }
-                      },
-                      buttonText: "Submit",
-                    ),
-                  ],
-                );
-              },
-            ),
-            const SizedBox(height: 20),
-
-            // Sign Up Navigation
-            GestureDetector(
-              onTap: () {
-               navigator.replaceWith(AppRoutes.register);
-              },
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(AppStrings.create_account,
-                      style: Theme.of(context)
-                          .textTheme
-                          .labelSmall
-                          ?.copyWith(color: AppColors.primary)),
-                ],
-              ),
-            ),
-            const SizedBox(height: 10),
-
-            // Forgot Password
-            GestureDetector(
-              onTap: () {
-               navigator.replaceWith(AppRoutes.home);
-              },
-              child: Center(
-                child: Text(AppStrings.forgotPassword,
-                    style: Theme.of(context)
-                        .textTheme
-                        .labelSmall
-                        ?.copyWith(color: AppColors.black)),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+  void initState() {
+    _passwordInvisible = true; 
   }
+
+  onPressed() {
+    setState(() {
+      _passwordInvisible = !_passwordInvisible;
+    });
+  }
+
+  @override 
+  Widget build(BuildContext context) { 
+    return Scaffold( 
+      backgroundColor: Colors.white, 
+      appBar: AppBar( 
+        title: Text(
+          "Cherry",
+          style: TextStyle(color: AppColors.primary, fontSize: 30),
+        ), 
+        centerTitle: true, 
+      ),  
+      body: DecoratedBox( 
+        // BoxDecoration takes the image
+        decoration: BoxDecoration( 
+          // Image set to background of the body
+          image: DecorationImage( 
+            image: AssetImage(AppImages.welcomeBg), 
+            fit: BoxFit.cover
+          ),
+        ),
+
+        child: SingleChildScrollView( 
+          child: Column( 
+            children: <Widget>[   
+              // Text welcome
+              Padding( 
+                padding: const EdgeInsets.only(top: 20.0), 
+                child: Center( 
+                  child: Container( 
+                    alignment: Alignment.center,
+                    width: 200, 
+                    height: 100,  
+                    // color: AppColors.black,  
+                    child: Text(
+                      AppStrings.welcome,
+                      style: TextStyle(fontSize: 30, color: AppColors.black),
+                    ), 
+                  ), 
+                ), 
+              ), 
+              
+              // Text login to Cherry
+              Padding( 
+                padding: const EdgeInsets.only(top: 1.0), 
+                child: Center( 
+                  child: Container( 
+                    alignment: Alignment.center,
+                    width: 300, 
+                    height: 50,  
+                    // color: AppColors.black,  
+                    child: Text(
+                      AppStrings.loginCherry,
+                      style: TextStyle(fontSize: 20, color: AppColors.black),
+                    ), 
+                  ), 
+                ), 
+              ), 
+            
+              // Email
+              Padding( 
+                //padding: const EdgeInsets.only(left:15.0,right: 15.0,top:0,bottom: 0), 
+                padding: EdgeInsets.symmetric(horizontal: 15), 
+                child: TextField(  
+                  decoration: buildInputDecorationPasswordEmail(labelText:"Email", hintText:"Enter email", iconPrefix:Icons.email, passwordInvisible: null, onPressed: () => null) 
+                ), 
+              ), 
+
+              // Password
+              Padding(  
+                // padding: EdgeInsets.symmetric(horizontal: 15), 
+                padding: EdgeInsets.only(left:15.0,right: 15.0,top:10,bottom: 0),
+                child: TextField(  
+                  obscureText: _passwordInvisible, // true or false 
+                  decoration: buildInputDecorationPasswordEmail(labelText:"Password", hintText:"Enter password", iconPrefix:Icons.lock, passwordInvisible: _passwordInvisible, onPressed: onPressed) 
+                ), 
+              ),
+              
+              // forgot password text
+              Container( 
+                child: Center( 
+                  child: Row( 
+                    children: [ 
+                      /* Padding( 
+                        padding: const EdgeInsets.only(left: 62), 
+                        child: Text(AppStrings.dontHaveAccount), 
+                      ), */
+
+                      Padding( 
+                        padding: const EdgeInsets.only(left:15.0, top:10.0), 
+                        child: InkWell( 
+                          onTap: (){ 
+                            print('hello'); 
+                          }, 
+                          child: Text(
+                            AppStrings.forgotPassword, 
+                            style: TextStyle(fontSize: 14, color: AppColors.primary),
+                          )
+                        ), 
+                      ) 
+                    ], 
+                  ), 
+                ) 
+              ), 
+              
+              // checkbox remember me
+              Container( 
+                child: Center( 
+                  child: Row( 
+                    children: [ 
+                      Padding( 
+                        padding: const EdgeInsets.only(left: 62), 
+                        child: Text(AppStrings.rememberMe), 
+                      ), 
+
+                      Padding( 
+                        padding: const EdgeInsets.only(left:15.0, top:10.0), 
+                        child: Checkbox(
+                          tristate: false, // Example with tristate
+                          value: value,
+                          activeColor: AppColors.primary,
+                          onChanged: (bool? newValue) {
+                            setState(() {
+                              value = newValue;
+                            });
+                          },
+                        ),
+                      ) 
+                    ], 
+                  ), 
+                ) 
+              ), 
+              
+              // login to continue
+              SizedBox( 
+                height: 65, 
+                // width: 360,
+                width: double.infinity, 
+                child: Container( 
+                  child: Padding( 
+                    padding: const EdgeInsets.only(top: 20.0, right:15.0, left:15.0), 
+                    // padding: EdgeInsets.symmetric(horizontal: 15),
+                    child: ElevatedButton( 
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor:  AppColors.primary,
+                      ), 
+                      child: Text( 
+                        AppStrings.loginToContinue, 
+                        style: TextStyle(color: AppColors.white, fontSize: 20), 
+                      ), 
+                      onPressed: (){ 
+                        print('Successfully log in '); 
+                      }, 
+                    ), 
+                  ), 
+                ), 
+              ), 
+
+              SizedBox( 
+                height: 50, 
+              ), 
+              
+              // text don't have an account
+              Container( 
+                child: Center( 
+                  child: Row( 
+                    children: [ 
+                      Padding( 
+                        padding: const EdgeInsets.only(left: 62), 
+                        child: Text(AppStrings.dontHaveAccount), 
+                      ), 
+
+                      Padding( 
+                        padding: const EdgeInsets.only(left:1.0), 
+                        child: InkWell( 
+                          onTap: (){ 
+                            print('hello'); 
+                          }, 
+                          child: Text(
+                            AppStrings.register, 
+                            style: TextStyle(fontSize: 14, color: AppColors.primary),
+                          )
+                        ), 
+                      ) 
+                    ], 
+                  ), 
+                ) 
+              ),
+
+              SizedBox( 
+                height: 20, 
+              ), 
+              
+              // the text or between the dividers
+              Container( 
+                child: Center( 
+                  child: Row( 
+                    children: [ 
+                      Expanded(
+                        child: new Container(
+                          margin: const EdgeInsets.only(left: 15.0, right: 2.0),
+                          child: Divider(
+                            color: AppColors.black,
+                            height: 36,
+                          )
+                        ),
+                      ),
+                      Padding( 
+                        padding: const EdgeInsets.only(left: 0.0), 
+                        child: Text(AppStrings.or), 
+                      ), 
+                      Expanded(
+                        child: new Container(
+                          margin: const EdgeInsets.only(left: 2.0, right: 15.0),
+                          child: Divider(
+                            color: AppColors.black,
+                            height: 36,
+                          )
+                        ),
+                      ),
+                      
+                    ], 
+                  ), 
+                ) 
+              ),
+
+              SizedBox( 
+                height: 20, 
+              ), 
+              
+              // Sign in with Apple
+              SizedBox( 
+                height: 65, 
+                width: 360, 
+                child: Container( 
+                  child: Padding( 
+                    padding: const EdgeInsets.only(top: 0.0),  
+                    child: ElevatedButton.icon(
+                      onPressed: () {},
+                      icon: const Icon(Icons.apple, size:50, color:AppColors.primary),
+                      label: const Text(
+                        AppStrings.signInApple, 
+                        style: TextStyle(color: AppColors.primary),
+                      ),
+                      iconAlignment: IconAlignment.start,
+                    ), 
+                  ), 
+                ), 
+              ), 
+              
+
+              SizedBox( 
+                height: 20, 
+              ), 
+              
+              // Sign in with Google
+              SizedBox( 
+                height: 65, 
+                width: 360, 
+                child: Container( 
+                  child: Padding( 
+                    padding: const EdgeInsets.only(top: 0.0),  
+                    child: ElevatedButton.icon(
+                      onPressed: () {},
+                      icon: const Icon(Icons.android, size:50, color:AppColors.primary),
+                      label: const Text(
+                        AppStrings.signInGoogle, 
+                        style: TextStyle(color: AppColors.primary),
+                      ),
+                      iconAlignment: IconAlignment.start,
+                    ), 
+                  ), 
+                ), 
+              ), 
+
+              SizedBox( 
+                height: 50, 
+              ), 
+
+              //
+
+
+            ], 
+          ), 
+        )
+      ), 
+    ); 
+  } 
 }

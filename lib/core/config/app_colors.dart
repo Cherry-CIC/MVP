@@ -12,3 +12,4 @@ class AppColors {
   static const lavenderBgColor = Color(0xFFDFE9FF);
   static const lightGreyFill = Color(0xFFF0F0F0);
 }
+ 

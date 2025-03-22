@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cherry_mvp/core/config/config.dart';
-import 'package:cherry_mvp/features/login/widgets/loginform.dart'; 
+import 'package:cherry_mvp/features/login/widgets/loginform.dart';
 
 class LoginPage extends StatelessWidget {
   const LoginPage({super.key});
@@ -11,7 +11,5 @@ class LoginPage extends StatelessWidget {
       backgroundColor: AppColors.bgColor,
       body: LoginForm(),
     );
-  }  
-
-} 
-
+  }
+}

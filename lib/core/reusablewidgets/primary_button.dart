@@ -13,7 +13,7 @@ class PrimaryAppButton extends StatelessWidget {
     required this.onPressed,
     required this.buttonText,
     this.width,
-    this.height,
+    this.height, 
   });
 
   @override

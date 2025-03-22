@@ -13,7 +13,7 @@ class WelcomePage extends StatelessWidget {
 
     return Scaffold(
       body: Stack(
-        children: [
+        children: [ 
           // Background Image
           Positioned.fill(
             child: Image.asset(

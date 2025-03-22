@@ -20,4 +20,12 @@ class AppStrings {
   static const sendEmail = 'Send email';
   static const forgotPassWordInstruction =
       'Please type your email and we’ll get in touch';
+
+  static const dontHaveAccount = "Don't have an account?  ";
+  static const rememberMe = "Remember me  ";
+  static const or = "Or";
+  static const signInApple = "Sign in with Apple";
+  static const signInGoogle = "Sign in with Google";
+  static const loginCherry = "Log in to Cherry"; 
+
 }
