@@ -33,8 +33,6 @@ class RegisterRepository {
         }
       }
 
-
-
         // Now, create the user in Firestore
         final firestoreResult = await createUserInFirestore(
           userCredentials?.uid ?? "",
