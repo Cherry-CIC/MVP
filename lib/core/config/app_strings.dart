@@ -32,4 +32,27 @@ class AppStrings {
   static const typePassword = "Type your password"; 
   static const hello = "Hello Alicia!!"; 
 
+
+  static const createAccountText = "Create your account"; 
+  static const easyregistrationText = "The registration is easy."; 
+
+  static const whatEmailText = "What's your email?"; 
+  static const verificationCodeText = "We'll send you a verification code."; 
+
+  static const verifyPhoneText = "Verify your phone number"; 
+  static const verifyPhoneCodeText = "Enter your phone number to receive a verification code."; 
+  static const dataRateText = "Message and data rates may apply."; 
+
+  static const sixDigitCodeText = "Enter the 6-digit code"; 
+  static const verifySixDigitCodeText = "A verification code has been sent to your number."; 
+
+
+  static const experienceText = "Tailor your experience"; 
+  static const preferenceText = "Customize your experience to suit your preferences"; 
+
+
+  static const createPasswordText = "Create a password"; 
+  static const protectPasswordText = "Protect your account by creating a strong password."; 
+
+
 }

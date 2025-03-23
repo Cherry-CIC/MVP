@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 
 InputDecoration buildInputDecorationPasswordEmail({required String labelText, required String hintText, IconData? iconPrefix, bool? passwordInvisible, required Function onPressed}) {
   return InputDecoration(  
-    labelText: labelText, // Label above the TextField
+    labelText: labelText, // Label above the TextField 
     hintText: hintText, // Placeholder inside the TextField 
-    labelStyle: TextStyle(color: AppColors.primary, fontSize: 18), // Styling the label
+    labelStyle: TextStyle(color: AppColors.greyTextColor, fontSize: 18), // Styling the label
     hintStyle: TextStyle(color: AppColors.greyTextColor, fontSize: 16), // Styling the placeholder
     border: OutlineInputBorder( // Adds a border around the TextField
       borderRadius: BorderRadius.circular(10.0),
@@ -21,12 +21,12 @@ InputDecoration buildInputDecorationPasswordEmail({required String labelText, re
     ),
     prefixIcon: iconPrefix != null ? Icon(
       iconPrefix, 
-      color: AppColors.primary
+      color: AppColors.greyTextColor
     ): null, // Icon before input
     suffixIcon: passwordInvisible != null ? IconButton(  
       icon: Icon(
         passwordInvisible ? Icons.visibility_off : Icons.visibility, 
-        color: AppColors.black,
+        color: AppColors.greyTextColor,
       ),
       onPressed: () {
         onPressed();
