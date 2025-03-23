@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 InputDecoration buildInputDecorationPasswordEmail({required String labelText, required String hintText, IconData? iconPrefix, bool? passwordInvisible, required Function onPressed}) {
   return InputDecoration(  
     labelText: labelText, // Label above the TextField
-    hintText: hintText, // Placeholder inside the TextField
+    hintText: hintText, // Placeholder inside the TextField 
     labelStyle: TextStyle(color: AppColors.primary, fontSize: 18), // Styling the label
     hintStyle: TextStyle(color: AppColors.greyTextColor, fontSize: 16), // Styling the placeholder
     border: OutlineInputBorder( // Adds a border around the TextField

@@ -19,4 +19,7 @@ class AppImages {
   static const shoes2 = '${_path}shoes_2.png';
   static const shoes3 = '${_path}shoes_3.png';
   static const shoes4 = '${_path}shoes_4.png';
+
+
+  static const profiles1 = '${_path}profiles_1.jpg';
 }

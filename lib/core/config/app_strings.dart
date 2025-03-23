@@ -27,5 +27,9 @@ class AppStrings {
   static const signInApple = "Sign in with Apple";
   static const signInGoogle = "Sign in with Google";
   static const loginCherry = "Log in to Cherry"; 
+  static const giveInStyle = "Let's give in style"; 
+  static const goodSeeYou = "Good to see you back!";
+  static const typePassword = "Type your password"; 
+  static const hello = "Hello Alicia!!"; 
 
 }
