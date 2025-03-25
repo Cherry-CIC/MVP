@@ -54,5 +54,19 @@ class AppStrings {
   static const createPasswordText = "Create a password"; 
   static const protectPasswordText = "Protect your account by creating a strong password."; 
 
+   
 
+  static const charityOfText = "Charity of"; 
+  static const weekText = "the week"; 
+  static const browseItemsText = "Browse pledged items";
+  static const learMoreText = "and learn more about"; 
+  static const workHereText = "the work the do here!"; 
+
+  static const amazingCharityText = "Amazing Charities,"; 
+  static const amazingWorkText = "Amazing Work         "; 
+  static const seeGoodNewsText = "See some good news here..."; 
+
+
+  static const likedItemsText = "Liked items"; 
+  static const justForYouText = "Just for you";
 }
