@@ -11,7 +11,7 @@ class CharityWeekCard extends StatefulWidget {
 
   @override
   CharityWeekCardState createState() => CharityWeekCardState();
-}
+}    
 
 class CharityWeekCardState extends State<CharityWeekCard> {
   @override
@@ -20,7 +20,7 @@ class CharityWeekCardState extends State<CharityWeekCard> {
       padding: const EdgeInsets.only(left: 15.0, right: 15.1, top: 0.0, bottom: 10),
       child: Card(
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(30), // Set border radius
+          borderRadius: BorderRadius.circular(30), // Set border radius//
         ),
         child: Stack(
           children: [
@@ -41,7 +41,7 @@ class CharityWeekCardState extends State<CharityWeekCard> {
                   height: 10,
                 ),
 
-                //  text Charity of
+                //  text Charity of .
                 Padding(
                   padding: const EdgeInsets.only(
                     top: 0.0,
