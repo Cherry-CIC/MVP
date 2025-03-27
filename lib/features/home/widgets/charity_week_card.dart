@@ -9,7 +9,7 @@ import 'package:cherry_mvp/core/reusablewidgets/reusablewidgets.dart';
 class CharityWeekCard extends StatefulWidget {
   const CharityWeekCard({super.key});
 
-  @override
+  @override  
   CharityWeekCardState createState() => CharityWeekCardState();
 }
 
@@ -17,7 +17,7 @@ class CharityWeekCardState extends State<CharityWeekCard> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(left: 15.0, right: 15.1, top: 0.0, bottom: 10),
+      padding: const EdgeInsets.only(left: 15.0, right: 15.1, top: 0.0, bottom: 10.0),
       child: Card(
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(30), // Set border radius

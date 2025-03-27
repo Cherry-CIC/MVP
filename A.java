@@ -1,1 +1,0 @@
-flutter create --platforms=android .
