@@ -8,7 +8,7 @@ import 'package:cherry_mvp/core/reusablewidgets/reusablewidgets.dart';
 import 'package:cherry_mvp/core/router/router.dart';
 
 class LoginForm extends StatefulWidget {
-  const LoginForm({super.key});
+  const LoginForm({super.key}); 
  
 
   @override
@@ -18,6 +18,10 @@ class LoginForm extends StatefulWidget {
 }
 
 class LoginFormState extends State<LoginForm> {
+
+  final _formKey = GlobalKey<FormState>();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
 
   int _index = 0;
 
@@ -41,20 +45,23 @@ class LoginFormState extends State<LoginForm> {
           // Image set to background of the body
           image: DecorationImage( 
             image: AssetImage(AppImages.welcomeBg), 
-            fit: BoxFit.cover
+            fit: BoxFit.none
           ),
         ),
 
         child: SingleChildScrollView( 
+               child: Form(
+               key: _formKey,
           child: Column( 
             children: <Widget>[ 
-              SizedBox( 
+              /* SizedBox( 
                 height: 180, 
-              ),
+              ), */
  
               // stepper
               Padding( 
-                padding: const EdgeInsets.only(top: 0.0, right:10.0, left:10.0),  
+                padding: const EdgeInsets.only(top: 30.0, right:10.0, left:10.0
+                ),  
                 child: Center( 
                   child: Container( 
                     // alignment: Alignment.center,
@@ -100,7 +107,8 @@ class LoginFormState extends State<LoginForm> {
                             child: Column( // const Text('Content for Step 1'), 
                               children: <Widget>[ 
                                 Padding( 
-                                  padding: const EdgeInsets.only(top: 0.0, left:15.0,), 
+                                  padding: const EdgeInsets.only(top: 130.0, // left:15.0,
+                                  ), 
                                   child: Center( 
                                     child: Container( 
                                       alignment: Alignment.centerLeft,
@@ -121,7 +129,8 @@ class LoginFormState extends State<LoginForm> {
                                     child: Row(  
                                       children: [ 
                                         Padding( 
-                                          padding: const EdgeInsets.only(left: 15.0, bottom:40.0,), 
+                                          padding: const EdgeInsets.only(// left: 15.0, 
+                                          bottom:40.0,), 
                                           child: Text(AppStrings.goodSeeYou), 
                                         ),  
 
@@ -136,9 +145,12 @@ class LoginFormState extends State<LoginForm> {
 
                                 // Email
                                 Padding( 
-                                  padding: const EdgeInsets.only(left:15.0,right: 15.0,top:20,bottom: 10), 
+                                  padding: const EdgeInsets.only(// left:15.0,right: 15.0,
+                                  top:20,bottom: 10), 
                                   // padding: EdgeInsets.symmetric(horizontal: 15), 
-                                  child: TextField(  
+                                  child: TextFormField(  
+                                    controller: _emailController,
+                                    validator: validateEmail,
                                     decoration: buildInputDecorationPasswordEmail(labelText:"Email", hintText:"Enter email", iconPrefix:Icons.email, passwordInvisible: null, onPressed: () => null) 
                                   ), 
                                 ), 
@@ -220,9 +232,12 @@ class LoginFormState extends State<LoginForm> {
 
                                 // Password
                                 Padding( 
-                                  padding: const EdgeInsets.only(left:15.0,right: 15.0,top:0.0,bottom: 0.0), 
+                                  padding: const EdgeInsets.only(// left:15.0,right: 15.0,
+                                  top:0.0, bottom: 100.0), 
                                   // padding: EdgeInsets.symmetric(horizontal: 15),   
-                                  child: TextField( 
+                                  child: TextFormField( 
+                                    controller: _passwordController,
+                                    validator: validatePassword,
                                     textAlign: TextAlign.center,
                                     obscureText: true,
                                     obscuringCharacter: '●',
@@ -243,31 +258,93 @@ class LoginFormState extends State<LoginForm> {
                       controlsBuilder: (BuildContext context, ControlsDetails details) {
                         return Column( 
                           children: [
-                            // Next button
-                            SizedBox( 
-                              height: 70, 
-                              // width: 360,
-                              width: double.infinity, 
-                              child: Container( 
-                                child: Padding( 
-                                  padding: const EdgeInsets.only(top: 20.0, right:15.0, left:15.0), 
-                                  // padding: EdgeInsets.symmetric(horizontal: 15),
-                                  child: ElevatedButton( 
-                                    onPressed: details.onStepContinue,
-                                    style: elevatedButtonStyle(context), 
-                                    child: Text( 
-                                      "Next", 
-                                      style: TextStyle(color: AppColors.white, fontSize: 20), 
-                                    ),  
-                                  ), 
-                                ), 
-                              ), 
-                            ),  
+                            // Next button 
+                            // Consumer to listen to LoginViewModel
+                            Consumer<LoginViewModel>(
+                              builder: (context, viewModel, child) {
+                                WidgetsBinding.instance.addPostFrameCallback((_) {
+                                  if (viewModel.status.type == StatusType.failure) {
+                                    Fluttertoast.showToast(msg: viewModel.status.message ?? "");
+                                  } else if (viewModel.status.type == StatusType.success) {
+                                    Fluttertoast.showToast(msg: "Login Successful");
+                                    //move to home
+                                    navigator.replaceWith(AppRoutes.home);
+                                  }
+                                });
+
+                                // beginning return
+                                return Column(
+                                  children: [
+                                    /* viewModel.status.type == StatusType.loading
+                                    ? const LoadingView()
+                                    : PrimaryAppButton(
+                                      onPressed: () {
+                                        if (_formKey.currentState!.validate()) {
+                                          viewModel.login(
+                                            _emailController.text,
+                                            _passwordController.text,
+                                          );
+                                        }
+                                      },
+                                      buttonText: "Submit",
+                                    ), */
+
+                                    //
+                                    _index == 0 ?
+                                    // beginning sizedbox
+                                    SizedBox( 
+                                      height: 70, 
+                                      // width: 360,
+                                      width: double.infinity, 
+                                      child: Container( 
+                                        child: Padding( 
+                                          padding: const EdgeInsets.only(
+                                            top: 20.0, // right:15.0, left:15.0
+                                          ), 
+                                          // padding: EdgeInsets.symmetric(horizontal: 15),
+                                          child: ElevatedButton( 
+                                            onPressed: details.onStepContinue,
+                                            style: elevatedButtonStyle(context), 
+                                            child: Text( 
+                                              "Next", 
+                                               style: TextStyle(color: AppColors.white, fontSize: 13), 
+                                            ),  
+                                          ), 
+                                        ), 
+                                      ), 
+                                    )
+                                    // end sizedbox
+                                    : 
+                                    // beginning submit button
+                                    viewModel.status.type == StatusType.loading
+                                    ? const LoadingView()
+                                    : PrimaryAppButton(
+                                      onPressed: () {
+                                        if (_formKey.currentState!.validate()) {
+                                          viewModel.login(
+                                            _emailController.text,
+                                            _passwordController.text,
+                                          );
+                                        }
+                                      },
+                                      buttonText: "Submit",
+                                    ),
+                                    // end submit button
+                                  ],
+                                );
+                                // end return
+                              },
+                            ),
+                            //
+                             
 
                             SizedBox(height: 20),
                             
                             TextButton(
                               onPressed: details.onStepCancel,
+                              style: TextButton.styleFrom(
+                                backgroundColor: AppColors.lightGreyTextColor, // Set the background color
+                              ),
                               child: Padding(
                                 padding: const EdgeInsets.all(8.0),
                                 child: Text(
@@ -286,7 +363,7 @@ class LoginFormState extends State<LoginForm> {
               ),   
             ], 
           ), 
-        )
+        ))
       ), 
     ); 
   } 
