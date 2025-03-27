@@ -19,7 +19,7 @@ class LocalCharitiesState extends State<LocalCharities> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(left: 15.0, right: 15.0, top: 0.0, bottom: 20),
+      padding: const EdgeInsets.only(left: 15.0, right: 15.0, top: 0.0, /* bottom: 20 */),
       child: Column(
         children: <Widget>[
           SizedBox(
@@ -92,10 +92,11 @@ class LocalCharitiesState extends State<LocalCharities> {
                 // LocalCharitiesCard(), 
               SizedBox(
                 width: 600, // Set width
-                height: MediaQuery.of(context).size.height, // Set height
+                height: MediaQuery.of(context).size.height/3, // Set height
+                // height: 400, // Set height
                 child: GridView.builder(
                   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2, // Number of columns
+                    crossAxisCount: 3, // Number of columns
                     crossAxisSpacing: 8,
                     mainAxisSpacing: 8,
                     childAspectRatio: 1, // Adjust the size ratio of items
