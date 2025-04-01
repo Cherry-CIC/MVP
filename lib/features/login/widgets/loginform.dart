@@ -71,9 +71,9 @@ class LoginFormState extends State<LoginForm> {
                         }
                       },
                       onStepContinue: () { 
-                        if(_index == 1) {
+                        /* if(_index == 1) {
                           navigator.replaceWith(AppRoutes.home);
-                        }
+                        } */
                         if (_index <= 0) {
                           setState(() {
                             _index += 1;
@@ -281,14 +281,14 @@ class LoginFormState extends State<LoginForm> {
                                         top: 20.0, 
                                       ),  
                                       child: PrimaryAppButton(
-                                        onPressed: details.onStepContinue, /* () {
+                                        onPressed: /* details.onStepContinue, */ () {
                                           if (_formKey.currentState!.validate()) {
                                             viewModel.login(
                                               _emailController.text,
                                               _passwordController.text,
                                             );
                                           }
-                                        }, */ 
+                                        }, 
                                         buttonText: "Submit",
                                       ), 
                                     ),
