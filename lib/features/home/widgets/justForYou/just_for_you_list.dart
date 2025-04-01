@@ -59,7 +59,7 @@ class JustForYouListState extends State<JustForYouList> {
               // second child of column
               Container(
                 width: 600, // Set width
-                height: MediaQuery.of(context).size.height * 0.74,
+                height: MediaQuery.of(context).size.height * 0.72,
                 child: GridView.builder(
                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 2, // Number of columns
