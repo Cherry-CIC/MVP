@@ -22,6 +22,10 @@ class AppStrings {
       'Please type your email and we’ll get in touch'; 
 
 
-  static const localCharityText = "Local Charities";
-  static const seeAllText = "See All"; 
+
+  static const justForYouText = "Just for you"; 
+  static const likedItemsText = "Liked items"; 
+  static const recentlyViewedText = "Recently viewed";
+  static const todayText = "Today"; 
+  static const aprilDateText = "April, 18";
 }
