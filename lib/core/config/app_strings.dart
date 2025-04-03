@@ -20,4 +20,10 @@ class AppStrings {
   static const sendEmail = 'Send email';
   static const forgotPassWordInstruction =
       'Please type your email and we’ll get in touch';
+  
+  static const justForYouText = "Just for you"; 
+  static const likedItemsText = "Liked items"; 
+  static const recentlyViewedText = "Recently viewed";
+  static const todayText = "Today"; 
+  static const aprilDateText = "April, 18"; 
 }
