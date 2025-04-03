@@ -20,4 +20,8 @@ class AppStrings {
   static const sendEmail = 'Send email';
   static const forgotPassWordInstruction =
       'Please type your email and we’ll get in touch';
+
+  
+  static const seeAllText = "See All";
+  static const localCharityText = "Local Charities";
 }
