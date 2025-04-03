@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
  
-import 'package:cherry_mvp/core/config/config.dart';
+import 'package:cherry_mvp/core/config/config.dart'; 
 import 'package:cherry_mvp/features/home/widgets/recentlyViewed/recently_viewed_list.dart';
  
 

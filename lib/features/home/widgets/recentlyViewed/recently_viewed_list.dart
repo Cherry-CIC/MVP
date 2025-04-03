@@ -85,7 +85,7 @@ class RecentlyViewedListState extends State<RecentlyViewedList> {
                             child: Padding(
                               padding: EdgeInsets.only(
                                 right: 0.0,
-                                left: 20.0,
+                                left: 20.0, 
                               ),
                               child: Row(children: [
                                 Padding(
