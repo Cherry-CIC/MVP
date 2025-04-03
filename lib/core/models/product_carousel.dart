@@ -1,7 +1,7 @@
 class ProductCarousel {
   final String image;
   final String charityLogo;
-  final int numberLikes;
+  final int numberLikes; 
   final double? price;
   final int? numberIndexes;
   final String? description;

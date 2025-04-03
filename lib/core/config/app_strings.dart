@@ -19,12 +19,9 @@ class AppStrings {
   static const email = 'Email';
   static const sendEmail = 'Send email';
   static const forgotPassWordInstruction =
-      'Please type your email and we’ll get in touch';
+      'Please type your email and we’ll get in touch'; 
 
-  
-  static const charityOfText = "Charity of"; 
-  static const weekText = "the week"; 
-  static const browseItemsText = "Browse pledged items";
-  static const learMoreText = "and learn more about"; 
-  static const workHereText = "the work the do here!"; 
+
+  static const localCharityText = "Local Charities";
+  static const seeAllText = "See All"; 
 }

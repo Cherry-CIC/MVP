@@ -23,7 +23,7 @@ class LocalCharitiesCard extends StatelessWidget {
       ),
 
       child: Stack(
-        children: [
+        children: [ 
           // Background Image
           ClipRRect(
             borderRadius: BorderRadius.circular(10),

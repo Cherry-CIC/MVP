@@ -9,7 +9,7 @@ import 'package:cherry_mvp/features/home/widgets/localCharities/local_charities_
 import 'package:cherry_mvp/data/dummy_product.dart';
 
 class LocalCharities extends StatefulWidget {
-  const LocalCharities({super.key});
+  const LocalCharities({super.key}); 
 
   @override
   LocalCharitiesState createState() => LocalCharitiesState();

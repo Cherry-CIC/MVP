@@ -44,7 +44,7 @@ const dummyProduct = [
     size: 'S'
   ), 
 
-  ProductCarousel(
+  ProductCarousel( 
     image: "https://media-hosting.imagekit.io/b1aaf9ca8c904cb2/charity_product5.jpg?Expires=1838031346&Key-Pair-Id=K2ZIVPTIP2VGHC&Signature=wKsgW3e0RE3MtFbe4lxBJOPlICZ3HxW1qu-BulE2SGvD-EJYE8KRwhemECXg-r7tYFEKCrH8Mxs-DF0qViCJxfSzIC7acusioQS6XZ3D1X-Lc~1Bm4h9RgiEwPlp~o4EAg9l0g9Pdq0G3qEdt-fZ1lkUo~cshmZwH9ky2MJsPal~VV4rkiNxG5j9IZFuH-37W8UGEEtFnbLmaH4tvYvJoolyqtM4J~W8XQBbGndSKh~RbZjxboTjWQRjut38zHA5gqpHXTrc9tvl3dJ5-e~iPpl8qctWUmYkCZXbVKNc7T~pW8Hjzav~WaajpikCCBvX~3LXYAzPv628Jj~dHTceBA__",
     charityLogo: "https://media-hosting.imagekit.io/3063901b665041e9/logo_red_cross.png?Expires=1838031384&Key-Pair-Id=K2ZIVPTIP2VGHC&Signature=BILub2JXe9r9dsP42NMFYSNNN~zrJZIM~moSYfL7TTlFzS8hpmZMzvwEFC-BZtJqLTdAtTBGEM2lL6ZZXGmrzcjapbKd1-3BJ2~I9ZdTQutsalt3GgLrrzysqf4FnNgvTDg8Xe8OB2V09dSw4hURqdcDvBEOxoz5A0HFAe-WHzL0q~CRpw2SiXrt5G4KExrd202DATp4yTFGmGPOzrHfwbod84~zgMIbmkw9ul2RHcpOdsvCb1vBNrEIf-84YrCIi1LGEn9ann5LeqFSRSmdWjqQwStVA8hXcALkSHyKBh-bk6uk~jTP2PLoQYJSIVVlQkY6MWYocVPrbAEfGw49Uw__",
     numberLikes: 90,
