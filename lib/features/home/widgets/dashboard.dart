@@ -5,7 +5,7 @@ import 'package:cherry_mvp/features/home/home_viewmodel.dart';
 import 'package:provider/provider.dart';
 
 import 'category.dart';
-
+ 
 class DashboardPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
