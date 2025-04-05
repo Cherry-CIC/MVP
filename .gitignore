@@ -108,6 +108,14 @@ web/.dart_tool/
 .dart_tool/version
 .dar_tool/version
 
+.dart_tool folder
+package_config.json
+package_config_subset
+version
+.flutter-plugins
+.flutter-plugin-depednecies
+.gitignore
+pubspeck.lock
 
 
 .pubspec.lock
