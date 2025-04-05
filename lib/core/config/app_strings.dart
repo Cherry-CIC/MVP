@@ -22,9 +22,6 @@ class AppStrings {
       'Please type your email and we’ll get in touch';
 
   
-  static const charityOfText = "Charity of"; 
-  static const weekText = "the week"; 
-  static const browseItemsText = "Browse pledged items";
-  static const learMoreText = "and learn more about"; 
-  static const workHereText = "the work the do here!"; 
+  static const seeAllLocalCharitiesText = "See All";
+  static const localCharitiesText = "Local Charities";
 }
