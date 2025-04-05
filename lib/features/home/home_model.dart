@@ -30,3 +30,12 @@ const dummyProducts = [
 ];
 
 
+
+const dummyCharityLogos = [
+  CharityLogo(charity_image: AppImages.homeStart),
+  CharityLogo(charity_image: AppImages.homeStart),
+  CharityLogo(charity_image: AppImages.homeStart),
+  CharityLogo(charity_image: AppImages.homeStart),
+  CharityLogo(charity_image: AppImages.homeStart),
+  CharityLogo(charity_image: AppImages.homeStart), 
+];

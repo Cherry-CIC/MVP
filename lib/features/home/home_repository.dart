@@ -10,4 +10,8 @@ class HomeRepository {
   List<Product> fetchProducts()  {
     return dummyProducts;
   }
+
+  List<CharityLogo> fetchCharityLogos()  {
+    return dummyCharityLogos;
+  }
 }
