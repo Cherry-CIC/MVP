@@ -11,7 +11,7 @@ import 'package:cherry_mvp/features/home/home_viewmodel.dart';
 
 class LocalCharities extends StatefulWidget {
   const LocalCharities({super.key});
-
+ 
   @override
   LocalCharitiesState createState() => LocalCharitiesState();
 }

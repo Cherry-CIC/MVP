@@ -20,7 +20,7 @@ class AppStrings {
   static const sendEmail = 'Send email';
   static const forgotPassWordInstruction =
       'Please type your email and we’ll get in touch';
-
+ 
   
   static const seeAllLocalCharitiesText = "See All";
   static const localCharitiesText = "Local Charities";

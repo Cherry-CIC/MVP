@@ -11,7 +11,7 @@ class LocalCharitiesCard extends StatelessWidget {
   const LocalCharitiesCard({super.key, required this.charityLogo});
 
   final CharityLogo charityLogo;
-
+ 
   @override
   Widget build(BuildContext context) {
     return Card(
