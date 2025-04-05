@@ -46,7 +46,7 @@ class LocalCharitiesState extends State<LocalCharities> {
                     left: 0.0,
                   ),
                   child: Text( 
-                    AppStrings.localCharityText,
+                    AppStrings.localCharitiesText,
                     style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.w700,
@@ -64,7 +64,7 @@ class LocalCharitiesState extends State<LocalCharities> {
                     style: TextButton.styleFrom(
                       foregroundColor: AppColors.primary, // Sets the text color
                     ),
-                    child: Text(AppStrings.seeAllText),
+                    child: Text(AppStrings.seeAllLocalCharitiesText),
                   ), 
                 ),  
               ],

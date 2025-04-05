@@ -22,6 +22,6 @@ class AppStrings {
       'Please type your email and we’ll get in touch';
 
   
-  static const seeAllText = "See All";
-  static const localCharityText = "Local Charities";
+  static const seeAllLocalCharitiesText = "See All";
+  static const localCharitiesText = "Local Charities";
 }
