@@ -1,22 +1,23 @@
-import 'package:cherry_mvp/features/home/widgets/product_card.dart';
 import 'package:flutter/material.dart';
-import 'package:cherry_mvp/features/home/home_viewmodel.dart';
-import 'package:cherry_mvp/features/home/widgets/chat_page.dart'; //
 import 'package:provider/provider.dart';
-
-import 'category.dart';
+import 'package:cherry_mvp/features/home/home_viewmodel.dart';
+import 'package:cherry_mvp/features/home/widgets/product_card.dart'; // make sure ProductCard is here
+import 'package:cherry_mvp/features/home/widgets/category.dart';
+import 'package:cherry_mvp/features/home/widgets/chat_page.dart';
+import 'package:cherry_mvp/core/router/nav_routes.dart'; // for AppRoutes.chat
+import 'package:cherry_mvp/features/home/widgets/my_cart_page.dart'; // ✅ Cart page
 
 class DashboardPage extends StatelessWidget {
   void _showChatModal(BuildContext context) {
     showModalBottomSheet(
       context: context,
-      isScrollControlled: true, // makes it full height
+      isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (_) => FractionallySizedBox(
         heightFactor: 0.95,
         child: ClipRRect(
           borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-          child: ChatPage(),
+          child: ChatPage(showAppBar: false),
         ),
       ),
     );
@@ -25,6 +26,46 @@ class DashboardPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: Text("Dashboard"),
+        actions: [
+          // 🛒 Cart Icon with static badge
+          Stack(
+            children: [
+              IconButton(
+                icon: Icon(Icons.shopping_cart),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const MyCartPage()),
+                  );
+                },
+              ),
+              Positioned(
+                right: 6,
+                top: 6,
+                child: Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: Colors.pink,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Text(
+                    '2', // Static item count
+                    style: TextStyle(color: Colors.white, fontSize: 12),
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          // 💬 Fullscreen Chat
+          IconButton(
+            icon: Icon(Icons.chat_bubble_outline),
+            onPressed: () => Navigator.pushNamed(context, AppRoutes.chat),
+          ),
+        ],
+      ),
       body: Consumer<HomeViewModel>(
         builder: (context, viewModel, _) {
           final products = viewModel.fetchProducts();
@@ -34,64 +75,48 @@ class DashboardPage extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.all(20),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: const [
-                      Text(
-                        "Just For You",
-                        style: TextStyle(
-                          fontSize: 21,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Spacer(),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  GridView.builder(
-                    shrinkWrap: true,
-                    physics: NeverScrollableScrollPhysics(),
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 5,
-                      mainAxisSpacing: 5,
-                      childAspectRatio: 0.7,
+                  // 🛍 Products
+                  if (products.isNotEmpty) ...[
+                    Text(
+                      "Just For You",
+                      style: TextStyle(fontSize: 21, fontWeight: FontWeight.bold),
                     ),
-                    itemCount: products.length,
-                    itemBuilder: (context, index) {
-                      return SingleProduct(product: products[index]);
-                    },
-                  ),
-                  const SizedBox(height: 30),
-                  Row(
-                    children: const [
-                      Text(
-                        "Categories",
-                        style: TextStyle(
-                          fontSize: 21,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Spacer(),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  GridView.builder(
-                    shrinkWrap: true,
-                    physics: NeverScrollableScrollPhysics(),
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 5,
-                      mainAxisSpacing: 5,
-                      childAspectRatio: 0.8,
+                    SizedBox(height: 20),
+                    ListView.builder(
+                      itemCount: products.length,
+                      physics: NeverScrollableScrollPhysics(),
+                      shrinkWrap: true,
+                      itemBuilder: (context, index) {
+                        return ProductCard(product: products[index]);
+                      },
                     ),
-                    itemCount: categories.length,
-                    itemBuilder: (context, index) {
-                      return SingleCategory(category: categories[index]);
-                    },
-                  ),
+                    SizedBox(height: 30),
+                  ],
+
+                  // 🗂 Categories
+                  if (categories.isNotEmpty) ...[
+                    Text(
+                      "Categories",
+                      style: TextStyle(fontSize: 21, fontWeight: FontWeight.bold),
+                    ),
+                    SizedBox(height: 20),
+                    GridView.builder(
+                      shrinkWrap: true,
+                      physics: NeverScrollableScrollPhysics(),
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        crossAxisSpacing: 5,
+                        mainAxisSpacing: 5,
+                        childAspectRatio: 0.8,
+                      ),
+                      itemCount: categories.length,
+                      itemBuilder: (context, index) {
+                        return SingleCategory(category: categories[index]);
+                      },
+                    ),
+                  ],
                 ],
               ),
             ),
