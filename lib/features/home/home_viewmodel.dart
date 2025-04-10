@@ -17,4 +17,8 @@ class HomeViewModel extends ChangeNotifier {
   List<Product> fetchProducts()  {
     return homeRepository.fetchProducts();
   }
+  
+  List<CharityLogo> fetchCharityLogos()  {
+    return homeRepository.fetchCharityLogos();
+  } 
 }

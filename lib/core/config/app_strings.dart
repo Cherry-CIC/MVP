@@ -27,4 +27,7 @@ class AppStrings {
   static const browseItemsText = "Browse pledged items";
   static const learMoreText = "and learn more about"; 
   static const workHereText = "the work the do here!"; 
+  
+  static const seeAllLocalCharitiesText = "See All";
+  static const localCharitiesText = "Local Charities";
 }

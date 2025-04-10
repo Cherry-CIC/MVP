@@ -6,6 +6,9 @@ import 'package:provider/provider.dart';
 
 import 'category.dart';
 
+import 'package:cherry_mvp/features/home/widgets/charity_week_card.dart';
+import 'package:cherry_mvp/features/home/widgets/localCharities/local_charities.dart';
+
 class DashboardPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -21,6 +24,9 @@ class DashboardPage extends StatelessWidget {
           padding: const EdgeInsets.all(20),
           child: Column(
             children: [
+              CharityWeekCard(),
+              SizedBox(height: 30), 
+              
               Row(
                 children: [
                   Text(
@@ -82,6 +88,9 @@ class DashboardPage extends StatelessWidget {
                   return SingleCategory(category: categories[index]);
                 },
               ),
+              
+              SizedBox(height: 30),
+              LocalCharities(),
             ],
           ),
         ),

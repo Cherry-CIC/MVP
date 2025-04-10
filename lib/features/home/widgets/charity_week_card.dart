@@ -17,7 +17,7 @@ class CharityWeekCardState extends State<CharityWeekCard> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(left: 15.0, right: 15.1, top: 0.0, bottom: 10.0),
+      padding: const EdgeInsets.only(left: 0.0, right: 0.0, top: 0.0, bottom: 10.0),
       child: Card(
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(30), // Set border radius
