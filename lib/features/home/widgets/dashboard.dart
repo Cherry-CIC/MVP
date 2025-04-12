@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:carousel_slider/carousel_slider.dart';
 import 'package:cherry_mvp/features/home/home_viewmodel.dart';
-import 'package:cherry_mvp/features/home/widgets/product_card.dart'; // make sure ProductCard is here
+import 'package:cherry_mvp/features/home/widgets/product_card.dart';
 import 'package:cherry_mvp/features/home/widgets/category.dart';
 import 'package:cherry_mvp/features/home/widgets/chat_page.dart';
-import 'package:cherry_mvp/core/router/nav_routes.dart'; // for AppRoutes.chat
-import 'package:cherry_mvp/features/home/widgets/my_cart_page.dart'; // ✅ Cart page
+import 'package:cherry_mvp/core/router/nav_routes.dart';
+import 'package:cherry_mvp/features/home/widgets/my_cart_page.dart';
 
 class DashboardPage extends StatelessWidget {
   void _showChatModal(BuildContext context) {
@@ -17,11 +18,18 @@ class DashboardPage extends StatelessWidget {
         heightFactor: 0.95,
         child: ClipRRect(
           borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-          child: ChatPage(showAppBar: false),
+          child: ChatPage(showAppBar: true),
         ),
       ),
     );
   }
+
+  final List<String> charityImages = [
+    'assets/images/charities/charity1.jpg',
+    'assets/images/charities/charity2.jpg',
+    'assets/images/charities/charity3.jpg',
+    'assets/images/charities/charity4.jpg',
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -77,6 +85,38 @@ class DashboardPage extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // 🎗️ Charity Section
+                  Text(
+                    "Charity of the Week",
+                    style: TextStyle(fontSize: 21, fontWeight: FontWeight.bold),
+                  ),
+                  SizedBox(height: 5),
+                  CarouselSlider(
+                    options: CarouselOptions(
+                      height: 60,
+                      autoPlay: true,
+                      autoPlayInterval: Duration(seconds: 3),
+                      enlargeCenterPage: true,
+                      viewportFraction: 0.6,
+                      aspectRatio: 16 / 9,
+                    ),
+                    items: charityImages.map((imagePath) {
+                      return Builder(
+                        builder: (BuildContext context) {
+                          return ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: Image.asset(
+                              imagePath,
+                              fit: BoxFit.cover,
+                              width: double.infinity,
+                            ),
+                          );
+                        },
+                      );
+                    }).toList(),
+                  ),
+                  SizedBox(height: 30),
+
                   // 🛍 Products
                   if (products.isNotEmpty) ...[
                     Text(

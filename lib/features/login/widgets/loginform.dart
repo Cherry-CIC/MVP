@@ -43,7 +43,7 @@ class LoginFormState extends State<LoginForm> {
                     ?.copyWith(color: AppColors.black),
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 28),
 
             // Email Field
             TextFormField(
