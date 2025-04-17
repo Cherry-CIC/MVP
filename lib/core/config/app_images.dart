@@ -10,6 +10,10 @@ class AppImages {
   static const password_home = '${_path}password_home.png';
   static const not_you_home = '${_path}not_you_bg.png';
   static const cherry_logo = '${_path}cherry_logo.png';
+  static const Ic_filter = '${_path}Ic_filter.png';
+  static const Ic_back = '${_path}Ic_back.png';
+  static const Ic_charityCategory = '${_path}charity_category.png';
+  static const Ic_arrow = '${_path}Ic_arrow.png';
 
   static const clothing1 = '${_path}clothing_1.png';
   static const clothing2 = '${_path}clothing_2.png';
