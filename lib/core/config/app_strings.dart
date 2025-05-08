@@ -60,4 +60,5 @@ class AppStrings {
   static const toysText = "Toys & Board Games";
   static const dvdText = "DVD's & Video Games";
 
+  static const continueText = 'Continue';
 }
