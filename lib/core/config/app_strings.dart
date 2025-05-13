@@ -60,7 +60,29 @@ class AppStrings {
   static const toysText = "Toys & Board Games";
   static const dvdText = "DVD's & Video Games";
 
-  
+  static const charitiesText = "Charities"; 
+
+  static const exploreText = "Explore Charities";
+  static const discover_something_Text = "Discover something beautiful..."; 
+  static const adText = "Ad";
+
+  static const discoverText = "Discover";
+  static const popularText = "Popular";
+  static const smaller_charities_Text = "Smaller Charities";
+  static const local_to_you_Text = "Local to you";
+
+  static const categoriesText = "Categories"; 
+  static const womenText = "Women"; 
+  static const menText = "Men"; 
+  static const childrenText = "Children"; 
+  static const unisexText = "Unisex"; 
+  static const designerText = "Designer"; 
+  static const profilesText = "Profiles";  
+  static const accessoriesText = "Accessories"; 
+  static const booksText = "Books"; 
+  static const toysText = "Toys & Board Games";
+  static const dvdText = "DVD's & Video Games";
+
   static const chat_with_us_Text = "Chat with us";
   static const FAQ_Text = "FAQ'S";
   static const support_Text = "Support";
@@ -88,4 +110,4 @@ class AppStrings {
   static const dark_mode_Text = "Dark mode";
   static const list_listings_Text = "Hide Listings";
 
-}
+  static const continueText = 'Continue';
