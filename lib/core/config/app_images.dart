@@ -2,6 +2,11 @@ class AppImages {
   static const _path = 'assets/images/';
 
   static const icHome = '${_path}ic_home.png';
+  static const icSearch = '${_path}search.png';
+  static const icMessage = '${_path}message.png';
+  static const icProfile = '${_path}profile.png';
+  static const icAdd = '${_path}add.png';
+  static const icCam = '${_path}cam.png';
   static const icHomeSelected = '${_path}ic_home_selected.png';
   static const icButton = '${_path}ic_button.png';
   static const welcomeBg = '${_path}welcome_bg.png';
