@@ -83,9 +83,27 @@ flutter run
 - Add screenshots or images of any UI changes.
 - Provide a clear description of the changes made.
 - Ensure that the code follows the project's coding standards
+- Mention the issue number your PR addresses.
+Use the following format in your pull request description:
+```shell
+Fixes: #<issue_number>
+```
+This helps us track which issue the PR is resolving. Here's an example of a good PR description:
+```shell
+Fixes: #97
+
+### Description of the Work Done:
+- Created the login UI
+- Integrated basic validation
+
+### Screenshot (if UI was created or updated):
+[Attach screenshot here]
+```
 
 ### Understanding the Project Architecture
-To better understand the architecture of this project, it may be helpful to read the official Flutter documentation using the links below: 
+To better understand the architecture of this project, please take a look at:
+- https://jimohyusuph.hashnode.dev/designing-the-mobile-architecture-for-cherry-flutter-app-my-thought-process
+it may also be helpful to read the official Flutter documentation using the links below: 
 - UI: https://docs.flutter.dev/ui/layout
 - Flutter App Architecture Guide: https://docs.flutter.dev/app-architecture/concepts
 - Compass App case study:https://docs.flutter.dev/app-architecture/case-study

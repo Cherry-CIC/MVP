@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:cherry_mvp/features/register/register_model.dart';
 import 'package:cherry_mvp/features/register/register_repository.dart';
 import 'package:flutter/cupertino.dart';
@@ -18,18 +20,18 @@ class RegisterViewModel extends ChangeNotifier {
   final _log = Logger('RegisterViewModel');
 
 
-  Future<void> register(String email, String password) async {
+  Future<void> register(String firstName, String email, String phone, String password, File? image) async {
     _status = Status.loading;
     notifyListeners();
 
 
     try {
-      final result = await registerRepository.register(RegisterRequest(email: email, password: password));
+      final result = await registerRepository.register(RegisterRequest(firstname: firstName, email: email, phone: phone, password: password, imageFile: image));
       if (result.isSuccess) {
         _status = Status.success;
       } else {
         _status = Status.failure(result.error ?? "");
-        _log.warning('Login failed! ${result.error}');
+        _log.warning('Registration failed! ${result.error}');
       }
     } catch (e) {
       _status = Status.failure(e.toString());

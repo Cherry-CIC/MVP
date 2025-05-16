@@ -38,4 +38,42 @@ class LoginViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> signInWithGoogle() async {
+    _status = Status.loading;
+    notifyListeners();
+
+    try {
+      final result = await loginRepository.signInWithGoogle();
+      if (result.isSuccess) {
+        _status = Status.success;
+      } else {
+        _status = Status.failure(result.error ?? "");
+        _log.warning('Login failed! ${result.error}');
+      }
+    } catch (e) {
+      _status = Status.failure(e.toString());
+    }
+
+    notifyListeners();
+  }
+
+  Future<void> signInWithApple() async {
+    _status = Status.loading;
+    notifyListeners();
+
+    try {
+      final result = await loginRepository.signInWithApple();
+      if (result.isSuccess) {
+        _status = Status.success;
+      } else {
+        _status = Status.failure(result.error ?? "");
+        _log.warning('Login failed! ${result.error}');
+      }
+    } catch (e) {
+      _status = Status.failure(e.toString());
+    }
+
+    notifyListeners();
+  }
+
 }

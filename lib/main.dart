@@ -1,4 +1,3 @@
-import 'package:cherry_mvp/features/home/homepage.dart';
 import 'package:cherry_mvp/features/welcome/welcome_page.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -15,33 +14,25 @@ void main() async {
   /// Load environment variables
   await dotenv.load();
 
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   SharedPreferences prefs = await SharedPreferences.getInstance();
 
-  runApp(
-    MultiProvider(
-      providers: [
-        ...buildProviders(prefs),
-      ],
-      child: MyApp(),
-    ),
-  );
+  runApp(MultiProvider(providers: [...buildProviders(prefs)], child: MyApp()));
 }
 
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Consumer<NavigationProvider>(
-        builder: (context, navigatorService, child) {
-      return MaterialApp(
-        navigatorKey: navigatorService.navigatorKey,
-        onGenerateRoute: AppRoutes.generateRoute,
-        theme: ThemeData(fontFamily: 'Raleway'),
-        home: HomePage(),
-      );
-    });
+      builder: (context, navigatorService, child) {
+        return MaterialApp(
+          navigatorKey: navigatorService.navigatorKey,
+          onGenerateRoute: AppRoutes.generateRoute,
+          theme: ThemeData(fontFamily: 'Raleway'),
+          home: WelcomePage(),
+        );
+      },
+    );
   }
 }
