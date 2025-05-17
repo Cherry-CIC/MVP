@@ -61,4 +61,8 @@ class AppStrings {
   static const dvdText = "DVD's & Video Games";
 
   static const continueText = 'Continue';
+
+  
+  static const dark_mode_Text = "Dark mode";
+  static const list_listings_Text = "Hide Listings";
 }
