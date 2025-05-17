@@ -61,4 +61,6 @@ class AppStrings {
   static const dvdText = "DVD's & Video Games";
 
   static const continueText = 'Continue';
+  
+  static const settings_Text = "Settings";
 }
