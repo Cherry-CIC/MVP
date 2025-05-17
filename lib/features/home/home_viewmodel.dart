@@ -18,8 +18,5 @@ class HomeViewModel extends ChangeNotifier {
   List<NewProduct> fetchNewProducts()  { 
     return homeRepository.fetchNewProducts(); 
   }
-  
-  List<DiscoverProduct> fetchDiscoverProducts()  {
-    return homeRepository.fetchDiscoverProducts();
-  } 
+
 }

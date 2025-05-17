@@ -21,28 +21,17 @@ class AppStrings {
   static const forgotPassWordInstruction =
       'Please type your email and we’ll get in touch';
 
-  
-  static const charityOfText = "Charity of";  
-  static const weekText = "the week"; 
-  static const browseItemsText = "Browse pledged items";
-  static const learMoreText = "and learn more about"; 
-  static const workHereText = "the work the do here!";
   static const dashboard = 'Dashboard';
   static const messages = 'Messages';
   static const search = 'Search';
   static const emptyStateMessageText = 'No messages just yet... 😢';
   static const emptyStateSearchText = 'No products found... 🔎';
-]
-  
+
   static const charitiesText = "Charities"; 
 
-
-
-  
   static const exploreText = "Explore Charities";
   static const discover_something_Text = "Discover something beautiful..."; 
   static const adText = "Ad";
-
   static const discoverText = "Discover";
   static const popularText = "Popular";
   static const smaller_charities_Text = "Smaller Charities";
@@ -61,6 +50,8 @@ class AppStrings {
   static const dvdText = "DVD's & Video Games";
 
   static const continueText = 'Continue';
-
   static const delete_account_Text = "Delete Account";
+  static const dark_mode_Text = "Dark mode";
+  static const list_listings_Text = "Hide Listings";
 }
+

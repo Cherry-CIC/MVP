@@ -11,7 +11,5 @@ class HomeRepository {
     return dummyNewProducts;
   } 
   
-  List<DiscoverProduct> fetchDiscoverProducts()  {
-    return dummyDiscoverProducts;
-  } 
+
 }

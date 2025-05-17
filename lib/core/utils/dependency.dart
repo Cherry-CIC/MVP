@@ -13,6 +13,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cherry_mvp/core/router/router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../features/search/search_repository.dart';
+import '../../features/search/search_viewmodel.dart';
+
 List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
   return [
     Provider(create: (_) => NavigationProvider()),

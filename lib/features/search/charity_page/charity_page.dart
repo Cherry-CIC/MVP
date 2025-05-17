@@ -5,8 +5,9 @@ import 'package:provider/provider.dart';
 import 'package:cherry_mvp/core/config/config.dart';
 import 'package:cherry_mvp/core/utils/utils.dart'; 
 import 'package:cherry_mvp/core/router/router.dart';
-import 'package:cherry_mvp/features/search/widgets/charity_page/category.dart';
-import 'package:cherry_mvp/features/search/search_viewmodel.dart'; 
+import 'package:cherry_mvp/features/search/search_viewmodel.dart';
+
+import 'category.dart';
 
 
 class CharityPage extends StatefulWidget {
@@ -29,11 +30,7 @@ class CharityPageState extends State<CharityPage> {
     return Consumer<SearchViewModel>( 
       builder: (context, viewModel, child) {
         final charities = viewModel.fetchCharityCategories();
-        final _charities = charities.where((charity) {
-          return charity.charity_name
-            .toLowerCase()
-            .contains(_searchQuery.toLowerCase()); 
-          }).toList();
+
 
         return Scaffold(  
           backgroundColor: Colors.white,  
@@ -86,9 +83,9 @@ class CharityPageState extends State<CharityPage> {
 
                 Expanded(
                   child: ListView.builder(
-                    itemCount: _charities.length,  
+                    itemCount: charities.length,
                     itemBuilder: (context, index) {
-                      return SingleCategory(charityCategory: _charities[index]); 
+                      return SingleCategory(charityCategory: charities[index]);
                     },
                   ), 
                 ),  

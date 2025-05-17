@@ -2,11 +2,7 @@
 import 'package:flutter/material.dart';     
  
 import 'package:cherry_mvp/core/config/config.dart';
-import 'package:cherry_mvp/core/utils/utils.dart'; 
-import 'package:cherry_mvp/features/home/widgets/home/explore_card.dart'; 
-import 'package:cherry_mvp/features/home/widgets/home/ad_card.dart';  
-import 'package:cherry_mvp/features/home/widgets/home/listProducts/list_products.dart';    
-
+import 'package:cherry_mvp/core/utils/utils.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});  
@@ -44,15 +40,7 @@ class HomeScreenState extends State<HomeScreen> {
 
       body: SingleChildScrollView(
         child: Column(
-          children: [ 
-
-            ExploreCard(),
-
-            AdCard(),
-
-            ListProducts(searchQuery: _searchQuery),
-
-          ]
+          children: []
         )
       ),
     ); 
