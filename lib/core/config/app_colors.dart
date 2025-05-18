@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 class AppColors {
   static const primary = Color(0xfff90653);
+  static const selectedTab = Color(0xffF90653);
   static const secondary = Color(0xff202020);
   static const black = Colors.black;
   static const white = Color(0xFFFFFFFF);
@@ -11,4 +12,6 @@ class AppColors {
   static const lightGreyTextColor = Color(0xFFD2D2D2);
   static const lavenderBgColor = Color(0xFFDFE9FF);
   static const greenBgColor = Color(0xFF01BF07);
+  static const lightGreyFill = Color(0xFFF0F0F0);
+  static const greyNavFooter= Color(0xFFA2A2A2);
 }

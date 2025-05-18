@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:cherry_mvp/features/register/register_viewmodel.dart';
 import 'package:cherry_mvp/core/config/config.dart';
@@ -16,9 +19,25 @@ class RegisterForm extends StatefulWidget {
 
 class _RegisterFormState extends State<RegisterForm> {
   final _formKey = GlobalKey<FormState>();
+  final TextEditingController _firstNameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _phoneNumberController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController = TextEditingController();
+  // Image picker controller
+  final ImagePicker _picker = ImagePicker();
+  File? _selectedImage;
+
+  // Function to pick an image
+  Future<void> _pickImage() async {
+    final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      setState(() {
+        _selectedImage = File(pickedFile.path);
+      });
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -43,18 +62,48 @@ class _RegisterFormState extends State<RegisterForm> {
             ),
             const SizedBox(height: 20),
 
+            // Image Picker
+            GestureDetector(
+              onTap: _pickImage,
+              child: _selectedImage == null
+                  ? Container(
+                height: 100,
+                width: 100,
+                color: AppColors.greyTextColor,
+                child: Center(child: Icon(Icons.camera_alt, color: AppColors.primary)),
+              )
+                  : Image.file(
+                _selectedImage!,
+                height: 100,
+                width: 100,
+                fit: BoxFit.cover,
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // FirstName Field
+            TextFormField(
+              controller: _firstNameController,
+              validator: validateFirstName,
+              decoration:
+              buildInputDecoration(hintText: 'First Name', icon: Icons.person),
+            ),
+            const SizedBox(height: 20),
+
             // Email Field
             TextFormField(
               controller: _emailController,
-              validator: (value) {
-                if (value!.isEmpty) return "Email cannot be empty";
-                if (!RegExp(r"^[a-zA-Z0-9+_.-]+@[a-zA-Z0-9.-]+\.[a-z]+$")
-                    .hasMatch(value)) {
-                  return "Please enter a valid email";
-                }
-                return null;
-              },
+              keyboardType: TextInputType.emailAddress,
+              validator: validateEmail,
               decoration: buildInputDecoration(hintText: 'Email', icon: Icons.email),
+            ),
+            const SizedBox(height: 20),
+
+            TextFormField(
+              controller: _phoneNumberController,
+              keyboardType: TextInputType.phone,
+              validator: validatePhoneNumber,
+              decoration: buildInputDecoration(hintText: 'Phone Number', icon: Icons.phone),
             ),
             const SizedBox(height: 20),
 
@@ -62,11 +111,7 @@ class _RegisterFormState extends State<RegisterForm> {
             TextFormField(
               controller: _passwordController,
               obscureText: true,
-              validator: (value) {
-                if (value!.isEmpty) return "Password cannot be empty";
-                if (value.length < 6) return "Password must be at least 6 characters";
-                return null;
-              },
+              validator: validatePassword,
               decoration:
               buildInputDecoration(hintText: 'Password', icon: Icons.lock),
             ),
@@ -76,13 +121,7 @@ class _RegisterFormState extends State<RegisterForm> {
             TextFormField(
               controller: _confirmPasswordController,
               obscureText: true,
-              validator: (value) {
-                if (value!.isEmpty) return "Confirm your password";
-                if (value != _passwordController.text) {
-                  return "Passwords do not match";
-                }
-                return null;
-              },
+              validator: (value) => validateConfirmPassword(value, _passwordController.text),
               decoration: buildInputDecoration(hintText: 'Confirm Password', icon: Icons.lock),
             ),
             const SizedBox(height: 20),
@@ -114,8 +153,11 @@ class _RegisterFormState extends State<RegisterForm> {
                       onPressed: () {
                         if (_formKey.currentState!.validate()) {
                           viewModel.register(
+                            _firstNameController.text,
                             _emailController.text,
+                            _phoneNumberController.text,
                             _passwordController.text,
+                            _selectedImage
                           );
                         }
                       },

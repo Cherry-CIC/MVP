@@ -47,6 +47,7 @@ class HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
 
+    // ignore: unused_local_variable
     final navigator = Provider.of<HomeViewModel>(context, listen: false);
 
     return Scaffold(

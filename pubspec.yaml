@@ -21,6 +21,8 @@ dependencies:
   logging: ^1.3.0
   image_picker: ^0.8.4+4
   flutter_dotenv: ^5.0.2
+  google_sign_in: ^6.2.2
+  fl_chart: ^0.66.2
 
 dev_dependencies:
   flutter_test:

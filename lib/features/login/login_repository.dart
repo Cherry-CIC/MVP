@@ -24,6 +24,36 @@ class LoginRepository {
     }
   }
 
+  Future<Result<UserCredentials?>> signInWithGoogle() async {
+    // Attempt to login with google using the auth service
+    final result = await _authService.signInWithGoogle();
+
+    if (result.isSuccess) {
+      // If login is successful, proceed to fetch user details
+      final userCredentials = result.value;
+      await fetchUserFromFirestore(userCredentials?.uid ?? "");
+      return result;
+    } else {
+      ///TODO: complete this to add logic to create user in firestore if user does not exist(first time user)
+      return Result.failure(result.error);
+    }
+  }
+
+  Future<Result<UserCredentials?>> signInWithApple() async {
+    // Attempt to login with google using the auth service
+    final result = await _authService.signInWithApple();
+
+    if (result.isSuccess) {
+      // If login is successful, proceed to fetch user details
+      final userCredentials = result.value;
+      await fetchUserFromFirestore(userCredentials?.uid ?? "");
+      return result;
+    } else {
+      ///TODO: complete this to add logic to create user in firestore if user does not exist(first time user)
+      return Result.failure(result.error);
+    }
+  }
+
   Future<Result<void>> fetchUserFromFirestore(String uid) async {
     // Fetch user document from Firestore
     final result = await _firestoreService.getDocument(FirestoreConstants.pathUserCollection, uid);
