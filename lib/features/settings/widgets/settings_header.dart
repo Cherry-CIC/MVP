@@ -8,7 +8,7 @@ class SettingsHeader extends StatelessWidget implements PreferredSizeWidget {
   @override  
   Widget build(BuildContext context) {     
 
-    return buildCommonAppBar(AppStrings.settings_Text, (){}); 
+    return buildCommonAppBar(AppStrings.settingsText, (){});
   } 
 
   @override

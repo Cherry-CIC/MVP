@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:cherry_mvp/core/reusablewidgets/emptystatecard.dart';
 import 'package:cherry_mvp/core/config/config.dart';
 
-import 'package:flutter/material.dart';
-
 class SearchPage extends StatelessWidget {
   const SearchPage({Key? key}) : super(key: key);
 

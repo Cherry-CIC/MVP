@@ -8,6 +8,10 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'core/router/router.dart';
 
+import 'package:cherry_mvp/features/search/searched_product_desc_page/searched_product_desc_page.dart';
+
+
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -30,7 +34,7 @@ class MyApp extends StatelessWidget {
           navigatorKey: navigatorService.navigatorKey,
           onGenerateRoute: AppRoutes.generateRoute,
           theme: ThemeData(fontFamily: 'Raleway'),
-          home: WelcomePage(),
+          home: SearchedProductDescPage(),
         );
       },
     );

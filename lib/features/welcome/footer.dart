@@ -17,7 +17,7 @@ class Footer extends StatelessWidget {
           child: InkWell(
             onTap: () {},
             child: Text(
-              AppStrings.delete_account_Text,
+              AppStrings.deleteAccountText,
               style: TextStyle(fontSize: 13, color: AppColors.primary, fontWeight: FontWeight.w500,),
             ),
           ),

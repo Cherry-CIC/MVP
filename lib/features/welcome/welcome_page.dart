@@ -66,7 +66,7 @@ class WelcomePage extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        AppStrings.create_account,
+                        AppStrings.createAccount,
                         style: Theme.of(context)
                             .textTheme
                             .labelSmall

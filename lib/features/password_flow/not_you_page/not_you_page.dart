@@ -66,7 +66,7 @@ class NotYouPage extends StatelessWidget {
                       Align(
                         alignment: Alignment.centerLeft,
                         child: Text(
-                          AppStrings.forgotPassWordInstruction,
+                          AppStrings.forgotPasswordInstruction,
                           style: AppTextStyles.bodyText,
                         ),
                       ),

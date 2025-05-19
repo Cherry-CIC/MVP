@@ -106,7 +106,7 @@ class LoginFormState extends State<LoginForm> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(AppStrings.create_account,
+                  Text(AppStrings.createAccount,
                       style: Theme.of(context)
                           .textTheme
                           .labelSmall
