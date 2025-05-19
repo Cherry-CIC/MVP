@@ -2,23 +2,9 @@ class AppImages {
   static const _path = 'assets/images/';
 
   static const icHome = '${_path}ic_home.png';
-  static const icSearch = '${_path}search.png';
-  static const icMessage = '${_path}message.png';
-  static const icProfile = '${_path}profile.png';
-  static const icAdd = '${_path}add.png';
-  static const icCam = '${_path}cam.png';
   static const icHomeSelected = '${_path}ic_home_selected.png';
   static const icButton = '${_path}ic_button.png';
   static const welcomeBg = '${_path}welcome_bg.png';
-  static const bubbles = '${_path}Bubbles.png';
-  static const profileImg = '${_path}image.png';
-  static const password_home = '${_path}password_home.png';
-  static const not_you_home = '${_path}not_you_bg.png';
-  static const cherry_logo = '${_path}cherry_logo.png';
-  static const Ic_filter = '${_path}Ic_filter.png';
-  static const Ic_back = '${_path}Ic_back.png';
-  static const Ic_charityCategory = '${_path}charity_category.png';
-  static const Ic_arrow = '${_path}Ic_arrow.png';
 
   static const clothing1 = '${_path}clothing_1.png';
   static const clothing2 = '${_path}clothing_2.png';
@@ -33,6 +19,4 @@ class AppImages {
   static const homeStart = '${_path}charity_home_start.png';
 
   static const likeHeart = '${_path}like_heart.png';
-
-  static const charity_week_card = '${_path}charity_week_card.png';
 }
