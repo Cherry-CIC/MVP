@@ -35,4 +35,17 @@ class AppImages {
   static const likeHeart = '${_path}like_heart.png';
 
   static const charity_week_card = '${_path}charity_week_card.png';
+  static const accessories = '${_path}accessories.png';
+  static const book = '${_path}book.png';
+  static const cd = '${_path}cd.png';
+  static const children = '${_path}children.png';
+  static const designer = '${_path}designer.png';
+  static const dvd = '${_path}dvd.png';
+  static const men = '${_path}men.png';
+  static const women = '${_path}women.png';
+  static const toy = '${_path}toy.png';
+  static const unisex = '${_path}unisex.png';
+
+  static const global_charity = '${_path}global_charity.png';
+
 }
