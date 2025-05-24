@@ -4,14 +4,15 @@ import 'package:cherry_mvp/core/config/config.dart';
 class SettingsItem extends StatelessWidget {
   final String title;
   final VoidCallback? onTap;
-  final String? trailing;
+  final String trailing;
 
   const SettingsItem({
-    Key? key,
+    super.key, 
     required this.title,
     this.onTap,
-    this.trailing,
-  }) : super(key: key);
+    required this.trailing
+  });
+ 
 
   @override
   Widget build(BuildContext context) {
@@ -36,7 +37,7 @@ class SettingsItem extends StatelessWidget {
                   children: [
                     if (trailing != null)
                       Text(
-                        trailing!,
+                        trailing,
                         style: const TextStyle(
                           color: AppColors.greyTextColor,
                           fontSize: 14,
