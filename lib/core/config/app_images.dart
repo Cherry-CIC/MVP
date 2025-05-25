@@ -66,4 +66,12 @@ class AppImages {
   static const dvdIcon = '${_path}dvd_icon.png'; 
 
 
+  static const profile_settings = '${_path}profile_setting.png';
+  static const profile_profileIcon = '${_path}profile_profile_icon.png';
+  static const profile_followers = '${_path}profile_followers.png';
+  static const profile_location = '${_path}profile_location.png';
+  static const profile_awards = '${_path}profile_awards.png';
+  static const profile_email = '${_path}profile_email.png';
+  static const profile_discount = '${_path}profile_discount.png';
+
 }

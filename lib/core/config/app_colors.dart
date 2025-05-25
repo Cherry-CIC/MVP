@@ -19,4 +19,6 @@ class AppColors {
   static const piechart_pink = Color(0xfff5B9EC);
   static const piechart_red = Color(0xFFF90653);
   static const piechart_purple = Color(0xFFAEABFD);
+  
+  static const profile_review = Color(0xFFFFD119);
 }

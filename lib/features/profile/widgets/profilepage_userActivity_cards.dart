@@ -1,6 +1,6 @@
-import 'package:cherry_mvp/core/config/config.dart';
 import 'package:flutter/material.dart';
-
+import 'package:cherry_mvp/core/config/config.dart';
+ 
 class ProfilepageUseractivityCards extends StatelessWidget {
   final String title;
   final String value;
@@ -14,7 +14,7 @@ class ProfilepageUseractivityCards extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 131,
+      width: 88,
       height: 83,
       decoration: BoxDecoration(
         color: AppColors.lightGreyFill,

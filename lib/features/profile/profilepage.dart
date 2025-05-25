@@ -1,14 +1,19 @@
+import 'package:flutter/material.dart';
+ 
 import 'package:cherry_mvp/core/config/config.dart';
 import 'package:cherry_mvp/features/profile/widgets/donation_impact_tracker.dart';
 import 'package:cherry_mvp/features/profile/widgets/profilepage_userActivity_cards.dart';
-import 'package:flutter/material.dart';
+import 'package:cherry_mvp/features/profile/widgets/user_information_section.dart'; 
+import 'package:cherry_mvp/features/profile/profile_model.dart';  
+import 'package:cherry_mvp/core/models/model.dart'; 
+
 
 class ProfilePage extends StatelessWidget {
   final List<Color> charityColors = [
-    Colors.red,
-    Colors.blue,
-    Colors.green,
-    Colors.orange
+    AppColors.piechart_red,
+    AppColors.blueBgColor,
+    AppColors.piechart_green,
+    AppColors.piechart_purple
   ];
 
   final List<double> charityValues = [40, 30, 20, 10];
@@ -20,10 +25,20 @@ class ProfilePage extends StatelessWidget {
     'Charity D'
   ];
 
+  final ProfileItem profile = dummyProfileData[0];
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Profile')),
+    
+      appBar: AppBar(
+        centerTitle: true,
+        title: Text(
+          AppStrings.profileText,
+          style: AppTextStyles.screen_title,
+        ),
+      ), 
+
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
@@ -31,81 +46,18 @@ class ProfilePage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  AppStrings.profile_user_donation_Summary,
-                  style: Theme.of(context).textTheme.headlineSmall,
-                ),
-                // Pie and bar charts side by side (commenting if need in future)
-                // SizedBox(
-                //   height: 300, // set fixed height for chart area
-                //   child: Row(
-                //     children: [
-                //       Expanded(
-                //         child: PieChart(
-                //           PieChartData(
-                //             sections: List.generate(4, (index) {
-                //               return PieChartSectionData(
-                //                 color: charityColors[index],
-                //                 value: charityValues[index],
-                //                 title: '${charityValues[index]}%',
-                //                 radius: 50,
-                //                 titleStyle: TextStyle(
-                //                     fontSize: 14,
-                //                     fontWeight: FontWeight.bold,
-                //                     color: Colors.white),
-                //               );
-                //             }),
-                //             sectionsSpace: 4,
-                //             centerSpaceRadius: 30,
-                //           ),
-                //         ),
-                //       ),
-                //       SizedBox(width: 16),
-                //       Expanded(
-                //         child: BarChart(
-                //           BarChartData(
-                //             alignment: BarChartAlignment.spaceAround,
-                //             titlesData: FlTitlesData(
-                //               leftTitles: AxisTitles(
-                //                 sideTitles: SideTitles(showTitles: true),
-                //               ),
-                //               bottomTitles: AxisTitles(
-                //                 sideTitles: SideTitles(
-                //                   showTitles: true,
-                //                   getTitlesWidget: (value, _) {
-                //                     if (value.toInt() < charityLabels.length) {
-                //                       return Text(
-                //                         charityLabels[value.toInt()],
-                //                         style: TextStyle(fontSize: 10),
-                //                       );
-                //                     }
-                //                     return SizedBox.shrink();
-                //                   },
-                //                 ),
-                //               ),
-                //               topTitles: AxisTitles(),
-                //               rightTitles: AxisTitles(),
-                //             ),
-                //             borderData: FlBorderData(show: false),
-                //             barGroups: List.generate(4, (index) {
-                //               return BarChartGroupData(
-                //                 x: index,
-                //                 barRods: [
-                //                   BarChartRodData(
-                //                     toY: charityValues[index],
-                //                     color: charityColors[index],
-                //                     width: 20,
-                //                   )
-                //                 ],
-                //               );
-                //             }),
-                //           ),
-                //         ),
-                //       ),
-                //     ],
-                //   ),
-                // ),
-                SizedBox(height: 20),
+                //user information section  
+                UserInformationSection(
+                  username: profile.username,
+                  awards: profile.awards,
+                  location: profile.location,
+                  reviewsCount: profile.reviewsCount,
+                  followersCount: profile.followersCount,
+                  followingCount: profile.followingCount,
+                  rating: profile.rating,
+                  hasBuyerDiscounts: profile.hasBuyerDiscounts,
+                ), 
+
                 //donation chart
                 DonationChart(
                   totalAmount: 365.00,
@@ -122,28 +74,31 @@ class ProfilePage extends StatelessWidget {
                     'RNLI': AppColors.piechart_purple, //blue
                   },
                 ),
-                SizedBox(height: 20),
+
                 // User activity cards
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
+                Padding(
+                  padding: EdgeInsets.only(bottom:20.0),
                   child: Row(
                     children: [
                       ProfilepageUseractivityCards(
                           title: AppStrings.profile_userActivity_bought,
-                          value: '0'),
-                      SizedBox(width: 10),
-                      ProfilepageUseractivityCards(
+                          value: '0'), 
+
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal:10.0), 
+                        child: ProfilepageUseractivityCards(
                           title: AppStrings.profile_userActivity_sold,
-                          value: '0'),
-                      SizedBox(width: 10),
+                          value: '0'
+                        )
+                      ),
+
                       ProfilepageUseractivityCards(
                           title: AppStrings.profile_userActivity_total,
                           value: '0'),
                     ],
                   ),
                 ),
-
-                SizedBox(height: 20),
+ 
               ],
             ),
           ),

@@ -1,8 +1,7 @@
-import 'package:cherry_mvp/core/config/app_colors.dart';
-import 'package:cherry_mvp/core/config/app_strings.dart';
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
-
+import 'package:cherry_mvp/core/config/config.dart'; 
+ 
 class DonationChart extends StatelessWidget {
   final double totalAmount;
   final Map<String, double> donations;
@@ -38,19 +37,23 @@ class DonationChart extends StatelessWidget {
                 fontWeight: FontWeight.w600,
                 color: AppColors.greyTextColorTwo),
           ),
-        ),
-        const SizedBox(height: 8),
-        Align(
-          alignment: Alignment.topLeft,
-          child: const Text(
-            AppStrings.profile_generosity_changes_lives,
-            style: TextStyle(
+        ), 
+
+        Padding(
+          padding: EdgeInsets.only(top:8.0, bottom:32.0), 
+          child: Align(
+            alignment: Alignment.topLeft,
+            child: const Text(
+              AppStrings.profile_generosity_changes_lives,
+              style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w400,
-                color: AppColors.greyTextColorTwo),
-          ),
+                color: AppColors.greyTextColorTwo
+              ),
+            )
+          )
         ),
-        const SizedBox(height: 32),
+
         Stack(
           alignment: Alignment.center,
           children: [
@@ -81,16 +84,19 @@ class DonationChart extends StatelessWidget {
               ],
             ),
           ],
-        ),
-        const SizedBox(height: 32),
-        Wrap(
-          alignment: WrapAlignment.center,
-          spacing: 16,
-          children: donations.entries.map((entry) {
-            return LegendItem('${entry.key} £${entry.value.toStringAsFixed(0)}',
+        ), 
+
+        Padding(
+          padding: EdgeInsets.only(top:32.0, bottom:20.0), 
+          child: Wrap(
+            alignment: WrapAlignment.center,
+            spacing: 16,
+            children: donations.entries.map((entry) {
+              return LegendItem('${entry.key} £${entry.value.toStringAsFixed(0)}',
                 colors[entry.key]!);
-          }).toList(),
-        ),
+            }).toList(),
+          )
+        )
       ],
     );
   }
@@ -114,13 +120,17 @@ class LegendItem extends StatelessWidget {
           width: 12,
           height: 12,
         ),
-        const SizedBox(width: 6),
-        Text(label,
+
+        Padding(
+          padding: EdgeInsets.only(left:6.0), 
+          child: Text(label,
             style: const TextStyle(
               fontWeight: FontWeight.w400,
               color: AppColors.greyTextColorTwo,
               fontSize: 14,
-            )),
+            )
+          )
+        )
       ],
     );
   }
