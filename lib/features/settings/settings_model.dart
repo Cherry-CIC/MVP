@@ -1,6 +1,5 @@
 import 'package:cherry_mvp/core/config/config.dart';
 import 'package:cherry_mvp/core/models/model.dart';
-import 'package:cherry_mvp/features/settings/settings_model.dart';
 
 final dummyAccountSection = [
   SectionSettingsItem(

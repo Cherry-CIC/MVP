@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:cherry_mvp/core/config/config.dart';
 
 class AdExample extends StatelessWidget {
-  const AdExample({Key? key}) : super(key: key);
+  const AdExample({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return SizedBox(
       width: double.infinity,
       height: double.infinity,
       child: Column(
@@ -16,7 +16,7 @@ class AdExample extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 16),
             child: Text(
-              AppStrings.adText,
+              AppStrings.adText ?? '',
               style: TextStyle(
                 color: AppColors.black,
                 fontSize: 20,
