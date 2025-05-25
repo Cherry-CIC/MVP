@@ -66,4 +66,7 @@ class AppImages {
   static const profile_awards = '${_path}profile_awards.png';
   static const profile_email = '${_path}profile_email.png';
   static const profile_discount = '${_path}profile_discount.png';
+  static const profile_listings = '${_path}profile_listings.png';
+  static const profile_order = '${_path}profile_order.png';
+  static const profile_liked = '${_path}profile_liked.png';
 }

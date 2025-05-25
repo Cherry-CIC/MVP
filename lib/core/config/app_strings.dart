@@ -67,6 +67,7 @@ class AppStrings {
   static const profile_user_info_username = "User.001";
   static const profile_user_info_title = 'Profile';
 
+
   // Dashboard & Search
   static const dashboard = 'Dashboard';
   static const search = 'Search';
@@ -167,4 +168,12 @@ class AppStrings {
   static String listListingsText = '';
 
   static var support_Text;
-  }
+  
+
+  static const profile_user_orders = "Orders";
+  static const profile_user_liked = "Liked";
+  static const profile_user_listings = "Listings";
+  static const profile_user_Buyer_disc = "Buyer discounts";
+  static const share = 'Share';
+}
+
