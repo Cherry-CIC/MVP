@@ -156,4 +156,12 @@ class AppStrings {
   static const pound_Text = "£ GBP";
   static const sizes_Text = "Sizes";
   static const UK_Text = "UK";
+
+  // donation options
+  static const donation_options_Text = "Donation Options";
+  static const give_your_buyer_Text = "Give your buyer the option pick a cause they care about.";
+  static const easy_way_Text = "Its an easy way to make your listing more impactful."; 
+  static const open_to_other_charities_Text = "Open to other charities";
+  static const open_to_offers_Text = "Open to offers";
+  static const applicable_for_buyer_discounts_Text = "Applicable for buyer discounts";
 }
