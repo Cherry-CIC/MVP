@@ -30,28 +30,33 @@ class AppTextStyles {
   );
 
   static TextStyle exploreSmallText = TextStyle(
-    fontSize: 15,
-    fontWeight: FontWeight.w600,
-    color: AppColors.white
-  );
-  
+      fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.white);
+
   //profile page
   static TextStyle screen_title = TextStyle(
       fontSize: 24, color: AppColors.black, fontWeight: FontWeight.w600);
-  
+
   static TextStyle bodyText_profile_heading = TextStyle(
       fontSize: 24,
       color: AppColors.greyTextColorTwo,
       fontWeight: FontWeight.w600);
-  
+
   static TextStyle bodyText_profile_heading2 = TextStyle(
       fontSize: 16,
       color: AppColors.greyTextColorTwo,
       fontWeight: FontWeight.w600);
-  
+
   static TextStyle bodyText_profile_subheading = TextStyle(
       fontSize: 13,
       color: AppColors.greyTextColor,
       fontWeight: FontWeight.w400);
 
+  // Discover Page
+  static TextStyle charityHeadingText = TextStyle(
+      fontSize: 15, color: AppColors.black, fontWeight: FontWeight.w400);
+
+  static TextStyle charityBodyText = TextStyle(
+      fontSize: 16,
+      color: AppColors.greyTextColorTwo,
+      fontWeight: FontWeight.w400);
 }
