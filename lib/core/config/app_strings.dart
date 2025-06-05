@@ -1,7 +1,7 @@
 class AppStrings {
   static const appName = 'Cherry';
   static const loginToContinue = 'Login to continue';
-  static const next = 'NEXT';
+  static const next = 'NEXT'; 
   static const skip = 'SKIP';
   static const login = 'Login';
   static const register = 'Sign Up';
@@ -172,4 +172,9 @@ class AppStrings {
   static const charityText = "Charity";
   static const priceText = "Price"; 
   static const conditionText = "Condition";
+
+  
+  // donation navigation button
+  static const nextButton = "Next";
+  static const backButton = "Back";
 }
