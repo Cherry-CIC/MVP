@@ -119,7 +119,7 @@ class LoginFormState extends State<LoginForm> {
             // Forgot Password
             GestureDetector(
               onTap: () {
-               navigator.replaceWith(AppRoutes.home);
+               navigator.replaceWith(AppRoutes.forgotPassword);
               },
               child: Center(
                 child: Text(AppStrings.forgotPassword,

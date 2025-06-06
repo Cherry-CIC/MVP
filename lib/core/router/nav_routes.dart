@@ -3,6 +3,7 @@ import 'package:cherry_mvp/features/register/registerpage.dart';
 import 'package:cherry_mvp/features/home/homepage.dart';
 import 'package:cherry_mvp/features/login/loginpage.dart';
 import 'package:cherry_mvp/features/welcome/welcome_page.dart';
+import 'package:cherry_mvp/features/password_flow/not_you_page/not_you_page.dart';
 
 
 class AppRoutes {
@@ -22,6 +23,8 @@ class AppRoutes {
         return MaterialPageRoute(builder: (_) => const LoginPage());
       case register:
         return MaterialPageRoute(builder: (_) => RegisterPage());
+      case forgotPassword:
+        return MaterialPageRoute(builder: (_) => NotYouPage());
       case home:
         return MaterialPageRoute(builder: (_) => HomePage());
       default:
