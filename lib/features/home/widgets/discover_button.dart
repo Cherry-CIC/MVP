@@ -5,13 +5,18 @@ import 'package:cherry_mvp/core/config/app_text_styles.dart';
 import 'package:cherry_mvp/features/home/widgets/dashboard.dart';
 import 'package:flutter/material.dart';
 import 'package:cherry_mvp/core/config/app_strings.dart';
+import 'package:provider/provider.dart';
+
+import '../../../core/router/nav_provider.dart';
+import '../../../core/router/nav_routes.dart';
 
 class DiscoverButton extends StatelessWidget {
   const DiscoverButton({super.key});
 
+
   void _navigate(BuildContext context) {
-    Navigator.push(
-        context, MaterialPageRoute(builder: (ctx) => DashboardPage()));
+    final navigator = Provider.of<NavigationProvider>(context, listen: false);
+    navigator.navigateTo(AppRoutes.discover);
   }
 
   @override

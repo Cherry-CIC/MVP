@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cherry_mvp/core/config/config.dart';
 
-PreferredSizeWidget buildCommonAppBar(
+PreferredSizeWidget buildCommonAppBarWithBackButton(
     String title, VoidCallback onBackPressed) {
   return AppBar(
     backgroundColor: AppColors.white,
@@ -23,3 +23,20 @@ PreferredSizeWidget buildCommonAppBar(
     centerTitle: true,
   );
 }
+
+PreferredSizeWidget buildCommonAppBar(
+    String title, VoidCallback onBackPressed) {
+  return AppBar(
+    backgroundColor: AppColors.white,
+    title: Text(
+      title,
+      style: TextStyle(
+        fontSize: 15,
+        color: AppColors.black,
+        fontWeight: FontWeight.w800,
+      ),
+    ),
+    centerTitle: true,
+  );
+}
+

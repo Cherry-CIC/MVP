@@ -1,3 +1,5 @@
+import 'package:cherry_mvp/features/home/widgets/ad_example.dart';
+import 'package:cherry_mvp/features/home/widgets/dashboard.dart';
 import 'package:flutter/material.dart';
 import 'package:cherry_mvp/features/home/widgets/discover_button.dart';
 import 'package:cherry_mvp/core/config/config.dart';
@@ -44,6 +46,8 @@ class HomeScreenState extends State<HomeScreen> {
           child: Column(
             children: [
               DiscoverButton(),
+              AdExample(),
+              DashboardPage(),
             ],
           ),
         ),

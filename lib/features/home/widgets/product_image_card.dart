@@ -33,7 +33,6 @@ class _ProductImageCardState extends State<ProductImageCard> {
         children: [
           Image.asset(
             widget.imagePath,
-            height: 380,
             width: double.infinity,
             fit: BoxFit.cover,
           ),

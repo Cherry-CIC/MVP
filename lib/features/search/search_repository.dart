@@ -3,7 +3,7 @@ import 'package:cherry_mvp/features/search/search_model.dart';
 
 class SearchRepository { 
  
-  List<CharityCategory> fetchCharityCategories()  {
+  List<Charity> fetchCharityCategories()  {
     return dummyCharityCategories;
   }
 }

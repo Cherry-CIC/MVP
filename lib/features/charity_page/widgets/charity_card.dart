@@ -1,20 +1,17 @@
-import 'package:flutter/material.dart';  
- 
+import 'package:flutter/material.dart';
 import 'package:cherry_mvp/core/config/config.dart';
 import 'package:cherry_mvp/core/models/model.dart';  
  
 
-class SingleCategory extends StatefulWidget {
-  const SingleCategory({super.key, required this.charityCategory,});
-  final CharityCategory charityCategory;
+class CharityCard extends StatefulWidget {
+  const CharityCard({super.key, required this.charity,});
+  final Charity charity;
 
   @override
-  SingleCategoryState createState() => SingleCategoryState();
+  CharityCardState createState() => CharityCardState();
 }
 
- 
-
-class SingleCategoryState extends State<SingleCategory> {  
+class CharityCardState extends State<CharityCard> {
 
   @override
   Widget build(BuildContext context) {  
@@ -37,7 +34,7 @@ class SingleCategoryState extends State<SingleCategory> {
                       ClipRRect(
                         borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
                         child: Image.asset(
-                          widget.charityCategory.charity_image, 
+                          widget.charity.charityImage,
                           height: 80,  
                           width: 80, 
                           fit: BoxFit.cover,
@@ -50,7 +47,7 @@ class SingleCategoryState extends State<SingleCategory> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        widget.charityCategory.charity_name,
+                        widget.charity.charityName,
                         style: TextStyle(color: AppColors.black, fontSize:14, fontWeight: FontWeight.w700 )
                       ),
 
@@ -58,7 +55,7 @@ class SingleCategoryState extends State<SingleCategory> {
                         width: screenWidth-110,
                         child: Expanded(
                           child: Text(
-                            widget.charityCategory.description,
+                            widget.charity.description,
                             style: TextStyle(color: AppColors.greyTextColor, fontSize:12, ),
                             softWrap: true,
                           )

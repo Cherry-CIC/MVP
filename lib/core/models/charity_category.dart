@@ -1,8 +1,15 @@
-class CharityCategory {
-  final String charity_name;
-  final String charity_image; 
-  final String description; 
+class Charity {
+  final String charityName;
+  final String charityImage;
+  final String description;
+  final String charityLogo;
+  final int likes;
 
-  const CharityCategory(
-      {required this.charity_name, required this.charity_image, required this.description});
-} 
+  const Charity({
+    required this.charityName,
+    required this.charityImage,
+    required this.description,
+    required this.charityLogo,
+    required this.likes,
+  });
+}

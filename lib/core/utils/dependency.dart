@@ -1,3 +1,5 @@
+import 'package:cherry_mvp/features/discover/discover_repository.dart';
+import 'package:cherry_mvp/features/discover/discover_viewmodel.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:provider/provider.dart';
@@ -49,6 +51,9 @@ List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
     Provider<HomeRepository>(
       create: (context) => HomeRepository(),
     ),
+    Provider<DiscoverRepository>(
+      create: (context) => DiscoverRepository(),
+    ),
     ChangeNotifierProvider<LoginViewModel>(
       create: (context) => LoginViewModel(
         loginRepository: Provider.of<LoginRepository>(context, listen: false),
@@ -64,10 +69,6 @@ List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
           homeRepository: Provider.of<HomeRepository>(context, listen: false),
         )
     ),
-
-
-    
-    
     Provider<SearchRepository>( 
       create: (context) => SearchRepository(),
     ),
@@ -76,6 +77,10 @@ List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
           searchRepository: Provider.of<SearchRepository>(context, listen: false),
         )
     ),
-
+    ChangeNotifierProvider<DiscoverViewModel>(
+        create: (context) => DiscoverViewModel(
+          discoverRepository: Provider.of<DiscoverRepository>(context, listen: false),
+        )
+    ),
    ];
 }

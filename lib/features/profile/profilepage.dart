@@ -1,13 +1,14 @@
 import 'package:cherry_mvp/core/config/app_text_styles.dart';
 import 'package:cherry_mvp/core/config/config.dart';
 import 'package:cherry_mvp/core/models/user_section.dart';
-import 'package:cherry_mvp/core/reusablewidgets/form/button_style.dart';
 import 'package:cherry_mvp/core/reusablewidgets/primary_button.dart';
 import 'package:cherry_mvp/features/profile/widgets/donation_impact_tracker.dart';
 import 'package:cherry_mvp/features/profile/widgets/profilepage_userActivity_cards.dart';
 import 'package:cherry_mvp/features/profile/widgets/user_information_section.dart';
 import 'package:cherry_mvp/features/profile/widgets/user_order_details.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:cherry_mvp/core/router/router.dart';
 
 class ProfilePage extends StatelessWidget {
   final List<Color> charityColors = [
@@ -38,6 +39,12 @@ class ProfilePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+
+    void navigateToSettings() {
+      final navigator = Provider.of<NavigationProvider>(context, listen: false);
+      navigator.navigateTo(AppRoutes.settingspage);
+    }
+
     return Scaffold(
       //profile header
       appBar: AppBar(
@@ -57,78 +64,10 @@ class ProfilePage extends StatelessWidget {
                 //user information section
                 UserInformationSection(
                   userInformationSection: UserInformation.fromJson(userInfoMap),
+                  onSettingsPressed: () {
+                    navigateToSettings();
+                  },
                 ),
-
-                // Pie and bar charts side by side (commenting if need in future)
-                // SizedBox(
-                //   height: 300, // set fixed height for chart area
-                //   child: Row(
-                //     children: [
-                //       Expanded(
-                //         child: PieChart(
-                //           PieChartData(
-                //             sections: List.generate(4, (index) {
-                //               return PieChartSectionData(
-                //                 color: charityColors[index],
-                //                 value: charityValues[index],
-                //                 title: '${charityValues[index]}%',
-                //                 radius: 50,
-                //                 titleStyle: TextStyle(
-                //                     fontSize: 14,
-                //                     fontWeight: FontWeight.bold,
-                //                     color: Colors.white),
-                //               );
-                //             }),
-                //             sectionsSpace: 4,
-                //             centerSpaceRadius: 30,
-                //           ),
-                //         ),
-                //       ),
-                //       SizedBox(width: 16),
-                //       Expanded(
-                //         child: BarChart(
-                //           BarChartData(
-                //             alignment: BarChartAlignment.spaceAround,
-                //             titlesData: FlTitlesData(
-                //               leftTitles: AxisTitles(
-                //                 sideTitles: SideTitles(showTitles: true),
-                //               ),
-                //               bottomTitles: AxisTitles(
-                //                 sideTitles: SideTitles(
-                //                   showTitles: true,
-                //                   getTitlesWidget: (value, _) {
-                //                     if (value.toInt() < charityLabels.length) {
-                //                       return Text(
-                //                         charityLabels[value.toInt()],
-                //                         style: TextStyle(fontSize: 10),
-                //                       );
-                //                     }
-                //                     return SizedBox.shrink();
-                //                   },
-                //                 ),
-                //               ),
-                //               topTitles: AxisTitles(),
-                //               rightTitles: AxisTitles(),
-                //             ),
-                //             borderData: FlBorderData(show: false),
-                //             barGroups: List.generate(4, (index) {
-                //               return BarChartGroupData(
-                //                 x: index,
-                //                 barRods: [
-                //                   BarChartRodData(
-                //                     toY: charityValues[index],
-                //                     color: charityColors[index],
-                //                     width: 20,
-                //                   )
-                //                 ],
-                //               );
-                //             }),
-                //           ),
-                //         ),
-                //       ),
-                //     ],
-                //   ),
-                // ),
                 //user order details
                 UserOrderDetails(),
                 //donation chart

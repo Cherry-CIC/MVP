@@ -30,7 +30,7 @@ class ToggleSection extends StatelessWidget {
         ),
       ),
       Text(
-        AppStrings.dark_mode_Text,
+        AppStrings.darkModeText,
         style: TextStyle(
           fontSize: 13,
           color: AppColors.greyTextColor,
@@ -47,7 +47,7 @@ class ToggleSection extends StatelessWidget {
         ),
       ),
       Text(
-        AppStrings.list_listings_Text,
+        AppStrings.listListingsText,
         style: TextStyle(
           fontSize: 13,
           color: AppColors.greyTextColor,

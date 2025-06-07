@@ -104,26 +104,6 @@ class AppStrings {
   static const listListingsText = "Hide Listings";
   static const adText = "Ad";
 
-  static const profile_userActivity_bought = "Bought";
-  static const profile_userActivity_sold = "Sold";
-  static const profile_userActivity_total = "Total";
-  static const profile_your_donation_impact = "Your Donation Impact";
-  static const profile_generosity_changes_lives =
-      "See how your generosity changes lives";
-  static const profile_user_donation_Summary = "User Donation Summary";
-  static const profile_user_donation_total = "Total";
-
-  static const profile_user_info_section_user = "User";
-  static const profile_user_info_section_following = "following";
-  static const profile_user_info_section_followers = "followers";
-  static const profile_user_info_section_buyer_discount =
-      "Buyer Discounts Active";
-  static const profile_user_info_section_buyer_awards = "Awards";
-  static const profile_user_info_section_buyer_reviews = "Reviews";
-  static const profile_user_info_location = "United Kingdom";
-  static const profile_user_info_username = "User.001";
-  static const profile_user_info_title = 'Profile';
-
   static const profile_user_orders = "Orders";
   static const profile_user_liked = "Liked";
   static const profile_user_listings = "Listings";
@@ -172,4 +152,5 @@ class AppStrings {
   static const charityText = "Charity";
   static const priceText = "Price"; 
   static const conditionText = "Condition";
+
 }

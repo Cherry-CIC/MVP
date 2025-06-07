@@ -13,7 +13,7 @@ class SearchViewModel extends ChangeNotifier {
   SearchViewModel({required this.searchRepository});
  
    
-  List<CharityCategory> fetchCharityCategories()  {
+  List<Charity> fetchCharityCategories()  {
     return searchRepository.fetchCharityCategories();
   }
 }

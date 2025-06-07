@@ -1,3 +1,5 @@
+import 'package:cherry_mvp/features/discover/discover_page.dart';
+import 'package:cherry_mvp/features/settings/settings_page.dart';
 import 'package:flutter/material.dart';
 import 'package:cherry_mvp/features/register/registerpage.dart';
 import 'package:cherry_mvp/features/home/homepage.dart';
@@ -12,7 +14,8 @@ class AppRoutes {
   static const String forgotPassword = '/forgotPassword';
   static const String home = '/home';
   static const String chat = '/chat'; // <- added chat route
-  static const String discover = '/discover'; 
+  static const String discover = '/discover';
+  static const String settingspage = '/settings';
 
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
@@ -24,6 +27,10 @@ class AppRoutes {
         return MaterialPageRoute(builder: (_) => RegisterPage());
       case home:
         return MaterialPageRoute(builder: (_) => HomePage());
+      case discover:
+        return MaterialPageRoute(builder: (_) => DiscoverPage());
+      case settingspage:
+        return MaterialPageRoute(builder: (_) => SettingsPage());
       default:
         return MaterialPageRoute(
           builder: (_) => Scaffold(
