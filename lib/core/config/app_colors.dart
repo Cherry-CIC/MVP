@@ -22,4 +22,6 @@ class AppColors {
   static const piechart_purple = Color(0xFFAEABFD);
 
   static const profile_review = Color(0xFFFFD119);
+
+  static const greyBgColor = Color(0xFFF1F1F1);
 }

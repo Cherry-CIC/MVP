@@ -59,4 +59,12 @@ class AppTextStyles {
       fontSize: 16,
       color: AppColors.greyTextColorTwo,
       fontWeight: FontWeight.w400);
+
+  static TextStyle selectedOption = TextStyle(
+      fontSize: 12, color: AppColors.primary, fontWeight: FontWeight.w600);
+
+  static TextStyle unselectedOption = TextStyle(
+      fontSize: 12,
+      color: AppColors.greyNavFooter,
+      fontWeight: FontWeight.w600);
 }

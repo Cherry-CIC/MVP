@@ -1,20 +1,21 @@
 import 'package:flutter/material.dart';
 
-class ProductImageCard extends StatefulWidget {
+class ProductImageCardDiscover extends StatefulWidget {
   final String imagePath;
   final int likes;
 
-  const ProductImageCard({
-    Key? key,
+  const ProductImageCardDiscover({
+    super.key,
     required this.imagePath,
     required this.likes,
-  }) : super(key: key);
+  });
 
   @override
-  State<ProductImageCard> createState() => _ProductImageCardState();
+  State<ProductImageCardDiscover> createState() =>
+      _ProductImageCardDiscoverState();
 }
 
-class _ProductImageCardState extends State<ProductImageCard> {
+class _ProductImageCardDiscoverState extends State<ProductImageCardDiscover> {
   late int likes;
   bool isLiked = false;
 
@@ -46,9 +47,9 @@ class _ProductImageCardState extends State<ProductImageCard> {
         children: [
           Image.asset(
             widget.imagePath,
-            // height: 380,
-            // width: double.infinity,
             fit: BoxFit.cover,
+            height: 100,
+            width: 100,
           ),
           Positioned(
             bottom: 12,
