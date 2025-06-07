@@ -175,6 +175,5 @@ class AppStrings {
 
   
   // donation navigation button
-  static const nextButton = "Next";
-  static const backButton = "Back";
+  static const back = "BACK";
 }

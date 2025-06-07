@@ -23,14 +23,17 @@ class DonationNavigationButton extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween, 
       children: [  
-
-        DonationButtonTemplate(onPressed: onPressedBackButton, buttonText: AppStrings.backButton, backgroundColor: AppColors.white, foregroundColor: AppColors.primary, BorderSideColor: AppColors.primary),
-
+        
+        // BACK button
+        DonationButtonTemplate(onPressed: onPressedBackButton, buttonText: AppStrings.back, backgroundColor: AppColors.white, foregroundColor: AppColors.primary, borderSideColor: AppColors.primary),
+        
+        // Best practice for spacing; it is not advised to use SizedBox
         Padding(
           padding: EdgeInsets.symmetric(horizontal: 2.0), 
         ), 
-
-        DonationButtonTemplate(onPressed: onPressedNextButton, buttonText:  AppStrings.nextButton, backgroundColor: AppColors.primary, foregroundColor: AppColors.white, BorderSideColor: AppColors.primary),
+        
+        // NEXT button
+        DonationButtonTemplate(onPressed: onPressedNextButton, buttonText:  AppStrings.next, backgroundColor: AppColors.primary, foregroundColor: AppColors.white, borderSideColor: AppColors.primary),
 
       ]
     );

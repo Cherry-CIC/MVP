@@ -5,8 +5,8 @@ class DonationButtonTemplate extends StatelessWidget {
   final VoidCallback? onPressed;
   final String buttonText; 
   final Color backgroundColor;
-  final Color foregroundColor;
-  final Color BorderSideColor; 
+  final Color foregroundColor; 
+  final Color borderSideColor; 
 
   const DonationButtonTemplate({
     super.key,
@@ -14,7 +14,7 @@ class DonationButtonTemplate extends StatelessWidget {
     required this.buttonText, 
     required this.backgroundColor,
     required this.foregroundColor,
-    required this.BorderSideColor 
+    required this.borderSideColor 
   });
 
   @override
@@ -27,7 +27,7 @@ class DonationButtonTemplate extends StatelessWidget {
           style: ElevatedButton.styleFrom(
             backgroundColor: backgroundColor,  
             foregroundColor: foregroundColor,   // text color
-            side: BorderSide(color: BorderSideColor, width: 2),  
+            side: BorderSide(color: borderSideColor, width: 2),  
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12.0),
             ),
