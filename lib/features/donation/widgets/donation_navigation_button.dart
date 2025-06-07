@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';    
 import 'package:cherry_mvp/core/config/config.dart';  
-import 'package:cherry_mvp/features/donation/widgets/donation_button_template.dart'; 
+import 'package:cherry_mvp/core/reusablewidgets/reusablewidgets.dart'; 
  
 
 class DonationNavigationButton extends StatelessWidget { 
@@ -24,16 +24,26 @@ class DonationNavigationButton extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.spaceBetween, 
       children: [  
         
-        // BACK button
-        DonationButtonTemplate(onPressed: onPressedBackButton, buttonText: AppStrings.back, backgroundColor: AppColors.white, foregroundColor: AppColors.primary, borderSideColor: AppColors.primary),
+        // BACK button 
+        Expanded(
+          child: PrimaryAppOutlineButton(
+            onPressed: onPressedBackButton, 
+            buttonText: AppStrings.back 
+          ), 
+        ),
         
         // Best practice for spacing; it is not advised to use SizedBox
         Padding(
           padding: EdgeInsets.symmetric(horizontal: 2.0), 
         ), 
         
-        // NEXT button
-        DonationButtonTemplate(onPressed: onPressedNextButton, buttonText:  AppStrings.next, backgroundColor: AppColors.primary, foregroundColor: AppColors.white, borderSideColor: AppColors.primary),
+        // NEXT button 
+        Expanded(
+          child: PrimaryAppButton(
+            onPressed: onPressedNextButton, 
+            buttonText: AppStrings.next 
+          ), 
+        )
 
       ]
     );
