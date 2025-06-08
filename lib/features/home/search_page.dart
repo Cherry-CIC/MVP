@@ -4,7 +4,7 @@ import 'package:cherry_mvp/core/reusablewidgets/footer_nav.dart';
 import 'package:flutter/material.dart';
 
 class SearchScreenPage extends StatefulWidget {
-  const SearchScreenPage({super.key});
+  const SearchScreenPage({super.key, required initialCategory});
 
   @override
   State<SearchScreenPage> createState() => _SearchScreenPageState();
@@ -94,7 +94,7 @@ class _SearchScreenPageState extends State<SearchScreenPage> {
                     decoration: InputDecoration(
                       hintText: 'Search items or members',
                       hintStyle: TextStyle(color: AppColors.greyTextColor),
-                      prefixIcon:  Image.asset(AppImages.icSearch,height:22.5 ,width: 22.5, color: AppColors.greyNavFooter,),
+                      prefixIcon:  Image.asset(AppImages.icSearch,height:22.5 ,width: 22.5, color: AppColors.grey1,),
                       suffixIcon: Image.asset(AppImages.icCam,height:22.5 ,width: 22.5,),
                       border: InputBorder.none,
                       contentPadding: const EdgeInsets.symmetric(vertical: 12),
@@ -183,7 +183,7 @@ class _SearchScreenPageState extends State<SearchScreenPage> {
         selectedIndex: _selectedIndex,
         onItemSelected: _onItemTapped,
         selectedColor: AppColors.primary,
-        unselectedColor: AppColors.greyNavFooter,
+        unselectedColor: AppColors.grey1,
       ),
     );
   }

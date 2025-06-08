@@ -1,17 +1,19 @@
 import 'package:cherry_mvp/core/config/app_colors.dart';
 import 'package:cherry_mvp/core/config/app_images.dart';
 import 'package:cherry_mvp/core/models/all_categories_model.dart';
+import 'package:cherry_mvp/features/home/search_page.dart';
 import 'package:flutter/material.dart';
 
-
+import '../../core/reusablewidgets/footer_nav.dart';
 
 /// for all categories of products
-final List<ProductCategories >womenCategories = [
+final List<ProductCategories> womenCategories = [
   /// for all categories of products
   ProductCategories(
     title: "Charities",
     iconPath: AppImages.Ic_charityCategory,
     hasActionArrow: true,
+
     /// listing subcategories
     subcategories: [
       "Dresses",
@@ -28,6 +30,7 @@ final List<ProductCategories >womenCategories = [
   ),
   ProductCategories(
     title: "Innerwear",
+
     /// listing subcategories
     subcategories: [
       "Dresses",
@@ -45,6 +48,7 @@ final List<ProductCategories >womenCategories = [
   ),
   ProductCategories(
     title: "Outerwear",
+
     /// listing subcategories
     subcategories: [
       "Dresses",
@@ -62,6 +66,7 @@ final List<ProductCategories >womenCategories = [
   ),
   ProductCategories(
     title: "Bags",
+
     /// listing subcategories
     subcategories: [
       "Dresses",
@@ -79,6 +84,7 @@ final List<ProductCategories >womenCategories = [
   ),
   ProductCategories(
     title: "Bottoms",
+
     /// listing subcategories
     subcategories: [
       "Dresses",
@@ -96,12 +102,14 @@ final List<ProductCategories >womenCategories = [
   ),
   ProductCategories(
     title: "Accessories",
+
     /// listing subcategories
     subcategories: [],
     isExpanded: false,
   ),
   ProductCategories(
     title: "Shoes",
+
     /// listing subcategories
     subcategories: [],
     isExpanded: false,
@@ -122,8 +130,8 @@ final List<ProductCategories >womenCategories = [
     subcategories: [],
   ),
 ];
-///other categories needs to be created as well
 
+///other categories needs to be created as well
 
 class AllCategoriesPage extends StatefulWidget {
   const AllCategoriesPage({super.key});
@@ -140,7 +148,7 @@ class _AllCategoriesPageState extends State<AllCategoriesPage> {
     return Scaffold(
       backgroundColor: AppColors.bgColor,
       appBar: AppBar(
-        title:  SizedBox(
+        title: SizedBox(
           width: 185,
           height: 36,
           child: Text(
@@ -155,7 +163,19 @@ class _AllCategoriesPageState extends State<AllCategoriesPage> {
             ),
           ),
         ),
-        leading: Center(child: Image.asset(AppImages.Ic_back,height: 16,width: 19,    color:  AppColors.black,),),
+        leading: InkWell(
+            onTap: () {
+              Navigator.push(context,
+                  MaterialPageRoute(builder: (context) => SearchScreenPage(initialCategory: null,)));
+            },
+            child: Center(
+              child: Image.asset(
+                AppImages.Ic_back,
+                height: 16,
+                width: 19,
+                color: AppColors.black,
+              ),
+            )),
         centerTitle: true,
         backgroundColor: AppColors.white,
         elevation: 0,
@@ -166,7 +186,6 @@ class _AllCategoriesPageState extends State<AllCategoriesPage> {
               AppImages.Ic_filter,
               width: 24,
               height: 24,
-
             ),
           ),
         ],
@@ -174,7 +193,8 @@ class _AllCategoriesPageState extends State<AllCategoriesPage> {
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
             child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
@@ -203,37 +223,39 @@ class _AllCategoriesPageState extends State<AllCategoriesPage> {
 
   Widget categoryTab(String title, bool isSelected) {
     return Container(
-      width: isSelected?107:70,
+      width: isSelected ? 107 : 70,
       height: 40,
       decoration: BoxDecoration(
-        color:   const Color(0xFFE5EBFC),
+        color: const Color(0xFFE5EBFC),
         borderRadius: BorderRadius.circular(9.0),
         border: Border.all(
-          color: isSelected ? Color(0xFFF90653): Color(0xffF9F9F9), // Border color
+          color: isSelected
+              ? Color(0xFFF90653)
+              : Color(0xffF9F9F9), // Border color
           width: 1, // Border width
         ),
-
       ),
       alignment: Alignment.center,
-
-
       margin: const EdgeInsets.only(right: 8.0),
-      child: Text(title,
+      child: Text(
+        title,
         style: TextStyle(
-
-        fontWeight: FontWeight.w500,
-        fontSize: isSelected?18:17,
-        letterSpacing: 0,
-        height: 23 / 18,
-        fontFamily: 'Raleway-Medium',
-        color: isSelected ? AppColors.primary : AppColors.black,
+          fontWeight: FontWeight.w500,
+          fontSize: isSelected ? 18 : 17,
+          letterSpacing: 0,
+          height: 23 / 18,
+          fontFamily: 'Raleway-Medium',
+          color: isSelected ? AppColors.primary : AppColors.black,
+        ),
+        textAlign: TextAlign.center,
       ),
-    textAlign: TextAlign.center,),
     );
   }
 
   Widget categoryItem(ProductCategories product) {
-    if (product.title == "Charities" || product.title == "Search by Brand" || product.title == "Other") {
+    if (product.title == "Charities" ||
+        product.title == "Search by Brand" ||
+        product.title == "Other") {
       return Container(
         width: 335,
         height: 50,
@@ -251,22 +273,23 @@ class _AllCategoriesPageState extends State<AllCategoriesPage> {
           ],
         ),
         child: ListTile(
-         contentPadding: const EdgeInsets.symmetric(horizontal: 20.0, ),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 20.0,
+          ),
           title: Text(
             product.title,
             style: TextStyle(
-
               fontWeight: FontWeight.w700,
               fontSize: 17,
               letterSpacing: -0.17,
               height: 21 / 17,
               fontFamily: 'Raleway-Bold',
-              color:  AppColors.secondary ,
+              color: AppColors.secondary,
             ),
           ),
           trailing: GestureDetector(
             onTap: () {
-             //Navigate to the next screen or perform any other action.
+              //Navigate to the next screen or perform any other action.
             },
             child: Container(
               width: 30,
@@ -275,14 +298,19 @@ class _AllCategoriesPageState extends State<AllCategoriesPage> {
                 color: AppColors.primary,
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: Image.asset(AppImages.Ic_arrow,width: 16,height: 16,),
+              child: Image.asset(
+                AppImages.Ic_arrow,
+                width: 16,
+                height: 16,
+              ),
             ),
           ),
           leading: product.title == "Charities"
               ? Positioned(
-              top: 125,
-              left: 22,
-              child: Image.asset(product.iconPath ?? "", width: 46, height: 60))
+                  top: 125,
+                  left: 22,
+                  child: Image.asset(product.iconPath ?? "",
+                      width: 46, height: 60))
               : null,
         ),
       );
@@ -301,6 +329,7 @@ class _AllCategoriesPageState extends State<AllCategoriesPage> {
             ),
           ],
         ),
+
         /// container for categories without arrow
         child: ExpansionTile(
           iconColor: AppColors.primary,
@@ -308,59 +337,59 @@ class _AllCategoriesPageState extends State<AllCategoriesPage> {
           title: Text(
             product.title,
             style: TextStyle(
-
               fontWeight: FontWeight.w700,
               fontSize: 17,
               letterSpacing: -0.17,
               height: 21 / 17,
               fontFamily: 'Raleway-Bold',
-              color:  AppColors.secondary ,
+              color: AppColors.secondary,
             ),
           ),
+
           /// for subcategories if
           children: product.subcategories?.isNotEmpty == true
               ? [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-              child: GridView.count(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                crossAxisCount: 2,
-                childAspectRatio: 3.0,
-                crossAxisSpacing: 12.0,
-                mainAxisSpacing: 12.0,
-                children: product.subcategories!.map((sub) {
-                  return Container(
-                    width: 163,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: AppColors.white,
-                      borderRadius: BorderRadius.circular(7),
-                      border: Border.all(
-                        color: const Color(0xFFFFEBEB),
-                        width: 2, // Border width
-                      ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16.0, vertical: 8.0),
+                    child: GridView.count(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      crossAxisCount: 2,
+                      childAspectRatio: 3.0,
+                      crossAxisSpacing: 12.0,
+                      mainAxisSpacing: 12.0,
+                      children: product.subcategories!.map((sub) {
+                        return Container(
+                          width: 163,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: AppColors.white,
+                            borderRadius: BorderRadius.circular(7),
+                            border: Border.all(
+                              color: const Color(0xFFFFEBEB),
+                              width: 2, // Border width
+                            ),
+                          ),
+                          child: Center(
+                            child: Text(
+                              sub,
+                              style: TextStyle(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 15,
+                                letterSpacing: 0,
+                                height: 1,
+                                fontFamily: 'Raleway-Bold',
+                                color: AppColors.secondary,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        );
+                      }).toList(),
                     ),
-                    child: Center(
-                      child: Text(
-                        sub,
-                        style: TextStyle(
-
-                          fontWeight: FontWeight.w700,
-                          fontSize: 15,
-                          letterSpacing: 0,
-                          height:1,
-                          fontFamily: 'Raleway-Bold',
-                          color:  AppColors.secondary ,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  );
-                }).toList(),
-              ),
-            )
-          ]
+                  )
+                ]
               : [],
         ),
       );
