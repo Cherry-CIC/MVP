@@ -4,6 +4,7 @@ import 'package:cherry_mvp/features/donation/widgets/donation_options.dart';
 import 'package:cherry_mvp/features/donation/widgets/form_fields.dart'; 
 import 'package:cherry_mvp/features/donation/widgets/dropdown_fields.dart'; 
 import 'package:cherry_mvp/features/donation/donation_model.dart';
+import 'package:cherry_mvp/features/donation/widgets/donation_navigation_button.dart'; 
 
 
 class DonationScreen extends StatefulWidget {
@@ -46,7 +47,14 @@ class DonationScreenState extends State<DonationScreen> {
 
   final TextEditingController _addToCollectionController = TextEditingController(); 
 
+  
+  void onPressedBackButton() {
+    //
+  } 
 
+  void onPressedNextButton() {
+    //
+  } 
 
 
   @override 
@@ -75,6 +83,9 @@ class DonationScreenState extends State<DonationScreen> {
                 FormFields(formFieldsController: _addToCollectionController, formFieldsHintText: AddToCollectionHintText, formFieldsTitle: AddToCollectionText, icon: null, iconSuffix: Icons.add), 
 
                 DonationOptions(isSwitchedOpenToOtherCharity: isSwitchedOpenToOtherCharity, toggleSwitchOpenToOtherCharity: toggleSwitchOpenToOtherCharity, isSwitchedOpenToOffer: isSwitchedOpenToOffer, toggleSwitchOpenToOffer: toggleSwitchOpenToOffer, isSwitchedApplicableBuyerDiscounts: isSwitchedApplicableBuyerDiscounts, toggleSwitchApplicableBuyerDiscounts: toggleSwitchApplicableBuyerDiscounts),
+
+                
+                DonationNavigationButton(onPressedBackButton: onPressedBackButton, onPressedNextButton: onPressedNextButton),
               ]
             )
           )
