@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';   
 import 'package:flutter/cupertino.dart';
 import 'package:cherry_mvp/core/config/config.dart';  
+import 'package:cherry_mvp/features/donation/widgets/toggle_item.dart'; 
  
 
 class DonationOptions extends StatelessWidget { 
@@ -49,86 +50,12 @@ class DonationOptions extends StatelessWidget {
           AppStrings.easy_way_Text,
           style: TextStyle(fontSize: 13, color: AppColors.greyTextColor, fontWeight: FontWeight.w300,),
         ),   
+ 
+        ToggleItem(label: AppStrings.open_to_other_charities_Text, value: isSwitchedOpenToOtherCharity, onChanged: toggleSwitchOpenToOtherCharity),
+        
+        ToggleItem(label: AppStrings.open_to_offers_Text, value: isSwitchedOpenToOffer, onChanged: toggleSwitchOpenToOffer),
 
-        Container(
-          width: double.infinity,
-          padding: EdgeInsets.symmetric(vertical:10.0, horizontal:15.0),
-          margin: EdgeInsets.only(bottom:20.0),
-          decoration: BoxDecoration(
-            color: AppColors.lightGreyFill, 
-            borderRadius: BorderRadius.circular(50.0),
-          ), 
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                AppStrings.open_to_other_charities_Text,
-                style: TextStyle(fontSize: 15, color: AppColors.greyTextColor, fontWeight: FontWeight.w300,),
-              ),
-
-              CupertinoSwitch( 
-                value: isSwitchedOpenToOtherCharity,
-                onChanged: toggleSwitchOpenToOtherCharity, 
-                inactiveTrackColor: AppColors.greyTextColor, 
-                activeColor: AppColors.primary, 
-              )
-            ]
-          )
-        ), 
-
-
-        Container(
-          width: double.infinity,
-          padding: EdgeInsets.symmetric(vertical:10.0, horizontal:15.0),
-          margin: EdgeInsets.only(bottom:20.0),
-          decoration: BoxDecoration(
-            color: AppColors.lightGreyFill, 
-            borderRadius: BorderRadius.circular(50.0),
-          ), 
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                AppStrings.open_to_offers_Text,
-                style: TextStyle(fontSize: 15, color: AppColors.greyTextColor, fontWeight: FontWeight.w300,),
-              ),
-
-              CupertinoSwitch( 
-                value: isSwitchedOpenToOffer,
-                onChanged: toggleSwitchOpenToOffer, 
-                inactiveTrackColor: AppColors.greyTextColor, 
-                activeColor: AppColors.primary, 
-              )
-            ]
-          )
-        ), 
-
-
-        Container(
-          width: double.infinity,
-          padding: EdgeInsets.symmetric(vertical:10.0, horizontal:15.0),
-          margin: EdgeInsets.only(bottom:20.0),
-          decoration: BoxDecoration(
-            color: AppColors.lightGreyFill, 
-            borderRadius: BorderRadius.circular(50.0),
-          ), 
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                AppStrings.applicable_for_buyer_discounts_Text,
-                style: TextStyle(fontSize: 13, color: AppColors.greyTextColor, fontWeight: FontWeight.w300,),
-              ),
-
-              CupertinoSwitch( 
-                value: isSwitchedApplicableBuyerDiscounts,
-                onChanged: toggleSwitchApplicableBuyerDiscounts, 
-                inactiveTrackColor: AppColors.greyTextColor, 
-                activeColor: AppColors.primary, 
-              )
-            ]
-          )
-        ), 
+        ToggleItem(label: AppStrings.applicable_for_buyer_discounts_Text, value: isSwitchedApplicableBuyerDiscounts, onChanged: toggleSwitchApplicableBuyerDiscounts),
 
       ]
     ); 

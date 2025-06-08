@@ -59,4 +59,8 @@ class AppTextStyles {
       fontSize: 16,
       color: AppColors.greyTextColorTwo,
       fontWeight: FontWeight.w400);
+
+
+  // toggle switch 
+  static TextStyle toggleSwitch = TextStyle(fontSize: 13, color: AppColors.greyTextColor, fontWeight: FontWeight.w300,);
 }
