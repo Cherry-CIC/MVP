@@ -64,17 +64,20 @@ class FirebaseAuthService {
       // Trigger the authentication flow
       final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
 
+      if (googleUser == null) {
+        return Result.failure('Sign in aborted');
+      }
+
       // Obtain the auth details from the request
-      final GoogleSignInAuthentication? googleAuth =
-          await googleUser?.authentication;
+      final googleAuth = await googleUser.authentication;
 
       // Create a new credential
       final credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth?.accessToken,
-        idToken: googleAuth?.idToken,
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
       );
 
-      final user = await FirebaseAuth.instance.signInWithCredential(credential);
+      final user = await firebaseAuth.signInWithCredential(credential);
 
       // Once signed in, return the UserCredential
       return Result.success(
@@ -91,9 +94,9 @@ class FirebaseAuthService {
       final appleProvider = AppleAuthProvider();
       final UserCredential user;
       if (kIsWeb) {
-        user = await FirebaseAuth.instance.signInWithPopup(appleProvider);
+        user = await firebaseAuth.signInWithPopup(appleProvider);
       } else {
-        user = await FirebaseAuth.instance.signInWithProvider(appleProvider);
+        user = await firebaseAuth.signInWithProvider(appleProvider);
       }
       // Once signed in, return the UserCredential
       return Result.success(
