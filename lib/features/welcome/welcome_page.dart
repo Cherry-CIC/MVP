@@ -1,7 +1,7 @@
 import 'package:cherry_mvp/core/reusablewidgets/primary_button.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import 'package:cherry_mvp/core/router/router.dart';
 import 'package:cherry_mvp/core/config/config.dart';
 
 class WelcomePage extends StatefulWidget {
@@ -38,8 +38,6 @@ class _WelcomePageState extends State<WelcomePage>
 
   @override
   Widget build(BuildContext context) {
-    final navigator = Provider.of<NavigationProvider>(context, listen: false);
-
     return Scaffold(
       body: Stack(
         children: [
@@ -95,7 +93,7 @@ class _WelcomePageState extends State<WelcomePage>
                   height: 50,
                   child: PrimaryAppButton(
                     onPressed: () {
-                      navigator.replaceWith(AppRoutes.login);
+                      context.pushReplacement('/login');
                     },
                     buttonText: AppStrings.login,
                     textStyle: const TextStyle(
@@ -110,7 +108,7 @@ class _WelcomePageState extends State<WelcomePage>
                 // Register Button
                 GestureDetector(
                   onTap: () {
-                    navigator.replaceWith(AppRoutes.register);
+                    context.pushReplacement('/register');
                   },
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,

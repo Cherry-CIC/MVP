@@ -12,6 +12,14 @@ class FirebaseAuthService {
     required this.firebaseAuth,
   });
 
+  UserCredentials? get currentUser {
+    final user = firebaseAuth.currentUser;
+    if (user != null) {
+      return UserCredentials(uid: user.uid, email: user.email);
+    }
+    return null;
+  }
+
   Future<Result<UserCredentials>> signUp(String email, String password) async {
     try {
       UserCredential user = await firebaseAuth.createUserWithEmailAndPassword(

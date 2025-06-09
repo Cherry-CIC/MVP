@@ -19,7 +19,7 @@ plugins {
 android {
     namespace = "com.example.cherry_mvp"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = localProperties.getProperty("flutter.ndkVersion")
+    ndkVersion = "27.0.12077973"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
@@ -35,7 +35,7 @@ android {
         applicationId = "com.example.cherry_mvp"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = localProperties.getProperty("flutter.minSdkVersion").toInt()
+        minSdk = 23
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
