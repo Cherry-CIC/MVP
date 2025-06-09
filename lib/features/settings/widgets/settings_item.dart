@@ -6,13 +6,8 @@ class SettingsItem extends StatelessWidget {
   final VoidCallback? onTap;
   final String trailing;
 
-  const SettingsItem({
-    super.key, 
-    required this.title,
-    this.onTap,
-    required this.trailing
-  });
- 
+  const SettingsItem(
+      {super.key, required this.title, this.onTap, required this.trailing});
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +16,8 @@ class SettingsItem extends StatelessWidget {
         InkWell(
           onTap: onTap,
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 16.0),
+            padding:
+                const EdgeInsets.symmetric(vertical: 20.0, horizontal: 16.0),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -35,17 +31,15 @@ class SettingsItem extends StatelessWidget {
                 ),
                 Row(
                   children: [
-                    if (trailing != null)
-                      Text(
-                        trailing,
-                        style: const TextStyle(
-                          color: AppColors.greyTextColor,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                        ),
+                    Text(
+                      trailing,
+                      style: const TextStyle(
+                        color: AppColors.greyTextColor,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
                       ),
-                    if (trailing != null)
-                      const SizedBox(width: 10),
+                    ),
+                    const SizedBox(width: 10),
                     const Icon(
                       Icons.chevron_right,
                       color: AppColors.greyTextColor,

@@ -1,3 +1,5 @@
+// ignore_for_file: non_constant_identifier_names, prefer_typing_uninitialized_variables
+
 class AppStrings {
   static const appName = 'Cherry';
   static const loginToContinue = 'Login to continue';
@@ -13,64 +15,47 @@ class AppStrings {
   static const profile = 'My Profile';
   static const report = 'Report';
   static const forgotPassword = 'Forgot Password?';
+  static const forgotPasswordInstruction =
+      "Please type your email and we'll get in touch";
   static const greeting = 'Hello';
   static const exclamationMark = '!!';
   static const userCheck = 'Not you';
   static const email = 'Email';
   static const sendEmail = 'Send email';
-  static const forgotPasswordInstruction =
-      'Please type your email and we’ll get in touch';
-
-  static const charityOfText = "Charity of";
-  static const weekText = "the week";
-  static const browseItemsText = "Browse pledged items";
-  static const learnMoreText = "and learn more about";
-  static const workHereText = "the work they do here!";
-  static const dashboard = 'Dashboard';
-  static const messages = 'Messages';
-  static const search = 'Search';
-  static const emptyStateMessageText = 'No messages just yet... 😢';
-  static const emptyStateSearchText = 'No products found... 🔎';
-
-  static const charitiesText = "Charities";
-  static const exploreText = "Explore Charities";
-  static const discoverSomethingText = "Discover something beautiful...";
-  static const adText = "Ad";
-
-  static const discoverText = "Discover";
-  static const popularText = "Popular";
-  static const smallerCharitiesText = "Smaller Charities";
-  static const localToYouText = "Local to you";
-
-  static const categoriesText = "Categories";
-  static const womenText = "Women";
-  static const menText = "Men";
-  static const childrenText = "Children";
-  static const unisexText = "Unisex";
-  static const designerText = "Designer";
-  static const profilesText = "Profiles";
-  static const accessoriesText = "Accessories";
-  static const booksText = "Books";
-  static const toysText = "Toys & Board Games";
-  static const dvdText = "DVDs & Video Games";
-
   static const continueText = 'Continue';
-  static const deleteAccountText = "Delete Account";
-  static const appVersion = "Version 1.0 April, 2025";
 
-  static const settingsText = "Settings";
-  static const darkModeText = "Dark mode";
-  static const listListingsText = "Hide Listings";
+  static const emptyStateSearchText = 'No products found... 🔎';
+  static const emptyStateMessageText = 'No messages just yet... 😢';
+  static const messages = 'Messages';
 
-  static const profile_userActivity_bought = "Bought";
-  static const profile_userActivity_sold = "Sold";
-  static const profile_userActivity_total = "Total";
-  static const profile_your_donation_impact = "Your Donation Impact";
+  // Profile donation and activity
+  static const profile_userActivity_bought = 'Bought';
+  static const profile_userActivity_sold = 'Sold';
+  static const profile_userActivity_total = 'Total';
+  static const profile_user_donation_Summary = 'User Donation Summary';
+  static const profile_your_donation_impact = 'Your Donation Impact';
   static const profile_generosity_changes_lives =
-      "See how your generosity changes lives";
-  static const profile_user_donation_Summary = "User Donation Summary";
-  static const profile_user_donation_total = "Total";
+      'See how your generosity changes lives';
+  static const profile_user_donation_total = 'Total';
+  static const profile_user_donation_total_amount = 'Total Amount';
+  static const profile_user_donation_total_items = 'Total Items Donated';
+  static const profile_user_donation_total_items_sold = 'Total Items Sold';
+  static const profile_user_donation_total_items_bought = 'Total Items Bought';
+  static const profile_user_donation_total_items_donated =
+      'Total Items Donated';
+  static const profile_user_donation_total_items_received =
+      'Total Items Received';
+  static const profile_user_donation_total_items_given = 'Total Items Given';
+  static const profile_user_donation_total_items_received_from_others =
+      'Total Items Received from Others';
+  static const profile_user_donation_total_items_given_to_others =
+      'Total Items Given to Others';
+  static const profile_user_donation_total_items_sold_to_others =
+      'Total Items Sold to Others';
+  static const profile_user_donation_total_items_bought_from_others =
+      'Total Items Bought from Others';
 
+  // Profile info section
   static const profile_user_info_section_user = "User";
   static const profile_user_info_section_following = "following";
   static const profile_user_info_section_followers = "followers";
@@ -81,30 +66,105 @@ class AppStrings {
   static const profile_user_info_location = "United Kingdom";
   static const profile_user_info_username = "User.001";
   static const profile_user_info_title = 'Profile';
-  
-  static const account_Text = "Account";
-  static const language_Text = "Language";
-  static const english_Text = "English"; 
-  static const security_Text = "Security";
-  static const about_us_Text = "About us";
-  static const legal_information_Text = "Legal information";
-  static const cookie_settings_Text = "Cookie settings";
-  static const log_out_Text = "Log out";
-  
-  static const shop_Text = "Shop";
-  static const country_Text = "Country";
-  static const united_kingdom_Text = "United Kingdom";
-  static const currency_Text = "Currency";
-  static const pound_Text = "£ GBP";
-  static const sizes_Text = "Sizes"; 
-  static const UK_Text = "UK";
-  static const chat_with_us_Text = "Chat with us";
-  static const FAQ_Text = "FAQ'S";
-  static const support_Text = "Support";
 
-  static const personal_Text = "Personal";
-  static const profile_Text = "Profile";
-  static const shipping_address_Text = "Shipping Address";
-  static const payment_methods_Text = "Payment methods";
-  static const postage_Text = "Postage";
-}
+  // Dashboard & Search
+  static const dashboard = 'Dashboard';
+  static const search = 'Search';
+
+  // Home sections
+  static const charityOfText = "Charity of";
+  static const weekText = "the week";
+  static const browseItemsText = "Browse pledged items";
+  static const learnMoreText = "and learn more about";
+  static const workHereText = "the work they do here!";
+  static const discoverText = "Discover";
+  static const popularText = "Popular";
+  static const smallerCharitiesText = "Smaller Charities";
+  static const localToYouText = "Local to you";
+
+  static String? appVersion;
+
+  static String? deleteAccountText = 'Delete Account';
+
+  static String? exploreText;
+
+  static String? discoverSomethingText = 'Discover something';
+
+  static String? charitiesText = '';
+
+  static String? adText;
+
+  static String? dvdText;
+
+  static String? categoriesText;
+
+  static String? womenText;
+
+  static String? childrenText;
+
+  static String? unisexText;
+
+  static String? designerText;
+
+  static String? profilesText;
+
+  static String? accessoriesText;
+
+  static String? booksText;
+
+  static String? toysText;
+
+  static String? dark_mode_Text;
+
+  static String? list_listings_Text;
+
+  static var account_Text;
+
+  static var language_Text;
+
+  static var english_Text;
+
+  static var security_Text;
+
+  static var about_us_Text;
+
+  static var legal_information_Text;
+
+  static var cookie_settings_Text;
+
+  static var log_out_Text;
+
+  static var country_Text;
+
+  static var united_kingdom_Text;
+
+  static var currency_Text;
+
+  static var pound_Text;
+
+  static var sizes_Text;
+
+  static var UK_Text;
+
+  static var chat_with_us_Text;
+
+  static var FAQ_Text;
+
+  static var shipping_address_Text;
+
+  static var payment_methods_Text;
+
+  static var postage_Text;
+
+  static String settingsText = '';
+
+  static var personal_Text;
+
+  static var shop_Text;
+
+  static String darkModeText = '';
+
+  static String listListingsText = '';
+
+  static var support_Text;
+  }

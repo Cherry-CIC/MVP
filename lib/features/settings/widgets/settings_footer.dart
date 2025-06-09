@@ -17,7 +17,7 @@ class SettingsFooter extends StatelessWidget {
           child: InkWell(
             onTap: () {},
             child: Text(
-              AppStrings.deleteAccountText,
+              AppStrings.deleteAccountText ?? '',
               style: TextStyle(fontSize: 13, color: AppColors.primary, fontWeight: FontWeight.w500,),
             ),
           ),
@@ -33,7 +33,7 @@ class SettingsFooter extends StatelessWidget {
         Padding(
           padding: EdgeInsets.only(bottom: 5),
           child:Text(
-            AppStrings.appVersion,
+            AppStrings.appVersion ?? '',
             style: TextStyle(fontSize: 13, color: AppColors.black, fontWeight: FontWeight.w500,),
           ), 
         ),

@@ -1,4 +1,3 @@
-import 'package:cherry_mvp/features/home/homepage.dart';
 import 'package:cherry_mvp/features/welcome/welcome_page.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';

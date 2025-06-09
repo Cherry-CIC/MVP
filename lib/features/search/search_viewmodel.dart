@@ -6,6 +6,7 @@ import 'package:logging/logging.dart';
 
 class SearchViewModel extends ChangeNotifier {
 
+  // ignore: unused_field
   final _log = Logger('SearchViewModel');
   final SearchRepository searchRepository;
 

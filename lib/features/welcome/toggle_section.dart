@@ -2,8 +2,8 @@ import 'dart:core';
 import 'package:flutter/cupertino.dart';
 import 'package:cherry_mvp/core/config/config.dart';
 
-class SettingsToggleSection extends StatelessWidget {
-  const SettingsToggleSection({
+class ToggleSection extends StatelessWidget {
+  const ToggleSection({
     super.key,
     required this.isSwitchedDark,
     required this.toggleSwitchDark,
@@ -30,7 +30,7 @@ class SettingsToggleSection extends StatelessWidget {
         ),
       ),
       Text(
-        AppStrings.darkModeText,
+        AppStrings.dark_mode_Text ?? '',
         style: TextStyle(
           fontSize: 13,
           color: AppColors.greyTextColor,
@@ -47,7 +47,7 @@ class SettingsToggleSection extends StatelessWidget {
         ),
       ),
       Text(
-        AppStrings.listListingsText,
+        AppStrings.list_listings_Text ?? '',
         style: TextStyle(
           fontSize: 13,
           color: AppColors.greyTextColor,

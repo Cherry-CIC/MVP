@@ -16,7 +16,7 @@ class AdExample extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 16),
             child: Text(
-              AppStrings.adText,
+              AppStrings.adText ?? '',
               style: TextStyle(
                 color: AppColors.black,
                 fontSize: 20,

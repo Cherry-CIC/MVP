@@ -11,8 +11,12 @@ class SettingsAccount extends StatelessWidget {
   @override 
   Widget build(BuildContext context) {     
 
-    return Container( 
-      child: SettingsCategoryGroup(list_items: dummyAccountSection, heading: AppStrings.account_Text),
-    ); 
+    return Container(
+      padding: const EdgeInsets.all(16.0),
+      child: SettingsCategoryGroup(
+      list_items: dummyAccountSection,
+      heading: AppStrings.account_Text,
+      ),
+    );
   } 
 }

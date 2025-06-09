@@ -1,5 +1,4 @@
 import 'package:cherry_mvp/core/config/app_button_style.dart';
-import 'package:cherry_mvp/core/config/app_colors.dart';
 import 'package:cherry_mvp/core/config/app_images.dart';
 import 'package:cherry_mvp/core/config/app_text_styles.dart';
 import 'package:cherry_mvp/features/home/widgets/dashboard.dart';
@@ -19,7 +18,7 @@ class DiscoverButton extends StatelessWidget {
     return ElevatedButton(
         style: AppButtonStyle.exploreButtonStyle,
         onPressed: () => _navigate(context),
-        child: Container(
+        child: SizedBox(
           width: double.infinity,
           height: 152,
           child: Row ( children: [
@@ -31,11 +30,11 @@ class DiscoverButton extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        AppStrings.exploreText,
+                        AppStrings.exploreText ?? '',
                         style: AppTextStyles.exploreLargeText,
                       ),
                       Text(
-                        AppStrings.discoverSomethingText,
+                        AppStrings.discoverSomethingText ?? '',
                         style: AppTextStyles.exploreSmallText,
                       )
                     ],

@@ -31,9 +31,9 @@ class DonationChart extends StatelessWidget {
       children: [
         Align(
           alignment: Alignment.topLeft,
-          child: const Text(
+          child: Text(
             AppStrings.profile_your_donation_impact,
-            style: TextStyle(
+            style: const TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.w600,
                 color: AppColors.greyTextColorTwo),
