@@ -5,6 +5,7 @@ import 'package:cherry_mvp/core/config/app_text_styles.dart';
 import 'package:cherry_mvp/core/models/user_section.dart';
 import 'package:cherry_mvp/core/reusablewidgets/profile_section_icontextrow.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class UserInformationSection extends StatelessWidget {
   final UserInformation userInformationSection;
@@ -26,10 +27,11 @@ class UserInformationSection extends StatelessWidget {
               "${AppStrings.greeting}, ${AppStrings.profile_user_info_section_user}!",
               style: AppTextStyles.bodyText_profile_heading,
             ),
-            Image.asset(
-              AppImages.profile_settings,
-              height: 35,
-              width: 35,
+            IconButton(
+              padding: EdgeInsets.zero,
+              onPressed: () => context.push('/profile/settings'),
+              icon: Image.asset(AppImages.profile_settings,
+                  height: 32, width: 32),
             ),
           ],
         ),

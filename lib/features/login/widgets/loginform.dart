@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:cherry_mvp/features/login/login_viewmodel.dart';
 import 'package:cherry_mvp/core/config/config.dart';
 import 'package:cherry_mvp/core/utils/utils.dart';
 import 'package:cherry_mvp/core/reusablewidgets/reusablewidgets.dart';
-import 'package:cherry_mvp/core/router/router.dart';
 
 class LoginForm extends StatefulWidget {
   const LoginForm({super.key});
@@ -17,16 +17,12 @@ class LoginForm extends StatefulWidget {
 }
 
 class LoginFormState extends State<LoginForm> {
-
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
-
-    final navigator = Provider.of<NavigationProvider>(context, listen: false);
-
     return Form(
       key: _formKey,
       child: Padding(
@@ -50,7 +46,7 @@ class LoginFormState extends State<LoginForm> {
               controller: _emailController,
               validator: validateEmail,
               decoration:
-              buildInputDecoration(hintText: 'Email', icon: Icons.email),
+                  buildInputDecoration(hintText: 'Email', icon: Icons.email),
             ),
             const SizedBox(height: 20),
 
@@ -59,7 +55,7 @@ class LoginFormState extends State<LoginForm> {
               controller: _passwordController,
               validator: validatePassword,
               decoration:
-              buildInputDecoration(hintText: 'Password', icon: Icons.lock),
+                  buildInputDecoration(hintText: 'Password', icon: Icons.lock),
             ),
             const SizedBox(height: 20),
 
@@ -68,12 +64,11 @@ class LoginFormState extends State<LoginForm> {
               builder: (context, viewModel, child) {
                 WidgetsBinding.instance.addPostFrameCallback((_) {
                   if (viewModel.status.type == StatusType.failure) {
-                    Fluttertoast.showToast(
-                        msg: viewModel.status.message ?? "");
+                    Fluttertoast.showToast(msg: viewModel.status.message ?? "");
                   } else if (viewModel.status.type == StatusType.success) {
                     Fluttertoast.showToast(msg: "Login Successful");
                     //move to home
-                    navigator.replaceWith(AppRoutes.home);
+                    context.pushReplacement('/');
                   }
                 });
 
@@ -82,16 +77,16 @@ class LoginFormState extends State<LoginForm> {
                     viewModel.status.type == StatusType.loading
                         ? const LoadingView()
                         : PrimaryAppButton(
-                      onPressed: () {
-                        if (_formKey.currentState!.validate()) {
-                          viewModel.login(
-                            _emailController.text,
-                            _passwordController.text,
-                          );
-                        }
-                      },
-                      buttonText: "Submit",
-                    ),
+                            onPressed: () {
+                              if (_formKey.currentState!.validate()) {
+                                viewModel.login(
+                                  _emailController.text,
+                                  _passwordController.text,
+                                );
+                              }
+                            },
+                            buttonText: "Submit",
+                          ),
                   ],
                 );
               },
@@ -101,7 +96,7 @@ class LoginFormState extends State<LoginForm> {
             // Sign Up Navigation
             GestureDetector(
               onTap: () {
-               navigator.replaceWith(AppRoutes.register);
+                context.pushReplacement('/register');
               },
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -119,7 +114,7 @@ class LoginFormState extends State<LoginForm> {
             // Forgot Password
             GestureDetector(
               onTap: () {
-               navigator.replaceWith(AppRoutes.home);
+                context.pushReplacement('/forgot-password');
               },
               child: Center(
                 child: Text(AppStrings.forgotPassword,

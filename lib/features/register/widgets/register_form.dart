@@ -2,13 +2,13 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:cherry_mvp/features/register/register_viewmodel.dart';
 import 'package:cherry_mvp/core/config/config.dart';
 import 'package:cherry_mvp/core/utils/utils.dart';
 import 'package:cherry_mvp/core/reusablewidgets/reusablewidgets.dart';
-import 'package:cherry_mvp/core/router/router.dart';
 
 class RegisterForm extends StatefulWidget {
   const RegisterForm({super.key});
@@ -23,14 +23,16 @@ class _RegisterFormState extends State<RegisterForm> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _phoneNumberController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController = TextEditingController();
+  final TextEditingController _confirmPasswordController =
+      TextEditingController();
   // Image picker controller
   final ImagePicker _picker = ImagePicker();
   File? _selectedImage;
 
   // Function to pick an image
   Future<void> _pickImage() async {
-    final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+    final XFile? pickedFile =
+        await _picker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
       setState(() {
         _selectedImage = File(pickedFile.path);
@@ -38,12 +40,8 @@ class _RegisterFormState extends State<RegisterForm> {
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
-
-    final navigator = Provider.of<NavigationProvider>(context, listen: false);
-
     return Form(
       key: _formKey,
       child: Padding(
@@ -67,17 +65,19 @@ class _RegisterFormState extends State<RegisterForm> {
               onTap: _pickImage,
               child: _selectedImage == null
                   ? Container(
-                height: 100,
-                width: 100,
-                color: AppColors.greyTextColor,
-                child: Center(child: Icon(Icons.camera_alt, color: AppColors.primary)),
-              )
+                      height: 100,
+                      width: 100,
+                      color: AppColors.greyTextColor,
+                      child: Center(
+                          child:
+                              Icon(Icons.camera_alt, color: AppColors.primary)),
+                    )
                   : Image.file(
-                _selectedImage!,
-                height: 100,
-                width: 100,
-                fit: BoxFit.cover,
-              ),
+                      _selectedImage!,
+                      height: 100,
+                      width: 100,
+                      fit: BoxFit.cover,
+                    ),
             ),
             const SizedBox(height: 20),
 
@@ -85,8 +85,8 @@ class _RegisterFormState extends State<RegisterForm> {
             TextFormField(
               controller: _firstNameController,
               validator: validateFirstName,
-              decoration:
-              buildInputDecoration(hintText: 'First Name', icon: Icons.person),
+              decoration: buildInputDecoration(
+                  hintText: 'First Name', icon: Icons.person),
             ),
             const SizedBox(height: 20),
 
@@ -95,7 +95,8 @@ class _RegisterFormState extends State<RegisterForm> {
               controller: _emailController,
               keyboardType: TextInputType.emailAddress,
               validator: validateEmail,
-              decoration: buildInputDecoration(hintText: 'Email', icon: Icons.email),
+              decoration:
+                  buildInputDecoration(hintText: 'Email', icon: Icons.email),
             ),
             const SizedBox(height: 20),
 
@@ -103,7 +104,8 @@ class _RegisterFormState extends State<RegisterForm> {
               controller: _phoneNumberController,
               keyboardType: TextInputType.phone,
               validator: validatePhoneNumber,
-              decoration: buildInputDecoration(hintText: 'Phone Number', icon: Icons.phone),
+              decoration: buildInputDecoration(
+                  hintText: 'Phone Number', icon: Icons.phone),
             ),
             const SizedBox(height: 20),
 
@@ -113,7 +115,7 @@ class _RegisterFormState extends State<RegisterForm> {
               obscureText: true,
               validator: validatePassword,
               decoration:
-              buildInputDecoration(hintText: 'Password', icon: Icons.lock),
+                  buildInputDecoration(hintText: 'Password', icon: Icons.lock),
             ),
             const SizedBox(height: 20),
 
@@ -121,8 +123,10 @@ class _RegisterFormState extends State<RegisterForm> {
             TextFormField(
               controller: _confirmPasswordController,
               obscureText: true,
-              validator: (value) => validateConfirmPassword(value, _passwordController.text),
-              decoration: buildInputDecoration(hintText: 'Confirm Password', icon: Icons.lock),
+              validator: (value) =>
+                  validateConfirmPassword(value, _passwordController.text),
+              decoration: buildInputDecoration(
+                  hintText: 'Confirm Password', icon: Icons.lock),
             ),
             const SizedBox(height: 20),
 
@@ -131,8 +135,7 @@ class _RegisterFormState extends State<RegisterForm> {
               builder: (context, viewModel, child) {
                 WidgetsBinding.instance.addPostFrameCallback((_) {
                   if (viewModel.status.type == StatusType.failure) {
-                    Fluttertoast.showToast(
-                        msg: viewModel.status.message ?? "");
+                    Fluttertoast.showToast(msg: viewModel.status.message ?? "");
                   } else if (viewModel.status.type == StatusType.success) {
                     Fluttertoast.showToast(msg: "Registration Successful");
 
@@ -141,7 +144,7 @@ class _RegisterFormState extends State<RegisterForm> {
                     _passwordController.clear();
                     _confirmPasswordController.clear();
 
-                    navigator.replaceWith(AppRoutes.home);
+                    context.pushReplacement('/');
                   }
                 });
 
@@ -150,19 +153,18 @@ class _RegisterFormState extends State<RegisterForm> {
                     viewModel.status.type == StatusType.loading
                         ? const LoadingView()
                         : PrimaryAppButton(
-                      onPressed: () {
-                        if (_formKey.currentState!.validate()) {
-                          viewModel.register(
-                            _firstNameController.text,
-                            _emailController.text,
-                            _phoneNumberController.text,
-                            _passwordController.text,
-                            _selectedImage
-                          );
-                        }
-                      },
-                      buttonText: "Submit",
-                    ),
+                            onPressed: () {
+                              if (_formKey.currentState!.validate()) {
+                                viewModel.register(
+                                    _firstNameController.text,
+                                    _emailController.text,
+                                    _phoneNumberController.text,
+                                    _passwordController.text,
+                                    _selectedImage);
+                              }
+                            },
+                            buttonText: "Submit",
+                          ),
                   ],
                 );
               },
@@ -172,7 +174,7 @@ class _RegisterFormState extends State<RegisterForm> {
             // Login Navigation
             GestureDetector(
               onTap: () {
-                 navigator.replaceWith(AppRoutes.login);
+                context.pushReplacement('/login');
               },
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,

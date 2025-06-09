@@ -104,32 +104,12 @@ class AppStrings {
   static const listListingsText = "Hide Listings";
   static const adText = "Ad";
 
-  static const profile_userActivity_bought = "Bought";
-  static const profile_userActivity_sold = "Sold";
-  static const profile_userActivity_total = "Total";
-  static const profile_your_donation_impact = "Your Donation Impact";
-  static const profile_generosity_changes_lives =
-      "See how your generosity changes lives";
-  static const profile_user_donation_Summary = "User Donation Summary";
-  static const profile_user_donation_total = "Total";
-
-  static const profile_user_info_section_user = "User";
-  static const profile_user_info_section_following = "following";
-  static const profile_user_info_section_followers = "followers";
-  static const profile_user_info_section_buyer_discount =
-      "Buyer Discounts Active";
-  static const profile_user_info_section_buyer_awards = "Awards";
-  static const profile_user_info_section_buyer_reviews = "Reviews";
-  static const profile_user_info_location = "United Kingdom";
-  static const profile_user_info_username = "User.001";
-  static const profile_user_info_title = 'Profile';
-
   static const profile_user_orders = "Orders";
   static const profile_user_liked = "Liked";
   static const profile_user_listings = "Listings";
   static const profile_user_Buyer_disc = "Buyer discounts";
   static const share = 'Share';
-  
+
   static const account_Text = "Account";
   static const language_Text = "Language";
   static const english_Text = "English";
@@ -149,6 +129,9 @@ class AppStrings {
   static const chat_with_us_Text = "Chat with us";
   static const FAQ_Text = "FAQ'S";
 
+  static const dark_mode_Text = "Dark Mode";
+  static const list_listings_Text = "Hide Listings";
+
   // Country and currency
   static const country_Text = "Country";
   static const united_kingdom_Text = "United Kingdom";
@@ -159,17 +142,20 @@ class AppStrings {
 
   // donation options
   static const donation_options_Text = "Donation Options";
-  static const give_your_buyer_Text = "Give your buyer the option pick a cause they care about.";
-  static const easy_way_Text = "Its an easy way to make your listing more impactful."; 
+  static const give_your_buyer_Text =
+      "Give your buyer the option pick a cause they care about.";
+  static const easy_way_Text =
+      "Its an easy way to make your listing more impactful.";
   static const open_to_other_charities_Text = "Open to other charities";
   static const open_to_offers_Text = "Open to offers";
-  static const applicable_for_buyer_discounts_Text = "Applicable for buyer discounts";
+  static const applicable_for_buyer_discounts_Text =
+      "Applicable for buyer discounts";
 
-  // donation fields 
+  // donation fields
   static const titleText = "Title";
   static const descriptionText = "Description";
   static const categoryText = "Category";
   static const charityText = "Charity";
-  static const priceText = "Price"; 
+  static const priceText = "Price";
   static const conditionText = "Condition";
 }

@@ -1,17 +1,12 @@
 import 'package:cherry_mvp/core/config/config.dart';
-import 'package:cherry_mvp/features/addproduct/addproductpage.dart';
-import 'package:cherry_mvp/features/home/home_viewmodel.dart';
 import 'package:cherry_mvp/features/home/widgets/bottom_nav_bar.dart';
-import 'package:cherry_mvp/features/messages/messagepage.dart';
-import 'package:cherry_mvp/features/profile/profilepage.dart';
-import 'package:cherry_mvp/features/home/widgets/dashboard.dart';
-import 'package:cherry_mvp/features/search/searchpage.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-
+import 'package:go_router/go_router.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  final Widget child;
+
+  const HomePage({super.key, required this.child});
 
   @override
   HomePageState createState() {
@@ -20,50 +15,13 @@ class HomePage extends StatefulWidget {
 }
 
 class HomePageState extends State<HomePage> {
-  int _selectedIndex = 0;
-  final PageController _pageController = PageController();
-
-  static final List<Widget> _pages = <Widget>[
-    DashboardPage(),
-    MessagePage(),
-    SearchPage(),
-    AddProductPage(),
-    ProfilePage()
-    //add other pages for the bottom sheet here
-  ];
-
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-    _pageController.jumpToPage(index);
-  }
-
-  void _onPageChanged(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-  }
-
-  @override
-  void dispose() {
-    _pageController.dispose();
-    super.dispose();
-  }
+  var _selectedIndex = 0;
 
   @override
   Widget build(BuildContext context) {
-
-    // ignore: unused_local_variable
-    final navigator = Provider.of<HomeViewModel>(context, listen: false);
-
     return Scaffold(
       backgroundColor: AppColors.bgColor,
-      body: PageView(
-        controller: _pageController,
-        onPageChanged: _onPageChanged,
-        children: _pages,
-      ),
+      body: widget.child,
       bottomNavigationBar: CherryBottomNavBar(
         selectedIndex: _selectedIndex,
         onItemSelected: _onItemTapped,
@@ -72,5 +30,29 @@ class HomePageState extends State<HomePage> {
       ),
     );
   }
-}
 
+  void _onItemTapped(int index) {
+    if (_selectedIndex == index) return;
+    setState(() {
+      _selectedIndex = index;
+    });
+
+    switch (index) {
+      case 0:
+        context.replace('/');
+        break;
+      case 1:
+        context.replace('/search');
+        break;
+      case 2:
+        context.replace('/add-product');
+        break;
+      case 3:
+        context.replace('/messages');
+        break;
+      case 4:
+        context.replace('/profile');
+        break;
+    }
+  }
+}

@@ -10,7 +10,6 @@ import 'package:cherry_mvp/features/login/login_viewmodel.dart';
 import 'package:cherry_mvp/features/register/register_viewmodel.dart';
 import 'package:cherry_mvp/features/home/home_viewmodel.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cherry_mvp/core/router/router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../features/search/search_repository.dart';
@@ -18,7 +17,6 @@ import '../../features/search/search_viewmodel.dart';
 
 List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
   return [
-    Provider(create: (_) => NavigationProvider()),
     Provider<FirebaseAuthService>(
       create: (_) => FirebaseAuthService(firebaseAuth: FirebaseAuth.instance),
     ),
@@ -56,26 +54,22 @@ List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
     ),
     ChangeNotifierProvider<RegisterViewModel>(
       create: (context) => RegisterViewModel(
-        registerRepository: Provider.of<RegisterRepository>(context, listen: false),
+        registerRepository:
+            Provider.of<RegisterRepository>(context, listen: false),
       ),
     ),
     ChangeNotifierProvider<HomeViewModel>(
         create: (context) => HomeViewModel(
-          homeRepository: Provider.of<HomeRepository>(context, listen: false),
-        )
-    ),
-
-
-    
-    
-    Provider<SearchRepository>( 
+              homeRepository:
+                  Provider.of<HomeRepository>(context, listen: false),
+            )),
+    Provider<SearchRepository>(
       create: (context) => SearchRepository(),
     ),
     ChangeNotifierProvider<SearchViewModel>(
         create: (context) => SearchViewModel(
-          searchRepository: Provider.of<SearchRepository>(context, listen: false),
-        )
-    ),
-
-   ];
+              searchRepository:
+                  Provider.of<SearchRepository>(context, listen: false),
+            )),
+  ];
 }
