@@ -4,6 +4,8 @@ import 'package:cherry_mvp/core/models/model.dart';
 const dummyProducts = [
   Product(
       name: "Men's Grey Button-up T-Shirt",
+      description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. "
+          "Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
       quality: "8/Great",
       size: "M",
       product_image: AppImages.mensTShirt,
@@ -14,6 +16,8 @@ const dummyProducts = [
       number: 8),
   Product(
       name: "Shoes",
+      description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. "
+          "Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
       quality: "6/Good",
       size: "8",
       product_image: AppImages.shoes2,

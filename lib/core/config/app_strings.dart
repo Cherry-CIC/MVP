@@ -79,3 +79,94 @@ class AppStrings {
   static const popularText = "Popular";
   static const smallerCharitiesText = "Smaller Charities";
   static const localToYouText = "Local to you";
+// feature/118-product-details-page
+  static const discoverSomethingText = "Discover something beautiful...";
+
+  // Category Texts
+  static const charitiesText = "Charities";
+  static const exploreText = "Explore Charities";
+  static const categoriesText = "Categories";
+  static const womenText = "Women";
+  static const menText = "Men";
+  static const childrenText = "Children";
+  static const unisexText = "Unisex";
+  static const designerText = "Designer";
+  static const profilesText = "Profiles";
+  static const accessoriesText = "Accessories";
+  static const booksText = "Books";
+  static const toysText = "Toys & Board Games";
+  static const dvdText = "DVDs & Video Games";
+
+  // Settings and Misc
+  static const deleteAccountText = "Delete Account";
+  static const appVersion = "Version 1.0 April, 2025";
+  static const settingsText = "Settings";
+  static const darkModeText = "Dark mode";
+  static const listListingsText = "Hide Listings";
+  static const adText = "Ad";
+
+  static const profile_user_orders = "Orders";
+  static const profile_user_liked = "Liked";
+  static const profile_user_listings = "Listings";
+  static const profile_user_Buyer_disc = "Buyer discounts";
+  static const share = 'Share';
+
+  static const account_Text = "Account";
+  static const language_Text = "Language";
+  static const english_Text = "English";
+  static const security_Text = "Security";
+  static const about_us_Text = "About us";
+  static const legal_information_Text = "Legal information";
+  static const cookie_settings_Text = "Cookie settings";
+  static const log_out_Text = "Log out";
+  static const support_Text = "Support";
+  static const shop_Text = "Shop";
+  static const personal_Text = "Personal";
+  static const profile_Text = "Profile";
+  static const shipping_address_Text = "Shipping Address";
+  static const payment_methods_Text = "Payment methods";
+  static const postage_Text = "Postage";
+
+  static const chat_with_us_Text = "Chat with us";
+  static const FAQ_Text = "FAQ'S";
+
+  static const dark_mode_Text = "Dark Mode";
+  static const list_listings_Text = "Hide Listings";
+
+  // Country and currency
+  static const country_Text = "Country";
+  static const united_kingdom_Text = "United Kingdom";
+  static const currency_Text = "Currency";
+  static const pound_Text = "£ GBP";
+  static const sizes_Text = "Sizes";
+  static const UK_Text = "UK";
+
+  // donation options
+  static const donation_options_Text = "Donation Options";
+  static const give_your_buyer_Text =
+      "Give your buyer the option pick a cause they care about.";
+  static const easy_way_Text =
+      "Its an easy way to make your listing more impactful.";
+  static const open_to_other_charities_Text = "Open to other charities";
+  static const open_to_offers_Text = "Open to offers";
+  static const applicable_for_buyer_discounts_Text =
+      "Applicable for buyer discounts";
+
+  // donation fields
+  static const titleText = "Title";
+  static const descriptionText = "Description";
+  static const categoryText = "Category";
+  static const charityText = "Charity";
+  static const priceText = "Price";
+  static const conditionText = "Condition";
+
+  // product page
+  static const productPageDescription = "Description";
+  static const productPageBuyerDiscountActive = 'Buyer discount active';
+  static const productPageBuy2Get1HalfPrice = 'Buy 2 get 1 half price';
+  static const productPageOpenToOtherCharities = 'Open to other charities';
+  static const productPageRequestOtherCharity = 'Request other charity';
+  static const productPageMakeOffer = 'Make Offer';
+  static const productPageBuyNow = 'Buy Now';
+}
+

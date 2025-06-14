@@ -1,3 +1,4 @@
+import 'package:cherry_mvp/core/config/app_theme.dart';
 import 'package:cherry_mvp/features/welcome/welcome_page.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -29,7 +30,8 @@ class MyApp extends StatelessWidget {
         return MaterialApp(
           navigatorKey: navigatorService.navigatorKey,
           onGenerateRoute: AppRoutes.generateRoute,
-          theme: ThemeData(fontFamily: 'Raleway'),
+          theme: buildTheme(),
+          darkTheme: buildTheme(Brightness.dark),
           home: WelcomePage(),
         );
       },

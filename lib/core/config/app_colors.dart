@@ -9,6 +9,7 @@ class AppColors {
   static const textFormOutline = Color(0x1A8C8A8A);
   static const greyTextColor = Color(0xFF8C8A8A);
   static const lightGreyTextColor = Color(0xFFD2D2D2);
+  static const dividerColor = Color(0xFFF3F3F3);
   static const lavenderBgColor = Color(0xFFDFE9FF);
   static const greenBgColor = Color(0xFF01BF07);
   static const lightGreyFill = Color(0xFFF0F0F0);

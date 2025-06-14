@@ -4,16 +4,18 @@ import 'package:flutter/material.dart';
 
 class ProductInformation extends StatelessWidget {
   final Product product;
+  final EdgeInsets? padding;
 
-  const ProductInformation({super.key, required this.product});
+  const ProductInformation({super.key, required this.product, this.padding});
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.symmetric(
-        horizontal: 16.0,
-        vertical: 8.0,
-      ),
+      padding: padding ??
+          EdgeInsets.symmetric(
+            horizontal: 16.0,
+            vertical: 8.0,
+          ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -55,7 +57,7 @@ class ProductInformation extends StatelessWidget {
               Icon(
                 Icons.workspace_premium,
                 color: AppColors.greyTextColor,
-              )
+              ),
             ],
           )
         ],

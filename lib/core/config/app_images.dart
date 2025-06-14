@@ -71,8 +71,10 @@ class AppImages {
   static const profile_order = '${_path}profile_order.png';
   static const profile_liked = '${_path}profile_liked.png';
 
+  static const sale = '${_path}sale.png';
   static const targetIcon = '${_path}target_icon.png';
   static const tshirtIcon = '${_path}icon_tshirt.png';
   static const wandIcon = '${_path}icon_wand.png';
   static const rulerIcon = '${_path}icon_ruler.png';
+
 }
