@@ -1,24 +1,31 @@
 import 'package:cherry_mvp/core/config/app_colors.dart';
 import 'package:cherry_mvp/core/config/app_images.dart';
+import 'package:cherry_mvp/features/donate/donate_screen.dart';
+import 'package:cherry_mvp/features/home/all_categories.dart';
 import 'package:flutter/material.dart';
 
 
 
 /// A reusable navigation bar widget that be use across the app.
-class CherryBottomNavBar extends StatelessWidget {
-  final int selectedIndex;
+class CherryBottomNavBar extends StatefulWidget {
+  int selectedIndex;
   final Function(int) onItemSelected;
   final Color selectedColor;
   final Color unselectedColor;
 
-  const CherryBottomNavBar({
+  CherryBottomNavBar({
     super.key,
     required this.selectedIndex,
     required this.onItemSelected,
     this.selectedColor = AppColors.selectedTab,
-    this.unselectedColor = AppColors.greyNavFooter,
+    this.unselectedColor = AppColors.grey1,
   });
 
+  @override
+  State<CherryBottomNavBar> createState() => _CherryBottomNavBarState();
+}
+
+class _CherryBottomNavBarState extends State<CherryBottomNavBar> {
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -40,11 +47,35 @@ class CherryBottomNavBar extends StatelessWidget {
         ),
       ),
       child: BottomNavigationBar(
-        currentIndex: selectedIndex,
-        onTap: onItemSelected,
+        currentIndex: widget.selectedIndex,
+        onTap: (index) {
+          setState(() {
+            widget.selectedIndex = index;
+          });
+          // Handle navigation based on index
+          switch (index) {
+            case 0:
+              // Navigator.push(
+              //   context,
+              //   MaterialPageRoute(builder: (context) => AllCategoriesPage()), // Replace current page
+              // );
+              break;
+            case 1:
+              Navigator.push(context, MaterialPageRoute(builder:(context)=>AllCategoriesPage(),),);
+              break;
+            case 2:
+            // Notification navigation
+            Navigator.push(context, MaterialPageRoute(builder:(context)=>DonateScreen(),),);
+              break;
+            case 3:
+            // Profile navigation
+              //Navigator.push(context, MaterialPageRoute(builder:(context)=>ProfilePage(),),);
+              break;
+          }
+        },
         type: BottomNavigationBarType.fixed,
-        selectedItemColor: selectedColor,
-        unselectedItemColor: unselectedColor,
+        selectedItemColor: widget.selectedColor,
+        unselectedItemColor: widget.unselectedColor,
         selectedFontSize: 12,
         unselectedFontSize: 12,
         showSelectedLabels: true,
@@ -57,7 +88,7 @@ class CherryBottomNavBar extends StatelessWidget {
               child: Image(
                   width: 39.93,
                   height: 30.29,
-                  color: selectedIndex == 0 ? selectedColor : unselectedColor,
+                  color: widget.selectedIndex == 0 ? widget.selectedColor : widget.unselectedColor,
                   image: AssetImage(AppImages.icHome)),
             ),
             label: 'Home',

@@ -19,6 +19,14 @@ class AppImages {
   static const Ic_back = '${_path}Ic_back.png';
   static const Ic_charityCategory = '${_path}charity_category.png';
   static const Ic_arrow = '${_path}Ic_arrow.png';
+  static const Ic_cross = '${_path}cross.jpg';
+  static const Ic_crossPlus = '${_path}Ic_circlePlus.png';
+  static const Ic_arrowLeft = '${_path}arrow_left.png';
+  static const Ic_logo = '${_path}logo.png';
+  static const Ic_water = '${_path}water.png';
+  static const Ic_shelter = '${_path}shelter.png';
+  static const Ic_panda = '${_path}panda.png';
+  static const Ic_hunger = '${_path}hunger.png';
 
   static const clothing1 = '${_path}clothing_1.png';
   static const clothing2 = '${_path}clothing_2.png';
@@ -28,6 +36,7 @@ class AppImages {
   static const shoes2 = '${_path}shoes_2.png';
   static const shoes3 = '${_path}shoes_3.png';
   static const shoes4 = '${_path}shoes_4.png';
+
 
   static const mensTShirt = '${_path}mens_t_shirt.png';
   static const homeStart = '${_path}charity_home_start.png';

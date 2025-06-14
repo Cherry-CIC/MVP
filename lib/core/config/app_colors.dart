@@ -13,5 +13,8 @@ class AppColors {
   static const lavenderBgColor = Color(0xFFDFE9FF);
   static const greenBgColor = Color(0xFF01BF07);
   static const lightGreyFill = Color(0xFFF0F0F0);
-  static const greyNavFooter= Color(0xFFA2A2A2);
+  static const grey1= Color(0xFFA2A2A2);
+  static const grey2= Color(0xFF707070);
+  static const containerColor= Color(0xFFFFF0F3);
+
 }
