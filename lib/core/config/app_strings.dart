@@ -7,6 +7,10 @@ class AppStrings {
   static const register = 'Sign Up';
   static const createAccount = 'Create Account';
   static const welcome = 'Welcome!';
+  static const take_photo = 'Upload or take new photos';
+  static const cameraPhoto = 'Take Photo';
+  static const galleryPhoto='Choose from Gallery';
+  static const take_photo_instruction ='Upload clear, high-quality images to help your items shine. The more angles the better.';
   static const professional = 'Professionals';
   static const signUpInstruction =
       'Click below to sign up as a parent or a healthcare professional';
