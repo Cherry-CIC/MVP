@@ -4,7 +4,6 @@ import 'package:cherry_mvp/core/utils/utils.dart';
 import 'package:logging/logging.dart';
 import 'login_model.dart';
 
-
 class LoginViewModel extends ChangeNotifier {
   final LoginRepository loginRepository;
 
@@ -17,14 +16,18 @@ class LoginViewModel extends ChangeNotifier {
   Status get status => _status;
 
   final _log = Logger('LoginViewModel');
-
+  void clearStatus() {
+    _status = Status.uninitialized; // or whatever your idle state is
+    notifyListeners();
+  }
 
   Future<void> login(String email, String password) async {
     _status = Status.loading;
     notifyListeners();
 
     try {
-      final result = await loginRepository.login(LoginRequest(email: email, password: password));
+      final result = await loginRepository
+          .login(LoginRequest(email: email, password: password));
       if (result.isSuccess) {
         _status = Status.success;
       } else {
@@ -75,5 +78,4 @@ class LoginViewModel extends ChangeNotifier {
 
     notifyListeners();
   }
-
 }

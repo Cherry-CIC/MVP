@@ -59,7 +59,7 @@ class FirebaseAuthService {
     }
   }
 
-  Future<Result<UserCredentials>> signInWithGoogle() async {
+  Future<Result<UserCredentialsGoogleSignIn>> signInWithGoogle() async {
     try {
       // Trigger the authentication flow
       final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
@@ -77,8 +77,12 @@ class FirebaseAuthService {
       final user = await FirebaseAuth.instance.signInWithCredential(credential);
 
       // Once signed in, return the UserCredential
-      return Result.success(
-          UserCredentials(uid: user.user?.uid, email: user.user?.email));
+      return Result.success(UserCredentialsGoogleSignIn(
+          uid: user.user?.uid,
+          email: user.user?.email,
+          firstname: user.user?.displayName,
+          photoUrl: user.user?.photoURL,
+          phonenumber: user.user?.phoneNumber));
     } on FirebaseAuthException catch (e) {
       return Result.failure(e.message ?? ErrorStrings.friendlyError);
     } catch (e) {

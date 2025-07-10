@@ -1,6 +1,8 @@
 class AppImages {
   static const _path = 'assets/images/';
 
+  static const authAppleIcon = '${_path}authAppleIcon.png';
+  static const authGoogleIcon = '${_path}authGoogleIcon.png';
   static const icHome = '${_path}ic_home.png';
   static const icHomeSelected = '${_path}ic_home_selected.png';
   static const icSearch = '${_path}search.png';
@@ -76,5 +78,4 @@ class AppImages {
   static const tshirtIcon = '${_path}icon_tshirt.png';
   static const wandIcon = '${_path}icon_wand.png';
   static const rulerIcon = '${_path}icon_ruler.png';
-
 }

@@ -1,8 +1,13 @@
+import 'dart:ui';
+
 import 'package:cherry_mvp/core/reusablewidgets/primary_button.dart';
+import 'package:cherry_mvp/features/welcome/widgets/signup_card.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cherry_mvp/core/router/router.dart';
 import 'package:cherry_mvp/core/config/config.dart';
+
+enum AuthMode { login, signup }
 
 class WelcomePage extends StatefulWidget {
   const WelcomePage({super.key});
@@ -30,6 +35,20 @@ class _WelcomePageState extends State<WelcomePage>
     );
   }
 
+  //for card to show up
+  bool showBottomCard = false;
+  AuthMode? authMode;
+  void toggleCard(AuthMode mode) {
+    setState(() {
+      authMode = mode;
+      showBottomCard = true;
+    });
+  }
+
+  void closeCard() {
+    setState(() => showBottomCard = false);
+  }
+
   @override
   void dispose() {
     _controller.dispose();
@@ -38,8 +57,7 @@ class _WelcomePageState extends State<WelcomePage>
 
   @override
   Widget build(BuildContext context) {
-    final navigator = Provider.of<NavigationProvider>(context, listen: false);
-
+    final double cardHeight = 400;
     return Scaffold(
       body: Stack(
         children: [
@@ -50,7 +68,6 @@ class _WelcomePageState extends State<WelcomePage>
               fit: BoxFit.cover,
             ),
           ),
-
           Center(
             child: FittedBox(
               child: Column(
@@ -72,10 +89,32 @@ class _WelcomePageState extends State<WelcomePage>
                       color: AppColors.greyNavFooter,
                     ),
                   ),
+                  //when card open background will be adjusted
+                  SizedBox(
+                    height: showBottomCard
+                        ? MediaQuery.of(context).size.height * 0.1
+                        : 0,
+                  )
                 ],
               ),
             ),
           ),
+          // ✅ Blur and dim background when card is visible
+          if (showBottomCard)
+            AnimatedOpacity(
+              duration: const Duration(milliseconds: 300),
+              opacity: showBottomCard ? 1.0 : 0.0,
+              child: Container(
+                // ignore: deprecated_member_use
+                color: Colors.black.withOpacity(0.3), // dim color
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+                  child: Container(
+                    color: Colors.transparent, // required for blur to apply
+                  ),
+                ),
+              ),
+            ),
 
           // Bottom Buttons
           Positioned(
@@ -91,7 +130,7 @@ class _WelcomePageState extends State<WelcomePage>
                   height: 50,
                   child: PrimaryAppButton(
                     onPressed: () {
-                      navigator.replaceWith(AppRoutes.login);
+                      toggleCard(AuthMode.login);
                     },
                     buttonText: AppStrings.login,
                     textStyle: const TextStyle(
@@ -106,7 +145,8 @@ class _WelcomePageState extends State<WelcomePage>
                 // Register Button
                 GestureDetector(
                   onTap: () {
-                    navigator.replaceWith(AppRoutes.register);
+                    toggleCard(AuthMode.signup);
+                    //navigator.replaceWith(AppRoutes.register);
                   },
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -128,6 +168,17 @@ class _WelcomePageState extends State<WelcomePage>
                   ),
                 ),
               ],
+            ),
+          ),
+          AnimatedPositioned(
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOut,
+            left: 0,
+            right: 0,
+            bottom: showBottomCard ? 0 : -cardHeight,
+            child: LoginSignupCard(
+              onClose: closeCard,
+              mode: authMode ?? AuthMode.login,
             ),
           ),
         ],

@@ -8,12 +8,10 @@ class LoadingView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: Colors.white.withValues(colorSpace: ColorSpace.sRGB),
-      child: const Center(
-        child: CircularProgressIndicator(
-          color: AppColors.primary,
-        ),
+    return const Center(
+      //no need for container with white background
+      child: CircularProgressIndicator(
+        color: AppColors.primary,
       ),
     );
   }

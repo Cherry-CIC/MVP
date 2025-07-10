@@ -1,6 +1,10 @@
 class AppStrings {
   static const appName = 'Cherry';
   static const loginToContinue = 'Login to continue';
+  static const continueWithEmail = 'Continue with email';
+  static const continueWithApple = "Continue with Apple";
+  static const continueWithGoogle = "Continue with Google";
+  static const or = 'or';
   static const next = 'NEXT';
   static const skip = 'SKIP';
   static const login = 'Login';
@@ -162,9 +166,11 @@ class AppStrings {
   static const catchEyesText = "Catch eyes by using quality photos!";
   static const photosTipPopupHeading = "Your photos should...";
   static const clearWellLit = "Be clear and well lit.";
-  static const multipleAngles = "Show multiple angles, including front view, back view, tags & labels, close-up details and any flaws.";
+  static const multipleAngles =
+      "Show multiple angles, including front view, back view, tags & labels, close-up details and any flaws.";
   static const noFilters = "No wacky filters or over-editing.";
-  static const showItOff = "If you’re comfortable, get it on & show it off! If not, something for reference is great!";
+  static const showItOff =
+      "If you’re comfortable, get it on & show it off! If not, something for reference is great!";
   static const learnHow = "Learn How";
 
   //   Discover page
@@ -180,8 +186,4 @@ class AppStrings {
   static const productPageMakeOffer = 'Make Offer';
   static const productPageBuyNow = 'Buy Now';
   static const giveInStyle = 'Give in style';
-
-
-
 }
-

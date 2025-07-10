@@ -70,24 +70,19 @@ class AppTextStyles {
 
   // Donate Page
   static TextStyle donatePhotoBarText1 = TextStyle(
-    fontSize: 15,
-    color: AppColors.white,
-    fontWeight: FontWeight.w500
-  );
+      fontSize: 15, color: AppColors.white, fontWeight: FontWeight.w500);
 
   static TextStyle donatePhotoBarText2 = TextStyle(
       fontSize: 15,
       color: AppColors.white,
       fontWeight: FontWeight.w700,
       decoration: TextDecoration.underline,
-      decorationColor: AppColors.white
-  );
+      decorationColor: AppColors.white);
 
   static TextStyle photoTipsHeadingText = TextStyle(
-    fontSize: 32,
-    color: AppColors.greyTextColorTwo,
-    fontWeight: FontWeight.w600
-  );
+      fontSize: 32,
+      color: AppColors.greyTextColorTwo,
+      fontWeight: FontWeight.w600);
 
   static TextStyle photoTipsBodyText = TextStyle(
     fontSize: 16,
@@ -99,6 +94,14 @@ class AppTextStyles {
     color: AppColors.white,
     fontWeight: FontWeight.w700,
   );
+  static TextStyle signupCardText = TextStyle(
+    fontSize: 20,
+    color: AppColors.black,
+    fontWeight: FontWeight.w600,
+  );
+  static TextStyle signupCardButtonText = TextStyle(
+    fontSize: 16,
+    color: AppColors.black,
+    fontWeight: FontWeight.w600,
+  );
 }
-
-
