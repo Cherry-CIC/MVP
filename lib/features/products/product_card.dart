@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cherry_mvp/core/models/model.dart';
+import 'package:cherry_mvp/core/utils/image_provider_helper.dart';
 
 class ProductCard extends StatelessWidget {
   final Product product;
@@ -38,7 +39,7 @@ class ProductCard extends StatelessWidget {
                               borderRadius: BorderRadius.circular(8),
                               image: DecorationImage(
                                   image:
-                                      AssetImage(product.product_images.first),
+                                      ImageProviderHelper.getImageProvider(product.product_images.first),
                                   fit: BoxFit.cover)),
                         ),
                       ),
@@ -117,8 +118,8 @@ class ProductCard extends StatelessWidget {
                         ),
                   ),
                 ),
-                Image.asset(
-                  product.charity_image,
+                ImageProviderHelper.buildImage(
+                  imagePath: product.charity_image,
                   height: 20,
                   width: 20,
                   fit: BoxFit.cover,
