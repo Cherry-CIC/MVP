@@ -1,6 +1,10 @@
 class AppStrings {
   static const appName = 'Cherry';
   static const loginToContinue = 'Login to continue';
+  static const continueWithEmail = 'Continue with email';
+  static const continueWithApple = "Continue with Apple";
+  static const continueWithGoogle = "Continue with Google";
+  static const or = 'or';
   static const next = 'NEXT';
   static const skip = 'SKIP';
   static const login = 'Login';

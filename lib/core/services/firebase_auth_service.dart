@@ -77,8 +77,12 @@ class FirebaseAuthService {
       final user = await FirebaseAuth.instance.signInWithCredential(credential);
 
       // Once signed in, return the UserCredential
-      return Result.success(
-          UserCredentials(uid: user.user?.uid, email: user.user?.email));
+      return Result.success(UserCredentials(
+          uid: user.user?.uid,
+          email: user.user?.email,
+          firstname: user.user?.displayName,
+          photoUrl: user.user?.photoURL,
+          phonenumber: user.user?.phoneNumber));
     } on FirebaseAuthException catch (e) {
       return Result.failure(e.message ?? ErrorStrings.friendlyError);
     } catch (e) {

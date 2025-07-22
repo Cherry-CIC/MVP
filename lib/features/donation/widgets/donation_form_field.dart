@@ -42,7 +42,7 @@ class DonationFormField extends StatelessWidget {
                 validator: validateDonationFormFields,
                 decoration: InputDecoration(
                     hintText: hintIcon == null ? hintText : null,
-                    hint: hintIcon != null
+                    helper: hintIcon != null
                         ? Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             spacing: 16,
