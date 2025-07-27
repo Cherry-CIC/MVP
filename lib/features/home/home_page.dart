@@ -1,4 +1,4 @@
-import 'package:cherry_mvp/features/donation/donation_page.dart';
+import 'package:cherry_mvp/core/router/nav_routes.dart';
 import 'package:cherry_mvp/features/home/home_viewmodel.dart';
 import 'package:cherry_mvp/features/home/widgets/bottom_nav_bar.dart';
 import 'package:cherry_mvp/features/home/widgets/home_screen.dart';
@@ -34,12 +34,7 @@ class _HomePageState extends State<HomePage> {
         _pageController.jumpToPage(1);
         break;
       case 2:
-        showDialog(
-          context: context,
-          builder: (context) => Dialog.fullscreen(
-            child: DonationPage(),
-          ),
-        );
+        Navigator.of(context).pushNamed(AppRoutes.donations);
         break;
       case 3:
         context.read<SearchController>().openView();

@@ -3,7 +3,6 @@ import 'package:cherry_mvp/features/categories/category_repository.dart';
 import 'package:cherry_mvp/features/discover/discover_repository.dart';
 import 'package:cherry_mvp/features/discover/discover_viewmodel.dart';
 import 'package:cherry_mvp/features/donation/donation_repository.dart';
-import 'package:cherry_mvp/features/donation/donation_view_model.dart';
 import 'package:cherry_mvp/features/products/product_repository.dart';
 import 'package:cherry_mvp/features/products/product_viewmodel.dart';
 import 'package:cherry_mvp/features/search/search_repository.dart';
@@ -30,12 +29,12 @@ List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
   final bool useMockData = dotenv.env['USE_MOCK_DATA'] == 'true';
   return [
     Provider(create: (_) => NavigationProvider()),
-    
+
     // Add API Service
     Provider<ApiService>(
       create: (_) => DioApiService(firebaseAuth: FirebaseAuth.instance),
     ),
-    
+
     Provider<FirebaseAuthService>(
       create: (_) => FirebaseAuthService(firebaseAuth: FirebaseAuth.instance),
     ),
@@ -71,8 +70,8 @@ List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
         if (useMockData) {
           return HomeRepositoryMock();
         } else {
-          return
-            HomeRepository(Provider.of<ApiService>(context, listen: false));
+          return HomeRepository(
+              Provider.of<ApiService>(context, listen: false));
         }
       },
     ),
@@ -100,7 +99,7 @@ List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
         create: (context) => HomeViewModel(
               homeRepository:
                   Provider.of<IHomeRepository>(context, listen: false),
-        )),
+            )),
     Provider<SearchRepository>(
       create: (context) => SearchRepository(),
     ),
@@ -119,11 +118,5 @@ List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
               productRepository:
                   Provider.of<ProductRepository>(context, listen: false),
             )),
-    ChangeNotifierProvider<DonationViewModel>(
-      create: (context) => DonationViewModel(
-        donationRepository:
-            Provider.of<DonationRepository>(context, listen: false),
-      ),
-    ),
   ];
 }

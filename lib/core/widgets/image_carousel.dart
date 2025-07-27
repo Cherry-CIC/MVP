@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
 
 class ImageCarousel extends StatefulWidget {
+  final PageController? controller;
   final List<ImageProvider> images;
 
-  const ImageCarousel({super.key, required this.images});
+  const ImageCarousel({
+    super.key,
+    this.controller,
+    required this.images,
+  });
 
   @override
   State<ImageCarousel> createState() => ImageCarouselState();
@@ -17,6 +22,7 @@ class ImageCarouselState extends State<ImageCarousel> {
     return Stack(
       children: [
         PageView.builder(
+          controller: widget.controller,
           itemCount: widget.images.length,
           itemBuilder: (context, index) {
             final image = widget.images[index];
@@ -25,7 +31,9 @@ class ImageCarouselState extends State<ImageCarousel> {
               fit: BoxFit.cover,
             );
           },
-          onPageChanged: (index) => setState(() => _currentPage = index),
+          onPageChanged: (index) {
+            setState(() => _currentPage = index);
+          },
         ),
         Positioned(
           bottom: 16,
@@ -48,5 +56,13 @@ class ImageCarouselState extends State<ImageCarousel> {
         ),
       ],
     );
+  }
+
+  @override
+  void didUpdateWidget(covariant ImageCarousel oldWidget) {
+    if (_currentPage >= widget.images.length) {
+      setState(() => _currentPage = widget.images.length - 1);
+    }
+    super.didUpdateWidget(oldWidget);
   }
 }

@@ -1,7 +1,9 @@
 // feature/118-product-details-page
+import 'package:cherry_mvp/features/categories/category_repository.dart';
 import 'package:cherry_mvp/features/checkout/checkout_complete_page.dart';
 import 'package:cherry_mvp/features/checkout/checkout_page.dart';
 import 'package:cherry_mvp/features/donation/donation_page.dart';
+import 'package:cherry_mvp/features/donation/donation_viewmodel.dart';
 import 'package:cherry_mvp/features/products/product_page.dart';
 
 import 'package:cherry_mvp/features/discover/discover_page.dart';
@@ -12,6 +14,7 @@ import 'package:cherry_mvp/features/register/register_page.dart';
 import 'package:cherry_mvp/features/home/home_page.dart';
 import 'package:cherry_mvp/features/login/login_page.dart';
 import 'package:cherry_mvp/features/welcome/welcome_page.dart';
+import 'package:provider/provider.dart';
 
 class AppRoutes {
   static const String welcome = '/welcome';
@@ -44,7 +47,14 @@ class AppRoutes {
       case settingspage:
         return MaterialPageRoute(builder: (_) => SettingsPage());
       case donations:
-        return MaterialPageRoute(builder: (_) => DonationPage());
+        return MaterialPageRoute(
+          fullscreenDialog: true,
+          builder: (context) => DonationPage(
+            viewModel: DonationViewModel(
+              categoryRepository: context.read<CategoryRepository>(),
+            ),
+          ),
+        );
       case checkout:
         return MaterialPageRoute(
           fullscreenDialog: true,

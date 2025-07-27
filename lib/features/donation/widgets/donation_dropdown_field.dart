@@ -1,41 +1,28 @@
 import 'package:flutter/material.dart';
 
-class DonationDropdownField extends StatefulWidget {
+class DonationDropdownField<T> extends StatelessWidget {
+  final String title;
+  final List<DropdownMenuItem<T>> items;
+  final T? value;
+  final ValueChanged<T?> onChanged;
+
   const DonationDropdownField({
     super.key,
-    required this.formFieldsHintText,
-    required this.dropdownList,
+    required this.title,
+    required this.items,
+    this.value,
     required this.onChanged,
   });
 
-  final String formFieldsHintText;
-  final List<String> dropdownList;
-  final ValueChanged<String?> onChanged;
-
-  @override
-  DonationDropdownFieldState createState() => DonationDropdownFieldState();
-}
-
-class DonationDropdownFieldState extends State<DonationDropdownField> {
-  String? selectedDropdownItem;
-
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: DropdownButtonFormField<String>(
-        value: selectedDropdownItem,
-        items: widget.dropdownList.map((item) {
-          return DropdownMenuItem(
-            value: item,
-            child: Text(item),
-          );
-        }).toList(),
-        onChanged: (value) {
-          setState(() => selectedDropdownItem = value);
-          widget.onChanged(value); // <- notify parent
-        },
-        decoration: InputDecoration(hintText: widget.formFieldsHintText),
+    return ListTile(
+      title: DropdownButtonFormField<T>(
+        decoration: InputDecoration(hintText: title),
+        value: value,
+        items: items,
+        onChanged: onChanged,
+        validator: (value) => value == null ? 'Select an option' : null,
       ),
     );
   }
