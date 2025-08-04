@@ -2,6 +2,7 @@ import 'package:cherry_mvp/core/config/app_strings.dart';
 import 'package:cherry_mvp/features/checkout/checkout_view_model.dart';
 import 'package:cherry_mvp/features/checkout/widgets/outlined.dart';
 import 'package:cherry_mvp/features/checkout/widgets/price_list_item.dart';
+import 'package:cherry_mvp/features/checkout/widgets/shipping_address_widget.dart';
 import 'package:cherry_mvp/features/checkout/widgets/shipping_list_item.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -16,6 +17,8 @@ class DeliveryOptions extends StatefulWidget {
 class _DeliveryOptionsState extends State<DeliveryOptions> {
   String? _delivery;
   var _deliverExpanded = false;
+  
+  PlaceDetails? _selectedAddress;
 
   @override
   Widget build(BuildContext context) {
@@ -88,6 +91,7 @@ class _DeliveryOptionsState extends State<DeliveryOptions> {
               },
             ),
           ),
+          // Show pickup points when pickup is selected
           if (_delivery == 'pickup') ...[
             const SizedBox(height: 8),
             Outlined(
@@ -137,6 +141,25 @@ class _DeliveryOptionsState extends State<DeliveryOptions> {
                   ],
                 ),
               ),
+          ],
+          // Show address input field when home delivery is selected
+          if (_delivery == 'home') ...[
+            const SizedBox(height: 16),
+            Text(
+              'Delivery Address',
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 8),
+            ShippingAddressWidget(
+              onAddressSelected: (PlaceDetails addressDetails) {
+                // Handle the selected address
+                // You can save this to your CheckoutViewModel
+                // basket.setDeliveryAddress(addressDetails);
+                print('Selected address: ${addressDetails.formattedAddress}');
+              },
+            ),
           ],
           const Divider(height: 16),
         ],
