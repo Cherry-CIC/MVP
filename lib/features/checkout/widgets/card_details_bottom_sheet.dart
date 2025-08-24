@@ -2,6 +2,7 @@ import 'package:cherry_mvp/core/config/app_strings.dart';
 import 'package:flutter/material.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 
+
 class CardDetailsBottomSheet extends StatefulWidget {
   const CardDetailsBottomSheet({super.key});
 

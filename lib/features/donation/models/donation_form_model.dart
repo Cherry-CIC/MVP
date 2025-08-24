@@ -11,6 +11,7 @@ final String addToCollectionHintText = "Add to Collection";
 final String addToCollectionText = "";
 
 final String categoryHintText = AppStrings.categoryText;
+final String charityText = AppStrings.charityText;
 final List<String> categoryDropdownList = [
   'Category A',
   'Category B',

@@ -1,6 +1,11 @@
+import 'package:cherry_mvp/core/config/app_strings.dart';
+import 'package:cherry_mvp/core/models/charity_category.dart';
+import 'package:cherry_mvp/core/services/network/api_service.dart';
 import 'package:cherry_mvp/core/utils/utils.dart';
+import 'package:cherry_mvp/features/donation/models/donation_charity_model.dart';
 import 'package:cherry_mvp/features/donation/models/donation_form_model.dart';
 import 'package:cherry_mvp/features/donation/models/donation_model.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
@@ -32,6 +37,40 @@ class DonationFormState extends State<DonationForm> {
   bool isSwitchedOpenToOtherCharity = false;
   bool isSwitchedOpenToOffer = false;
   bool isSwitchedApplicableBuyerDiscounts = false;
+  List<CharityCategories> charityCategories = [];
+
+  bool isCharitiesLoading = true;
+  CharityCategories? selectedCharity;
+  late Future<List<CharityCategories>> _charitiesTypes;
+  final DioApiService _apiService = DioApiService();
+
+  @override
+  void initState() {
+    super.initState();
+    _charitiesTypes = backendCharities();
+  }
+
+  Future<List<CharityCategories>> backendCharities() async {
+    if (kDebugMode) {
+      print('🔄 Loading charities...');
+    }
+    final result = await _apiService.getCharityCategories();
+
+    if (result.isSuccess && result.value != null) {
+      if (kDebugMode) {
+        print('✅ Successfully loaded ${result.value!.length} charities');
+      }
+      return result.value!;
+
+    } else {
+      if (kDebugMode) {
+        print('❌ Failed to load charities: ${result.error}');
+      }
+      throw Exception(result.error ?? 'Failed to load charities');
+
+    }
+  }
+
 
   void toggleSwitchOpenToOtherCharity(bool value) {
     setState(() => isSwitchedOpenToOtherCharity = value);
@@ -83,9 +122,76 @@ class DonationFormState extends State<DonationForm> {
           DonationDropdownField(
             formFieldsHintText: categoryHintText,
             dropdownList: categoryDropdownList,
-            onChanged: (val) => setState(() => selectedCategory = val!),
+            onChanged: (val) => setState(() => selectedCategory = val!), charityImages: [],
           ),
-          DonationDropdownField(
+          FutureBuilder<List<CharityCategories>>(
+            future: _charitiesTypes,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 16.0),
+                  child: Center(
+                    child: Column(
+                      children: [
+                        CircularProgressIndicator(),
+                        SizedBox(height: 8),
+                        Text(AppStrings.loadCharities),
+                      ],
+                    ),
+                  ),
+                );
+              } else if (snapshot.hasError) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 16.0),
+                  child: Column(
+                    children: [
+                      const Icon(Icons.error, color: Colors.red, size: 32),
+                      const SizedBox(height: 8),
+                      Text(
+                        AppStrings.failedToLoadCategories,
+                        style: TextStyle(color: Colors.red),
+                      ),
+                      const SizedBox(height: 8),
+                      ElevatedButton(
+                        onPressed: () {
+                          setState(() {
+                            _charitiesTypes = backendCharities();
+                          });
+                        },
+                        child: const Text(AppStrings.retry),
+                      ),
+                    ],
+                  ),
+                );
+              } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                return const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 16.0),
+                  child: Text(AppStrings.noCharitiesAvailable),
+                );
+              } else {
+                final charityCategories = snapshot.data!;
+                return DonationDropdownField(
+                  formFieldsHintText: charityText,
+
+                  charityImages: charityCategories.map((c) => c.imageUrl).toList(),
+                  dropdownList: charityCategories.map((c) => c.name).toList(),
+                  onChanged: (val) {
+                    final selected = charityCategories.firstWhere((c) => c.name == val);
+                    setState(() {
+                      selectedCharity = selected;
+
+
+                    });
+                  },
+                  selectedValue: selectedCharity?.name,
+
+                );
+              }
+            },
+          ),
+
+
+      DonationDropdownField(
             formFieldsHintText: priceHintText,
             dropdownList: priceDropdownList,
             onChanged: (val) => setState(() => selectedPrice = val!),

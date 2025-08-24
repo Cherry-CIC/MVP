@@ -172,6 +172,10 @@ class AppStrings {
   static const titleText = "Title";
   static const descriptionText = "Description";
   static const categoryText = "Category";
+  static const charityError='Failed to load charities';
+  static const loadCharities='Loading charities...';
+  static const noCharitiesAvailable='No charities available';
+
   static const charityText = "Charity";
   static const priceText = "Price";
   static const conditionText = "Condition";

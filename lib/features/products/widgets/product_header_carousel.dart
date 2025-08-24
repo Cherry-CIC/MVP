@@ -23,7 +23,7 @@ class ProductHeaderCarousel extends StatelessWidget {
             children: [
               Positioned.fill(
                 child: ImageCarousel(
-                  images: product.product_images
+                  images: product.productImages
                       .map((path) => ImageProviderHelper.getImageProvider(path))
                       .toList(),
                 ),

@@ -6,11 +6,15 @@ class DonationDropdownField extends StatefulWidget {
     required this.formFieldsHintText,
     required this.dropdownList,
     required this.onChanged,
+    this.charityImages,
+    this.selectedValue,
   });
 
   final String formFieldsHintText;
   final List<String> dropdownList;
   final ValueChanged<String?> onChanged;
+  final List<String>? charityImages;
+  final String? selectedValue;
 
   @override
   DonationDropdownFieldState createState() => DonationDropdownFieldState();
@@ -18,6 +22,51 @@ class DonationDropdownField extends StatefulWidget {
 
 class DonationDropdownFieldState extends State<DonationDropdownField> {
   String? selectedDropdownItem;
+
+  @override
+  void initState() {
+    super.initState();
+    selectedDropdownItem = widget.selectedValue;
+  }
+
+
+
+  Widget charityRow(String item) {
+    final index = widget.dropdownList.indexOf(item);
+    final imageUrl = (widget.charityImages != null && index >= 0 && index < widget.charityImages!.length)
+        ? widget.charityImages![index]
+        : null;
+
+    return SizedBox(
+      width: 200, /// Set the desired width to match ui
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Flexible(
+            child: Text(
+              item,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          if (imageUrl != null && imageUrl.isNotEmpty)
+            const SizedBox(width: 74),
+          if (imageUrl != null && imageUrl.isNotEmpty)
+            ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: Image.network(
+                imageUrl,
+                width: 24,
+                height: 24,
+                fit: BoxFit.cover,
+              ),
+            ),
+
+
+        ],
+      ),
+    );
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -28,12 +77,17 @@ class DonationDropdownFieldState extends State<DonationDropdownField> {
         items: widget.dropdownList.map((item) {
           return DropdownMenuItem(
             value: item,
-            child: Text(item),
+            child: charityRow(item),
           );
         }).toList(),
         onChanged: (value) {
           setState(() => selectedDropdownItem = value);
-          widget.onChanged(value); // <- notify parent
+          widget.onChanged(value);
+        },
+        selectedItemBuilder: (BuildContext context) {
+          return widget.dropdownList.map((item) {
+            return charityRow(item);
+          }).toList();
         },
         decoration: InputDecoration(hintText: widget.formFieldsHintText),
       ),

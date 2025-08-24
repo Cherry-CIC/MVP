@@ -1,3 +1,4 @@
+
 import 'package:dio/dio.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cherry_mvp/core/utils/result.dart';
@@ -5,6 +6,8 @@ import 'package:cherry_mvp/core/services/error_string.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:pretty_dio_logger/pretty_dio_logger.dart';
 import 'package:logging/logging.dart';
+
+import '../../../features/donation/models/donation_charity_model.dart';
 
 abstract class ApiService {
   Future<Result<T>> get<T>(String endpoint, {Map<String, dynamic>? queryParameters});
@@ -137,7 +140,45 @@ class DioApiService implements ApiService {
       return Result.failure(ErrorStrings.friendlyError);
     }
   }
-  
+  /// Fetch charity categories from the API.
+
+  Future<Result<List<CharityCategories>>> getCharityCategories() async {
+    const String endpoint = '/api/charities';
+
+    final result = await get<Map<String, dynamic>>(endpoint);
+    if (result.isSuccess && result.value != null) {
+      try {
+        final responseMap = result.value!;
+
+        // Check if the response has a 'data' field
+        if (!responseMap.containsKey('data')) {
+          _log.severe('API response missing "data" field: $responseMap');
+          return Result.failure('Invalid API response structure');
+        }
+
+        final charityListData = responseMap['data'];
+
+        if (charityListData is! List) {
+          _log.severe('Expected "data" to be a List but got ${charityListData.runtimeType}');
+          return Result.failure('Invalid charity data format');
+        }
+
+        final charities = (charityListData as List<dynamic>)
+            .map((json) => CharityCategories.fromJson(json as Map<String, dynamic>))
+            .toList();
+
+        _log.info('Successfully parsed ${charities.length} charities');
+        return Result.success(charities);
+      } catch (e) {
+        _log.severe('Error parsing charity list: $e');
+        return Result.failure('Failed to parse charity data: ${e.toString()}');
+      }
+    } else {
+      return Result.failure(result.error ?? 'Unknown error occurred');
+    }
+  }
+
+
   Result<T> _handleResponse<T>(Response response) {
     if (response.statusCode != null && response.statusCode! >= 200 && response.statusCode! < 300) {
       return Result.success(response.data as T);

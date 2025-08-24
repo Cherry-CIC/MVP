@@ -39,7 +39,7 @@ class ProductCard extends StatelessWidget {
                               borderRadius: BorderRadius.circular(8),
                               image: DecorationImage(
                                   image:
-                                      ImageProviderHelper.getImageProvider(product.product_images.first),
+                                      ImageProviderHelper.getImageProvider(product.productImages.first),
                                   fit: BoxFit.cover)),
                         ),
                       ),
@@ -119,7 +119,7 @@ class ProductCard extends StatelessWidget {
                   ),
                 ),
                 ImageProviderHelper.buildImage(
-                  imagePath: product.charity_image,
+                  imagePath: product.charityImage,
                   height: 20,
                   width: 20,
                   fit: BoxFit.cover,
