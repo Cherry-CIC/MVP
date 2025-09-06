@@ -1,4 +1,5 @@
 import 'package:cherry_mvp/features/categories/category_view_model.dart';
+import 'package:cherry_mvp/features/checkout/checkout_repository.dart';
 import 'package:cherry_mvp/features/charity_page/charity_repository.dart';
 import 'package:cherry_mvp/features/charity_page/charity_viewmodel.dart';
 import 'package:cherry_mvp/features/checkout/checkout_view_model.dart';
@@ -28,7 +29,7 @@ import 'package:cherry_mvp/core/router/router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
+List<SingleChildWidget> buildProviders(prefs) {
   // Configuration flag - reads from environment variable
   final bool useMockData = dotenv.env['USE_MOCK_DATA'] == 'true';
   return [
@@ -49,9 +50,7 @@ List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
       ),
     ),
     Provider<StorageProvider>(
-      create: (_) => StorageProvider(
-        firebaseStorage: FirebaseStorage.instance,
-      ),
+      create: (_) => StorageProvider(firebaseStorage: FirebaseStorage.instance),
     ),
     Provider<LoginRepository>(
       create: (context) => LoginRepository(
@@ -66,7 +65,7 @@ List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
         Provider.of<StorageProvider>(context, listen: false),
       ),
     ),
-    ChangeNotifierProvider(create: (context) => CheckoutViewModel()),
+
     ChangeNotifierProvider(create: (_) => SearchController()),
     Provider<IHomeRepository>(
       create: (context) {
@@ -74,16 +73,13 @@ List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
           return HomeRepositoryMock();
         } else {
           return HomeRepository(
-              Provider.of<ApiService>(context, listen: false));
+            Provider.of<ApiService>(context, listen: false),
+          );
         }
       },
     ),
-    Provider<DiscoverRepository>(
-      create: (context) => DiscoverRepository(),
-    ),
-    Provider<ProductRepository>(
-      create: (context) => ProductRepository(),
-    ),
+    Provider<DiscoverRepository>(create: (context) => DiscoverRepository()),
+    Provider<ProductRepository>(create: (context) => ProductRepository()),
     Provider<IDonationRepository>(
       create: (context) {
         if (useMockData) {
@@ -91,7 +87,10 @@ List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
         } else {
           return DonationRepository(
             apiService: Provider.of<ApiService>(context, listen: false),
-            storageProvider: Provider.of<StorageProvider>(context, listen: false),
+            storageProvider: Provider.of<StorageProvider>(
+              context,
+              listen: false,
+            ),
             firebaseAuth: FirebaseAuth.instance,
           );
         }
@@ -100,7 +99,16 @@ List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
     Provider<ICategoryRepository>(
       create: (context) {
         return CategoryRepository(
-            Provider.of<ApiService>(context, listen: false));
+          Provider.of<ApiService>(context, listen: false),
+        );
+      },
+    ),
+    Provider<ICheckoutRepository>(
+      create: (context) {
+        return CheckoutRepository(
+          Provider.of<ApiService>(context, listen: false),
+          Provider.of<FirestoreService>(context, listen: false),
+        );
       },
     ),
     Provider<ICharityRepository>(
@@ -109,7 +117,8 @@ List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
           return CharityRepositoryMock();
         } else {
           return CharityRepository(
-              Provider.of<ApiService>(context, listen: false));
+            Provider.of<ApiService>(context, listen: false),
+          );
         }
       },
     ),
@@ -120,48 +129,71 @@ List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
     ),
     ChangeNotifierProvider<RegisterViewModel>(
       create: (context) => RegisterViewModel(
-        registerRepository:
-            Provider.of<RegisterRepository>(context, listen: false),
+        registerRepository: Provider.of<RegisterRepository>(
+          context,
+          listen: false,
+        ),
       ),
     ),
     ChangeNotifierProvider<HomeViewModel>(
-        create: (context) => HomeViewModel(
-              homeRepository:
-                  Provider.of<IHomeRepository>(context, listen: false),
-            )),
-    Provider<SearchRepository>(
-      create: (context) => SearchRepository(),
+      create: (context) => HomeViewModel(
+        homeRepository: Provider.of<IHomeRepository>(context, listen: false),
+      ),
     ),
+    Provider<SearchRepository>(create: (context) => SearchRepository()),
     ChangeNotifierProvider<SearchViewModel>(
-        create: (context) => SearchViewModel(
-              searchRepository:
-                  Provider.of<SearchRepository>(context, listen: false),
-            )),
+      create: (context) => SearchViewModel(
+        searchRepository: Provider.of<SearchRepository>(context, listen: false),
+      ),
+    ),
     ChangeNotifierProvider<DiscoverViewModel>(
-        create: (context) => DiscoverViewModel(
-              discoverRepository:
-                  Provider.of<DiscoverRepository>(context, listen: false),
-            )),
+      create: (context) => DiscoverViewModel(
+        discoverRepository: Provider.of<DiscoverRepository>(
+          context,
+          listen: false,
+        ),
+      ),
+    ),
     ChangeNotifierProvider<ProductViewModel>(
-        create: (context) => ProductViewModel(
-              productRepository:
-                  Provider.of<ProductRepository>(context, listen: false),
-            )),
+      create: (context) => ProductViewModel(
+        productRepository: Provider.of<ProductRepository>(
+          context,
+          listen: false,
+        ),
+      ),
+    ),
     ChangeNotifierProvider<DonationViewModel>(
       create: (context) => DonationViewModel(
-        donationRepository:
-            Provider.of<IDonationRepository>(context, listen: false),
+        donationRepository: Provider.of<IDonationRepository>(
+          context,
+          listen: false,
+        ),
       ),
     ),
     ChangeNotifierProvider<CategoryViewModel>(
-        create: (context) => CategoryViewModel(
-              categoryRepository:
-                  Provider.of<ICategoryRepository>(context, listen: false),
-            )),
+      create: (context) => CategoryViewModel(
+        categoryRepository: Provider.of<ICategoryRepository>(
+          context,
+          listen: false,
+        ),
+      ),
+    ),
+
+    ChangeNotifierProvider<CheckoutViewModel>(
+      create: (context) => CheckoutViewModel(
+        checkoutRepository: Provider.of<ICheckoutRepository>(
+          context,
+          listen: false,
+        ),
+      ),
+    ),
     ChangeNotifierProvider<CharityViewModel>(
-        create: (context) => CharityViewModel(
-              charityRepository:
-                  Provider.of<ICharityRepository>(context, listen: false),
-            )),
+      create: (context) => CharityViewModel(
+        charityRepository: Provider.of<ICharityRepository>(
+          context,
+          listen: false,
+        ),
+      ),
+    ),
   ];
 }

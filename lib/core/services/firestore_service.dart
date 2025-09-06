@@ -1,3 +1,4 @@
+import 'package:cherry_mvp/core/config/firestore_constants.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cherry_mvp/core/utils/result.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -12,9 +13,26 @@ class FirestoreService {
     required this.prefs,
   });
 
-  Future<Result<DocumentSnapshot>> getDocument(String collectionName, String documentId) async {
+  Future<Result<DocumentSnapshot>> getDocument(
+      String collectionName, String documentId,
+      {bool isOrder = false}) async {
     try {
-      final documentSnapshot = await firebaseFirestore.collection(collectionName).doc(documentId).get();
+      dynamic documentSnapshot;
+      if (isOrder) {
+        final uid = prefs.getString(FirestoreConstants.id);
+        documentSnapshot = await firebaseFirestore
+            .collection(collectionName)
+            .doc(documentId)
+            .collection(FirestoreConstants.lockers)
+            .doc(uid)
+            .get();
+      } else {
+        documentSnapshot = await firebaseFirestore
+            .collection(collectionName)
+            .doc(documentId)
+            .get();
+      }
+
       if (documentSnapshot.exists) {
         return Result.success(documentSnapshot);
       } else {
@@ -25,9 +43,25 @@ class FirestoreService {
     }
   }
 
-  Future<Result<void>> saveDocument(String collectionName, String documentId, Map<String, dynamic> data) async {
+  Future<Result<void>> saveDocument(
+      String collectionName, String documentId, Map<String, dynamic> data,
+      {bool isOrder = false}) async {
     try {
-      await firebaseFirestore.collection(collectionName).doc(documentId).set(data);
+      if (isOrder) {
+        final uid = prefs.getString(FirestoreConstants.id);
+        await firebaseFirestore
+            .collection(collectionName)
+            .doc(documentId)
+            .collection(FirestoreConstants.lockers)
+            .doc(uid)
+            .set(data);
+      } else {
+        await firebaseFirestore
+            .collection(collectionName)
+            .doc(documentId)
+            .set(data);
+      }
+
       return Result.success(null);
     } catch (e) {
       return Result.failure(e.toString());
@@ -38,7 +72,7 @@ class FirestoreService {
     try {
       return firebaseFirestore.collection(collectionName).snapshots().map(
             (querySnapshot) => Result.success(querySnapshot),
-      );
+          );
     } catch (e) {
       return Stream.value(Result.failure(e.toString()));
     }

@@ -28,10 +28,9 @@ class CheckoutCompletePage extends StatelessWidget {
                         color: Theme.of(context).colorScheme.surface,
                         shadows: [
                           BoxShadow(
-                            color: Theme.of(context)
-                                .colorScheme
-                                .primary
-                                .withValues(alpha: .6),
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.primary.withValues(alpha: .6),
                             blurRadius: 12,
                             offset: const Offset(0, 4),
                           ),
@@ -63,16 +62,16 @@ class CheckoutCompletePage extends StatelessWidget {
                     Text(
                       AppStrings.checkoutThankYou,
                       style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color:
-                              Theme.of(context).colorScheme.onSurfaceVariant),
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       AppStrings.checkoutEscrowInfo,
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                          color:
-                              Theme.of(context).colorScheme.onSurfaceVariant),
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                     ),
                   ],
                 ),
@@ -132,12 +131,15 @@ class CheckoutCompletePage extends StatelessWidget {
               height: 56,
               width: double.infinity,
               child: FilledButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  child: Text(
-                    AppStrings.checkoutContinueShopping,
-                  )),
+                onPressed: () {
+                  Provider.of<CheckoutViewModel>(
+                    context,
+                    listen: false,
+                  ).setDeliveryChoice('');
+                  Navigator.pop(context);
+                },
+                child: Text(AppStrings.checkoutContinueShopping),
+              ),
             ),
           ],
         ),

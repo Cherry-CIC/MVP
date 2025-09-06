@@ -35,7 +35,7 @@ class BasketListItem extends StatelessWidget {
                 child: product.productImages.isNotEmpty
                     ? ClipRRect(
                         borderRadius: BorderRadius.circular(8),
-                        child: Image.asset(
+                        child: Image.network(
                           product.productImages.first,
                           fit: BoxFit.cover,
                         ))

@@ -18,6 +18,14 @@ class CheckoutPage extends StatefulWidget {
 
 class _CheckoutPageState extends State<CheckoutPage> {
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<CheckoutViewModel>(context, listen: false).fetchUserLocker();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final basket = context.read<CheckoutViewModel>();
     return Scaffold(
@@ -90,8 +98,17 @@ class _CheckoutPageState extends State<CheckoutPage> {
               height: 56,
               width: double.infinity,
               child: FilledButton(
-                onPressed: () => Navigator.pushReplacementNamed(
-                    context, AppRoutes.checkoutComplete),
+                onPressed: () {
+                  if (context.read<CheckoutViewModel>().deliveryChoice ==
+                          "pickup" &&
+                      context.read<CheckoutViewModel>().selectedInpost !=
+                          null) {
+                    Provider.of<CheckoutViewModel>(context, listen: false)
+                        .storeLockerInFirestore();
+                  }
+                  Navigator.pushReplacementNamed(
+                      context, AppRoutes.checkoutComplete);
+                },
                 child: Text(AppStrings.checkoutPay),
               ),
             ),

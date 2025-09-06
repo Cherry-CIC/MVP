@@ -1,11 +1,76 @@
+import 'package:cherry_mvp/core/config/config.dart';
+import 'package:cherry_mvp/core/models/inpost_model.dart';
 import 'package:cherry_mvp/core/models/product.dart';
+import 'package:cherry_mvp/core/utils/utils.dart';
+import 'package:cherry_mvp/features/checkout/checkout_repository.dart';
 import 'package:cherry_mvp/features/checkout/widgets/shipping_address_widget.dart';
 import 'package:cherry_mvp/features/checkout/constants/address_constants.dart';
 import 'package:flutter/material.dart';
+import 'package:logging/logging.dart';
 
 /// ViewModel for managing checkout state including basket items, shipping address, and payment method
 class CheckoutViewModel extends ChangeNotifier {
+  final ICheckoutRepository checkoutRepository;
+  final _log = Logger('CheckoutViewModel');
+
+  CheckoutViewModel({required this.checkoutRepository});
+
+  Status _status = Status.uninitialized;
+
+  Status get status => _status;
+
   final List<Product> _basketItems = [];
+
+  final List<InpostModel> _nearestInpost = [
+    InpostModel(
+      id: "002",
+      name: "Aldi Locker — Camden",
+      address: "Camden High Street, London",
+      postcode: "NW1 8QP",
+      lat: "51.5413",
+      long: "-0.1460",
+    ),
+    InpostModel(
+      id: "010",
+      name: "Aldi Locker — Deansgate",
+      address: "Deansgate, Manchester",
+      postcode: "M3 2BW",
+      lat: "53.4808",
+      long: "-2.2474",
+    ),
+    InpostModel(
+      id: "030",
+      name: "Aldi Locker — Temple Gate",
+      address: "Temple Gate, Bristol",
+      postcode: "BS1 6PL",
+      lat: "51.4490",
+      long: "-2.5830",
+    ),
+  ];
+  List<InpostModel> get nearestInpost => _nearestInpost;
+
+  InpostModel? selectedInpost;
+
+  bool showLocker = false;
+
+  bool hasLocker = false;
+
+  String? deliveryChoice;
+
+  setDeliveryChoice(String val) {
+    deliveryChoice = val;
+    notifyListeners();
+  }
+
+  setShowLocker(bool val) {
+    showLocker = val;
+    notifyListeners();
+  }
+
+  setSelectedInpost(var data) {
+    selectedInpost = data;
+    notifyListeners();
+  }
 
   /// Unmodifiable list of items in the basket
   List<Product> get basketItems => List.unmodifiable(_basketItems);
@@ -24,19 +89,19 @@ class CheckoutViewModel extends ChangeNotifier {
 
   // Shipping Address properties
   PlaceDetails? _shippingAddress;
-  
+
   /// Currently selected shipping address
   PlaceDetails? get shippingAddress => _shippingAddress;
-  
+
   /// Whether a valid shipping address has been selected
   bool get hasShippingAddress => _shippingAddress != null;
-  
-  // Payment properties  
+
+  // Payment properties
   bool _hasPaymentMethod = false;
-  
+
   /// Whether a payment method has been set
   bool get hasPaymentMethod => _hasPaymentMethod;
-  
+
   /// Whether the order is ready for checkout (has both address and payment method)
   bool get canCheckout => hasShippingAddress && hasPaymentMethod;
 
@@ -57,7 +122,7 @@ class CheckoutViewModel extends ChangeNotifier {
   }
 
   // Shipping address methods
-  
+
   /// Sets the shipping address from Google Places API result
   /// Notifies listeners when address is updated
   void setShippingAddress(PlaceDetails address) {
@@ -72,7 +137,7 @@ class CheckoutViewModel extends ChangeNotifier {
   }
 
   // Payment method methods
-  
+
   /// Sets whether a payment method has been configured
   void setPaymentMethod(bool hasPayment) {
     _hasPaymentMethod = hasPayment;
@@ -88,9 +153,10 @@ class CheckoutViewModel extends ChangeNotifier {
   /// Keys are standardized using AddressConstants
   Map<String, String> get shippingAddressComponents {
     if (_shippingAddress == null) return {};
-    
+
     return {
-      AddressConstants.streetKey: '${_shippingAddress!.streetNumber} ${_shippingAddress!.route}'.trim(),
+      AddressConstants.streetKey:
+          '${_shippingAddress!.streetNumber} ${_shippingAddress!.route}'.trim(),
       AddressConstants.cityKey: _shippingAddress!.locality,
       AddressConstants.stateKey: _shippingAddress!.administrativeAreaLevel1,
       AddressConstants.postalCodeKey: _shippingAddress!.postalCode,
@@ -110,21 +176,21 @@ class CheckoutViewModel extends ChangeNotifier {
   /// Returns true if address is valid for checkout
   bool validateShippingAddress() {
     if (_shippingAddress == null) return false;
-    
+
     final components = shippingAddressComponents;
-    
+
     // Check required fields are present and non-empty
     final street = components[AddressConstants.streetKey]?.trim() ?? '';
     final city = components[AddressConstants.cityKey]?.trim() ?? '';
     final postalCode = components[AddressConstants.postalCodeKey]?.trim() ?? '';
-    
+
     // Basic validation - could be enhanced with format validation
-    return street.isNotEmpty && 
-           city.isNotEmpty && 
-           postalCode.isNotEmpty &&
-           _isValidPostalCode(postalCode);
+    return street.isNotEmpty &&
+        city.isNotEmpty &&
+        postalCode.isNotEmpty &&
+        _isValidPostalCode(postalCode);
   }
-  
+
   /// Helper method to validate postal code format (basic US ZIP code validation)
   bool _isValidPostalCode(String postalCode) {
     // Basic US ZIP code pattern (5 digits or 5+4 format)
@@ -138,23 +204,32 @@ class CheckoutViewModel extends ChangeNotifier {
   Future<bool> processCheckout() async {
     if (!canCheckout) return false;
     if (!validateShippingAddress()) return false;
-    
+
     try {
       // Prepare order data for API call
       final Map<String, dynamic> orderData = {
-        'items': basketItems.map((item) => {
-          'id': item.id,
-          'name': item.name,
-          'price': item.price,
-          // Add other product fields as needed
-        }).toList(),
+        'items': basketItems
+            .map(
+              (item) => {
+                'id': item.id,
+                'name': item.name,
+                'price': item.price,
+                // Add other product fields as needed
+              },
+            )
+            .toList(),
         'shipping_address': {
           'formatted_address': formattedShippingAddress,
-          AddressConstants.streetKey: shippingAddressComponents[AddressConstants.streetKey],
-          AddressConstants.cityKey: shippingAddressComponents[AddressConstants.cityKey],
-          AddressConstants.stateKey: shippingAddressComponents[AddressConstants.stateKey],
-          'postal_code': shippingAddressComponents[AddressConstants.postalCodeKey],
-          AddressConstants.countryKey: shippingAddressComponents[AddressConstants.countryKey],
+          AddressConstants.streetKey:
+              shippingAddressComponents[AddressConstants.streetKey],
+          AddressConstants.cityKey:
+              shippingAddressComponents[AddressConstants.cityKey],
+          AddressConstants.stateKey:
+              shippingAddressComponents[AddressConstants.stateKey],
+          'postal_code':
+              shippingAddressComponents[AddressConstants.postalCodeKey],
+          AddressConstants.countryKey:
+              shippingAddressComponents[AddressConstants.countryKey],
           'latitude': _shippingAddress?.latitude,
           'longitude': _shippingAddress?.longitude,
         },
@@ -163,21 +238,79 @@ class CheckoutViewModel extends ChangeNotifier {
           'security_fee': securityFee,
           'postage': postage,
           'total': total,
-        }
+        },
       };
-      
+
       // TODO: Implement actual API call here
       // Example: await checkoutService.processOrder(orderData);
       // For now, we'll just validate the order data is properly structured
       if (orderData['items'] == null || (orderData['items'] as List).isEmpty) {
         return false;
       }
-      
+
       return true;
     } catch (e) {
       // Log error for debugging purposes only
       debugPrint('${AddressConstants.checkoutError}: $e');
       return false;
+    }
+  }
+
+  // fetch nearest inPost locker for pickup
+  Future<void> fetchNearestInPosts(String postalCode) async {
+    _status = Status.loading;
+    notifyListeners();
+
+    try {
+      //final result = await checkoutRepository.fetchNearestInPosts(postalCode);
+      if (_nearestInpost.isNotEmpty) {
+        showLocker = true;
+        _status = Status.success;
+      } else {
+        _status = Status.failure(
+          //result.error ??
+          'Pickup points currently unavailable, please try again later',
+        );
+        _log.warning('Fetch nearest inPost locker failed! ');
+      }
+    } catch (e) {
+      _status = Status.failure(e.toString());
+      _log.severe('Fetch nearest inPost locker error:: $e');
+    }
+
+    notifyListeners();
+  }
+
+  Future<void> storeLockerInFirestore() async {
+    try {
+      await checkoutRepository.storeLockerInFirestore(selectedInpost!);
+    } catch (e) {
+      _log.severe('Error storing locker to firestore:: $e');
+    }
+  }
+
+  Future<Result> fetchUserLocker() async {
+    final result = await checkoutRepository.fetchUserLocker();
+    if (result.isSuccess) {
+      final doc = result.value;
+      if (doc != null && doc.exists) {
+        // hydrate your selectedInpost here
+        selectedInpost = InpostModel(
+          id: doc.get(FirestoreConstants.id),
+          name: doc.get(FirestoreConstants.name),
+          address: doc.get(FirestoreConstants.address),
+          postcode: doc.get(FirestoreConstants.postcode),
+          lat: doc.get(FirestoreConstants.lat),
+          long: doc.get(FirestoreConstants.long),
+        );
+        hasLocker = true;
+        showLocker = true;
+        _status = Status.success;
+        notifyListeners();
+      }
+      return Result.success(null);
+    } else {
+      return Result.failure(result.error);
     }
   }
 }
