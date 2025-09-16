@@ -98,14 +98,14 @@ class _CheckoutPageState extends State<CheckoutPage> {
               height: 56,
               width: double.infinity,
               child: FilledButton(
-                onPressed: () {
-                  if (context.read<CheckoutViewModel>().deliveryChoice ==
-                          "pickup" &&
-                      context.read<CheckoutViewModel>().selectedInpost !=
-                          null) {
-                    Provider.of<CheckoutViewModel>(context, listen: false)
-                        .storeLockerInFirestore();
+                onPressed: () async {
+                  final checkoutViewModel = context.read<CheckoutViewModel>();
+                  if (checkoutViewModel.deliveryChoice == "pickup" &&
+                      checkoutViewModel.selectedInpost != null) {
+                    await checkoutViewModel.storeLockerInFirestore();
                   }
+                  // Store dummy order in Firestore
+                  await checkoutViewModel.storeOrderInFirestore();
                   Navigator.pushReplacementNamed(
                       context, AppRoutes.checkoutComplete);
                 },

@@ -9,6 +9,9 @@ abstract class ICheckoutRepository {
 
   Future<void> storeLockerInFirestore(InpostModel data);
 
+  /// Store a dummy order in Firestore
+  Future<void> storeOrderInFirestore(Map<String, dynamic> orderData);
+
   Future<Result<DocumentSnapshot>> fetchUserLocker();
 }
 
@@ -53,6 +56,18 @@ final class CheckoutRepository implements ICheckoutRepository {
     await _firestoreService.saveDocument(
         FirestoreConstants.orders, FirestoreConstants.pickup, lockerData,
         isOrder: true);
+  }
+
+  @override
+  Future<void> storeOrderInFirestore(Map<String, dynamic> orderData) async {
+    // Use a generated order ID (timestamp-based)
+    final orderId = DateTime.now().millisecondsSinceEpoch.toString();
+    await _firestoreService.saveDocument(
+      FirestoreConstants.orders,
+      orderId,
+      orderData,
+      isOrder: true,
+    );
   }
 
   @override
