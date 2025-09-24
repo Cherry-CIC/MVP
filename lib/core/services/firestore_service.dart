@@ -1,14 +1,3 @@
-  Future<Result<List<QueryDocumentSnapshot>>> getProductsForUser(String userId) async {
-    try {
-      final querySnapshot = await firebaseFirestore
-          .collection('products')
-          .where('userId', isEqualTo: userId)
-          .get();
-      return Result.success(querySnapshot.docs);
-    } catch (e) {
-      return Result.failure(e.toString());
-    }
-  }
 import 'package:cherry_mvp/core/config/firestore_constants.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cherry_mvp/core/utils/result.dart';
@@ -19,14 +8,13 @@ class FirestoreService {
   final FirebaseFirestore firebaseFirestore;
   final SharedPreferences prefs;
 
-  FirestoreService({
-    required this.firebaseFirestore,
-    required this.prefs,
-  });
+  FirestoreService({required this.firebaseFirestore, required this.prefs});
 
   Future<Result<DocumentSnapshot>> getDocument(
-      String collectionName, String documentId,
-      {bool isOrder = false}) async {
+    String collectionName,
+    String documentId, {
+    bool isOrder = false,
+  }) async {
     try {
       dynamic documentSnapshot;
       if (isOrder) {
@@ -55,8 +43,11 @@ class FirestoreService {
   }
 
   Future<Result<void>> saveDocument(
-      String collectionName, String documentId, Map<String, dynamic> data,
-      {bool isOrder = false}) async {
+    String collectionName,
+    String documentId,
+    Map<String, dynamic> data, {
+    bool isOrder = false,
+  }) async {
     try {
       if (isOrder) {
         final uid = prefs.getString(FirestoreConstants.id);
@@ -81,11 +72,26 @@ class FirestoreService {
 
   Stream<Result<QuerySnapshot>> getRealTimeUpdates(String collectionName) {
     try {
-      return firebaseFirestore.collection(collectionName).snapshots().map(
-            (querySnapshot) => Result.success(querySnapshot),
-          );
+      return firebaseFirestore
+          .collection(collectionName)
+          .snapshots()
+          .map((querySnapshot) => Result.success(querySnapshot));
     } catch (e) {
       return Stream.value(Result.failure(e.toString()));
+    }
+  }
+
+  Future<Result<List<QueryDocumentSnapshot>>> getProductsForUser(
+    String userId,
+  ) async {
+    try {
+      final querySnapshot = await firebaseFirestore
+          .collection('products')
+          .where('userId', isEqualTo: userId)
+          .get();
+      return Result.success(querySnapshot.docs);
+    } catch (e) {
+      return Result.failure(e.toString());
     }
   }
 }

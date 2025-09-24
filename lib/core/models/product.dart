@@ -6,7 +6,7 @@ part 'product.g.dart';
 
 @JsonSerializable()
 class Product {
-  final String userId;
+  final String? userId;
   final String id;
   final String name;
   final String description;
@@ -31,7 +31,7 @@ class Product {
 
   const Product({
     required this.id,
-    required this.userId,
+    this.userId,
     required this.name,
     required this.description,
     required this.quality,

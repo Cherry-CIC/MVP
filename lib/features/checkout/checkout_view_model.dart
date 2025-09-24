@@ -1,30 +1,3 @@
-  /// Store a dummy order in Firestore
-  Future<void> storeOrderInFirestore() async {
-    final Map<String, dynamic> orderData = {
-      'items': basketItems
-          .map((item) => {
-                'id': item.id,
-                'name': item.name,
-                'price': item.price,
-                'image': item.image,
-              })
-          .toList(),
-      'shipping_address': {
-        'formatted_address': formattedShippingAddress,
-        ...shippingAddressComponents,
-        'latitude': _shippingAddress?.latitude,
-        'longitude': _shippingAddress?.longitude,
-      },
-      'totals': {
-        'item_total': itemTotal,
-        'security_fee': securityFee,
-        'postage': postage,
-        'total': total,
-      },
-      'created_at': DateTime.now().toIso8601String(),
-    };
-    await checkoutRepository.storeOrderInFirestore(orderData);
-  }
 import 'package:cherry_mvp/core/config/config.dart';
 import 'package:cherry_mvp/core/models/inpost_model.dart';
 import 'package:cherry_mvp/core/models/product.dart';
@@ -339,5 +312,35 @@ class CheckoutViewModel extends ChangeNotifier {
     } else {
       return Result.failure(result.error);
     }
+  }
+
+  /// Store a dummy order in Firestore
+  Future<void> storeOrderInFirestore() async {
+    final Map<String, dynamic> orderData = {
+      'items': basketItems
+          .map(
+            (item) => {
+              'id': item.id,
+              'name': item.name,
+              'price': item.price,
+              //'image': item.image,
+            },
+          )
+          .toList(),
+      'shipping_address': {
+        'formatted_address': formattedShippingAddress,
+        ...shippingAddressComponents,
+        'latitude': _shippingAddress?.latitude,
+        'longitude': _shippingAddress?.longitude,
+      },
+      'totals': {
+        'item_total': itemTotal,
+        'security_fee': securityFee,
+        'postage': postage,
+        'total': total,
+      },
+      'created_at': DateTime.now().toIso8601String(),
+    };
+    await checkoutRepository.storeOrderInFirestore(orderData);
   }
 }
