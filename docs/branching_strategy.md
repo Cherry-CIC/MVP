@@ -40,12 +40,15 @@ flowchart LR
 | Branch Type | Purpose | Created From | Primary Merge Target(s) | Naming Convention | Lifecycle & Notes |
 |-------------|---------|--------------|--------------------------|-------------------|-------------------|
 | **`main`** | Always releasable production source of truth. | — | — | `main` | Protected branch. Only updated via reviewed PRs. Every successful deployment is tagged from `main`. |
-| **Feature** | New functionality, enhancements, experiments. | `main` | `main` | `feature/<short-topic>` | Short lived (ideally < 5 days). Rebase/merge `main` frequently. Squash merge back into `main`. |
-| **Bugfix** | Non-urgent bug fixes found in development or QA. | `main` | `main` | `bugfix/<short-topic>` | Treated the same as feature branches but scoped to defects. Squash merge into `main`. |
-| **Hotfix** | Critical production incident requiring immediate remediation. | `main` | `main` **and** active `release/*` (if present) | `hotfix/<short-topic>` | High-priority workflow. Merge via PR into `main`, tag & deploy, then cherry-pick into active release branch. |
+| **Feature** | New functionality, enhancements, experiments. | `main` | `main` | `feature/<slug>-<issue-id>` (e.g. `feature/checkout-ui-123`) | Short lived (ideally < 5 days). Rebase/merge `main` frequently. Squash merge back into `main`. |
+| **Bugfix** | Non-urgent bug fixes found in development or QA. | `main` | `main` | `bugfix/<slug>-<issue-id>` | Treated the same as feature branches but scoped to defects. Squash merge into `main`. |
+| **Hotfix** | Critical production incident requiring immediate remediation. | `main` | `main` **and** active `release/*` (if present) | `hotfix/<slug>-<issue-id>` | High-priority workflow. Merge via PR into `main`, tag & deploy, then cherry-pick into active release branch. |
 | **Release** *(optional)* | Freeze scope to stabilise a numbered release while new work continues on `main`. | `main` | `main` | `release/v<major>.<minor>.<patch>` | Exists only for the duration of the release. Allow QA-only fixes. Merge back into `main` and delete after tagging. |
 | **Environment** *(optional)* | Mirror of `main` for long-lived non-production environments (staging, demo). | `main` | Fast-forward from `main` | `env/<environment>` | Updated automatically from latest `main` tag. No direct commits. |
 | **Backend** (Optional: used as a temporary code split for frontend flutter and backend Node.) | Used to temporarily split code between flutter/ dart and Node.JS before being merged to main | Main / Itself | Pretty much just Main 😅 | 'Backend' | Used primarily to split the code languages and issues for more simplicity and manageability, but all backend code will be merged to main regardless, eventually.
+
+
+**`<slug>` should be a concise, kebab-case summary (e.g. `checkout-ui`); `<issue-id>` references the tracker number (e.g. GitHub issue `123`).**
 
 ---
 
@@ -53,12 +56,12 @@ flowchart LR
 
 | Situation | Branch Type | Why |
 |-----------|-------------|-----|
-| Building a new UI or feature flag | `feature/<topic>` | Keeps scope isolated and history concise. |
-| Fixing a regression uncovered in QA before release | `bugfix/<topic>` | Aligns with standard review flow while signalling priority. |
-| Urgent production outage, security fix, or data-loss issue | `hotfix/<topic>` | Enables rapid remediation directly from `main` with immediate deployment. |
+| Building a new UI or feature flag | `feature/<slug>-<issue-id>` | Keeps scope isolated, references the roadmap item, and keeps history concise. |
+| Fixing a regression uncovered in QA before release | `bugfix/<slug>-<issue-id>` | Aligns with standard review flow while signalling priority and traceability. |
+| Urgent production outage, security fix, or data-loss issue | `hotfix/<slug>-<issue-id>` | Enables rapid remediation directly from `main` with immediate deployment and auditability. |
 | Preparing a release that needs a QA freeze or marketing coordination | `release/vX.Y.Z` | Allows final polish while ongoing work continues on `main`. |
 | Maintaining a staging or demo environment that must temporarily diverge | `env/<environment>` | Provides an automation-only mirror of `main` without fragmenting development. |
-| Routine maintenance, refactors, dependency bumps | `feature/<topic>` or `bugfix/<topic>` | Follow normal PR process unless the work is an emergency hotfix. |
+| Routine maintenance, refactors, dependency bumps | `feature/<slug>-<issue-id>` or `bugfix/<slug>-<issue-id>` | Follow normal PR process unless the work is an emergency hotfix. |
 
 ---
 
@@ -71,10 +74,10 @@ flowchart LR
    git checkout main
    git pull origin main
    ```
-2. Create a branch:
+2. Create a branch tied to the issue number:
    ```bash
-   git checkout -b feature/<short-topic>
-   # or git checkout -b bugfix/<short-topic>
+   git checkout -b feature/<slug>-<issue-id>
+   # or git checkout -b bugfix/<slug>-<issue-id>
    ```
 3. Implement changes with focused commits.
 4. Keep the branch current at least daily:
@@ -82,11 +85,11 @@ flowchart LR
    git fetch origin
    git rebase origin/main   # or merge if collaboration requires
    ```
-5. Push for review:
+5. Push for review (matching the issue-aware branch name):
    ```bash
-   git push -u origin feature/<short-topic>
+   git push -u origin feature/<slug>-<issue-id>
    ```
-6. Open a PR to `main` (see Section 5) and address feedback.
+6. Open a PR to `main` (see Section 5) and address feedback. The PR template auto-includes `Fixes #<issue-id>` so the issue closes on merge.
 7. Once approved and CI passes, squash merge via the PR interface.
 8. Delete the branch locally and remotely.
 
@@ -120,9 +123,9 @@ flowchart LR
    git checkout main
    git pull origin main
    ```
-2. Create the hotfix branch:
+2. Create the hotfix branch using the incident reference:
    ```bash
-   git checkout -b hotfix/<incident-key>
+   git checkout -b hotfix/<slug>-<issue-id>
    ```
 3. Implement the minimal fix and add regression tests when feasible.
 4. Push and open a PR targeting `main`. Flag reviewers and label as `hotfix`.
@@ -157,6 +160,7 @@ Schedule this in CI to run after each tagged release if the environment must mir
 ### 5.1 Checklist (include in PR description)
 
 - [ ] Target branch is correct (`main` or active `release/v…`)
+- [ ] Branch name follows `<type>/<slug>-<issue-id>` convention
 - [ ] Linked issue, ticket, or incident reference
 - [ ] Summary of changes and user impact
 - [ ] Tests added/updated or rationale for omission
@@ -164,6 +168,7 @@ Schedule this in CI to run after each tagged release if the environment must mir
 - [ ] Screenshots or screen recordings for UI updates
 - [ ] Documentation or configuration updates included if behaviour changed
 - [ ] Rollback/feature-flag plan noted if applicable
+- [ ] PR description retains the auto-populated `Fixes #<issue-id>` line
 
 ### 5.2 Review Criteria
 
@@ -181,6 +186,13 @@ Schedule this in CI to run after each tagged release if the environment must mir
 | Environment | Force fast-forward from `main` | Prevents divergence and eliminates manual edits. |
 
 Branch protection must enforce these merge options through repository settings.
+
+### 5.4 Issue Traceability Standards
+
+- **Branch naming:** Always include the issue ID (e.g. `feature/donor-export-456`) so the workstream maps directly to the roadmap card.
+- **PR description:** Leave the `Fixes #<issue-id>` placeholder intact. GitHub closes the issue automatically on merge and records the linkage in the issue timeline.
+- **Commit messages:** Ensure at least one commit (the squash commit for most branches) references the issue with `#<issue-id>` to satisfy audit trails without duplicating text across every commit.
+- **Issue hygiene:** Move the related issue to “In Review” when the PR opens and to “Done” after the merge/deploy automation confirms success.
 
 ---
 
