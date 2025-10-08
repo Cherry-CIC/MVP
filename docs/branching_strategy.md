@@ -1,6 +1,6 @@
-# Cherry Application Branching Strategy
+# cherry application branching strategy
 
-This document defines the production-ready branching model for the Cherry Flutter application. It provides explicit branch definitions, workflows, and governance so contributors can ship safely, respond rapidly to incidents, and automate CI/CD with confidence.
+This document defines the production-ready branching model for the cherry Flutter application. It provides explicit branch definitions, workflows, and governance so contributors can ship safely, respond rapidly to incidents, and automate CI/CD with confidence.
 
 ---
 
@@ -46,6 +46,7 @@ flowchart LR
 | **Release** *(optional)* | Freeze scope to stabilise a numbered release while new work continues on `main`. | `main` | `main` | `release/v<major>.<minor>.<patch>` | Exists only for the duration of the release. Allow QA-only fixes. Merge back into `main` and delete after tagging. |
 | **Environment** *(optional)* | Mirror of `main` for long-lived non-production environments (staging, demo). | `main` | Fast-forward from `main` | `env/<environment>` | Updated automatically from latest `main` tag. No direct commits. |
 | **Backend** (Optional: used as a temporary code split for frontend flutter and backend Node.) | Used to temporarily split code between flutter/ dart and Node.JS before being merged to main | Main / Itself | Pretty much just Main 😅 | 'Backend' | Used primarily to split the code languages and issues for more simplicity and manageability, but all backend code will be merged to main regardless, eventually.
+
 ---
 
 ## 3. Decision Matrix
@@ -99,7 +100,7 @@ flowchart LR
    git checkout -b release/v<major>.<minor>.<patch>
    git push -u origin release/v<major>.<minor>.<patch>
    ```
-3. Apply only release-scoped changes (version bump, changelog, localization, QA fixes).
+3. Apply only release-scoped changes (version bump, changelog, localisation, QA fixes).
 4. Run the QA gate (Section 6).
 5. Open a PR from `release/v…` to `main`.
 6. Merge using **merge commit** or **fast-forward** (do not squash) to preserve release history.
@@ -127,8 +128,10 @@ flowchart LR
 4. Push and open a PR targeting `main`. Flag reviewers and label as `hotfix`.
 5. If a release branch is active, open a parallel PR from the same hotfix branch into `release/v…` after `main` is updated, or cherry-pick the merged commit.
 6. Merge as soon as review and CI succeed (merge commit acceptable for multi-commit fixes).
-7. Tag and deploy immediately:
+7. Tag and deploy immediately from the updated `main` branch:
    ```bash
+   git checkout main
+   git pull origin main
    git tag v<major>.<minor>.<patch>
    git push origin v<major>.<minor>.<patch>
    ```
@@ -165,7 +168,7 @@ Schedule this in CI to run after each tagged release if the environment must mir
 ### 5.2 Review Criteria
 
 - At least one reviewer with domain knowledge must approve.
-- Reviewers verify: code quality, adherence to architecture, test coverage, accessibility, performance concerns, and localization impact.
+- Reviewers verify: code quality, adherence to architecture, test coverage, accessibility, performance concerns, and localisation impact.
 - Requested changes must be addressed before merging; mark conversations as resolved.
 
 ### 5.3 Merge Strategies
@@ -247,7 +250,7 @@ Branch protection must enforce these merge options through repository settings.
 | `feature/template-inventory` | Feature | Example scaffold following the naming convention for new feature work. |
 | `bugfix/template-validation` | Bugfix | Example scaffold to demonstrate defect branch naming. |
 | `hotfix/template-critical` | Hotfix | Placeholder for emergency production fixes with expedited workflow. |
-| `release/v0.1.0` | Release | Seed release branch showing semantic version naming for stabilization periods. |
+| `release/v0.1.0` | Release | Seed release branch showing semantic version naming for stabilisation periods. |
 | `env/staging` | Environment | Illustrative environment mirror ready for automation-based syncs. |
 
 By following this playbook, cherry contributors share a single, unambiguous branching model that supports rapid iteration, predictable releases, and reliable automation.
