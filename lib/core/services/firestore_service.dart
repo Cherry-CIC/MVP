@@ -1,7 +1,8 @@
 import 'package:cherry_mvp/core/config/firestore_constants.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cherry_mvp/core/utils/result.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
 import 'error_string.dart';
 
 class FirestoreService {
@@ -94,4 +95,10 @@ class FirestoreService {
       return Result.failure(e.toString());
     }
   }
+
+  Future<void> setThemeMode(String mode) async {
+    await prefs.setString('themeMode', mode);
+  }
+
+  String get themeMode => prefs.getString('themeMode') ?? '';
 }

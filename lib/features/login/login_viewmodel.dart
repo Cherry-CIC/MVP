@@ -26,8 +26,9 @@ class LoginViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final result = await loginRepository
-          .login(LoginRequest(email: email, password: password));
+      final result = await loginRepository.login(
+        LoginRequest(email: email, password: password),
+      );
       if (result.isSuccess) {
         _status = Status.success;
       } else {

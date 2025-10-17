@@ -1,10 +1,10 @@
+import 'package:cherry_mvp/core/config/config.dart';
+import 'package:cherry_mvp/core/router/router.dart';
+import 'package:cherry_mvp/core/utils/utils.dart';
+import 'package:cherry_mvp/features/login/login_viewmodel.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
-import 'package:cherry_mvp/features/login/login_viewmodel.dart';
-import 'package:cherry_mvp/core/config/config.dart';
-import 'package:cherry_mvp/core/utils/utils.dart';
-import 'package:cherry_mvp/core/router/router.dart';
 
 class LoginForm extends StatefulWidget {
   const LoginForm({super.key});
@@ -65,13 +65,10 @@ class LoginFormState extends State<LoginForm> {
                     navigator.replaceWith(AppRoutes.home);
                   }
                 });
-
                 return Column(
                   children: [
                     viewModel.status.type == StatusType.loading
-                        ? const Center(
-                            child: CircularProgressIndicator(),
-                          )
+                        ? const Center(child: CircularProgressIndicator())
                         : SizedBox(
                             width: double.infinity,
                             child: FilledButton(
@@ -94,8 +91,9 @@ class LoginFormState extends State<LoginForm> {
             SizedBox(
               width: double.infinity,
               child: TextButton(
-                  onPressed: () => navigator.replaceWith(AppRoutes.register),
-                  child: Text(AppStrings.createAccount)),
+                onPressed: () => navigator.replaceWith(AppRoutes.register),
+                child: Text(AppStrings.createAccount),
+              ),
             ),
             SizedBox(
               width: double.infinity,
