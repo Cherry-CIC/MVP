@@ -28,12 +28,16 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cherry_mvp/core/router/router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:cherry_mvp/core/theme/theme_notifier.dart';
 
-List<SingleChildWidget> buildProviders(prefs) {
+List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
   // Configuration flag - reads from environment variable
   final bool useMockData = dotenv.env['USE_MOCK_DATA'] == 'true';
   return [
     Provider(create: (_) => NavigationProvider()),
+    ChangeNotifierProvider(
+      create: (_) => ThemeNotifier(prefs),
+    ),
 
     // Add API Service
     Provider<ApiService>(

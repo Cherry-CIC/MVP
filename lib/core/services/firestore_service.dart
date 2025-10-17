@@ -1,14 +1,3 @@
-  Future<Result<List<QueryDocumentSnapshot>>> getProductsForUser(String userId) async {
-    try {
-      final querySnapshot = await firebaseFirestore
-          .collection('products')
-          .where('userId', isEqualTo: userId)
-          .get();
-      return Result.success(querySnapshot.docs);
-    } catch (e) {
-      return Result.failure(e.toString());
-    }
-  }
 import 'package:cherry_mvp/core/config/firestore_constants.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cherry_mvp/core/utils/result.dart';
@@ -86,6 +75,19 @@ class FirestoreService {
           );
     } catch (e) {
       return Stream.value(Result.failure(e.toString()));
+    }
+  }
+
+  Future<Result<List<QueryDocumentSnapshot>>> getProductsForUser(
+      String userId) async {
+    try {
+      final querySnapshot = await firebaseFirestore
+          .collection('products')
+          .where('userId', isEqualTo: userId)
+          .get();
+      return Result.success(querySnapshot.docs);
+    } catch (e) {
+      return Result.failure(e.toString());
     }
   }
 }

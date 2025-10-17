@@ -100,14 +100,14 @@ class _CheckoutPageState extends State<CheckoutPage> {
               child: FilledButton(
                 onPressed: () async {
                   final checkoutViewModel = context.read<CheckoutViewModel>();
+                  final navigator = Navigator.of(context);
                   if (checkoutViewModel.deliveryChoice == "pickup" &&
                       checkoutViewModel.selectedInpost != null) {
                     await checkoutViewModel.storeLockerInFirestore();
                   }
                   // Store dummy order in Firestore
                   await checkoutViewModel.storeOrderInFirestore();
-                  Navigator.pushReplacementNamed(
-                      context, AppRoutes.checkoutComplete);
+                  navigator.pushReplacementNamed(AppRoutes.checkoutComplete);
                 },
                 child: Text(AppStrings.checkoutPay),
               ),

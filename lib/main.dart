@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'core/router/router.dart';
+import 'package:cherry_mvp/core/theme/theme_notifier.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -27,13 +28,14 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<NavigationProvider>(
-      builder: (context, navigatorService, child) {
+    return Consumer2<NavigationProvider, ThemeNotifier>(
+      builder: (context, navigatorService, themeNotifier, child) {
         return MaterialApp(
           navigatorKey: navigatorService.navigatorKey,
           onGenerateRoute: AppRoutes.generateRoute,
           theme: buildTheme(),
           darkTheme: buildTheme(Brightness.dark),
+          themeMode: themeNotifier.mode,
           home: WelcomePage(),
         );
       },

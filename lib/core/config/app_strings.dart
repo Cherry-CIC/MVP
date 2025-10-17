@@ -180,6 +180,7 @@ class AppStrings {
   static const charityDescription = 'Supporting communities through various charitable initiatives and programs.';
 
   static const charityText = "Charity";
+  static const selectOptionText = 'Tap to choose';
   static const priceText = "Price";
   static const conditionText = "Condition";
   static const catchEyesText = "Catch eyes by using quality photos!";
