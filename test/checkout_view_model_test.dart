@@ -1,27 +1,14 @@
+import 'package:cherry_mvp/features/checkout/checkout_repository.dart';
 import 'package:cherry_mvp/features/checkout/checkout_view_model.dart';
 import 'package:cherry_mvp/features/checkout/widgets/shipping_address_widget.dart';
-import 'package:cherry_mvp/features/checkout/checkout_repository.dart';
-import 'package:cherry_mvp/core/models/inpost_model.dart';
-import 'package:cherry_mvp/core/utils/result.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 class FakeCheckoutRepository implements ICheckoutRepository {
   @override
-  Future<Result> fetchNearestInPosts(String postalCode) async {
-    return Result.failure('Not implemented');
-  }
-
-  @override
-  Future<void> storeLockerInFirestore(InpostModel data) async {}
-
-  @override
   Future<void> storeOrderInFirestore(Map<String, dynamic> orderData) async {}
 
   @override
-  Future<Result<DocumentSnapshot>> fetchUserLocker() async {
-    return Result<DocumentSnapshot>.failure('Not implemented');
-  }
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 void main() {
