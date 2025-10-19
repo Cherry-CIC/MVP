@@ -6,6 +6,7 @@ import 'package:cherry_mvp/features/checkout/checkout_repository.dart';
 import 'package:cherry_mvp/features/checkout/widgets/shipping_address_widget.dart';
 import 'package:cherry_mvp/features/checkout/constants/address_constants.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:logging/logging.dart';
 
 /// ViewModel for managing checkout state including basket items, shipping address, and payment method
@@ -342,5 +343,47 @@ class CheckoutViewModel extends ChangeNotifier {
       'created_at': DateTime.now().toIso8601String(),
     };
     await checkoutRepository.storeOrderInFirestore(orderData);
+  }
+
+  Future<void> payWithPaymentSheet({required int amountInCents}) async {
+    _status = Status.loading;
+
+    try {
+      // 1) ask your backend to create a PaymentIntent and return the client_secret
+      final response = await checkoutRepository.createPaymentIntent(
+        amountInCents,
+      );
+
+      if (response.isSuccess && response.value != null) {
+        String clientSecret = response.value!.paymentIntent;
+        String customer = response.value!.customer;
+
+        // 2) init the payment sheet (configure Apple/Google Pay here)
+        await Stripe.instance.initPaymentSheet(
+          paymentSheetParameters: SetupPaymentSheetParameters(
+            paymentIntentClientSecret: clientSecret,
+            merchantDisplayName: customer,
+            applePay: PaymentSheetApplePay(merchantCountryCode: "UK"),
+            googlePay: PaymentSheetGooglePay(
+              merchantCountryCode: "UK",
+              testEnv: true, // true for testing
+            ),
+          ),
+        );
+
+        // 3) present the native PaymentSheet (it will show ApplePay/GooglePay if available)
+        await Stripe.instance.presentPaymentSheet();
+        // success
+        _status = Status.success;
+      }
+    } on StripeException catch (e) {
+      _status = Status.failure(e.toString());
+      _log.severe(
+        'Stripe Payment Error :: ${e.error.localizedMessage ?? e.toString()}',
+      );
+    } catch (e) {
+      _status = Status.failure(e.toString());
+      _log.severe('Error making payment:: $e');
+    }
   }
 }
