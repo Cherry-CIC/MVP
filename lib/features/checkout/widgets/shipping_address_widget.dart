@@ -9,9 +9,9 @@ class ShippingAddressWidget extends StatefulWidget {
   final Function(PlaceDetails)? onAddressSelected;
   
   const ShippingAddressWidget({
-    Key? key,
+    super.key,
     this.onAddressSelected,
-  }) : super(key: key);
+  });
 
   @override
   State<ShippingAddressWidget> createState() => _ShippingAddressWidgetState();

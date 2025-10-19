@@ -1,4 +1,3 @@
-import 'package:cherry_mvp/core/config/app_strings.dart';
 import 'package:cherry_mvp/core/config/config.dart';
 import 'package:cherry_mvp/features/checkout/payment_type.dart';
 import 'package:flutter/material.dart';

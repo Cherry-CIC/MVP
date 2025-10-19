@@ -5,11 +5,13 @@ class CategoryTileWidget extends StatelessWidget {
   final Function() onTap;
   final String image;
   final String text;
+  final Widget? trailing;
   const CategoryTileWidget({
     super.key,
     required this.onTap,
     required this.image,
     required this.text,
+    this.trailing,
   });
 
   @override
@@ -35,11 +37,12 @@ class CategoryTileWidget extends StatelessWidget {
           ]),
         ]),
         Column(children: [
-          Icon(
-            Icons.chevron_right,
-            color: Theme.of(context).colorScheme.onSurface,
-            size: 26,
-          ),
+          trailing ??
+              Icon(
+                Icons.chevron_right,
+                color: Theme.of(context).colorScheme.onSurface,
+                size: 26,
+              ),
         ]),
       ]),
     );
