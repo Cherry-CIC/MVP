@@ -90,4 +90,10 @@ class AppImages {
   static const checkoutTrackOrdersIcon = '${_path}track_orders.svg';
   static const checkoutImpactSummaryIcon = '${_path}impact_summary.svg';
   static const checkoutReviewIcon = '${_path}review.svg';
+  static const checkoutPurhaseSecurityShield =
+      '${_path}purchase_security_shield.png';
+  static const refundPolicy = '${_path}refund_policy.png';
+  static const secureTransactions = '${_path}lock_icon.png';
+  static const yourSupport = '${_path}support_icon.png';
+  static const supportOurMission = '${_path}mission_icon.png';
 }

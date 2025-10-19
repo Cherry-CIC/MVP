@@ -1,3 +1,4 @@
+import 'package:cherry_mvp/core/config/app_colors.dart';
 import 'package:cherry_mvp/core/config/app_strings.dart';
 import 'package:cherry_mvp/core/utils/utils.dart';
 import 'package:cherry_mvp/core/router/router.dart';
@@ -23,12 +24,8 @@ import 'package:cherry_mvp/features/donation/donation_view_model.dart';
 class DonationForm extends StatefulWidget {
   final List<XFile>? selectedImages;
   final VoidCallback? onClearImages;
-  
-  const DonationForm({
-    super.key,
-    this.selectedImages,
-    this.onClearImages,
-  });
+
+  const DonationForm({super.key, this.selectedImages, this.onClearImages});
 
   @override
   DonationFormState createState() => DonationFormState();
@@ -39,7 +36,8 @@ class DonationFormState extends State<DonationForm> {
 
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
-  final TextEditingController _addToCollectionController = TextEditingController();
+  final TextEditingController _addToCollectionController =
+      TextEditingController();
   final TextEditingController _customPriceController = TextEditingController();
 
   String selectedCategory = '';
@@ -87,7 +85,6 @@ class DonationFormState extends State<DonationForm> {
     return double.tryParse(priceString.replaceAll('£', '')) ?? 0.0;
   }
 
-
   DonationRequest buildDonationRequest() {
     return DonationRequest(
       name: _titleController.text,
@@ -133,10 +130,14 @@ class DonationFormState extends State<DonationForm> {
             _clearForm();
             donationViewModel.resetStatus();
             Navigator.of(context).pop();
-            final navigationProvider = Provider.of<NavigationProvider>(context, listen: false);
+            final navigationProvider = Provider.of<NavigationProvider>(
+              context,
+              listen: false,
+            );
             navigationProvider.navigateTo(AppRoutes.donationSuccess);
           } else if (donationViewModel.status.type == StatusType.failure) {
-            final errorMessage = donationViewModel.submissionMessage ??
+            final errorMessage =
+                donationViewModel.submissionMessage ??
                 AppStrings.unexpectedErrorOccurred;
             Fluttertoast.showToast(
               msg: errorMessage,
@@ -154,16 +155,16 @@ class DonationFormState extends State<DonationForm> {
                 controller: _titleController,
                 hintText: titleHintText,
                 title: AppStrings.titleText,
-                hintIcon: Icons.add_circle,
+                hintIcon: Icons.add_circle_outline,
               ),
               DonationFormField(
                 controller: _descriptionController,
                 hintText: descriptionHintText,
                 title: AppStrings.descriptionText,
-                hintIcon: Icons.add_circle,
-                minLines: 3,
+                hintIcon: Icons.add_circle_outline,
+                minLines: 2,
               ),
-              
+
               Consumer<CategoryViewModel>(
                 builder: (context, categoryViewModel, child) {
                   final status = categoryViewModel.status;
@@ -195,7 +196,8 @@ class DonationFormState extends State<DonationForm> {
                           ),
                           const SizedBox(height: 8),
                           ElevatedButton(
-                            onPressed: () => categoryViewModel.fetchCategories(),
+                            onPressed: () =>
+                                categoryViewModel.fetchCategories(),
                             child: const Text(AppStrings.retry),
                           ),
                         ],
@@ -205,7 +207,8 @@ class DonationFormState extends State<DonationForm> {
                     return DonationDropdownField(
                       formFieldsHintText: categoryHintText,
                       dropdownList: categoryDropdownList,
-                      onChanged: (val) => setState(() => selectedCategory = val!),
+                      onChanged: (val) =>
+                          setState(() => selectedCategory = val!),
                       charityImages: const [],
                     );
                   } else {
@@ -319,10 +322,13 @@ class DonationFormState extends State<DonationForm> {
                 charityImages: const [],
                 selectedValue: selectedPrice.isNotEmpty ? selectedPrice : null,
               ),
-              
+
               if (showCustomPriceField)
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16.0,
+                    vertical: 8.0,
+                  ),
                   child: TextFormField(
                     controller: _customPriceController,
                     decoration: const InputDecoration(
@@ -331,30 +337,38 @@ class DonationFormState extends State<DonationForm> {
                       prefixText: '£',
                       border: OutlineInputBorder(),
                     ),
-                    keyboardType: TextInputType.numberWithOptions(decimal: true),
+                    keyboardType: TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
                     inputFormatters: [
-                      FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}')),
+                      FilteringTextInputFormatter.allow(
+                        RegExp(r'^\d*\.?\d{0,2}'),
+                      ),
                     ],
                     validator: (value) {
-                      if (showCustomPriceField && (value == null || value.isEmpty)) {
+                      if (showCustomPriceField &&
+                          (value == null || value.isEmpty)) {
                         return 'Please enter a price';
                       }
-                      if (showCustomPriceField && double.tryParse(value!) == null) {
+                      if (showCustomPriceField &&
+                          double.tryParse(value!) == null) {
                         return 'Please enter a valid price';
                       }
                       return null;
                     },
                   ),
                 ),
-              
+
               DonationDropdownField(
                 formFieldsHintText: qualityHintText,
                 dropdownList: qualityDropdownList,
                 onChanged: (val) => setState(() => selectedQuality = val!),
                 charityImages: const [],
-                selectedValue: selectedQuality.isNotEmpty ? selectedQuality : null,
+                selectedValue: selectedQuality.isNotEmpty
+                    ? selectedQuality
+                    : null,
               ),
-              
+
               DonationDropdownField(
                 formFieldsHintText: sizeHintText,
                 dropdownList: sizeDropdownList,
@@ -362,9 +376,7 @@ class DonationFormState extends State<DonationForm> {
                 charityImages: const [],
                 selectedValue: selectedSize.isNotEmpty ? selectedSize : null,
               ),
-              
 
-              
               DonationFormField(
                 controller: _addToCollectionController,
                 hintText: addToCollectionHintText,
@@ -372,51 +384,111 @@ class DonationFormState extends State<DonationForm> {
                 suffixIcon: Icons.add,
                 validator: validateOptionalDonationFormFields,
               ),
-              
+
               DonationOptions(
                 isSwitchedOpenToOtherCharity: isSwitchedOpenToOtherCharity,
                 toggleSwitchOpenToOtherCharity: toggleSwitchOpenToOtherCharity,
                 isSwitchedOpenToOffer: isSwitchedOpenToOffer,
                 toggleSwitchOpenToOffer: toggleSwitchOpenToOffer,
-                isSwitchedApplicableBuyerDiscounts: isSwitchedApplicableBuyerDiscounts,
-                toggleSwitchApplicableBuyerDiscounts: toggleSwitchApplicableBuyerDiscounts,
+                isSwitchedApplicableBuyerDiscounts:
+                    isSwitchedApplicableBuyerDiscounts,
+                toggleSwitchApplicableBuyerDiscounts:
+                    toggleSwitchApplicableBuyerDiscounts,
               ),
-              
               Padding(
                 padding: const EdgeInsets.all(16),
-                child: donationViewModel.status.type == StatusType.loading
-                    ? const Center(child: CircularProgressIndicator())
-                    : SizedBox(
-                        height: 56,
-                        width: double.infinity,
-                        child: FilledButton(
-                          onPressed: () {
-                            if (_formKey.currentState!.validate()) {
-                              // Validate required dropdowns
-                              if (selectedPrice.isEmpty ||
-                                  selectedQuality.isEmpty ||
-                                  selectedSize.isEmpty) {
-                                Fluttertoast.showToast(
-                                    msg: AppStrings.pleaseSelectAllDropdowns);
-                                return;
-                              }
-                              if (selectedCharity == null) {
-                                Fluttertoast.showToast(
-                                    msg: AppStrings.pleaseSelectCharity);
-                                return;
-                              }
-                              if (widget.selectedImages == null || widget.selectedImages!.isEmpty) {
-                                Fluttertoast.showToast(
-                                    msg: AppStrings.pleaseAddPhoto);
-                                return;
-                              }
-                              final request = buildDonationRequest();
-                              donationViewModel.submitDonation(request);
-                            }
-                          },
-                          child: const Text(AppStrings.submitDonation),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      AppStrings.thoughtsOnUpload,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    OutlinedButton(
+                      onPressed: () {},
+                      style: OutlinedButton.styleFrom(
+                        side: BorderSide(color: AppColors.grey),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 0,
                         ),
                       ),
+                      child: Text(
+                        AppStrings.giveFeedback,
+                        style: TextStyle(color: AppColors.grey, fontSize: 14),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Padding(
+              //   padding: const EdgeInsets.all(16),
+              //   child: donationViewModel.status.type == StatusType.loading
+              //       ? const Center(child: CircularProgressIndicator())
+              //       : SizedBox(
+              //           height: 56,
+              //           width: double.infinity,
+              //           child: FilledButton(
+              //             onPressed: () {
+              //               if (_formKey.currentState!.validate()) {
+              //                 // Validate required dropdowns
+              //                 if (selectedPrice.isEmpty ||
+              //                     selectedQuality.isEmpty ||
+              //                     selectedSize.isEmpty) {
+              //                   Fluttertoast.showToast(
+              //                     msg: AppStrings.pleaseSelectAllDropdowns,
+              //                   );
+              //                   return;
+              //                 }
+              //                 if (selectedCharity == null) {
+              //                   Fluttertoast.showToast(
+              //                     msg: AppStrings.pleaseSelectCharity,
+              //                   );
+              //                   return;
+              //                 }
+              //                 if (widget.selectedImages == null ||
+              //                     widget.selectedImages!.isEmpty) {
+              //                   Fluttertoast.showToast(
+              //                     msg: AppStrings.pleaseAddPhoto,
+              //                   );
+              //                   return;
+              //                 }
+              //                 final request = buildDonationRequest();
+              //                 donationViewModel.submitDonation(request);
+              //               }
+              //             },
+              //             child: const Text(AppStrings.submitDonation),
+              //           ),
+              //         ),
+              // ),
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () {},
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                        ),
+                        child: const Text("Back"),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: FilledButton(
+                        onPressed: () {},
+                        style: FilledButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                        ),
+                        child: const Text("Next"),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),

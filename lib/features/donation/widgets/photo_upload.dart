@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:cherry_mvp/core/config/app_colors.dart';
 import 'package:cherry_mvp/core/config/app_strings.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -7,12 +8,8 @@ import 'package:image_picker/image_picker.dart';
 class PhotoUpload extends StatefulWidget {
   final Function(List<XFile>)? onImagesChanged;
   final List<XFile>? initialImages;
-  
-  const PhotoUpload({
-    super.key,
-    this.onImagesChanged,
-    this.initialImages,
-  });
+
+  const PhotoUpload({super.key, this.onImagesChanged, this.initialImages});
 
   @override
   State<PhotoUpload> createState() => _PhotoUploadState();
@@ -41,9 +38,12 @@ class _PhotoUploadState extends State<PhotoUpload> {
       if (widget.initialImages != null && widget.initialImages!.isNotEmpty) {
         setState(() {
           selectedImages = List.from(widget.initialImages!);
-          _currentImageIndex = selectedImages.isNotEmpty ? selectedImages.length - 1 : 0;
+          _currentImageIndex = selectedImages.isNotEmpty
+              ? selectedImages.length - 1
+              : 0;
         });
-      } else if (widget.initialImages == null || widget.initialImages!.isEmpty) {
+      } else if (widget.initialImages == null ||
+          widget.initialImages!.isEmpty) {
         setState(() {
           selectedImages.clear();
           _currentImageIndex = 0;
@@ -62,26 +62,26 @@ class _PhotoUploadState extends State<PhotoUpload> {
           maxHeight: 1024,
           imageQuality: 85,
         );
-        
+
         if (picked.isNotEmpty) {
           // Filter out duplicates based on file path
           final List<XFile> newImages = [];
           for (final pickedImage in picked) {
-            final isDuplicate = selectedImages.any((existing) =>
-              existing.path == pickedImage.path
+            final isDuplicate = selectedImages.any(
+              (existing) => existing.path == pickedImage.path,
             );
             if (!isDuplicate) {
               newImages.add(pickedImage);
             }
           }
-          
+
           if (newImages.isNotEmpty) {
             setState(() {
               selectedImages.addAll(newImages);
               _currentImageIndex = selectedImages.length - 1;
             });
             widget.onImagesChanged?.call(selectedImages);
-            
+
             // Animate to the last added image
             if (selectedImages.length > 1) {
               WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -107,17 +107,17 @@ class _PhotoUploadState extends State<PhotoUpload> {
 
         if (picked != null) {
           // Check for duplicates
-          final isDuplicate = selectedImages.any((existing) =>
-            existing.path == picked.path
+          final isDuplicate = selectedImages.any(
+            (existing) => existing.path == picked.path,
           );
-          
+
           if (!isDuplicate) {
             setState(() {
               selectedImages.add(picked);
               _currentImageIndex = selectedImages.length - 1;
             });
             widget.onImagesChanged?.call(selectedImages);
-            
+
             // Animate to the newly added image
             if (selectedImages.length > 1) {
               WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -145,16 +145,18 @@ class _PhotoUploadState extends State<PhotoUpload> {
   void _removeImage(int index) {
     setState(() {
       selectedImages.removeAt(index);
-      if (_currentImageIndex >= selectedImages.length && selectedImages.isNotEmpty) {
+      if (_currentImageIndex >= selectedImages.length &&
+          selectedImages.isNotEmpty) {
         _currentImageIndex = selectedImages.length - 1;
       } else if (selectedImages.isEmpty) {
         _currentImageIndex = 0;
       }
     });
     widget.onImagesChanged?.call(selectedImages);
-    
+
     // Animate to valid page if needed
-    if (selectedImages.isNotEmpty && _currentImageIndex < selectedImages.length) {
+    if (selectedImages.isNotEmpty &&
+        _currentImageIndex < selectedImages.length) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (_pageController.hasClients) {
           _pageController.animateToPage(
@@ -231,7 +233,7 @@ class _PhotoUploadState extends State<PhotoUpload> {
               );
             },
           ),
-          
+
           // Remove button
           Positioned(
             top: 8,
@@ -247,7 +249,7 @@ class _PhotoUploadState extends State<PhotoUpload> {
               ),
             ),
           ),
-          
+
           // Add more button
           Positioned(
             top: 8,
@@ -263,7 +265,7 @@ class _PhotoUploadState extends State<PhotoUpload> {
               ),
             ),
           ),
-          
+
           // Image counter
           if (selectedImages.length > 1)
             Positioned(
@@ -272,7 +274,10 @@ class _PhotoUploadState extends State<PhotoUpload> {
               right: 0,
               child: Center(
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.black54,
                     borderRadius: BorderRadius.circular(20),
@@ -287,7 +292,7 @@ class _PhotoUploadState extends State<PhotoUpload> {
                 ),
               ),
             ),
-          
+
           // Page indicators
           if (selectedImages.length > 1)
             Positioned(
@@ -330,6 +335,7 @@ class _PhotoUploadState extends State<PhotoUpload> {
               color: Theme.of(context).colorScheme.primary,
               width: 1,
             ),
+            color: AppColors.pinkBackground,
           ),
           height: 160,
           width: double.infinity,
@@ -374,7 +380,7 @@ class _PhotoUploadState extends State<PhotoUpload> {
         spacing: 16,
         children: [
           Text(AppStrings.takePhotoInstruction),
-          selectedImages.isNotEmpty 
+          selectedImages.isNotEmpty
               ? _buildImageCarousel()
               : _buildEmptyState(),
         ],

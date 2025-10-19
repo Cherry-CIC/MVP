@@ -4,6 +4,7 @@ import 'package:cherry_mvp/core/config/config.dart';
 import 'package:cherry_mvp/core/utils/utils.dart';
 import 'package:cherry_mvp/features/checkout/checkout_view_model.dart';
 import 'package:cherry_mvp/features/checkout/widgets/outlined.dart';
+import 'package:cherry_mvp/features/checkout/purchase_security.dart';
 import 'package:cherry_mvp/features/checkout/widgets/pickup_points_empty_widget.dart';
 import 'package:cherry_mvp/features/checkout/widgets/pickup_points_error_widget.dart';
 import 'package:cherry_mvp/features/checkout/widgets/pickup_points_loading_widget.dart';
@@ -46,10 +47,21 @@ class _DeliveryOptionsState extends State<DeliveryOptions> {
           const SizedBox(height: 4),
           PriceListItem(
             title: Row(
-              children: const [
-                Text(AppStrings.checkoutSecurityFee),
-                SizedBox(width: 4),
-                Icon(Icons.info, size: 16),
+              children: [
+                const Text(AppStrings.checkoutSecurityFee),
+                const SizedBox(width: 4),
+                InkWell(
+                  borderRadius: BorderRadius.circular(16),
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => const PurchaseSecurity(),
+                        fullscreenDialog: true,
+                      ),
+                    );
+                  },
+                  child: const Icon(Icons.info, size: 16),
+                ),
               ],
             ),
             price: basket.securityFee,
