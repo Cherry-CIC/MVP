@@ -1,4 +1,3 @@
-import 'package:cherry_mvp/core/config/app_strings.dart';
 import 'package:cherry_mvp/core/config/config.dart';
 import 'package:cherry_mvp/features/checkout/payment_type.dart';
 import 'package:flutter/material.dart';
@@ -25,10 +24,7 @@ class _SelectPaymentTypeBottomSheetState
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 24,
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
             width: double.infinity,
             child: Text(
               AppStrings.paymentMethodsTitle,
@@ -46,11 +42,12 @@ class _SelectPaymentTypeBottomSheetState
             leading: const Icon(Icons.credit_card),
             title: Text(AppStrings.paymentMethodsCard),
             trailing: Radio.adaptive(
-                value: PaymentType.card,
-                groupValue: _selected,
-                onChanged: (value) {
-                  setState(() => _selected = value);
-                }),
+              value: PaymentType.card,
+              groupValue: _selected,
+              onChanged: (value) {
+                setState(() => _selected = value);
+              },
+            ),
             onTap: () => setState(() => _selected = PaymentType.card),
           ),
           const Divider(height: 1),
@@ -62,11 +59,12 @@ class _SelectPaymentTypeBottomSheetState
             ),
             title: Text(AppStrings.paymentMethodsGooglePay),
             trailing: Radio.adaptive(
-                value: PaymentType.google,
-                groupValue: _selected,
-                onChanged: (value) {
-                  setState(() => _selected = value);
-                }),
+              value: PaymentType.google,
+              groupValue: _selected,
+              onChanged: (value) {
+                setState(() => _selected = value);
+              },
+            ),
             onTap: () => setState(() => _selected = PaymentType.google),
           ),
           const Divider(height: 1),
@@ -78,11 +76,12 @@ class _SelectPaymentTypeBottomSheetState
             ),
             title: Text(AppStrings.paymentMethodsApplePay),
             trailing: Radio.adaptive(
-                value: PaymentType.apple,
-                groupValue: _selected,
-                onChanged: (value) {
-                  setState(() => _selected = value);
-                }),
+              value: PaymentType.apple,
+              groupValue: _selected,
+              onChanged: (value) {
+                setState(() => _selected = value);
+              },
+            ),
             onTap: () => setState(() => _selected = PaymentType.apple),
           ),
           const SizedBox(height: 32),
