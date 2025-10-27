@@ -2,11 +2,14 @@ import 'package:cherry_mvp/core/config/app_colors.dart';
 import 'package:cherry_mvp/core/config/app_strings.dart';
 import 'package:cherry_mvp/core/utils/utils.dart';
 import 'package:cherry_mvp/core/router/router.dart';
+import 'package:cherry_mvp/core/models/category.dart';
 import 'package:cherry_mvp/features/charity_page/charity_model.dart';
 import 'package:cherry_mvp/features/charity_page/charity_viewmodel.dart';
 import 'package:cherry_mvp/features/categories/category_view_model.dart';
+import 'package:cherry_mvp/features/charity_page/charity_page.dart';
 import 'package:cherry_mvp/features/donation/models/donation_form_model.dart';
 import 'package:cherry_mvp/features/donation/models/donation_model.dart';
+import 'package:cherry_mvp/features/search/widgets/category_page/category_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -209,22 +212,29 @@ class DonationFormState extends State<DonationForm> {
                       charityImages: const [],
                     );
                   } else {
-                    return DonationDropdownField(
-                      formFieldsHintText: categoryHintText,
-                      charityImages: const [],
-                      dropdownList: categories.map((c) => c.name).toList(),
-                      onChanged: (val) {
-                        final selected = categories.firstWhere(
-                          (c) => c.name == val,
+                    return _SelectionField(
+                      label: categoryHintText,
+                      value: selectedCategory.isNotEmpty ? selectedCategory : null,
+                      onTap: () async {
+                        final Category? result =
+                            await Navigator.of(context).push<Category>(
+                          MaterialPageRoute(
+                            builder: (_) => CategoryPage(
+                              selectionMode: true,
+                              initialCategoryId: selectedCategoryId.isNotEmpty
+                                  ? selectedCategoryId
+                                  : null,
+                            ),
+                          ),
                         );
-                        setState(() {
-                          selectedCategory = selected.name;
-                          selectedCategoryId = selected.id;
-                        });
+
+                        if (result != null) {
+                          setState(() {
+                            selectedCategory = result.name;
+                            selectedCategoryId = result.id;
+                          });
+                        }
                       },
-                      selectedValue: selectedCategory.isNotEmpty
-                          ? selectedCategory
-                          : null,
                     );
                   }
                 },
@@ -273,19 +283,25 @@ class DonationFormState extends State<DonationForm> {
                       child: Text(AppStrings.noCharitiesAvailable),
                     );
                   } else {
-                    return DonationDropdownField(
-                      formFieldsHintText: AppStrings.charityText,
-                      charityImages: charities.map((c) => c.imageUrl).toList(),
-                      dropdownList: charities.map((c) => c.name).toList(),
-                      onChanged: (val) {
-                        final selected = charities.firstWhere(
-                          (c) => c.name == val,
+                    return _SelectionField(
+                      label: AppStrings.charityText,
+                      value: selectedCharity?.name,
+                      onTap: () async {
+                        final Charity? result =
+                            await Navigator.of(context).push<Charity>(
+                          MaterialPageRoute(
+                            builder: (_) => CharityPage(
+                              selectionMode: true,
+                              initialCharityId: selectedCharity?.id,
+                            ),
+                          ),
                         );
-                        setState(() {
-                          selectedCharity = selected;
-                        });
+                        if (result != null) {
+                          setState(() {
+                            selectedCharity = result;
+                          });
+                        }
                       },
-                      selectedValue: selectedCharity?.name,
                     );
                   }
                 },
@@ -478,6 +494,50 @@ class DonationFormState extends State<DonationForm> {
           ),
         );
       },
+    );
+  }
+}
+
+class _SelectionField extends StatelessWidget {
+  const _SelectionField({
+    required this.label,
+    required this.value,
+    required this.onTap,
+  });
+
+  final String label;
+  final String? value;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final display = value ?? AppStrings.selectOptionText;
+    final isPlaceholder = value == null;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: InputDecorator(
+          decoration: InputDecoration(
+            labelText: label,
+            suffixIcon: const Icon(Icons.chevron_right),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            child: Text(
+              display,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: isPlaceholder
+                    ? theme.hintColor
+                    : theme.colorScheme.onSurface,
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

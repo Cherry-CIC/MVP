@@ -39,6 +39,7 @@ final List<Charity> dummyCharities = [
 
 const dummyProducts = [
   Product(
+    userId: "demo-user",
     id: "1",
     name: "Men's Grey Button-up T-Shirt",
     description:
@@ -55,6 +56,7 @@ const dummyProducts = [
     number: 8,
   ),
   Product(
+    userId: "demo-user",
     id: "2",
     name: "Shoes",
     description:
@@ -71,6 +73,7 @@ const dummyProducts = [
     number: 8,
   ),
   Product(
+    userId: "demo-user",
     id: "3",
     name: "Shoes",
     description:
@@ -86,6 +89,7 @@ const dummyProducts = [
     number: 9,
   ),
   Product(
+    userId: "demo-user",
     id: "4",
     name: "Shoes",
     description:

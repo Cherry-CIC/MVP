@@ -1,13 +1,23 @@
-import 'package:flutter_test/flutter_test.dart';
+import 'package:cherry_mvp/features/checkout/checkout_repository.dart';
 import 'package:cherry_mvp/features/checkout/checkout_view_model.dart';
 import 'package:cherry_mvp/features/checkout/widgets/shipping_address_widget.dart';
+import 'package:flutter_test/flutter_test.dart';
+
+class FakeCheckoutRepository implements ICheckoutRepository {
+  @override
+  Future<void> storeOrderInFirestore(Map<String, dynamic> orderData) async {}
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
 
 void main() {
   group('CheckoutViewModel', () {
     late CheckoutViewModel viewModel;
 
     setUp(() {
-      viewModel = CheckoutViewModel();
+      viewModel =
+          CheckoutViewModel(checkoutRepository: FakeCheckoutRepository());
     });
 
     test('should initialize with empty state', () {

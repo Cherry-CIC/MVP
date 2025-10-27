@@ -1,4 +1,5 @@
 import 'package:cherry_mvp/core/config/config.dart';
+import 'package:cherry_mvp/core/theme/theme_notifier.dart';
 import 'package:flutter/material.dart';
 import 'package:cherry_mvp/features/settings/widgets/settings_toggle_section.dart';
 import 'package:cherry_mvp/features/settings/widgets/settings_support.dart';
@@ -6,6 +7,7 @@ import 'package:cherry_mvp/features/settings/widgets/settings_personal.dart';
 import 'package:cherry_mvp/features/settings/widgets/settings_shop.dart';
 import 'package:cherry_mvp/features/settings/widgets/settings_account.dart';
 import 'package:cherry_mvp/features/settings/widgets/settings_footer.dart';
+import 'package:provider/provider.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -15,13 +17,9 @@ class SettingsPage extends StatefulWidget {
 }
 
 class SettingsPageState extends State<SettingsPage> {
-  bool isSwitchedDark = false;
   bool isSwitchedHide = false;
-
   void toggleSwitchDark(bool value) {
-    setState(() {
-      isSwitchedDark = value;
-    });
+    context.read<ThemeNotifier>().toggleDark(value);
   }
 
   void toggleSwitchHide(bool value) {
@@ -32,6 +30,7 @@ class SettingsPageState extends State<SettingsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final themeNotifier = context.watch<ThemeNotifier>();
     return Scaffold(
       body: CustomScrollView(
         slivers: [
@@ -41,7 +40,7 @@ class SettingsPageState extends State<SettingsPage> {
             snap: true,
           ),
           SettingsToggleSection(
-            isSwitchedDark: isSwitchedDark,
+            isSwitchedDark: themeNotifier.isDark,
             toggleSwitchDark: toggleSwitchDark,
             isSwitchedHide: isSwitchedHide,
             toggleSwitchHide: toggleSwitchHide,
