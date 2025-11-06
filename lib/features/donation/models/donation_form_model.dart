@@ -33,21 +33,6 @@ final List<String> charityDropdownList = [
   'Charity D'
 ];
 
-final String priceHintText = AppStrings.priceText;
-final List<String> priceDropdownList = [
-  "£5.00",
-  "£10.00",
-  "£15.00",
-  "£20.00",
-  "£25.00",
-  "£30.00",
-  "£40.00",
-  "£50.00",
-  "£75.00",
-  "£100.00",
-  "Custom Amount" // Option to enter custom price
-];
-
 final String conditionHintText = AppStrings.conditionText;
 final List<String> conditionDropdownList = [
   "Condition A",
