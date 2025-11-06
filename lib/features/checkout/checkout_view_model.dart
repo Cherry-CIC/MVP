@@ -289,38 +289,6 @@ class CheckoutViewModel extends ChangeNotifier {
     }
   }
 
-  /// Store a dummy order in Firestore
-  Future<void> storeOrderInFirestore() async {
-    final Map<String, dynamic> orderData = {
-      'items': _basketItems
-          .map(
-            (item) => {
-              'id': item.id,
-              'name': item.name,
-              'price': item.price,
-              'image': item.productImages.isNotEmpty
-                  ? item.productImages.first
-                  : null,
-            },
-          )
-          .toList(),
-      'shipping_address': {
-        'formatted_address': formattedShippingAddress,
-        ...shippingAddressComponents,
-        'latitude': _shippingAddress?.latitude,
-        'longitude': _shippingAddress?.longitude,
-      },
-      'totals': {
-        'item_total': itemTotal,
-        'security_fee': securityFee,
-        'postage': postage,
-        'total': total,
-      },
-      'created_at': DateTime.now().toIso8601String(),
-    };
-    await checkoutRepository.storeOrderInFirestore(orderData);
-  }
-
   Future<Result> fetchUserLocker() async {
     final result = await checkoutRepository.fetchUserLocker();
     if (result.isSuccess) {
@@ -346,16 +314,15 @@ class CheckoutViewModel extends ChangeNotifier {
     }
   }
 
-  /// Store a dummy order in Firestore
   Future<void> storeOrderInFirestore() async {
     final Map<String, dynamic> orderData = {
-      'items': basketItems
+      'items': _basketItems
           .map(
             (item) => {
               'id': item.id,
               'name': item.name,
               'price': item.price,
-              //'image': item.image,
+              'image': item.productImages.isNotEmpty ? item.productImages.first : null,
             },
           )
           .toList(),
@@ -373,6 +340,7 @@ class CheckoutViewModel extends ChangeNotifier {
       },
       'created_at': DateTime.now().toIso8601String(),
     };
+
     await checkoutRepository.storeOrderInFirestore(orderData);
   }
 }
