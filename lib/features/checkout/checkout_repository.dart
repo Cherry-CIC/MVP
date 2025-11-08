@@ -15,7 +15,8 @@ abstract class ICheckoutRepository {
 
   Future<Result<DocumentSnapshot>> fetchUserLocker();
 
-  Future<Result<PaymentIntentResponse>> createPaymentIntent(int amount);
+  Future<Result<PaymentIntentResponse>> createPaymentIntent(double amount);
+  Future<Result> createOrder(Map<String, dynamic> order);
 }
 
 final class CheckoutRepository implements ICheckoutRepository {
@@ -90,7 +91,9 @@ final class CheckoutRepository implements ICheckoutRepository {
   }
 
   @override
-  Future<Result<PaymentIntentResponse>> createPaymentIntent(int amount) async {
+  Future<Result<PaymentIntentResponse>> createPaymentIntent(
+    double amount,
+  ) async {
     //  call backend API which returns client_secret
     var data = {"amount": amount};
 
@@ -102,6 +105,29 @@ final class CheckoutRepository implements ICheckoutRepository {
       if (result.isSuccess) {
         final paymentResponse = PaymentIntentResponse.fromJson(result.value);
         return Result.success(paymentResponse);
+      } else {
+        return Result.failure(
+          result.error ?? 'Error creating payment, please try again later',
+        );
+      }
+    } catch (e) {
+      return Result.failure(e.toString());
+    }
+  }
+
+  @override
+  Future<Result> createOrder(Map<String, dynamic> order) async {
+    try {
+      final result = await _apiService.post(
+        ApiEndpoints.createOrder,
+        data: order,
+      );
+      if (result.isSuccess && result.value != null) {
+        final data = result.value;
+
+        final jsonList = data['data'] ?? data;
+
+        return Result.success(jsonList);
       } else {
         return Result.failure(
           result.error ?? 'Error creating payment, please try again later',

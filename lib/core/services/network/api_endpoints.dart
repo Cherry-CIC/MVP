@@ -9,5 +9,6 @@ class ApiEndpoints {
   static const String categories = '/categories';
   static const String inpostLockers = '/shipping/inpost/lockers';
   static const String charities = '/charities';
-  static const String paymentIntent = '/api/payment/create-payment-intent';
+  static const String paymentIntent = '/payment/create-payment-intent';
+  static const String createOrder = '/order/create';
 }

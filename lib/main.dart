@@ -2,6 +2,7 @@ import 'package:cherry_mvp/core/config/app_theme.dart';
 import 'package:cherry_mvp/features/welcome/welcome_page.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_stripe/flutter_stripe.dart';
 import 'core/utils/utils.dart';
 import 'firebase_options.dart';
 import 'package:flutter/material.dart';
@@ -14,6 +15,9 @@ void main() async {
 
   /// Load environment variables
   await dotenv.load();
+
+  Stripe.publishableKey = dotenv.env['STRIPE_PUBLISHABLE_KEY']!;
+  Stripe.merchantIdentifier = dotenv.env['STRIPE_MERCHANT_IDENTIFIER']!;
 
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 

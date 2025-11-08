@@ -345,45 +345,93 @@ class CheckoutViewModel extends ChangeNotifier {
     await checkoutRepository.storeOrderInFirestore(orderData);
   }
 
-  Future<void> payWithPaymentSheet({required int amountInCents}) async {
-    _status = Status.loading;
+  Future<bool> payWithPaymentSheet({required double amount}) async {
+    //_status = Status.loading;
 
     try {
-      // 1) ask your backend to create a PaymentIntent and return the client_secret
-      final response = await checkoutRepository.createPaymentIntent(
-        amountInCents,
+      // To create a PaymentIntent and return the client_secret
+      // final response = await checkoutRepository.createPaymentIntent(amount);
+      // debugPrint(
+      //   "response.value!.paymentIntent:${response.value!.paymentIntent}",
+      // );
+      //if (response.isSuccess && response.value != null) {
+      String clientSecret =
+          "pi_3SQuZP2OD0xtlQhy1AakMxry_secret_zTnJfZ3ylmQFW53mOxfFji59T";
+      //response.value!.paymentIntent;
+      String customer = "cus_TM9KnpCvqfFuqa";
+      //response.value!.customer;
+
+      // Init the payment sheet (configure Apple/Google Pay here)
+      await Stripe.instance.initPaymentSheet(
+        paymentSheetParameters: SetupPaymentSheetParameters(
+          paymentIntentClientSecret: clientSecret,
+          customerId: customer,
+          merchantDisplayName: "cherry",
+          //applePay: PaymentSheetApplePay(merchantCountryCode: "GB"),
+          googlePay: PaymentSheetGooglePay(
+            merchantCountryCode: "GB",
+            testEnv: true, // true for testing
+          ),
+        ),
       );
 
-      if (response.isSuccess && response.value != null) {
-        String clientSecret = response.value!.paymentIntent;
-        String customer = response.value!.customer;
+      debugPrint("herrrrrrrrrrr");
 
-        // 2) init the payment sheet (configure Apple/Google Pay here)
-        await Stripe.instance.initPaymentSheet(
-          paymentSheetParameters: SetupPaymentSheetParameters(
-            paymentIntentClientSecret: clientSecret,
-            merchantDisplayName: customer,
-            applePay: PaymentSheetApplePay(merchantCountryCode: "UK"),
-            googlePay: PaymentSheetGooglePay(
-              merchantCountryCode: "UK",
-              testEnv: true, // true for testing
-            ),
-          ),
-        );
-
-        // 3) present the native PaymentSheet (it will show ApplePay/GooglePay if available)
-        await Stripe.instance.presentPaymentSheet();
-        // success
-        _status = Status.success;
-      }
+      // Present the native PaymentSheet (it will show ApplePay/GooglePay if available)
+      await Stripe.instance.presentPaymentSheet();
+      // success
+      //_status = Status.success;
+      return true;
+      // }
     } on StripeException catch (e) {
+      debugPrint(
+        "Stripe Payment Error :: ${e.error.localizedMessage ?? e.toString()}",
+      );
       _status = Status.failure(e.toString());
       _log.severe(
         'Stripe Payment Error :: ${e.error.localizedMessage ?? e.toString()}',
       );
+      return false;
     } catch (e) {
       _status = Status.failure(e.toString());
+      debugPrint("Stripe Payment Error :: $e");
       _log.severe('Error making payment:: $e');
+      return false;
     }
+    return false;
+  }
+
+  Future<void> createOrder() async {
+    _status = Status.loading;
+    notifyListeners();
+
+    final Map<String, dynamic> orderData = {
+      "amount": total,
+      "productId": basketItems[0].id,
+      "productName": basketItems[0].name,
+      "shipping": {
+        "address": {
+          "line1": "Flat B Bore Court",
+          "city": "London",
+          "state": "London",
+          "postal_code": "SW8 6TX",
+          "country": "United kingdom",
+        },
+        "name": "BEAR",
+      },
+    };
+    try {
+      final result = await checkoutRepository.createOrder(orderData);
+      if (result.isSuccess) {
+        _status = Status.success;
+      } else {
+        _status = Status.failure(result.error ?? "");
+        _log.warning('Create order failed! ${result.error}');
+      }
+    } catch (e) {
+      _status = Status.failure(e.toString());
+      _log.severe('Create order failed! ${e.toString()}');
+    }
+    notifyListeners();
   }
 }
