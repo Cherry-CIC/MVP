@@ -56,7 +56,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                   if (checkoutViewModel.deliveryChoice != null) {
                     if (checkoutViewModel.deliveryChoice == "pickup" &&
                         checkoutViewModel.selectedInpost == null) {
-                      Fluttertoast.showToast(msg: "choose pick up point");
+                      Fluttertoast.showToast(msg: "choose pickup point");
                       return;
                     }
 
@@ -109,42 +109,49 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 width: double.infinity,
                 child: Consumer<CheckoutViewModel>(
                   builder: (context, viewModel, _) {
-                    // WidgetsBinding.instance.addPostFrameCallback((_) {
-                    //   if (viewModel.status.type == StatusType.failure) {
-                    //     Fluttertoast.showToast(
-                    //       msg:
-                    //           viewModel.status.message ??
-                    //           "Something went wrong",
-                    //     );
-                    //   } else if (viewModel.status.type == StatusType.success) {
-                    //     Fluttertoast.showToast(msg: "Payment Successful");
-                    //     Navigator.pushReplacementNamed(
-                    //       context,
-                    //       AppRoutes.checkoutComplete,
-                    //     );
-                    //   }
-                    // });
+                    WidgetsBinding.instance.addPostFrameCallback((_) async {
+                      if (viewModel.createOrderStatus.type ==
+                          StatusType.failure) {
+                        Fluttertoast.showToast(
+                          msg:
+                              viewModel.createOrderStatus.message ??
+                              "Something went wrong",
+                        );
+                      } else if (viewModel.createOrderStatus.type ==
+                          StatusType.success) {
+                        Fluttertoast.showToast(msg: "Payment Successful");
+                        await Future.delayed(const Duration(seconds: 1));
+                        gotoCheckoutComplete();
+                      }
+                    });
                     return FilledButton(
                       onPressed: () async {
-                        // if (viewModel.deliveryChoice == "pickup" &&
-                        //     viewModel.selectedInpost != null) {
-                        //   await viewModel.storeLockerInFirestore();
-                        // }
-                        // // Store dummy order in Firestore
-                        // await viewModel.storeOrderInFirestore();
+                        if (viewModel.deliveryChoice != null) {
+                          if (viewModel.deliveryChoice == "pickup" &&
+                              viewModel.selectedInpost != null) {
+                            await viewModel.storeLockerInFirestore();
+                          }
+                          // Store dummy order in Firestore
+                          await viewModel.storeOrderInFirestore();
 
-                        if (basket.total > 0) {
-                          bool result = await viewModel.payWithPaymentSheet(
-                            amount: basket.total,
-                          );
-                          if (result) {
-                            await viewModel.createOrder();
+                          if (basket.total > 0) {
+                            bool result = await viewModel.payWithPaymentSheet(
+                              amount: basket.total,
+                            );
+                            if (result) {
+                              await viewModel.createOrder();
+                            }
+                          } else {
+                            Fluttertoast.showToast(msg: "Your basket is empty");
                           }
                         } else {
-                          Fluttertoast.showToast(msg: "Your basket is empty");
+                          Fluttertoast.showToast(
+                            msg: "Choose Shipping address",
+                          );
                         }
                       },
-                      child: viewModel.status.type == StatusType.loading
+                      child:
+                          viewModel.createOrderStatus.type == StatusType.loading
                           ? const CircularProgressIndicator(color: Colors.white)
                           : Text(AppStrings.checkoutPay),
                     );
@@ -157,5 +164,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
         ],
       ),
     );
+  }
+
+  gotoCheckoutComplete() {
+    Navigator.pushReplacementNamed(context, AppRoutes.checkoutComplete);
   }
 }
