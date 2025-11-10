@@ -296,41 +296,18 @@ class CheckoutViewModel extends ChangeNotifier {
     }
   }
 
-  Future<Result> fetchUserLocker() async {
-    final result = await checkoutRepository.fetchUserLocker();
-    if (result.isSuccess) {
-      final doc = result.value;
-      if (doc != null && doc.exists) {
-        // hydrate your selectedInpost here
-        selectedInpost = InpostModel(
-          id: doc.get(FirestoreConstants.id),
-          name: doc.get(FirestoreConstants.name),
-          address: doc.get(FirestoreConstants.address),
-          postcode: doc.get(FirestoreConstants.postcode),
-          lat: doc.get(FirestoreConstants.lat),
-          long: doc.get(FirestoreConstants.long),
-        );
-        hasLocker = true;
-        showLocker = true;
-        _status = Status.success;
-        notifyListeners();
-      }
-      return Result.success(null);
-    } else {
-      return Result.failure(result.error);
-    }
-  }
-
   /// Store a dummy order in Firestore
   Future<void> storeOrderInFirestore() async {
     final Map<String, dynamic> orderData = {
-      'items': basketItems
+      'items': _basketItems
           .map(
             (item) => {
               'id': item.id,
               'name': item.name,
               'price': item.price,
-              //'image': item.image,
+              'image': item.productImages.isNotEmpty
+                  ? item.productImages.first
+                  : null,
             },
           )
           .toList(),

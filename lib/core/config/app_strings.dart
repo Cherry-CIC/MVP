@@ -149,9 +149,10 @@ class AppStrings {
   static const titleText = "Title";
   static const descriptionText = "Description";
   static const categoryText = "Category";
-  static const charityText = "Charity";
   static const charityDescription =
       'Supporting communities through various charitable initiatives and programs.';
+  static const charityText = "Charity";
+  static const selectOptionText = 'Tap to choose';
   static const charityError = 'Failed to load charities';
   static const loadCharities = 'Loading charities...';
   static const noCharitiesAvailable = 'No charities available';
@@ -159,12 +160,6 @@ class AppStrings {
   static const seeMore = 'See More';
   static const priceText = "Price";
   static const conditionText = "Condition";
-
-  // Donation Validation
-  static const pleaseSelectAllDropdowns = 'Please select all dropdowns';
-  static const pleaseSelectCharity = 'Please select a charity';
-  static const pleaseAddPhoto = 'Please add at least one photo';
-  static const submitDonation = 'Submit Donation';
 
   // Donation Submission
   static const donationSubmittedSuccessfully =
@@ -341,7 +336,7 @@ class AppStrings {
   static const currencySymbol = "£";
 
 // Professional
-  static const professional = 'Professionals';
+  static const professional = 'Charities';
   static const signUpInstruction =
-      'Click below to sign up as a parent or a healthcare professional';
+      'Click below to sign up as a charity';
 }

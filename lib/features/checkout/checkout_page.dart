@@ -53,30 +53,14 @@ class _CheckoutPageState extends State<CheckoutPage> {
               ListTile(
                 onTap: () async {
                   final checkoutViewModel = context.read<CheckoutViewModel>();
-                  if (checkoutViewModel.deliveryChoice != null) {
-                    if (checkoutViewModel.deliveryChoice == "pickup" &&
-                        checkoutViewModel.selectedInpost == null) {
-                      Fluttertoast.showToast(msg: "choose pickup point");
-                      return;
-                    }
-
-                    final selected = await showModalBottomSheet<PaymentType>(
-                      context: context,
-                      enableDrag: false,
-                      isScrollControlled: false,
-                      builder: (context) =>
-                          const SelectPaymentTypeBottomSheet(),
-                    );
-                    if (selected == null || !context.mounted) return;
-                    if (selected == PaymentType.card) {
-                      showModalBottomSheet(
-                        context: context,
-                        enableDrag: false,
-                        isScrollControlled: true,
-                        builder: (context) => const CardDetailsBottomSheet(),
-                      );
-                    }
+                  final navigator = Navigator.of(context);
+                  if (checkoutViewModel.deliveryChoice == "pickup" &&
+                      checkoutViewModel.selectedInpost != null) {
+                    await checkoutViewModel.storeLockerInFirestore();
                   }
+                  // Store dummy order in Firestore
+                  await checkoutViewModel.storeOrderInFirestore();
+                  navigator.pushReplacementNamed(AppRoutes.checkoutComplete);
                 },
                 title: const Text(AppStrings.checkoutPayment),
                 titleTextStyle: Theme.of(context).textTheme.labelMedium,

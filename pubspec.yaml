@@ -38,6 +38,8 @@ dev_dependencies:
   flutter_lints: ^5.0.0
   json_serializable: ^6.7.1
   build_runner: ^2.4.7
+  flutter_launcher_icons: ^0.14.1
+  flutter_native_splash: ^2.4.2
 
 flutter:
   uses-material-design: true
@@ -78,3 +80,19 @@ flutter:
         - asset: assets/fonts/Raleway-BlackItalic.ttf
           weight: 900
           style: italic
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/icon/icon.png"
+  remove_alpha_ios: true
+  min_sdk_android: 21
+
+flutter_native_splash:
+  color: "#FFFFFF"
+  image: assets/icon/icon.png
+  android: true
+  ios: true
+  android_12:
+    image: assets/icon/icon.png
+    icon_background_color: "#FFFFFF"
