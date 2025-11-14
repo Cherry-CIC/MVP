@@ -6,6 +6,7 @@ import 'package:cherry_mvp/features/checkout/checkout_repository.dart';
 import 'package:cherry_mvp/features/checkout/widgets/shipping_address_widget.dart';
 import 'package:cherry_mvp/features/checkout/constants/address_constants.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:logging/logging.dart';
 
 /// ViewModel for managing checkout state including basket items, shipping address, and payment method
@@ -18,6 +19,9 @@ class CheckoutViewModel extends ChangeNotifier {
   Status _status = Status.uninitialized;
 
   Status get status => _status;
+
+  Status _createOrderStatus = Status.uninitialized;
+  Status get createOrderStatus => _createOrderStatus;
 
   final List<Product> _basketItems = [];
 
@@ -146,7 +150,7 @@ class CheckoutViewModel extends ChangeNotifier {
 
   /// Returns the formatted shipping address for display purposes
   String get formattedShippingAddress {
-    return _shippingAddress?.formattedAddress ?? '';
+    return _shippingAddress?.formattedAddress ?? "2, Court yard";
   }
 
   /// Returns shipping address components as a map for backend processing
@@ -169,6 +173,9 @@ class CheckoutViewModel extends ChangeNotifier {
   void resetCheckout() {
     _shippingAddress = null;
     _hasPaymentMethod = false;
+    _basketItems.clear();
+    deliveryChoice = null;
+    _createOrderStatus = Status.uninitialized;
     notifyListeners();
   }
 
@@ -289,6 +296,31 @@ class CheckoutViewModel extends ChangeNotifier {
     }
   }
 
+  Future<Result> fetchUserLocker() async {
+    final result = await checkoutRepository.fetchUserLocker();
+    if (result.isSuccess) {
+      final doc = result.value;
+      if (doc != null && doc.exists) {
+        // hydrate your selectedInpost here
+        selectedInpost = InpostModel(
+          id: doc.get(FirestoreConstants.id),
+          name: doc.get(FirestoreConstants.name),
+          address: doc.get(FirestoreConstants.address),
+          postcode: doc.get(FirestoreConstants.postcode),
+          lat: doc.get(FirestoreConstants.lat),
+          long: doc.get(FirestoreConstants.long),
+        );
+        hasLocker = true;
+        showLocker = true;
+        _status = Status.success;
+        notifyListeners();
+      }
+      return Result.success(null);
+    } else {
+      return Result.failure(result.error);
+    }
+  }
+
   /// Store a dummy order in Firestore
   Future<void> storeOrderInFirestore() async {
     final Map<String, dynamic> orderData = {
@@ -321,29 +353,96 @@ class CheckoutViewModel extends ChangeNotifier {
     await checkoutRepository.storeOrderInFirestore(orderData);
   }
 
-  Future<Result> fetchUserLocker() async {
-    final result = await checkoutRepository.fetchUserLocker();
-    if (result.isSuccess) {
-      final doc = result.value;
-      if (doc != null && doc.exists) {
-        // hydrate your selectedInpost here
-        selectedInpost = InpostModel(
-          id: doc.get(FirestoreConstants.id),
-          name: doc.get(FirestoreConstants.name),
-          address: doc.get(FirestoreConstants.address),
-          postcode: doc.get(FirestoreConstants.postcode),
-          lat: doc.get(FirestoreConstants.lat),
-          long: doc.get(FirestoreConstants.long),
+  Future<bool> payWithPaymentSheet({required double amount}) async {
+    _createOrderStatus = Status.loading;
+    notifyListeners();
+
+    try {
+      // To create a PaymentIntent and return the client_secret
+      final response = await checkoutRepository.createPaymentIntent(amount);
+
+      if (response.isSuccess && response.value != null) {
+        String clientSecret = response.value!.paymentIntent;
+        String customer = response.value!.customer;
+
+        // Init the payment sheet (configure Apple/Google Pay here)
+        await Stripe.instance.initPaymentSheet(
+          paymentSheetParameters: SetupPaymentSheetParameters(
+            paymentIntentClientSecret: clientSecret,
+            customerId: customer,
+            merchantDisplayName: "cherry",
+            //applePay: PaymentSheetApplePay(merchantCountryCode: "GB"),
+            googlePay: PaymentSheetGooglePay(
+              merchantCountryCode: "GB",
+              testEnv: true, // true for testing
+            ),
+          ),
         );
-        hasLocker = true;
-        showLocker = true;
-        _status = Status.success;
-        notifyListeners();
+
+        // Present the native PaymentSheet (it will show ApplePay/GooglePay if available)
+        await Stripe.instance.presentPaymentSheet();
+        return true;
       }
-      return Result.success(null);
-    } else {
-      return Result.failure(result.error);
+    } on StripeException catch (e) {
+      _createOrderStatus = Status.failure(e.toString());
+      _log.severe(
+        'Stripe Payment Error :: ${e.error.localizedMessage ?? e.toString()}',
+      );
+      return false;
+    } catch (e) {
+      _createOrderStatus = Status.failure(e.toString());
+      _log.severe('Error making payment:: $e');
+      return false;
     }
+    notifyListeners();
+    return false;
   }
 
+  Future<void> createOrder() async {
+    _createOrderStatus = Status.loading;
+    notifyListeners();
+
+    final Map<String, dynamic> address = deliveryChoice == "pickup"
+        ? {
+            "line1": selectedInpost?.address ?? '',
+            "city": "London",
+            "state": "London",
+            "postal_code": selectedInpost?.postcode ?? '',
+            "country": "United kingdom",
+          }
+        : {
+            'line1': formattedShippingAddress,
+            "city":
+                shippingAddressComponents[AddressConstants.cityKey] ?? "London",
+            "state":
+                shippingAddressComponents[AddressConstants.stateKey] ??
+                "London",
+            'postal_code':
+                shippingAddressComponents[AddressConstants.postalCodeKey] ??
+                "SW1 7AX",
+            "country":
+                shippingAddressComponents[AddressConstants.countryKey] ??
+                "United kingdom",
+          };
+
+    final Map<String, dynamic> orderData = {
+      "amount": total.toInt(),
+      "productId": basketItems[0].id,
+      "productName": basketItems[0].name,
+      "shipping": {"address": address, "name": "John Doe"},
+    };
+    try {
+      final result = await checkoutRepository.createOrder(orderData);
+      if (result.isSuccess) {
+        _createOrderStatus = Status.success;
+      } else {
+        _createOrderStatus = Status.failure(result.error ?? "");
+        _log.warning('Create order failed! ${result.error}');
+      }
+    } catch (e) {
+      _createOrderStatus = Status.failure(e.toString());
+      _log.severe('Create order failed! ${e.toString()}');
+    }
+    notifyListeners();
+  }
 }

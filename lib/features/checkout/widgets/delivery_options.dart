@@ -81,115 +81,118 @@ class _DeliveryOptionsState extends State<DeliveryOptions> {
             style: Theme.of(context).textTheme.titleMedium,
           ),
           const Divider(height: 32),
-          Text(
-            AppStrings.address,
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: 8),
-          TextField(
-            controller: addressController,
-            keyboardType: TextInputType.streetAddress,
-            decoration: InputDecoration(
-              hintText: AddressConstants.addressHinText,
-              border: OutlineInputBorder(
-                borderSide: BorderSide(
-                  color: Theme.of(context).colorScheme.outline,
-                ),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderSide: BorderSide(
-                  color: Theme.of(context).colorScheme.outline,
-                ),
+          if (_delivery == 'pickup') ...[
+            Text(
+              AppStrings.address,
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ),
-          ),
-          const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    AppStrings.postCode,
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: addressController,
+              keyboardType: TextInputType.streetAddress,
+              decoration: InputDecoration(
+                hintText: AddressConstants.addressHinText,
+                border: OutlineInputBorder(
+                  borderSide: BorderSide(
+                    color: Theme.of(context).colorScheme.outline,
                   ),
-                  const SizedBox(height: 8),
-                  SizedBox(
-                    width: 175,
-                    child: TextField(
-                      controller: postcodeController,
-                      keyboardType: TextInputType.streetAddress,
-                      decoration: InputDecoration(
-                        hintText: AddressConstants.postCodeHintText,
-                        border: OutlineInputBorder(
-                          borderSide: BorderSide(
-                            color: Theme.of(context).colorScheme.outline,
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderSide: BorderSide(
+                    color: Theme.of(context).colorScheme.outline,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      AppStrings.postCode,
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      width: 175,
+                      child: TextField(
+                        controller: postcodeController,
+                        keyboardType: TextInputType.streetAddress,
+                        decoration: InputDecoration(
+                          hintText: AddressConstants.postCodeHintText,
+                          border: OutlineInputBorder(
+                            borderSide: BorderSide(
+                              color: Theme.of(context).colorScheme.outline,
+                            ),
                           ),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide(
-                            color: Theme.of(context).colorScheme.outline,
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(
+                              color: Theme.of(context).colorScheme.outline,
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                ],
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    AppStrings.city,
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ],
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      AppStrings.city,
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  SizedBox(
-                    width: 175,
-                    child: TextField(
-                      controller: cityController,
-                      keyboardType: TextInputType.streetAddress,
-                      decoration: InputDecoration(
-                        hintText: AddressConstants.cityHintText,
-                        border: OutlineInputBorder(
-                          borderSide: BorderSide(
-                            color: Theme.of(context).colorScheme.outline,
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      width: 175,
+                      child: TextField(
+                        controller: cityController,
+                        keyboardType: TextInputType.streetAddress,
+                        decoration: InputDecoration(
+                          hintText: AddressConstants.cityHintText,
+                          border: OutlineInputBorder(
+                            borderSide: BorderSide(
+                              color: Theme.of(context).colorScheme.outline,
+                            ),
                           ),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide(
-                            color: Theme.of(context).colorScheme.outline,
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(
+                              color: Theme.of(context).colorScheme.outline,
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Row(
-            spacing: 10,
-            children: [
-              Icon(Icons.check_box_outline_blank, color: AppColors.red),
-              Text(
-                AppStrings.useAsDefaultAddress,
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ],
                 ),
-              ),
-            ],
-          ),
-          const Divider(height: 32),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Row(
+              spacing: 10,
+              children: [
+                Icon(Icons.check_box_outline_blank, color: AppColors.red),
+                Text(
+                  AppStrings.useAsDefaultAddress,
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+            const Divider(height: 32),
+          ],
+
           Text(
             AppStrings.checkoutDeliveryOption,
             style: TextStyle(

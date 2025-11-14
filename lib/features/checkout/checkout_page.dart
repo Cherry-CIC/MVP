@@ -1,12 +1,11 @@
 import 'package:cherry_mvp/core/config/app_strings.dart';
 import 'package:cherry_mvp/core/router/nav_routes.dart';
+import 'package:cherry_mvp/core/utils/status.dart';
 import 'package:cherry_mvp/features/checkout/checkout_view_model.dart';
-import 'package:cherry_mvp/features/checkout/payment_type.dart';
 import 'package:cherry_mvp/features/checkout/widgets/basket_list_item.dart';
-import 'package:cherry_mvp/features/checkout/widgets/card_details_bottom_sheet.dart';
 import 'package:cherry_mvp/features/checkout/widgets/delivery_options.dart';
-import 'package:cherry_mvp/features/checkout/widgets/select_payment_type_bottom_sheet.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
 
 class CheckoutPage extends StatefulWidget {
@@ -46,59 +45,10 @@ class _CheckoutPageState extends State<CheckoutPage> {
             },
           ),
           DeliveryOptions(),
-          SliverList.list(children: [
-            ListTile(
-              onTap: () async {
-                final selected = await showModalBottomSheet<PaymentType>(
-                  context: context,
-                  enableDrag: false,
-                  isScrollControlled: false,
-                  builder: (context) => const SelectPaymentTypeBottomSheet(),
-                );
-                if (selected == null || !context.mounted) return;
-                if (selected == PaymentType.card) {
-                  showModalBottomSheet(
-                    context: context,
-                    enableDrag: false,
-                    isScrollControlled: true,
-                    builder: (context) => const CardDetailsBottomSheet(),
-                  );
-                }
-              },
-              title: const Text(AppStrings.checkoutPayment),
-              titleTextStyle: Theme.of(context).textTheme.labelMedium,
-              subtitle: const Text(AppStrings.checkoutChoosePayment),
-              trailing: const Icon(Icons.add),
-              iconColor: Theme.of(context).colorScheme.primary,
-            ),
-            const SizedBox(height: 32),
-            IntrinsicHeight(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.lock,
-                    size: 14,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                  Text(
-                    AppStrings.checkoutSecure,
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                  ),
-                ],
-              ),
-            ),
-            Container(
-              margin: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 8,
-              ),
-              height: 56,
-              width: double.infinity,
-              child: FilledButton(
-                onPressed: () async {
+          SliverList.list(
+            children: [
+              ListTile(
+                onTap: () async {
                   final checkoutViewModel = context.read<CheckoutViewModel>();
                   final navigator = Navigator.of(context);
                   if (checkoutViewModel.deliveryChoice == "pickup" &&
@@ -109,13 +59,95 @@ class _CheckoutPageState extends State<CheckoutPage> {
                   await checkoutViewModel.storeOrderInFirestore();
                   navigator.pushReplacementNamed(AppRoutes.checkoutComplete);
                 },
-                child: Text(AppStrings.checkoutPay),
+                title: const Text(AppStrings.checkoutPayment),
+                titleTextStyle: Theme.of(context).textTheme.labelMedium,
+                subtitle: const Text(AppStrings.checkoutChoosePayment),
+                trailing: const Icon(Icons.add),
+                iconColor: Theme.of(context).colorScheme.primary,
               ),
-            ),
-            SizedBox(height: MediaQuery.of(context).padding.bottom),
-          ])
+              const SizedBox(height: 32),
+              IntrinsicHeight(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.lock,
+                      size: 14,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                    Text(
+                      AppStrings.checkoutSecure,
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                height: 56,
+                width: double.infinity,
+                child: Consumer<CheckoutViewModel>(
+                  builder: (context, viewModel, _) {
+                    WidgetsBinding.instance.addPostFrameCallback((_) async {
+                      if (viewModel.createOrderStatus.type ==
+                          StatusType.failure) {
+                        Fluttertoast.showToast(
+                          msg:
+                              viewModel.createOrderStatus.message ??
+                              "Something went wrong",
+                        );
+                      } else if (viewModel.createOrderStatus.type ==
+                          StatusType.success) {
+                        Fluttertoast.showToast(msg: "Payment Successful");
+                        await Future.delayed(const Duration(seconds: 1));
+                        gotoCheckoutComplete();
+                      }
+                    });
+                    return FilledButton(
+                      onPressed: () async {
+                        if (viewModel.deliveryChoice != null) {
+                          if (viewModel.deliveryChoice == "pickup" &&
+                              viewModel.selectedInpost != null) {
+                            await viewModel.storeLockerInFirestore();
+                          }
+                          // Store dummy order in Firestore
+                          await viewModel.storeOrderInFirestore();
+
+                          if (basket.total > 0) {
+                            bool result = await viewModel.payWithPaymentSheet(
+                              amount: basket.total,
+                            );
+                            if (result) {
+                              await viewModel.createOrder();
+                            }
+                          } else {
+                            Fluttertoast.showToast(msg: "Your basket is empty");
+                          }
+                        } else {
+                          Fluttertoast.showToast(
+                            msg: "Choose Shipping address",
+                          );
+                        }
+                      },
+                      child:
+                          viewModel.createOrderStatus.type == StatusType.loading
+                          ? const CircularProgressIndicator(color: Colors.white)
+                          : Text(AppStrings.checkoutPay),
+                    );
+                  },
+                ),
+              ),
+              SizedBox(height: MediaQuery.of(context).padding.bottom),
+            ],
+          ),
         ],
       ),
     );
+  }
+
+  gotoCheckoutComplete() {
+    Navigator.pushReplacementNamed(context, AppRoutes.checkoutComplete);
   }
 }

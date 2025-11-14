@@ -1,5 +1,6 @@
 import 'package:cherry_mvp/core/config/firestore_constants.dart';
 import 'package:cherry_mvp/core/models/inpost_model.dart';
+import 'package:cherry_mvp/features/checkout/models/payment_intent.dart';
 import 'package:cherry_mvp/core/services/services.dart';
 import 'package:cherry_mvp/core/utils/result.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -13,6 +14,9 @@ abstract class ICheckoutRepository {
   Future<void> storeOrderInFirestore(Map<String, dynamic> orderData);
 
   Future<Result<DocumentSnapshot>> fetchUserLocker();
+
+  Future<Result<PaymentIntentResponse>> createPaymentIntent(double amount);
+  Future<Result> createOrder(Map<String, dynamic> order);
 }
 
 final class CheckoutRepository implements ICheckoutRepository {
@@ -24,7 +28,8 @@ final class CheckoutRepository implements ICheckoutRepository {
   Future<Result> fetchNearestInPosts(String postalCode) async {
     try {
       final result = await _apiService.get(
-          "${ApiEndpoints.inpostLockers} ?postcode=$postalCode&maxDistance=30");
+        "${ApiEndpoints.inpostLockers} ?postcode=$postalCode&maxDistance=30",
+      );
       if (result.isSuccess && result.value != null) {
         final data = result.value;
 
@@ -34,8 +39,10 @@ final class CheckoutRepository implements ICheckoutRepository {
         //     jsonList.map((json) => Category.fromJson(json)).toList();
         return Result.success(jsonList);
       } else {
-        return Result.failure(result.error ??
-            'Pickup points currently unavailable, please try again later');
+        return Result.failure(
+          result.error ??
+              'Pickup points currently unavailable, please try again later',
+        );
       }
     } catch (e) {
       return Result.failure(e.toString());
@@ -54,8 +61,11 @@ final class CheckoutRepository implements ICheckoutRepository {
     };
 
     await _firestoreService.saveDocument(
-        FirestoreConstants.orders, FirestoreConstants.pickup, lockerData,
-        isOrder: true);
+      FirestoreConstants.orders,
+      FirestoreConstants.pickup,
+      lockerData,
+      isOrder: true,
+    );
   }
 
   @override
@@ -73,8 +83,58 @@ final class CheckoutRepository implements ICheckoutRepository {
   @override
   Future<Result<DocumentSnapshot>> fetchUserLocker() async {
     final result = await _firestoreService.getDocument(
-        FirestoreConstants.orders, FirestoreConstants.pickup,
-        isOrder: true);
+      FirestoreConstants.orders,
+      FirestoreConstants.pickup,
+      isOrder: true,
+    );
     return result;
+  }
+
+  @override
+  Future<Result<PaymentIntentResponse>> createPaymentIntent(
+    double amount,
+  ) async {
+    //  call backend API which returns client_secret
+    var data = {"amount": amount};
+
+    try {
+      final result = await _apiService.post(
+        ApiEndpoints.paymentIntent,
+        data: data,
+      );
+      if (result.isSuccess) {
+        final paymentResponse = PaymentIntentResponse.fromJson(result.value);
+        return Result.success(paymentResponse);
+      } else {
+        return Result.failure(
+          result.error ?? 'Error creating payment, please try again later',
+        );
+      }
+    } catch (e) {
+      return Result.failure(e.toString());
+    }
+  }
+
+  @override
+  Future<Result> createOrder(Map<String, dynamic> order) async {
+    try {
+      final result = await _apiService.post(
+        ApiEndpoints.createOrder,
+        data: order,
+      );
+      if (result.isSuccess && result.value != null) {
+        final data = result.value;
+
+        final jsonList = data['data'] ?? data;
+
+        return Result.success(jsonList);
+      } else {
+        return Result.failure(
+          result.error ?? 'Error creating payment, please try again later',
+        );
+      }
+    } catch (e) {
+      return Result.failure(e.toString());
+    }
   }
 }
