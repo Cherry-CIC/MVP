@@ -64,13 +64,16 @@ cd CherryMVP
 git checkout -b feature-new-feature
 ```
 
-### Step 3: Install Dependencies
+### Step 3: Create a .env file
 - Create a .env file in the root directory and update it with:
-
+```shell
 API_BASE_URL=https://cherry-backend-401854471349.europe-west2.run.app/api
 
 USE_MOCK_DATA=false
+```
 
+### Step 4: Install Dependencies
+- run
 ```shell
 flutter clean (optional)
 flutter pub get
