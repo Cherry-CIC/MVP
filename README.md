@@ -65,7 +65,12 @@ git checkout -b feature-new-feature
 ```
 
 ### Step 3: Install Dependencies
-- Create a .env file in the root directory and update it with necessary credentials 
+- Create a .env file in the root directory and update it with:
+
+API_BASE_URL=https://cherry-backend-401854471349.europe-west2.run.app/api
+
+USE_MOCK_DATA=false
+
 ```shell
 flutter clean (optional)
 flutter pub get
