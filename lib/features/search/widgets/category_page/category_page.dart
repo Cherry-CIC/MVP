@@ -4,6 +4,7 @@ import 'package:cherry_mvp/features/categories/widget/category_empty_widget.dart
 import 'package:cherry_mvp/features/categories/widget/category_error_widget.dart';
 import 'package:cherry_mvp/features/search/widgets/category_tile_widget.dart';
 import 'package:flutter/material.dart';
+import 'package:cherry_mvp/core/config/app_images.dart';
 import 'package:cherry_mvp/core/config/config.dart';
 import 'package:provider/provider.dart';
 
@@ -31,8 +32,10 @@ class CategoryPageState extends State<CategoryPage> {
     super.didChangeDependencies();
     if (!_hasInitialized) {
       _hasInitialized = true;
-      final categoryViewModel =
-          Provider.of<CategoryViewModel>(context, listen: false);
+      final categoryViewModel = Provider.of<CategoryViewModel>(
+        context,
+        listen: false,
+      );
       if (categoryViewModel.categories.isEmpty) {
         categoryViewModel.fetchCategories();
       }
@@ -49,14 +52,19 @@ class CategoryPageState extends State<CategoryPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-          leading: IconButton(
-            icon: Icon(
-              Icons.reply,
-              color: Theme.of(context).colorScheme.primary,
-            ),
-            onPressed: () => Navigator.of(context).maybePop(),
+        centerTitle: true,
+        leading: InkWell(
+          onTap: () => Navigator.of(context).maybePop(),
+          child: Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: Image.asset(AppImages.backIcon, width: 24, height: 24),
           ),
-          title: Text(AppStrings.categoriesText)),
+        ),
+        title: const Text(
+          AppStrings.categoriesText,
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+      ),
       body: Padding(
         padding: const EdgeInsets.only(top: 8.0, right: 15.0, left: 15.0),
         child: Consumer<CategoryViewModel>(
@@ -82,7 +90,8 @@ class CategoryPageState extends State<CategoryPage> {
             return ListView.separated(
               itemBuilder: (BuildContext context, int index) {
                 final category = categories[index];
-                final isSelected = widget.initialCategoryId != null &&
+                final isSelected =
+                    widget.initialCategoryId != null &&
                     category.id == widget.initialCategoryId;
 
                 return Padding(
@@ -91,6 +100,10 @@ class CategoryPageState extends State<CategoryPage> {
                     onTap: () => _handleCategoryTap(category),
                     image: category.imageUrl,
                     text: category.name,
+                    icon: categoryViewModel.getCategoryIcon(category.name),
+                    assetIcon: categoryViewModel.getCategoryAssetIcon(
+                      category.name,
+                    ),
                     trailing: widget.selectionMode && isSelected
                         ? Icon(
                             Icons.check_circle,

@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:ui';
 
 import 'package:cherry_mvp/core/config/app_colors.dart';
 import 'package:cherry_mvp/core/config/app_strings.dart';
@@ -324,47 +325,41 @@ class _PhotoUploadState extends State<PhotoUpload> {
 
   Widget _buildEmptyState() {
     return Material(
-      color: Theme.of(context).colorScheme.surfaceContainerHighest,
+      color: AppColors.pinkBackground,
       borderRadius: BorderRadius.circular(20),
       child: InkWell(
         onTap: _pickProductImage,
-        child: Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: Theme.of(context).colorScheme.primary,
-              width: 1,
-            ),
-            color: AppColors.pinkBackground,
+        borderRadius: BorderRadius.circular(20),
+        child: CustomPaint(
+          painter: _DashedBorderPainter(
+            color: const Color(0xFFFF0050),
+            strokeWidth: 1,
+            gap: 4,
+            dash: 4,
+            radius: 20,
           ),
-          height: 160,
-          width: double.infinity,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.photo_library,
-                size: 24,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                AppStrings.takePhoto,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+          child: Container(
+            height: 160,
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.image_outlined,
+                  size: 48,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5),
                 ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                AppStrings.tapToAddPhotos,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  fontSize: 12,
+                const SizedBox(height: 8),
+                Text(
+                  AppStrings.takePhoto,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -392,5 +387,64 @@ class _PhotoUploadState extends State<PhotoUpload> {
   void dispose() {
     _pageController.dispose();
     super.dispose();
+  }
+}
+
+class _DashedBorderPainter extends CustomPainter {
+  final Color color;
+  final double strokeWidth;
+  final double gap;
+  final double dash;
+  final double radius;
+
+  _DashedBorderPainter({
+    required this.color,
+    this.strokeWidth = 1.0,
+    this.gap = 5.0,
+    this.dash = 5.0,
+    this.radius = 0.0,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final Paint paint = Paint()
+      ..color = color
+      ..strokeWidth = strokeWidth
+      ..style = PaintingStyle.stroke;
+
+    final Path path = Path()
+      ..addRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromLTWH(0, 0, size.width, size.height),
+          Radius.circular(radius),
+        ),
+      );
+
+    final Path dashedPath = _dashPath(path, dash, gap);
+    canvas.drawPath(dashedPath, paint);
+  }
+
+  Path _dashPath(Path source, double dashArray, double gap) {
+    final Path dest = Path();
+    for (final PathMetric metric in source.computeMetrics()) {
+      double distance = 0.0;
+      while (distance < metric.length) {
+        final double len = (distance + dashArray < metric.length)
+            ? dashArray
+            : metric.length - distance;
+        dest.addPath(metric.extractPath(distance, distance + len), Offset.zero);
+        distance += dashArray + gap;
+      }
+    }
+    return dest;
+  }
+
+  @override
+  bool shouldRepaint(_DashedBorderPainter oldDelegate) {
+    return color != oldDelegate.color ||
+        strokeWidth != oldDelegate.strokeWidth ||
+        gap != oldDelegate.gap ||
+        dash != oldDelegate.dash ||
+        radius != oldDelegate.radius;
   }
 }

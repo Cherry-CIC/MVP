@@ -46,6 +46,15 @@ class DonationFormField extends StatelessWidget {
               validator: validator ?? validateDonationFormFields,
               decoration: InputDecoration(
                 hintText: hintText,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(
+                    color: Theme.of(context).colorScheme.outline,
+                  ),
+                ),
                 prefixIcon: hintIcon != null
                     ? Icon(
                         hintIcon,
