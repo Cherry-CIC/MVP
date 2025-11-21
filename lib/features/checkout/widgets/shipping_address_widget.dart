@@ -253,14 +253,26 @@ class _ShippingAddressWidgetState extends State<ShippingAddressWidget> {
         country: _countryController.text,
       );
 
+      // Save address to Firestore first
+      final saveSuccess = await _saveAddressToFirestore(manualAddress);
+
+      if (!saveSuccess) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Failed to save address. Please try again.'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+        return;
+      }
+
       setState(() {
         _selectedAddress = manualAddress;
         _isAddressConfirmed = true;
         _addressController.text = manualAddress.formattedAddress;
       });
-
-      // Save address to Firestore
-      await _saveAddressToFirestore(manualAddress);
 
       if (widget.onAddressSelected != null) {
         widget.onAddressSelected!(manualAddress);
@@ -268,12 +280,12 @@ class _ShippingAddressWidgetState extends State<ShippingAddressWidget> {
     }
   }
 
-  Future<void> _saveAddressToFirestore(PlaceDetails address) async {
+  Future<bool> _saveAddressToFirestore(PlaceDetails address) async {
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) {
         debugPrint('No user logged in, cannot save address');
-        return;
+        return false;
       }
 
       final addressData = {
@@ -296,8 +308,10 @@ class _ShippingAddressWidgetState extends State<ShippingAddressWidget> {
           .set(addressData, SetOptions(merge: true));
 
       debugPrint('Address saved to Firestore successfully');
+      return true;
     } catch (e) {
       debugPrint('Error saving address to Firestore: $e');
+      return false;
     }
   }
 
@@ -318,7 +332,7 @@ class _ShippingAddressWidgetState extends State<ShippingAddressWidget> {
 
       if (doc.exists) {
         final data = doc.data();
-        if (data != null) {
+        if (data != null && mounted) {
           setState(() {
             _addressLine1Controller.text = data['addressLine1'] ?? '';
             _addressLine2Controller.text = data['addressLine2'] ?? '';
@@ -648,7 +662,7 @@ class _ShippingAddressWidgetState extends State<ShippingAddressWidget> {
           ),
           const SizedBox(height: 16),
 
-          // Country
+          // Country (read-only, UK-specific app)
           TextFormField(
             controller: _countryController,
             decoration: const InputDecoration(
@@ -656,6 +670,8 @@ class _ShippingAddressWidgetState extends State<ShippingAddressWidget> {
               prefixIcon: Icon(Icons.public),
               border: OutlineInputBorder(),
             ),
+            readOnly: true,
+            enabled: false,
             validator: (value) {
               if (value == null || value.isEmpty) {
                 return AddressConstants.countryError;
