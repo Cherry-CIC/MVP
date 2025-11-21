@@ -670,7 +670,6 @@ class _ShippingAddressWidgetState extends State<ShippingAddressWidget> {
               prefixIcon: Icon(Icons.public),
               border: OutlineInputBorder(),
             ),
-            readOnly: true,
             enabled: false,
             validator: (value) {
               if (value == null || value.isEmpty) {
