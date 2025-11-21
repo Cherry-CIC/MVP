@@ -9,52 +9,48 @@ class PhotoTipsBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Material(
-        color: Theme.of(context).colorScheme.primary,
+        color: const Color(0xFFFF0050), // Hardcoded red from design
         borderRadius: BorderRadius.circular(8),
         child: InkWell(
           borderRadius: BorderRadius.circular(8),
           onTap: () {
             showDialog(
               context: context,
-              builder: (context) => PhotoTipsDialog(), // show the dialog on tap
+              builder: (context) => const PhotoTipsDialog(),
             );
           },
           child: Padding(
-            padding: const EdgeInsets.all(6),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              spacing: 10,
               children: [
                 Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Icon(
+                    const Icon(
                       Icons.info_outline,
-                      color: Theme.of(context).colorScheme.onPrimary,
+                      color: Colors.white,
                       size: 20,
                     ),
-                    SizedBox(width: 10),
-                    ConstrainedBox(
-                      constraints: BoxConstraints(maxWidth: 160),
-                      child: Text(
-                        AppStrings.catchEyesText,
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Theme.of(context).colorScheme.onPrimary,
-                          fontWeight: FontWeight.bold,
-                        ),
+                    const SizedBox(width: 8),
+                    Text(
+                      AppStrings.catchEyesText.replaceAll('\n', ' '),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
                       ),
                     ),
                   ],
                 ),
-
-                Text(
+                const Text(
                   AppStrings.learnHow,
                   style: TextStyle(
-                    color: AppColors.white,
+                    color: Colors.white,
                     fontWeight: FontWeight.bold,
+                    decoration: TextDecoration.underline,
+                    decorationColor: Colors.white,
                   ),
                 ),
               ],

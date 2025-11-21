@@ -11,6 +11,8 @@ class AppStrings {
   static const retry = 'Retry';
   static const share = 'Share';
   static const cancel = 'Cancel';
+  static const back = 'Back';
+  static const nextButton = 'Next';
 
   // Auth & Login
   static const login = 'Login';
@@ -134,7 +136,7 @@ class AppStrings {
   static const giveFeedback = "Give feedback";
 
   // Donation
-  static const donationsText = "Donation an item";
+  static const donationsText = "Donate";
   static const donationOptionsText = "Donation Options";
   static const giveYourBuyerText =
       "Give your buyer the option pick a cause they care about.";
@@ -159,7 +161,10 @@ class AppStrings {
   static const searchCharities = 'Search charities';
   static const seeMore = 'See More';
   static const priceText = "Price";
-  static const conditionText = "Condition";
+  static const conditionText = 'Condition';
+  static const enterCustomPrice = 'Enter Custom Price';
+  static const pleaseEnterPrice = 'Please enter a price';
+  static const pleaseEnterValidPrice = 'Please enter a valid price';
 
   // Donation Submission
   static const donationSubmittedSuccessfully =
@@ -168,6 +173,9 @@ class AppStrings {
   static const userNotAuthenticated = 'User not authenticated';
   static const failedToUploadImages = 'Failed to upload images';
   static const failedToSubmitDonation = 'Failed to submit donation';
+  static const pleaseSelectAllDropdowns = 'Please select all dropdowns';
+  static const pleaseSelectCharity = 'Please select a charity';
+  static const pleaseAddPhoto = 'Please add at least one photo';
 
   // Donation Success
   static const congratulations = 'Congratulations!';

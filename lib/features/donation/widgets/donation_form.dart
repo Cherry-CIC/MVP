@@ -61,8 +61,10 @@ class DonationFormState extends State<DonationForm> {
     super.didChangeDependencies();
     if (!_hasInitialized) {
       _hasInitialized = true;
-      context.read<CharityViewModel>().fetchCharities();
-      context.read<CategoryViewModel>().fetchCategories();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        context.read<CharityViewModel>().fetchCharities();
+        context.read<CategoryViewModel>().fetchCategories();
+      });
     }
   }
 
@@ -214,19 +216,22 @@ class DonationFormState extends State<DonationForm> {
                   } else {
                     return _SelectionField(
                       label: categoryHintText,
-                      value: selectedCategory.isNotEmpty ? selectedCategory : null,
+                      value: selectedCategory.isNotEmpty
+                          ? selectedCategory
+                          : null,
                       onTap: () async {
-                        final Category? result =
-                            await Navigator.of(context).push<Category>(
-                          MaterialPageRoute(
-                            builder: (_) => CategoryPage(
-                              selectionMode: true,
-                              initialCategoryId: selectedCategoryId.isNotEmpty
-                                  ? selectedCategoryId
-                                  : null,
-                            ),
-                          ),
-                        );
+                        final Category? result = await Navigator.of(context)
+                            .push<Category>(
+                              MaterialPageRoute(
+                                builder: (_) => CategoryPage(
+                                  selectionMode: true,
+                                  initialCategoryId:
+                                      selectedCategoryId.isNotEmpty
+                                      ? selectedCategoryId
+                                      : null,
+                                ),
+                              ),
+                            );
 
                         if (result != null) {
                           setState(() {
@@ -287,15 +292,15 @@ class DonationFormState extends State<DonationForm> {
                       label: AppStrings.charityText,
                       value: selectedCharity?.name,
                       onTap: () async {
-                        final Charity? result =
-                            await Navigator.of(context).push<Charity>(
-                          MaterialPageRoute(
-                            builder: (_) => CharityPage(
-                              selectionMode: true,
-                              initialCharityId: selectedCharity?.id,
-                            ),
-                          ),
-                        );
+                        final Charity? result = await Navigator.of(context)
+                            .push<Charity>(
+                              MaterialPageRoute(
+                                builder: (_) => CharityPage(
+                                  selectionMode: true,
+                                  initialCharityId: selectedCharity?.id,
+                                ),
+                              ),
+                            );
                         if (result != null) {
                           setState(() {
                             selectedCharity = result;
@@ -332,7 +337,7 @@ class DonationFormState extends State<DonationForm> {
                   child: TextFormField(
                     controller: _customPriceController,
                     decoration: const InputDecoration(
-                      labelText: 'Enter Custom Price',
+                      labelText: AppStrings.enterCustomPrice,
                       hintText: '0.00',
                       prefixText: '£',
                       border: OutlineInputBorder(),
@@ -348,11 +353,11 @@ class DonationFormState extends State<DonationForm> {
                     validator: (value) {
                       if (showCustomPriceField &&
                           (value == null || value.isEmpty)) {
-                        return 'Please enter a price';
+                        return AppStrings.pleaseEnterPrice;
                       }
                       if (showCustomPriceField &&
                           double.tryParse(value!) == null) {
-                        return 'Please enter a valid price';
+                        return AppStrings.pleaseEnterValidPrice;
                       }
                       return null;
                     },
@@ -470,21 +475,65 @@ class DonationFormState extends State<DonationForm> {
                   children: [
                     Expanded(
                       child: OutlinedButton(
-                        onPressed: () {},
+                        onPressed: () => Navigator.of(context).pop(),
                         style: OutlinedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 16),
+                          side: const BorderSide(color: Color(0xFFFF0050)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(100),
+                          ),
                         ),
-                        child: const Text("Back"),
+                        child: const Text(
+                          AppStrings.back,
+                          style: TextStyle(
+                            color: Color(0xFFFF0050),
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
                     ),
                     const SizedBox(width: 10),
                     Expanded(
                       child: FilledButton(
-                        onPressed: () {},
+                        onPressed: () {
+                          if (_formKey.currentState!.validate()) {
+                            // Validate required dropdowns
+                            if (selectedPrice.isEmpty ||
+                                selectedQuality.isEmpty ||
+                                selectedSize.isEmpty) {
+                              Fluttertoast.showToast(
+                                msg: AppStrings.pleaseSelectAllDropdowns,
+                              );
+                              return;
+                            }
+                            if (selectedCharity == null) {
+                              Fluttertoast.showToast(
+                                msg: AppStrings.pleaseSelectCharity,
+                              );
+                              return;
+                            }
+                            if (widget.selectedImages == null ||
+                                widget.selectedImages!.isEmpty) {
+                              Fluttertoast.showToast(
+                                msg: AppStrings.pleaseAddPhoto,
+                              );
+                              return;
+                            }
+                            final request = buildDonationRequest();
+                            donationViewModel.submitDonation(request);
+                          }
+                        },
                         style: FilledButton.styleFrom(
+                          backgroundColor: const Color(0xFFFF0050),
                           padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(100),
+                          ),
                         ),
-                        child: const Text("Next"),
+                        child: const Text(
+                          AppStrings.nextButton,
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
                       ),
                     ),
                   ],
@@ -524,6 +573,13 @@ class _SelectionField extends StatelessWidget {
           decoration: InputDecoration(
             labelText: label,
             suffixIcon: const Icon(Icons.chevron_right),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                color: Theme.of(context).colorScheme.outline,
+              ),
+            ),
           ),
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 4),

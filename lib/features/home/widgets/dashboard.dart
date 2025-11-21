@@ -33,7 +33,9 @@ class _DashboardPageState extends State<DashboardPage> {
     super.didChangeDependencies();
     if (!_hasInitialized) {
       _hasInitialized = true;
-      context.read<HomeViewModel>().fetchProducts();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        context.read<HomeViewModel>().fetchProducts();
+      });
     }
   }
 
@@ -41,10 +43,14 @@ class _DashboardPageState extends State<DashboardPage> {
   Widget build(BuildContext context) {
     return Consumer<HomeViewModel>(
       builder: (context, homeViewModel, _) {
-        final navigator =
-            Provider.of<NavigationProvider>(context, listen: false);
-        final productViewModel =
-            Provider.of<ProductViewModel>(context, listen: false);
+        final navigator = Provider.of<NavigationProvider>(
+          context,
+          listen: false,
+        );
+        final productViewModel = Provider.of<ProductViewModel>(
+          context,
+          listen: false,
+        );
         final products = homeViewModel.products;
         final status = homeViewModel.status;
 
@@ -58,14 +64,12 @@ class _DashboardPageState extends State<DashboardPage> {
               // Show loading widget when fetching data
               if (status.type == StatusType.loading)
                 const DashboardLoadingWidget()
-
               // Show error widget if failed
               else if (status.type == StatusType.failure)
                 DashboardErrorWidget(
                   errorMessage: status.message,
                   onRetry: () => homeViewModel.fetchProducts(),
                 )
-
               // Show products grid when data is loaded
               else if (products.isNotEmpty)
                 GridView.builder(
@@ -88,7 +92,6 @@ class _DashboardPageState extends State<DashboardPage> {
                     );
                   },
                 )
-
               // Show empty state if no products
               else
                 const DashboardEmptyWidget(),

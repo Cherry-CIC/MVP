@@ -89,7 +89,18 @@ class DonationDropdownFieldState extends State<DonationDropdownField> {
             return charityRow(item);
           }).toList();
         },
-        decoration: InputDecoration(hintText: widget.formFieldsHintText),
+        decoration: InputDecoration(
+          hintText: widget.formFieldsHintText,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(
+              color: Theme.of(context).colorScheme.outline,
+            ),
+          ),
+        ),
       ),
     );
   }

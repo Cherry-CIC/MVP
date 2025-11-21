@@ -6,12 +6,16 @@ class CategoryTileWidget extends StatelessWidget {
   final String image;
   final String text;
   final Widget? trailing;
+  final IconData? icon;
+  final String? assetIcon;
   const CategoryTileWidget({
     super.key,
     required this.onTap,
     required this.image,
     required this.text,
     this.trailing,
+    this.icon,
+    this.assetIcon,
   });
 
   @override
@@ -21,18 +25,40 @@ class CategoryTileWidget extends StatelessWidget {
       child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
         Column(children: [
           Row(children: [
-            Image.network(
-              image,
-              width: 30,
-              height: 30,
-              errorBuilder: (context, error, stackTrace) => const Icon(
-                Icons.broken_image,
-                color: AppColors.red,
+            if (icon != null)
+              Icon(
+                icon,
+                size: 24,
+                color: const Color(0xFFFF0050),
+              )
+            else if (assetIcon != null)
+              Image.asset(
+                assetIcon!,
+                width: 24,
+                height: 24,
+                color: const Color(0xFFFF0050),
+                errorBuilder: (context, error, stackTrace) => const Icon(
+                  Icons.broken_image,
+                  color: AppColors.red,
+                ),
+              )
+            else
+              Image.network(
+                image,
+                width: 24,
+                height: 24,
+                color: const Color(0xFFFF0050),
+                errorBuilder: (context, error, stackTrace) => const Icon(
+                  Icons.broken_image,
+                  color: AppColors.red,
+                ),
               ),
-            ),
             Padding(
-              padding: EdgeInsets.only(left: 20),
-              child: Text(text, style: Theme.of(context).textTheme.titleSmall),
+              padding: const EdgeInsets.only(left: 16),
+              child: Text(
+                text,
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
             ),
           ]),
         ]),
