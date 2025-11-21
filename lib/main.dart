@@ -10,6 +10,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'core/router/router.dart';
 import 'package:cherry_mvp/core/theme/theme_notifier.dart';
 
+import 'firebase_options.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
