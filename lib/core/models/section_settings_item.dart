@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 typedef ItemTapCallback = void Function(BuildContext context);
 class SectionSettingsItem {
