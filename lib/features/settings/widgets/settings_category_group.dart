@@ -7,10 +7,11 @@ class SettingsCategoryGroup extends StatelessWidget {
   const SettingsCategoryGroup({
     super.key,
     required this.children,
-    required this.heading,
+    required this.heading, this.onTap,
   });
 
   final List<SectionSettingsItem> children;
+  final VoidCallback? onTap;
   final String heading;
 
   @override
@@ -29,7 +30,13 @@ class SettingsCategoryGroup extends StatelessWidget {
           final item = children[index - 1];
           return SettingsItem(
             title: item.title,
-            onTap: () {},
+            onTap: () {
+            // Inside the closure, we check if the item has an action...
+            if (item.onTap != null) {
+              // ...and execute that action, passing the context available from itemBuilder.
+              item.onTap!(context);
+            }
+          },
             trailing: item.trailing,
           );
         });
