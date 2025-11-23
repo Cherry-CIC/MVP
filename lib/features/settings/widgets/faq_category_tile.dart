@@ -12,14 +12,12 @@ class FaqCategoryTile extends StatelessWidget {
       elevation: 0,
       margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
       child: ExpansionTile(
-        // Category title as the header
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        collapsedBackgroundColor: Theme.of(context).scaffoldBackgroundColor,
         title: Text(
           category.title,
-          style: Theme.of(
-            context,
-          ).textTheme.titleMedium!.copyWith(fontWeight: FontWeight.bold),
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(fontSize: 18),
         ),
-        // Grouped questions as the collapsible content
         children: category.entries.map((entry) {
           return Padding(
             padding: const EdgeInsets.only(
@@ -33,8 +31,8 @@ class FaqCategoryTile extends StatelessWidget {
                 // Question
                 Text(
                   entry.question,
-                  style: Theme.of(context).textTheme.bodyLarge!.copyWith(
-                    fontWeight: FontWeight.w600,
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    fontSize: 15,
                     color: Theme.of(context).colorScheme.primary,
                   ),
                 ),
