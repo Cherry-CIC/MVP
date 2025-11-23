@@ -16,19 +16,12 @@ class FaqPage extends StatelessWidget {
             snap: true,
           ),
           SliverList.builder(
-            itemCount:  dummyFaqData.length,
+            itemCount: dummyFaqData.length,
             itemBuilder: (context, index) {
-              final product = basket.basketItems[index];
-              return BasketListItem(
-                product: product,
-                onRemove: () => basket.removeItem(product),
-              );
+              final category = dummyFaqData[index];
+              return FaqCategoryTile(category: category);
             },
           ),
-         SliverList(delegate: delegate)
-         dummyFaqData.map((category) {
-              return FaqCategoryTile(category: category);
-            }).toList(),
 
           SliverPadding(
             padding: EdgeInsets.only(
@@ -55,14 +48,18 @@ class FaqCategoryTile extends StatelessWidget {
         // Category title as the header
         title: Text(
           category.title,
-          style: Theme.of(context).textTheme.titleMedium!.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium!.copyWith(fontWeight: FontWeight.bold),
         ),
         // Grouped questions as the collapsible content
         children: category.entries.map((entry) {
           return Padding(
-            padding: const EdgeInsets.only(left: 16.0, right: 16.0, bottom: 8.0),
+            padding: const EdgeInsets.only(
+              left: 16.0,
+              right: 16.0,
+              bottom: 8.0,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
