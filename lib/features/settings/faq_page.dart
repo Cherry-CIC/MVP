@@ -1,6 +1,7 @@
-import 'package:cherry_mvp/core/models/faqs_model.dart';
 import 'package:flutter/material.dart';
 import '../../core/config/app_strings.dart';
+import 'package:cherry_mvp/core/models/faqs_model.dart';
+import 'package:cherry_mvp/features/settings/widgets/faq_category_tile.dart';
 
 class FaqPage extends StatelessWidget {
   const FaqPage({super.key});
@@ -22,7 +23,6 @@ class FaqPage extends StatelessWidget {
               return FaqCategoryTile(category: category);
             },
           ),
-
           SliverPadding(
             padding: EdgeInsets.only(
               bottom: MediaQuery.of(context).padding.bottom + 16,
