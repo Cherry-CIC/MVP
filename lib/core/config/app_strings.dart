@@ -335,8 +335,46 @@ class AppStrings {
   static const seeAllText = "See All";
   static const currencySymbol = "£";
 
-// Professional
+  // Professional
   static const professional = 'Charities';
-  static const signUpInstruction =
-      'Click below to sign up as a charity';
+  static const signUpInstruction = 'Click below to sign up as a charity';
+
+  //Faqs
+  static const generalInfo = 'General Info';
+  static const whatIsCherryQuestion = 'What is cherry?';
+  static const whatIsCherryAnswer =
+      'Cherry is a platform connecting buyers and sellers where a portion of every transaction is donated to charity.';
+  static const whoCanSellQuestion = 'Who can sell on cherry?';
+  static const whoCanSellAnswer =
+      'Anyone with a verified account and a valid payment method can list items for sale.';
+  static const offers = 'Offers';
+  static const howDoIOfferQuestion = 'How do I make an offer?';
+  static const howDoIOfferAnswer =
+      'On any item\'s page, select the "Make an Offer" button and enter your proposed price.';
+  static const offerDeclinedQuestion = 'What happens if my offer is declined?';
+  static const offerDeclinedAnswer =
+      'If your offer is declined, you can submit a new offer or choose to buy the item at the listed price.';
+  static const selling = 'Selling';
+  static const listItemQuestion = 'How do I list an item?';
+  static const listItemAnswer =
+      'Navigate to the "Sell" tab and follow the prompts to upload photos, add a description, and set your price.';
+  static const pickCharityQuestion = 'Can I pick the charity?';
+  static const pickCharityAnswer =
+      'Yes, sellers can choose from our list of approved partner charities when creating a listing.';
+  static const buying = 'Buying';
+  static const deliveryOptionsQuestion = 'What delivery options are there?';
+  static const deliveryOptionsAnswer =
+      'Available options typically include standard and express shipping, varying by seller location.';
+  static const purchaseSecurityQuestion = 'What is purchase security?';
+  static const purchaseSecurityAnswer =
+      'Our purchase security guarantees a full refund if your item is significantly not as described or never arrives.';
+  static const trustAndSafety = 'Trust & Safety';
+  static const transactionSafetyQuestion =
+      'How does cherry keep transactions safe?';
+  static const transactionSafetyAnswer =
+      'We use secure payment processing, seller verification, and a robust dispute resolution system.';
+ static const refundPolicyQuestion =
+     'What’s the refund policy?';
+  static const refundPolicyAnswer =
+      'Refunds are issued based on our purchase security policy for issues like non-delivery or item discrepancies.';
 }
