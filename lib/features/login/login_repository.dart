@@ -39,9 +39,10 @@ class LoginRepository {
         FirestoreConstants.photoUrl: userCredentials?.photoUrl ?? "",
       };
       await _firestoreService.saveDocument(
-          FirestoreConstants.pathUserCollection,
-          userCredentials?.uid ?? "",
-          data);
+        FirestoreConstants.pathUserCollection,
+        userCredentials?.uid ?? "",
+        data,
+      );
 
       //proceed to fetch user details
 
@@ -69,9 +70,10 @@ class LoginRepository {
         FirestoreConstants.photoUrl: userCredentials?.photoUrl ?? "",
       };
       await _firestoreService.saveDocument(
-          FirestoreConstants.pathUserCollection,
-          userCredentials?.uid ?? "",
-          data);
+        FirestoreConstants.pathUserCollection,
+        userCredentials?.uid ?? "",
+        data,
+      );
 
       //proceed to fetch user details
 
@@ -86,22 +88,34 @@ class LoginRepository {
   Future<Result<void>> fetchUserFromFirestore(String uid) async {
     // Fetch user document from Firestore
     final result = await _firestoreService.getDocument(
-        FirestoreConstants.pathUserCollection, uid);
+      FirestoreConstants.pathUserCollection,
+      uid,
+    );
 
     if (result.isSuccess) {
       final document = result.value;
       // Store user data to shared preferences
       await _firestoreService.prefs.setString(FirestoreConstants.id, uid);
-      await _firestoreService.prefs.setString(FirestoreConstants.firstname,
-          document?.get(FirestoreConstants.firstname));
-      await _firestoreService.prefs.setString(FirestoreConstants.photoUrl,
-          document?.get(FirestoreConstants.photoUrl) ?? "");
-      await _firestoreService.prefs.setString(FirestoreConstants.email,
-          document?.get(FirestoreConstants.email) ?? "");
+      await _firestoreService.prefs.setString(
+        FirestoreConstants.firstname,
+        document?.get(FirestoreConstants.firstname),
+      );
+      await _firestoreService.prefs.setString(
+        FirestoreConstants.photoUrl,
+        document?.get(FirestoreConstants.photoUrl) ?? "",
+      );
+      await _firestoreService.prefs.setString(
+        FirestoreConstants.email,
+        document?.get(FirestoreConstants.email) ?? "",
+      );
 
       return Result.success(null);
     } else {
       return Result.failure(result.error);
     }
+  }
+
+  Future<Result<void>> logout() async {
+    return await _authService.logout();
   }
 }

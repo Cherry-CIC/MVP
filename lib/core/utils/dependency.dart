@@ -1,3 +1,4 @@
+import 'package:cherry_mvp/features/auth/auth_view_model.dart';
 import 'package:cherry_mvp/features/categories/category_view_model.dart';
 import 'package:cherry_mvp/features/checkout/checkout_repository.dart';
 import 'package:cherry_mvp/features/charity_page/charity_repository.dart';
@@ -35,9 +36,7 @@ List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
   final bool useMockData = dotenv.env['USE_MOCK_DATA'] == 'true';
   return [
     Provider(create: (_) => NavigationProvider()),
-    ChangeNotifierProvider(
-      create: (_) => ThemeNotifier(prefs),
-    ),
+    ChangeNotifierProvider(create: (_) => ThemeNotifier(prefs)),
 
     // Add API Service
     Provider<ApiService>(
@@ -197,6 +196,12 @@ List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
           context,
           listen: false,
         ),
+      ),
+    ),
+    // Logout provider
+    ChangeNotifierProvider<AuthViewModel>(
+      create: (context) => AuthViewModel(
+        loginRepository: Provider.of<LoginRepository>(context, listen: false),
       ),
     ),
   ];
