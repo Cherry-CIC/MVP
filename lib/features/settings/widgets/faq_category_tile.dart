@@ -41,6 +41,7 @@ class FaqCategoryTile extends StatelessWidget {
                 Text(
                   entry.answer,
                   style: Theme.of(context).textTheme.bodyMedium,
+                  textAlign: TextAlign.justify,
                 ),
                 const Divider(height: 20),
               ],
