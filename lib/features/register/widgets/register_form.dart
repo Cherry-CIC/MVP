@@ -17,6 +17,7 @@ class RegisterForm extends StatefulWidget {
 
 class _RegisterFormState extends State<RegisterForm> {
   final _formKey = GlobalKey<FormState>();
+  final TextEditingController _userNameController = TextEditingController();
   final TextEditingController _firstNameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _phoneNumberController = TextEditingController();
@@ -29,8 +30,9 @@ class _RegisterFormState extends State<RegisterForm> {
 
   // Function to pick an image
   Future<void> _pickImage() async {
-    final XFile? pickedFile =
-        await _picker.pickImage(source: ImageSource.gallery);
+    final XFile? pickedFile = await _picker.pickImage(
+      source: ImageSource.gallery,
+    );
     if (pickedFile != null) {
       setState(() {
         _selectedImage = File(pickedFile.path);
@@ -59,8 +61,11 @@ class _RegisterFormState extends State<RegisterForm> {
                         width: 100,
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
                         child: Center(
-                            child: Icon(Icons.camera_alt,
-                                color: Theme.of(context).colorScheme.primary)),
+                          child: Icon(
+                            Icons.camera_alt,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                        ),
                       )
                     : Image.file(
                         _selectedImage!,
@@ -71,12 +76,22 @@ class _RegisterFormState extends State<RegisterForm> {
               ),
               const SizedBox(height: 20),
 
-              // FirstName Field
+              // Username Field
+              TextFormField(
+                controller: _userNameController,
+                validator: validateUserName,
+                decoration: InputDecoration(
+                  hintText: 'Username',
+                  prefixIcon: Icon(Icons.person),
+                ),
+              ), // FirstName Field
               TextFormField(
                 controller: _firstNameController,
                 validator: validateFirstName,
                 decoration: InputDecoration(
-                    hintText: 'First Name', prefixIcon: Icon(Icons.person)),
+                  hintText: 'First Name',
+                  prefixIcon: Icon(Icons.person),
+                ),
               ),
               const SizedBox(height: 20),
 
@@ -86,7 +101,9 @@ class _RegisterFormState extends State<RegisterForm> {
                 keyboardType: TextInputType.emailAddress,
                 validator: validateEmail,
                 decoration: InputDecoration(
-                    hintText: 'Email', prefixIcon: Icon(Icons.email)),
+                  hintText: 'Email',
+                  prefixIcon: Icon(Icons.email),
+                ),
               ),
               const SizedBox(height: 20),
 
@@ -95,7 +112,9 @@ class _RegisterFormState extends State<RegisterForm> {
                 keyboardType: TextInputType.phone,
                 validator: validatePhoneNumber,
                 decoration: InputDecoration(
-                    hintText: 'Phone Number', prefixIcon: Icon(Icons.phone)),
+                  hintText: 'Phone Number',
+                  prefixIcon: Icon(Icons.phone),
+                ),
               ),
               const SizedBox(height: 20),
 
@@ -105,7 +124,9 @@ class _RegisterFormState extends State<RegisterForm> {
                 obscureText: true,
                 validator: validatePassword,
                 decoration: InputDecoration(
-                    hintText: 'Password', prefixIcon: Icon(Icons.lock)),
+                  hintText: 'Password',
+                  prefixIcon: Icon(Icons.lock),
+                ),
               ),
               const SizedBox(height: 20),
 
@@ -116,7 +137,9 @@ class _RegisterFormState extends State<RegisterForm> {
                 validator: (value) =>
                     validateConfirmPassword(value, _passwordController.text),
                 decoration: InputDecoration(
-                    hintText: 'Confirm Password', prefixIcon: Icon(Icons.lock)),
+                  hintText: 'Confirm Password',
+                  prefixIcon: Icon(Icons.lock),
+                ),
               ),
               const SizedBox(height: 20),
 
@@ -126,7 +149,8 @@ class _RegisterFormState extends State<RegisterForm> {
                   WidgetsBinding.instance.addPostFrameCallback((_) {
                     if (viewModel.status.type == StatusType.failure) {
                       Fluttertoast.showToast(
-                          msg: viewModel.status.message ?? "");
+                        msg: viewModel.status.message ?? "",
+                      );
                     } else if (viewModel.status.type == StatusType.success) {
                       Fluttertoast.showToast(msg: "Registration Successful");
 
@@ -149,11 +173,12 @@ class _RegisterFormState extends State<RegisterForm> {
                                 onPressed: () {
                                   if (_formKey.currentState!.validate()) {
                                     viewModel.register(
-                                        _firstNameController.text,
-                                        _emailController.text,
-                                        _phoneNumberController.text,
-                                        _passwordController.text,
-                                        _selectedImage);
+                                      _firstNameController.text,
+                                      _emailController.text,
+                                      _phoneNumberController.text,
+                                      _passwordController.text,
+                                      _selectedImage,
+                                    );
                                   }
                                 },
                                 child: Text("Submit"),
@@ -173,12 +198,15 @@ class _RegisterFormState extends State<RegisterForm> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text("Already have an account? "),
-                    Text("Login",
-                        style: TextStyle(
-                            color: Theme.of(context).colorScheme.primary)),
+                    Text(
+                      "Login",
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
                   ],
                 ),
-              )
+              ),
             ],
           ),
         ),
