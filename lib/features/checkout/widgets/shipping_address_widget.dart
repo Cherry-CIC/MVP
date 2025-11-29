@@ -3,7 +3,10 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
+import 'package:cherry_mvp/core/config/config.dart';
 import 'package:cherry_mvp/features/checkout/constants/address_constants.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class ShippingAddressWidget extends StatefulWidget {
   final Function(PlaceDetails)? onAddressSelected;
@@ -25,10 +28,19 @@ class _ShippingAddressWidgetState extends State<ShippingAddressWidget> {
   bool _isLoading = false;
   bool _showPredictions = false;
   PlaceDetails? _selectedAddress;
-  bool _isAddressConfirmed = false; // New state to track confirmation
+  bool _isAddressConfirmed = false;
+  bool _useManualEntry = false;
+  bool _apiAvailable = true;
   
+  // Manual entry controllers
+  final TextEditingController _addressLine1Controller = TextEditingController();
+  final TextEditingController _addressLine2Controller = TextEditingController();
+  final TextEditingController _cityController = TextEditingController();
+  final TextEditingController _postcodeController = TextEditingController();
+  final TextEditingController _countryController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
 
- final String _apiKey = dotenv.env[AddressConstants.apiKeyEnvVar] ?? '';
+  final String _apiKey = dotenv.env[AddressConstants.apiKeyEnvVar] ?? '';
   
   @override
   void initState() {
@@ -39,7 +51,14 @@ class _ShippingAddressWidgetState extends State<ShippingAddressWidget> {
     // Check if API key is available
     if (_apiKey.isEmpty) {
       debugPrint(AddressConstants.apiKeyMissingError);
+      setState(() {
+        _apiAvailable = false;
+        _useManualEntry = true;
+      });
     }
+    
+    _countryController.text = AppStrings.unitedKingdomText;
+    _loadSavedAddress();
   }
 
   @override
@@ -47,6 +66,11 @@ class _ShippingAddressWidgetState extends State<ShippingAddressWidget> {
     _debounceTimer?.cancel();
     _addressController.dispose();
     _addressFocusNode.dispose();
+    _addressLine1Controller.dispose();
+    _addressLine2Controller.dispose();
+    _cityController.dispose();
+    _postcodeController.dispose();
+    _countryController.dispose();
     super.dispose();
   }
 
@@ -82,7 +106,7 @@ class _ShippingAddressWidgetState extends State<ShippingAddressWidget> {
   }
 
   Future<void> _searchPlaces(String query) async {
-    if (query.isEmpty || _isAddressConfirmed || _apiKey.isEmpty) return;
+    if (query.isEmpty || _isAddressConfirmed || _apiKey.isEmpty || !_apiAvailable) return;
     
     setState(() {
       _isLoading = true;
@@ -132,6 +156,8 @@ class _ShippingAddressWidgetState extends State<ShippingAddressWidget> {
       setState(() {
         _isLoading = false;
         _showPredictions = false;
+        _apiAvailable = false;
+        _useManualEntry = true;
       });
     }
   }
@@ -197,12 +223,177 @@ class _ShippingAddressWidgetState extends State<ShippingAddressWidget> {
       _selectedAddress = null;
       _showPredictions = false;
     });
-    // Focus the text field for editing
-    _addressFocusNode.requestFocus();
+    if (_useManualEntry) {
+      _addressLine1Controller.clear();
+      _addressLine2Controller.clear();
+      _cityController.clear();
+      _postcodeController.clear();
+      _countryController.text = AppStrings.unitedKingdomText;
+    } else {
+      _addressFocusNode.requestFocus();
+    }
+  }
+
+  void _toggleEntryMode() {
+    setState(() {
+      _useManualEntry = !_useManualEntry;
+      _isAddressConfirmed = false;
+      _selectedAddress = null;
+    });
+  }
+
+  void _submitManualAddress() async {
+    if (_formKey.currentState?.validate() ?? false) {
+      // Create PlaceDetails from manual input
+      final manualAddress = PlaceDetails.fromManualEntry(
+        addressLine1: _addressLine1Controller.text,
+        addressLine2: _addressLine2Controller.text,
+        city: _cityController.text,
+        postcode: _postcodeController.text,
+        country: _countryController.text,
+      );
+
+      // Save address to Firestore first
+      final saveSuccess = await _saveAddressToFirestore(manualAddress);
+
+      if (!saveSuccess) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Failed to save address. Please try again.'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+        return;
+      }
+
+      setState(() {
+        _selectedAddress = manualAddress;
+        _isAddressConfirmed = true;
+        _addressController.text = manualAddress.formattedAddress;
+      });
+
+      if (widget.onAddressSelected != null) {
+        widget.onAddressSelected!(manualAddress);
+      }
+    }
+  }
+
+  Future<bool> _saveAddressToFirestore(PlaceDetails address) async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        debugPrint('No user logged in, cannot save address');
+        return false;
+      }
+
+      final addressData = {
+        'addressLine1': address.streetNumber.isNotEmpty && address.route.isNotEmpty
+            ? '${address.streetNumber} ${address.route}'
+            : address.route.isNotEmpty ? address.route : _addressLine1Controller.text,
+        'addressLine2': _addressLine2Controller.text,
+        'city': address.locality.isNotEmpty ? address.locality : _cityController.text,
+        'postcode': address.postalCode.isNotEmpty ? address.postalCode : _postcodeController.text,
+        'country': address.country.isNotEmpty ? address.country : _countryController.text,
+        'formattedAddress': address.formattedAddress,
+        'updatedAt': FieldValue.serverTimestamp(),
+      };
+
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .collection('address')
+          .doc('shipping')
+          .set(addressData, SetOptions(merge: true));
+
+      debugPrint('Address saved to Firestore successfully');
+      return true;
+    } catch (e) {
+      debugPrint('Error saving address to Firestore: $e');
+      return false;
+    }
+  }
+
+  Future<void> _loadSavedAddress() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        debugPrint('No user logged in, cannot load address');
+        return;
+      }
+
+      final doc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .collection('address')
+          .doc('shipping')
+          .get();
+
+      if (doc.exists) {
+        final data = doc.data();
+        if (data != null && mounted) {
+          setState(() {
+            _addressLine1Controller.text = data['addressLine1'] ?? '';
+            _addressLine2Controller.text = data['addressLine2'] ?? '';
+            _cityController.text = data['city'] ?? '';
+            _postcodeController.text = data['postcode'] ?? '';
+            _countryController.text = data['country'] ?? AppStrings.unitedKingdomText;
+            
+            // If all required fields are filled, auto-confirm
+            if (_addressLine1Controller.text.isNotEmpty &&
+                _cityController.text.isNotEmpty &&
+                _postcodeController.text.isNotEmpty) {
+              final savedAddress = PlaceDetails.fromManualEntry(
+                addressLine1: _addressLine1Controller.text,
+                addressLine2: _addressLine2Controller.text,
+                city: _cityController.text,
+                postcode: _postcodeController.text,
+                country: _countryController.text,
+              );
+              _selectedAddress = savedAddress;
+              _isAddressConfirmed = true;
+              _addressController.text = savedAddress.formattedAddress;
+            }
+          });
+          debugPrint('Address loaded from Firestore successfully');
+        }
+      }
+    } catch (e) {
+      debugPrint('Error loading address from Firestore: $e');
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Mode toggle button (only show if API is available)
+        if (_apiAvailable) ...[
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton.icon(
+              onPressed: _toggleEntryMode,
+              icon: Icon(_useManualEntry ? Icons.search : Icons.edit),
+              label: Text(_useManualEntry
+                  ? AddressConstants.toggleSearchMode
+                  : AddressConstants.toggleManualMode),
+            ),
+          ),
+          const SizedBox(height: 8),
+        ],
+
+        // Show manual entry form or autocomplete
+        if (_useManualEntry)
+          _buildManualEntryForm()
+        else
+          _buildAutocompleteField(),
+      ],
+    );
+  }
+
+  Widget _buildAutocompleteField() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -385,6 +576,178 @@ class _ShippingAddressWidgetState extends State<ShippingAddressWidget> {
       ],
     );
   }
+
+  Widget _buildManualEntryForm() {
+    return Form(
+      key: _formKey,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Address Line 1
+          TextFormField(
+            controller: _addressLine1Controller,
+            decoration: const InputDecoration(
+              labelText: AddressConstants.streetAddressLabel,
+              hintText: AddressConstants.streetAddressHint,
+              prefixIcon: Icon(Icons.home),
+              border: OutlineInputBorder(),
+            ),
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return AddressConstants.streetAddressError;
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: 16),
+          TextFormField(
+            controller: _addressLine2Controller,
+            decoration: const InputDecoration(
+              labelText: AddressConstants.addressLine2Label,
+              hintText: AddressConstants.addressLine2Hint,
+              prefixIcon: Icon(Icons.business),
+              border: OutlineInputBorder(),
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // City and Postcode in a row
+          Row(
+            children: [
+              Expanded(
+                flex: 2,
+                child: TextFormField(
+                  controller: _cityController,
+                  decoration: const InputDecoration(
+                    labelText: AddressConstants.townCityLabel,
+                    hintText: AddressConstants.townCityHint,
+                    prefixIcon: Icon(Icons.location_city),
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return AddressConstants.requiredFieldError;
+                    }
+                    return null;
+                  },
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: TextFormField(
+                  controller: _postcodeController,
+                  decoration: const InputDecoration(
+                    labelText: AddressConstants.postcodeLabel,
+                    hintText: AddressConstants.postcodeHint,
+                    prefixIcon: Icon(Icons.mail),
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return AddressConstants.requiredFieldError;
+                    }
+                    final postcodeRegex = RegExp(
+                      r'^[A-Z]{1,2}[0-9][A-Z0-9]? ?[0-9][A-Z]{2}$',
+                      caseSensitive: false,
+                    );
+                    if (!postcodeRegex.hasMatch(value.toUpperCase())) {
+                      return AddressConstants.invalidPostcodeError;
+                    }
+                    return null;
+                  },
+                  textCapitalization: TextCapitalization.characters,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          // Country (read-only, UK-specific app)
+          TextFormField(
+            controller: _countryController,
+            decoration: const InputDecoration(
+              labelText: AddressConstants.countryLabel,
+              prefixIcon: Icon(Icons.public),
+              border: OutlineInputBorder(),
+            ),
+            enabled: false,
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return AddressConstants.countryError;
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            height: 48,
+            child: FilledButton.icon(
+              onPressed: _submitManualAddress,
+              icon: const Icon(Icons.check),
+              label: const Text(AddressConstants.confirmAddressButton),
+            ),
+          ),
+
+          // Confirmed address display
+          if (_isAddressConfirmed && _selectedAddress != null) ...[
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primaryContainer,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.check_circle,
+                    color: Theme.of(context).colorScheme.primary,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          AddressConstants.addressConfirmedTitle,
+                          style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                            color: Theme.of(context).colorScheme.onPrimaryContainer,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          _selectedAddress!.formattedAddress,
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Theme.of(context).colorScheme.onPrimaryContainer,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: _editAddress,
+                    child: Text(
+                      AddressConstants.editButtonText,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
 }
 
 // Data Models (same as before)
@@ -439,6 +802,55 @@ class PlaceDetails {
     this.latitude,
     this.longitude,
   });
+
+  factory PlaceDetails.fromManualEntry({
+    required String addressLine1,
+    required String addressLine2,
+    required String city,
+    required String postcode,
+    required String country,
+  }) {
+    // Build formatted address
+    final addressParts = [
+      addressLine1,
+      if (addressLine2.isNotEmpty) addressLine2,
+      city,
+      postcode,
+      country,
+    ];
+    final formattedAddress = addressParts.join(', ');
+
+    // Create address components to match Google's structure
+    final components = [
+      AddressComponent(
+        longName: addressLine1,
+        shortName: addressLine1,
+        types: [AddressConstants.routeType],
+      ),
+      AddressComponent(
+        longName: city,
+        shortName: city,
+        types: [AddressConstants.localityType],
+      ),
+      AddressComponent(
+        longName: postcode,
+        shortName: postcode,
+        types: [AddressConstants.postalCodeType],
+      ),
+      AddressComponent(
+        longName: country,
+        shortName: country,
+        types: [AddressConstants.countryType],
+      ),
+    ];
+
+    return PlaceDetails(
+      formattedAddress: formattedAddress,
+      addressComponents: components,
+      latitude: null,
+      longitude: null,
+    );
+  }
 
   factory PlaceDetails.fromJson(Map<String, dynamic> json) {
     final List<AddressComponent> components = [];
