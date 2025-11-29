@@ -10,18 +10,16 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'core/router/router.dart';
 import 'package:cherry_mvp/core/theme/theme_notifier.dart';
 
-import 'firebase_option.dart';
-
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   /// Load environment variables
   await dotenv.load();
+  await Firebase.initializeApp();
 
   Stripe.publishableKey = dotenv.env['STRIPE_PUBLISHABLE_KEY']!;
   await Stripe.instance.applySettings();
 
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   SharedPreferences prefs = await SharedPreferences.getInstance();
 
   runApp(MultiProvider(providers: [...buildProviders(prefs)], child: MyApp()));

@@ -399,7 +399,7 @@ class CheckoutViewModel extends ChangeNotifier {
       return false;
     } catch (e) {
       _createOrderStatus = Status.failure(e.toString());
-      _log.severe('Error making payment:: $e');
+      _log.severe('Error making payment::: $e');
       notifyListeners();
       return false;
     }

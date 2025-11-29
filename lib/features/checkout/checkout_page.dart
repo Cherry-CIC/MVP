@@ -95,7 +95,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                       Fluttertoast.showToast(
                         msg:
                             viewModel.createOrderStatus.message ??
-                            "Something went wrong",
+                            "oops! Something went wrong",
                       );
                     } else if (viewModel.createOrderStatus.type ==
                         StatusType.success) {
