@@ -66,7 +66,6 @@ String? validateConfirmPassword(String? value, String? password) {
   return null;
 }
 
-
 String? validateDonationFormFields(String? value) {
   if (value == null || value.isEmpty) {
     return "This cannot be empty";
