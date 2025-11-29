@@ -18,7 +18,7 @@ class AddressConstants {
 
   // API settings
   static const String apiKeyEnvVar = 'GOOGLE_API_KEY';
-  static const String countryRestriction = 'country:us'; // Adjust as needed
+  static const String countryRestriction = 'country:gb'; // UK restriction
   static const String addressTypeFilter = 'address';
 
   // UI strings
@@ -31,6 +31,24 @@ class AddressConstants {
   static const String addressHinText = 'address';
   static const String cityHintText = 'city';
   static const String postCodeHintText = 'postcode';
+  
+  // Manual entry strings
+  static const String toggleSearchMode = 'Use Address Search';
+  static const String toggleManualMode = 'Enter Manually';
+  static const String confirmAddressButton = 'Confirm Address';
+  static const String streetAddressLabel = 'Street Address';
+  static const String streetAddressHint = 'House number and street name';
+  static const String addressLine2Label = 'Address Line 2 (Optional)';
+  static const String addressLine2Hint = 'Flat, apartment, or building name';
+  static const String townCityLabel = 'Town/City';
+  static const String townCityHint = 'e.g. London';
+  static const String postcodeLabel = 'Postcode';
+  static const String postcodeHint = 'e.g. SW1A 1AA';
+  static const String countryLabel = 'Country';
+  static const String requiredFieldError = 'Required';
+  static const String streetAddressError = 'Please enter your street address';
+  static const String countryError = 'Please enter your country';
+  static const String invalidPostcodeError = 'Invalid UK postcode';
 
   // Error messages
   static const String addressSearchError = 'Error searching places';

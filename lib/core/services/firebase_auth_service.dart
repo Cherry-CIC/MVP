@@ -8,9 +8,7 @@ import 'error_string.dart';
 class FirebaseAuthService {
   final FirebaseAuth firebaseAuth;
 
-  FirebaseAuthService({
-    required this.firebaseAuth,
-  });
+  FirebaseAuthService({required this.firebaseAuth});
 
   Future<Result<UserCredentials>> signUp(String email, String password) async {
     try {
@@ -20,7 +18,8 @@ class FirebaseAuthService {
       );
 
       return Result.success(
-          UserCredentials(uid: user.user?.uid, email: user.user?.email));
+        UserCredentials(uid: user.user?.uid, email: user.user?.email),
+      );
     } on FirebaseAuthException catch (e) {
       return Result.failure(e.message ?? ErrorStrings.registerError);
     } catch (e) {
@@ -35,7 +34,8 @@ class FirebaseAuthService {
         password: password,
       );
       return Result.success(
-          UserCredentials(uid: user.user?.uid, email: user.user?.email));
+        UserCredentials(uid: user.user?.uid, email: user.user?.email),
+      );
     } on FirebaseAuthException catch (e) {
       return Result.failure(e.message ?? ErrorStrings.loginError);
     } catch (e) {
@@ -77,12 +77,15 @@ class FirebaseAuthService {
       final user = await FirebaseAuth.instance.signInWithCredential(credential);
 
       // Once signed in, return the UserCredential
-      return Result.success(UserCredentials(
+      return Result.success(
+        UserCredentials(
           uid: user.user?.uid,
           email: user.user?.email,
           firstname: user.user?.displayName,
           photoUrl: user.user?.photoURL,
-          phonenumber: user.user?.phoneNumber));
+          phonenumber: user.user?.phoneNumber,
+        ),
+      );
     } on FirebaseAuthException catch (e) {
       return Result.failure(e.message ?? ErrorStrings.friendlyError);
     } catch (e) {
@@ -100,14 +103,30 @@ class FirebaseAuthService {
         user = await FirebaseAuth.instance.signInWithProvider(appleProvider);
       }
       // Once signed in, return the UserCredential
-      return Result.success(UserCredentials(
+      return Result.success(
+        UserCredentials(
           uid: user.user?.uid,
           email: user.user?.email,
           firstname: user.user?.displayName,
           photoUrl: user.user?.photoURL,
-          phonenumber: user.user?.phoneNumber));
+          phonenumber: user.user?.phoneNumber,
+        ),
+      );
     } on FirebaseAuthException catch (e) {
       return Result.failure(e.message ?? ErrorStrings.friendlyError);
+    } catch (e) {
+      return Result.failure(e.toString());
+    }
+  }
+
+  Future<Result<void>> logout() async {
+    try {
+      await firebaseAuth.signOut();
+      if (await GoogleSignIn().isSignedIn()) {
+        await GoogleSignIn().signOut();
+      }
+
+      return Result.success(null);
     } catch (e) {
       return Result.failure(e.toString());
     }
