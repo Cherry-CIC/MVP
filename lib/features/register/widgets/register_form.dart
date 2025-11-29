@@ -16,6 +16,8 @@ class RegisterForm extends StatefulWidget {
 }
 
 class _RegisterFormState extends State<RegisterForm> {
+  bool isUsernameChecking = false;
+  String? _usernameError;
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _userNameController = TextEditingController();
   final TextEditingController _firstNameController = TextEditingController();
@@ -79,12 +81,31 @@ class _RegisterFormState extends State<RegisterForm> {
               // Username Field
               TextFormField(
                 controller: _userNameController,
-                validator: validateUserName,
+                validator: validateUsername,
                 decoration: InputDecoration(
                   hintText: 'Username',
                   prefixIcon: Icon(Icons.person),
+                  suffixIcon: isUsernameChecking
+                      ? const Padding(
+                          // Show spinner while checking
+                          padding: EdgeInsets.all(8.0),
+                          child: SizedBox(
+                            height: 16,
+                            width: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                        )
+                      : _usernameError == null && validateUsername == null
+                      ? const Icon(
+                          Icons.check_circle,
+                          color: Colors.green,
+                        ) // Show checkmark on success
+                      : null,
                 ),
-              ), // FirstName Field
+              ),
+              const SizedBox(height: 20),
+
+              // FirstName Field
               TextFormField(
                 controller: _firstNameController,
                 validator: validateFirstName,
