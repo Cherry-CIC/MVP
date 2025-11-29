@@ -90,21 +90,19 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 width: double.infinity,
                 child: Consumer<CheckoutViewModel>(
                   builder: (context, viewModel, _) {
-                    WidgetsBinding.instance.addPostFrameCallback((_) async {
-                      if (viewModel.createOrderStatus.type ==
-                          StatusType.failure) {
-                        Fluttertoast.showToast(
-                          msg:
-                              viewModel.createOrderStatus.message ??
-                              "Something went wrong",
-                        );
-                      } else if (viewModel.createOrderStatus.type ==
-                          StatusType.success) {
-                        Fluttertoast.showToast(msg: "Payment Successful");
-                        await Future.delayed(const Duration(seconds: 1));
-                        gotoCheckoutComplete();
-                      }
-                    });
+                    if (viewModel.createOrderStatus.type ==
+                        StatusType.failure) {
+                      Fluttertoast.showToast(
+                        msg:
+                            viewModel.createOrderStatus.message ??
+                            "Something went wrong",
+                      );
+                    } else if (viewModel.createOrderStatus.type ==
+                        StatusType.success) {
+                      Fluttertoast.showToast(msg: "Payment Successful");
+
+                      gotoCheckoutComplete();
+                    }
                     return FilledButton(
                       onPressed: () async {
                         if (viewModel.deliveryChoice != null) {
@@ -119,6 +117,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                             bool result = await viewModel.payWithPaymentSheet(
                               amount: basket.total,
                             );
+                            debugPrint("baskletttt $result");
                             if (result) {
                               await viewModel.createOrder();
                             }
@@ -147,7 +146,8 @@ class _CheckoutPageState extends State<CheckoutPage> {
     );
   }
 
-  gotoCheckoutComplete() {
+  gotoCheckoutComplete() async {
+    await Future.delayed(const Duration(seconds: 1));
     Navigator.pushReplacementNamed(context, AppRoutes.checkoutComplete);
   }
 }

@@ -382,20 +382,27 @@ class CheckoutViewModel extends ChangeNotifier {
         // Present the native PaymentSheet (it will show ApplePay/GooglePay if available)
         await Stripe.instance.presentPaymentSheet();
         return true;
+      } else {
+        _createOrderStatus = Status.failure(response.error.toString());
+        _log.severe('Create Payment intent Error :: ${response.error}');
+        notifyListeners();
+        return false;
       }
     } on StripeException catch (e) {
-      _createOrderStatus = Status.failure(e.toString());
+      _createOrderStatus = Status.failure(
+        e.error.localizedMessage ?? e.toString(),
+      );
       _log.severe(
         'Stripe Payment Error :: ${e.error.localizedMessage ?? e.toString()}',
       );
+      notifyListeners();
       return false;
     } catch (e) {
       _createOrderStatus = Status.failure(e.toString());
       _log.severe('Error making payment:: $e');
+      notifyListeners();
       return false;
     }
-    notifyListeners();
-    return false;
   }
 
   Future<void> createOrder() async {
