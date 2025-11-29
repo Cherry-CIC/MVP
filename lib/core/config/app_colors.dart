@@ -12,4 +12,5 @@ class AppColors {
   static const grey = Color(0xFFBCB5B5);
 
   static const pinkBackground = Color(0xFFfff0f3);
+  static const borderGrey = Color(0xFFDFDFDF);
 }
