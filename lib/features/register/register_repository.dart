@@ -96,6 +96,17 @@ class RegisterRepository {
     }
   }
 
+  Future<bool> _isUsernameTaken(String username) async {
+    final result = await _firestoreService.queryCollection(
+      FirestoreConstants.pathUserCollection,
+      field: FirestoreConstants.username,
+      value: username,
+    );
+
+    return result.isSuccess && result.value.isNotEmpty;
+  }
+
+
   Future<Result<void>> createUserInFirestore(
     String uid,
     String username,
