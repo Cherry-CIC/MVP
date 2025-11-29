@@ -22,54 +22,73 @@ class RegisterRepository {
       if (request.imageFile != null && request.imageFile!.existsSync()) {
         // Upload image if a file is provided
         final imageUploadResult = await _storage.uploadImage(
-            request.imageFile!, 'user_images/${request.firstname}_profile_picture.png');
+          request.imageFile!,
+          'user_images/${request.firstname}_profile_picture.png',
+        );
 
         if (imageUploadResult.isSuccess) {
           photoUrl = imageUploadResult
               .value; // Get the download URL of the uploaded image
         } else {
           return Result.failure(
-              "Error uploading image: ${imageUploadResult.error}");
+            "Error uploading image: ${imageUploadResult.error}",
+          );
         }
       }
 
+      // Now, create the user in Firestore
+      final firestoreResult = await createUserInFirestore(
+        userCredentials?.uid ?? "",
+        request.username,
+        request.firstname,
+        request.email,
+        request.phone,
+        photoUrl ?? "", // Pass the photo URL if available
+      );
 
-
-        // Now, create the user in Firestore
-        final firestoreResult = await createUserInFirestore(
-          userCredentials?.uid ?? "",
-          request.firstname,
-          request.email,
-          request.phone,
-          photoUrl ?? "", // Pass the photo URL if available
-        );
-
-        if (firestoreResult.isSuccess) {
-          return Result.success(userCredentials);
-        } else {
-          return Result.failure(firestoreResult
-              .error);
-        }
+      if (firestoreResult.isSuccess) {
+        return Result.success(userCredentials);
       } else {
-        return Result.failure(result.error);
+        return Result.failure(firestoreResult.error);
       }
+    } else {
+      return Result.failure(result.error);
     }
+  }
 
   //Send Verifcation Email
 
-
   Future<Result<void>> fetchUserFromFirestore(String uid) async {
     // Fetch user document from Firestore
-    final result = await _firestoreService.getDocument(FirestoreConstants.pathUserCollection, uid);
+    final result = await _firestoreService.getDocument(
+      FirestoreConstants.pathUserCollection,
+      uid,
+    );
 
     if (result.isSuccess) {
       final document = result.value;
       // Store user data to shared preferences
       await _firestoreService.prefs.setString(FirestoreConstants.id, uid);
-      await _firestoreService.prefs.setString(FirestoreConstants.firstname, document?.get(FirestoreConstants.firstname));
-      await _firestoreService.prefs.setString(FirestoreConstants.photoUrl, document?.get(FirestoreConstants.photoUrl) ?? "");
-      await _firestoreService.prefs.setString(FirestoreConstants.phone, document?.get(FirestoreConstants.phone) ?? "");
-      await _firestoreService.prefs.setString(FirestoreConstants.email, document?.get(FirestoreConstants.email) ?? "");
+      await _firestoreService.prefs.setString(
+        FirestoreConstants.username,
+        document?.get(FirestoreConstants.username),
+      );
+      await _firestoreService.prefs.setString(
+        FirestoreConstants.firstname,
+        document?.get(FirestoreConstants.firstname),
+      );
+      await _firestoreService.prefs.setString(
+        FirestoreConstants.photoUrl,
+        document?.get(FirestoreConstants.photoUrl) ?? "",
+      );
+      await _firestoreService.prefs.setString(
+        FirestoreConstants.phone,
+        document?.get(FirestoreConstants.phone) ?? "",
+      );
+      await _firestoreService.prefs.setString(
+        FirestoreConstants.email,
+        document?.get(FirestoreConstants.email) ?? "",
+      );
 
       return Result.success(null);
     } else {
@@ -77,10 +96,18 @@ class RegisterRepository {
     }
   }
 
-  Future<Result<void>> createUserInFirestore(String uid, String firstName, String email, String phone, String photo) async {
+  Future<Result<void>> createUserInFirestore(
+    String uid,
+    String username,
+    String firstName,
+    String email,
+    String phone,
+    String photo,
+  ) async {
     // Create user document in Firestore
     // Prepare the data to be saved
     Map<String, dynamic> data = {
+      FirestoreConstants.username: username,
       FirestoreConstants.firstname: firstName,
       FirestoreConstants.email: email,
       FirestoreConstants.phone: phone,
@@ -88,7 +115,11 @@ class RegisterRepository {
       FirestoreConstants.photoUrl: photo,
     };
 
-    final result = await _firestoreService.saveDocument(FirestoreConstants.pathUserCollection, uid, data);
+    final result = await _firestoreService.saveDocument(
+      FirestoreConstants.pathUserCollection,
+      uid,
+      data,
+    );
 
     if (result.isSuccess) {
       await fetchUserFromFirestore(uid);
