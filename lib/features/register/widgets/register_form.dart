@@ -196,6 +196,7 @@ class _RegisterFormState extends State<RegisterForm> {
                                     viewModel.register(
                                       _firstNameController.text,
                                       _emailController.text,
+                                      _userNameController.text,
                                       _phoneNumberController.text,
                                       _passwordController.text,
                                       _selectedImage,
