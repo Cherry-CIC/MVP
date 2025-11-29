@@ -33,7 +33,6 @@ class MyApp extends StatelessWidget {
     return Consumer2<NavigationProvider, ThemeNotifier>(
       builder: (context, navigatorService, themeNotifier, child) {
         return MaterialApp(
-          debugShowCheckedModeBanner: false,
           navigatorKey: navigatorService.navigatorKey,
           onGenerateRoute: AppRoutes.generateRoute,
           theme: buildTheme(),
