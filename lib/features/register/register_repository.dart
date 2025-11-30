@@ -12,6 +12,11 @@ class RegisterRepository {
   RegisterRepository(this._authService, this._firestoreService, this._storage);
 
   Future<Result<UserCredentials?>> register(RegisterRequest request) async {
+    final usernameTaken = await _isUsernameTaken(request.username);
+    if (usernameTaken) {
+      return Result.failure("Username is already taken.");
+    }
+
     final result = await _authService.signUp(request.email, request.password);
 
     if (result.isSuccess) {
@@ -103,9 +108,8 @@ class RegisterRepository {
       value: username,
     );
 
-    return result.isSuccess && result.value.isNotEmpty;
+    return result.isSuccess && result.value!.isNotEmpty;
   }
-
 
   Future<Result<void>> createUserInFirestore(
     String uid,
