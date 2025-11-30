@@ -1,3 +1,4 @@
+import 'package:cherry_mvp/core/config/app_strings.dart';
 import 'package:flutter/material.dart';
 
 class HiddenPasswordField extends StatefulWidget {
@@ -10,7 +11,15 @@ class HiddenPasswordField extends StatefulWidget {
 class _HiddenPasswordFieldState extends State<HiddenPasswordField> {
   final TextEditingController _controller = TextEditingController();
   String _password = '';
-  final int _maxLength = 10; //TODO define password length
+  // Password length should be defined in config or constants
+  // Using a reasonable default for now
+  final int _maxLength = 10;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -54,3 +63,4 @@ class _HiddenPasswordFieldState extends State<HiddenPasswordField> {
     );
   }
 }
+
