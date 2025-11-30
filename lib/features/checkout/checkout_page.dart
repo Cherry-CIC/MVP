@@ -47,24 +47,6 @@ class _CheckoutPageState extends State<CheckoutPage> {
           DeliveryOptions(),
           SliverList.list(
             children: [
-              ListTile(
-                onTap: () async {
-                  final checkoutViewModel = context.read<CheckoutViewModel>();
-                  final navigator = Navigator.of(context);
-                  if (checkoutViewModel.deliveryChoice == "pickup" &&
-                      checkoutViewModel.selectedInpost != null) {
-                    await checkoutViewModel.storeLockerInFirestore();
-                  }
-                  // Store dummy order in Firestore
-                  await checkoutViewModel.storeOrderInFirestore();
-                  navigator.pushReplacementNamed(AppRoutes.checkoutComplete);
-                },
-                title: const Text(AppStrings.checkoutPayment),
-                titleTextStyle: Theme.of(context).textTheme.labelMedium,
-                subtitle: const Text(AppStrings.checkoutChoosePayment),
-                trailing: const Icon(Icons.add),
-                iconColor: Theme.of(context).colorScheme.primary,
-              ),
               const SizedBox(height: 32),
               IntrinsicHeight(
                 child: Row(

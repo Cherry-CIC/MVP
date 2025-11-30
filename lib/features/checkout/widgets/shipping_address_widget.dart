@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:cherry_mvp/features/checkout/checkout_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
@@ -7,14 +8,12 @@ import 'package:cherry_mvp/core/config/config.dart';
 import 'package:cherry_mvp/features/checkout/constants/address_constants.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:provider/provider.dart';
 
 class ShippingAddressWidget extends StatefulWidget {
   final Function(PlaceDetails)? onAddressSelected;
-  
-  const ShippingAddressWidget({
-    super.key,
-    this.onAddressSelected,
-  });
+
+  const ShippingAddressWidget({super.key, this.onAddressSelected});
 
   @override
   State<ShippingAddressWidget> createState() => _ShippingAddressWidgetState();
@@ -31,7 +30,7 @@ class _ShippingAddressWidgetState extends State<ShippingAddressWidget> {
   bool _isAddressConfirmed = false;
   bool _useManualEntry = false;
   bool _apiAvailable = true;
-  
+
   // Manual entry controllers
   final TextEditingController _addressLine1Controller = TextEditingController();
   final TextEditingController _addressLine2Controller = TextEditingController();
@@ -41,13 +40,13 @@ class _ShippingAddressWidgetState extends State<ShippingAddressWidget> {
   final _formKey = GlobalKey<FormState>();
 
   final String _apiKey = dotenv.env[AddressConstants.apiKeyEnvVar] ?? '';
-  
+
   @override
   void initState() {
     super.initState();
     _addressController.addListener(_onAddressChanged);
     _addressFocusNode.addListener(_onFocusChanged);
-    
+
     // Check if API key is available
     if (_apiKey.isEmpty) {
       debugPrint(AddressConstants.apiKeyMissingError);
@@ -56,7 +55,7 @@ class _ShippingAddressWidgetState extends State<ShippingAddressWidget> {
         _useManualEntry = true;
       });
     }
-    
+
     _countryController.text = AppStrings.unitedKingdomText;
     _loadSavedAddress();
   }
@@ -92,7 +91,7 @@ class _ShippingAddressWidgetState extends State<ShippingAddressWidget> {
     }
 
     if (_debounceTimer?.isActive ?? false) _debounceTimer!.cancel();
-    
+
     _debounceTimer = Timer(const Duration(milliseconds: 500), () {
       if (_addressController.text.length > 2 && !_isAddressConfirmed) {
         _searchPlaces(_addressController.text);
@@ -106,14 +105,18 @@ class _ShippingAddressWidgetState extends State<ShippingAddressWidget> {
   }
 
   Future<void> _searchPlaces(String query) async {
-    if (query.isEmpty || _isAddressConfirmed || _apiKey.isEmpty || !_apiAvailable) return;
-    
+    if (query.isEmpty ||
+        _isAddressConfirmed ||
+        _apiKey.isEmpty ||
+        !_apiAvailable)
+      return;
+
     setState(() {
       _isLoading = true;
     });
 
     try {
-      final String url = 
+      final String url =
           'https://maps.googleapis.com/maps/api/place/autocomplete/json'
           '?input=${Uri.encodeComponent(query)}'
           '&key=$_apiKey'
@@ -121,10 +124,10 @@ class _ShippingAddressWidgetState extends State<ShippingAddressWidget> {
           '&components=${AddressConstants.countryRestriction}';
 
       final response = await http.get(Uri.parse(url));
-      
+
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = json.decode(response.body);
-        
+
         if (data['status'] == 'OK') {
           final List<dynamic> predictions = data['predictions'];
           setState(() {
@@ -141,7 +144,9 @@ class _ShippingAddressWidgetState extends State<ShippingAddressWidget> {
             _showPredictions = false;
           });
           if (data['status'] != 'ZERO_RESULTS') {
-            debugPrint('${AddressConstants.addressSearchError}: ${data['status']}');
+            debugPrint(
+              '${AddressConstants.addressSearchError}: ${data['status']}',
+            );
           }
         }
       } else {
@@ -149,7 +154,9 @@ class _ShippingAddressWidgetState extends State<ShippingAddressWidget> {
           _isLoading = false;
           _showPredictions = false;
         });
-        debugPrint('${AddressConstants.addressSearchError}: HTTP ${response.statusCode}');
+        debugPrint(
+          '${AddressConstants.addressSearchError}: HTTP ${response.statusCode}',
+        );
       }
     } catch (e) {
       debugPrint('${AddressConstants.addressSearchError}: $e');
@@ -167,26 +174,30 @@ class _ShippingAddressWidgetState extends State<ShippingAddressWidget> {
       debugPrint(AddressConstants.apiKeyMissingError);
       return null;
     }
-    
+
     try {
-      final String url = 
+      final String url =
           'https://maps.googleapis.com/maps/api/place/details/json'
           '?place_id=$placeId'
           '&key=$_apiKey'
           '&fields=formatted_address,address_components,geometry';
 
       final response = await http.get(Uri.parse(url));
-      
+
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = json.decode(response.body);
-        
+
         if (data['status'] == 'OK') {
           return PlaceDetails.fromJson(data['result']);
         } else {
-          debugPrint('${AddressConstants.placeDetailsError}: ${data['status']}');
+          debugPrint(
+            '${AddressConstants.placeDetailsError}: ${data['status']}',
+          );
         }
       } else {
-        debugPrint('${AddressConstants.placeDetailsError}: HTTP ${response.statusCode}');
+        debugPrint(
+          '${AddressConstants.placeDetailsError}: HTTP ${response.statusCode}',
+        );
       }
     } catch (e) {
       debugPrint('${AddressConstants.placeDetailsError}: $e');
@@ -202,7 +213,7 @@ class _ShippingAddressWidgetState extends State<ShippingAddressWidget> {
     });
 
     final PlaceDetails? details = await _getPlaceDetails(prediction.placeId);
-    
+
     setState(() {
       _isLoading = false;
       _selectedAddress = details;
@@ -289,13 +300,22 @@ class _ShippingAddressWidgetState extends State<ShippingAddressWidget> {
       }
 
       final addressData = {
-        'addressLine1': address.streetNumber.isNotEmpty && address.route.isNotEmpty
+        'addressLine1':
+            address.streetNumber.isNotEmpty && address.route.isNotEmpty
             ? '${address.streetNumber} ${address.route}'
-            : address.route.isNotEmpty ? address.route : _addressLine1Controller.text,
+            : address.route.isNotEmpty
+            ? address.route
+            : _addressLine1Controller.text,
         'addressLine2': _addressLine2Controller.text,
-        'city': address.locality.isNotEmpty ? address.locality : _cityController.text,
-        'postcode': address.postalCode.isNotEmpty ? address.postalCode : _postcodeController.text,
-        'country': address.country.isNotEmpty ? address.country : _countryController.text,
+        'city': address.locality.isNotEmpty
+            ? address.locality
+            : _cityController.text,
+        'postcode': address.postalCode.isNotEmpty
+            ? address.postalCode
+            : _postcodeController.text,
+        'country': address.country.isNotEmpty
+            ? address.country
+            : _countryController.text,
         'formattedAddress': address.formattedAddress,
         'updatedAt': FieldValue.serverTimestamp(),
       };
@@ -338,8 +358,9 @@ class _ShippingAddressWidgetState extends State<ShippingAddressWidget> {
             _addressLine2Controller.text = data['addressLine2'] ?? '';
             _cityController.text = data['city'] ?? '';
             _postcodeController.text = data['postcode'] ?? '';
-            _countryController.text = data['country'] ?? AppStrings.unitedKingdomText;
-            
+            _countryController.text =
+                data['country'] ?? AppStrings.unitedKingdomText;
+
             // If all required fields are filled, auto-confirm
             if (_addressLine1Controller.text.isNotEmpty &&
                 _cityController.text.isNotEmpty &&
@@ -352,6 +373,10 @@ class _ShippingAddressWidgetState extends State<ShippingAddressWidget> {
                 country: _countryController.text,
               );
               _selectedAddress = savedAddress;
+              Provider.of<CheckoutViewModel>(
+                context,
+                listen: false,
+              ).setShippingAddress(savedAddress);
               _isAddressConfirmed = true;
               _addressController.text = savedAddress.formattedAddress;
             }
@@ -376,9 +401,11 @@ class _ShippingAddressWidgetState extends State<ShippingAddressWidget> {
             child: TextButton.icon(
               onPressed: _toggleEntryMode,
               icon: Icon(_useManualEntry ? Icons.search : Icons.edit),
-              label: Text(_useManualEntry
-                  ? AddressConstants.toggleSearchMode
-                  : AddressConstants.toggleManualMode),
+              label: Text(
+                _useManualEntry
+                    ? AddressConstants.toggleSearchMode
+                    : AddressConstants.toggleManualMode,
+              ),
             ),
           ),
           const SizedBox(height: 8),
@@ -405,7 +432,7 @@ class _ShippingAddressWidgetState extends State<ShippingAddressWidget> {
           decoration: InputDecoration(
             hintText: AddressConstants.addressHintText,
             prefixIcon: const Icon(Icons.location_on),
-            suffixIcon: _isLoading 
+            suffixIcon: _isLoading
                 ? const Padding(
                     padding: EdgeInsets.all(12),
                     child: SizedBox(
@@ -415,22 +442,22 @@ class _ShippingAddressWidgetState extends State<ShippingAddressWidget> {
                     ),
                   )
                 : _isAddressConfirmed
-                    ? IconButton(
-                        icon: const Icon(Icons.edit),
-                        onPressed: _editAddress,
-                        tooltip: AddressConstants.editAddressTooltip,
-                      )
-                    : null,
+                ? IconButton(
+                    icon: const Icon(Icons.edit),
+                    onPressed: _editAddress,
+                    tooltip: AddressConstants.editAddressTooltip,
+                  )
+                : null,
             border: OutlineInputBorder(
               borderSide: BorderSide(
-                color: _isAddressConfirmed 
+                color: _isAddressConfirmed
                     ? Theme.of(context).colorScheme.primary
                     : Theme.of(context).colorScheme.outline,
               ),
             ),
             enabledBorder: OutlineInputBorder(
               borderSide: BorderSide(
-                color: _isAddressConfirmed 
+                color: _isAddressConfirmed
                     ? Theme.of(context).colorScheme.primary
                     : Theme.of(context).colorScheme.outline,
               ),
@@ -444,7 +471,7 @@ class _ShippingAddressWidgetState extends State<ShippingAddressWidget> {
             }
           },
         ),
-        
+
         // Predictions dropdown - only show when not confirmed
         if (_showPredictions && !_isAddressConfirmed) ...[
           const SizedBox(height: 4),
@@ -474,7 +501,9 @@ class _ShippingAddressWidgetState extends State<ShippingAddressWidget> {
                         border: index < _predictions.length - 1
                             ? Border(
                                 bottom: BorderSide(
-                                  color: Theme.of(context).colorScheme.outlineVariant,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.outlineVariant,
                                 ),
                               )
                             : null,
@@ -483,7 +512,9 @@ class _ShippingAddressWidgetState extends State<ShippingAddressWidget> {
                         children: [
                           Icon(
                             Icons.location_on,
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
                             size: 20,
                           ),
                           const SizedBox(width: 12),
@@ -492,18 +523,25 @@ class _ShippingAddressWidgetState extends State<ShippingAddressWidget> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  prediction.structuredFormatting?.mainText ?? 
-                                  prediction.description,
-                                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                    fontWeight: FontWeight.w500,
-                                  ),
+                                  prediction.structuredFormatting?.mainText ??
+                                      prediction.description,
+                                  style: Theme.of(context).textTheme.bodyMedium
+                                      ?.copyWith(fontWeight: FontWeight.w500),
                                 ),
-                                if (prediction.structuredFormatting?.secondaryText != null)
+                                if (prediction
+                                        .structuredFormatting
+                                        ?.secondaryText !=
+                                    null)
                                   Text(
-                                    prediction.structuredFormatting!.secondaryText!,
-                                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                                    ),
+                                    prediction
+                                        .structuredFormatting!
+                                        .secondaryText!,
+                                    style: Theme.of(context).textTheme.bodySmall
+                                        ?.copyWith(
+                                          color: Theme.of(
+                                            context,
+                                          ).colorScheme.onSurfaceVariant,
+                                        ),
                                   ),
                               ],
                             ),
@@ -517,7 +555,7 @@ class _ShippingAddressWidgetState extends State<ShippingAddressWidget> {
             ),
           ),
         ],
-        
+
         // Selected address confirmation
         if (_isAddressConfirmed && _selectedAddress != null) ...[
           const SizedBox(height: 12),
@@ -526,9 +564,7 @@ class _ShippingAddressWidgetState extends State<ShippingAddressWidget> {
             decoration: BoxDecoration(
               color: Theme.of(context).colorScheme.primaryContainer,
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                color: Theme.of(context).colorScheme.primary,
-              ),
+              border: Border.all(color: Theme.of(context).colorScheme.primary),
             ),
             child: Row(
               children: [
@@ -544,16 +580,21 @@ class _ShippingAddressWidgetState extends State<ShippingAddressWidget> {
                     children: [
                       Text(
                         AddressConstants.addressConfirmedTitle,
-                        style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                          color: Theme.of(context).colorScheme.onPrimaryContainer,
-                          fontWeight: FontWeight.w600,
-                        ),
+                        style: Theme.of(context).textTheme.labelMedium
+                            ?.copyWith(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onPrimaryContainer,
+                              fontWeight: FontWeight.w600,
+                            ),
                       ),
                       const SizedBox(height: 2),
                       Text(
                         _selectedAddress!.formattedAddress,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.onPrimaryContainer,
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onPrimaryContainer,
                         ),
                       ),
                     ],
@@ -715,17 +756,23 @@ class _ShippingAddressWidgetState extends State<ShippingAddressWidget> {
                       children: [
                         Text(
                           AddressConstants.addressConfirmedTitle,
-                          style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                            color: Theme.of(context).colorScheme.onPrimaryContainer,
-                            fontWeight: FontWeight.w600,
-                          ),
+                          style: Theme.of(context).textTheme.labelMedium
+                              ?.copyWith(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onPrimaryContainer,
+                                fontWeight: FontWeight.w600,
+                              ),
                         ),
                         const SizedBox(height: 2),
                         Text(
                           _selectedAddress!.formattedAddress,
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context).colorScheme.onPrimaryContainer,
-                          ),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onPrimaryContainer,
+                              ),
                         ),
                       ],
                     ),
@@ -777,10 +824,7 @@ class StructuredFormatting {
   final String? mainText;
   final String? secondaryText;
 
-  StructuredFormatting({
-    this.mainText,
-    this.secondaryText,
-  });
+  StructuredFormatting({this.mainText, this.secondaryText});
 
   factory StructuredFormatting.fromJson(Map<String, dynamic> json) {
     return StructuredFormatting(
@@ -878,7 +922,8 @@ class PlaceDetails {
   String get streetNumber => _getComponent(AddressConstants.streetNumberType);
   String get route => _getComponent(AddressConstants.routeType);
   String get locality => _getComponent(AddressConstants.localityType);
-  String get administrativeAreaLevel1 => _getComponent(AddressConstants.administrativeAreaLevel1Type);
+  String get administrativeAreaLevel1 =>
+      _getComponent(AddressConstants.administrativeAreaLevel1Type);
   String get postalCode => _getComponent(AddressConstants.postalCodeType);
   String get country => _getComponent(AddressConstants.countryType);
 
@@ -910,5 +955,17 @@ class AddressComponent {
       shortName: json['short_name'] ?? '',
       types: List<String>.from(json['types'] ?? []),
     );
+  }
+}
+
+extension PlaceDetailsParser on PlaceDetails {
+  String? get line1 {
+    try {
+      return addressComponents
+          .firstWhere((c) => c.types.contains(AddressConstants.routeType))
+          .longName;
+    } catch (_) {
+      return null;
+    }
   }
 }

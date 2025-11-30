@@ -365,6 +365,9 @@ class CheckoutViewModel extends ChangeNotifier {
         String clientSecret = response.value!.paymentIntent;
         String customer = response.value!.customer;
 
+        Stripe.publishableKey = response.value!.publishableKey;
+        await Stripe.instance.applySettings();
+
         // Init the payment sheet (configure Apple/Google Pay here)
         await Stripe.instance.initPaymentSheet(
           paymentSheetParameters: SetupPaymentSheetParameters(
@@ -418,25 +421,20 @@ class CheckoutViewModel extends ChangeNotifier {
             "country": "United kingdom",
           }
         : {
-            'line1': formattedShippingAddress,
-            "city":
-                shippingAddressComponents[AddressConstants.cityKey] ?? "London",
-            "state":
-                shippingAddressComponents[AddressConstants.stateKey] ??
-                "London",
+            'line1': _shippingAddress?.line1 ?? '',
+            "city": shippingAddressComponents[AddressConstants.cityKey] ?? "",
+            "state": shippingAddressComponents[AddressConstants.cityKey] ?? "",
             'postal_code':
-                shippingAddressComponents[AddressConstants.postalCodeKey] ??
-                "SW1 7AX",
+                shippingAddressComponents[AddressConstants.postalCodeKey] ?? "",
             "country":
-                shippingAddressComponents[AddressConstants.countryKey] ??
-                "United kingdom",
+                shippingAddressComponents[AddressConstants.countryKey] ?? "",
           };
 
     final Map<String, dynamic> orderData = {
       "amount": total.toInt(),
       "productId": basketItems[0].id,
       "productName": basketItems[0].name,
-      "shipping": {"address": address, "name": "John Doe"},
+      "shipping": {"address": address, "name": 'John Doe'},
     };
     try {
       final result = await checkoutRepository.createOrder(orderData);

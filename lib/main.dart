@@ -17,9 +17,6 @@ void main() async {
   await dotenv.load();
   await Firebase.initializeApp();
 
-  Stripe.publishableKey = dotenv.env['STRIPE_PUBLISHABLE_KEY']!;
-  await Stripe.instance.applySettings();
-
   SharedPreferences prefs = await SharedPreferences.getInstance();
 
   runApp(MultiProvider(providers: [...buildProviders(prefs)], child: MyApp()));
