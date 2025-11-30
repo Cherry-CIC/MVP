@@ -1,3 +1,4 @@
+import 'package:cherry_mvp/core/config/app_strings.dart';
 import 'package:cherry_mvp/core/config/config.dart';
 import 'package:cherry_mvp/core/models/inpost_model.dart';
 import 'package:cherry_mvp/core/models/product.dart';
@@ -198,16 +199,18 @@ class CheckoutViewModel extends ChangeNotifier {
         _isValidPostalCode(postalCode);
   }
 
-  /// Helper method to validate postal code format (basic US ZIP code validation)
+  /// Helper method to validate postal code format (UK postcode validation)
   bool _isValidPostalCode(String postalCode) {
-    // Basic US ZIP code pattern (5 digits or 5+4 format)
-    final RegExp zipPattern = RegExp(r'^\d{5}(-\d{4})?$');
-    return zipPattern.hasMatch(postalCode);
+    // UK postcode pattern: 1-2 letters, 1-2 digits, optional letter/digit, space, digit, 2 letters
+    final RegExp postcodePattern = RegExp(
+      r'^[A-Z]{1,2}[0-9][A-Z0-9]? ?[0-9][A-Z]{2}$',
+      caseSensitive: false,
+    );
+    return postcodePattern.hasMatch(postalCode.trim());
   }
 
   /// Processes the checkout order
   /// Returns true if successful, false if validation fails or error occurs
-  /// TODO: Implement actual API integration
   Future<bool> processCheckout() async {
     if (!canCheckout) return false;
     if (!validateShippingAddress()) return false;
@@ -248,16 +251,24 @@ class CheckoutViewModel extends ChangeNotifier {
         },
       };
 
-      // TODO: Implement actual API call here
-      // Example: await checkoutService.processOrder(orderData);
-      // For now, we'll just validate the order data is properly structured
+      // Validate order data structure
       if (orderData['items'] == null || (orderData['items'] as List).isEmpty) {
         return false;
       }
 
-      return true;
+      // Call the repository to create the order via API
+      final result = await checkoutRepository.createOrder(orderData);
+      
+      if (result.isSuccess) {
+        _log.info('Checkout processed successfully');
+        return true;
+      } else {
+        _log.warning('Checkout failed: ${result.error}');
+        return false;
+      }
     } catch (e) {
-      // Log error for debugging purposes only
+      // Log error for debugging purposes
+      _log.severe('Checkout error: $e');
       debugPrint('${AddressConstants.checkoutError}: $e');
       return false;
     }
@@ -408,7 +419,7 @@ class CheckoutViewModel extends ChangeNotifier {
             "city": "London",
             "state": "London",
             "postal_code": selectedInpost?.postcode ?? '',
-            "country": "United kingdom",
+            "country": AppStrings.unitedKingdomText,
           }
         : {
             'line1': formattedShippingAddress,
@@ -422,7 +433,7 @@ class CheckoutViewModel extends ChangeNotifier {
                 "SW1 7AX",
             "country":
                 shippingAddressComponents[AddressConstants.countryKey] ??
-                "United kingdom",
+                AppStrings.unitedKingdomText,
           };
 
     final Map<String, dynamic> orderData = {
