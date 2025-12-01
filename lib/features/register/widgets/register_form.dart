@@ -85,22 +85,6 @@ class _RegisterFormState extends State<RegisterForm> {
                 decoration: InputDecoration(
                   hintText: 'Username',
                   prefixIcon: Icon(Icons.person),
-                  suffixIcon: isUsernameChecking
-                      ? const Padding(
-                          // Show spinner while checking
-                          padding: EdgeInsets.all(8.0),
-                          child: SizedBox(
-                            height: 16,
-                            width: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          ),
-                        )
-                      : _usernameError == null && validateUsername == null
-                      ? const Icon(
-                          Icons.check_circle,
-                          color: Colors.green,
-                        ) // Show checkmark on success
-                      : null,
                 ),
               ),
               const SizedBox(height: 20),
