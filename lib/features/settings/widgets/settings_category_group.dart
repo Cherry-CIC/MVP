@@ -14,9 +14,11 @@ class SettingsCategoryGroup extends StatelessWidget {
     super.key,
     required this.children,
     required this.heading,
+    this.onTap,
   });
 
   final List<SectionSettingsItem> children;
+  final VoidCallback? onTap;
   final String heading;
 
   @override
@@ -78,7 +80,13 @@ class SettingsCategoryGroup extends StatelessWidget {
         return SettingsItem(
           title: item.title,
           trailing: item.trailing,
-          onTap: () {},
+          onTap: () {
+            // Inside the closure, we check if the item has an action...
+            if (item.onTap != null) {
+              // ...and execute that action, passing the context available from itemBuilder.
+              item.onTap!(context);
+            }
+          },
         );
       },
     );

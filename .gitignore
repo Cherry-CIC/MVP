@@ -34,6 +34,22 @@ pubspec.lock
 .pub/
 /build/
 
+# Firebase
+/android/app/google-services.json
+/lib/firebase_options.dart
+
+# iOS builds
+/ios/Pods/
+/ios/Podfile.lock
+/ios/Runner.xcodeproj
+/ios/Runner/GoogleService-Info.plist
+
+# Flutter generated
+**/Generated.xcconfig
+**/Flutter.podspec
+
+
+
 # Symbolication related
 app.*.symbols
 

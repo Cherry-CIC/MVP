@@ -6,6 +6,7 @@ import 'package:cherry_mvp/features/donation/successful_upload_page.dart';
 import 'package:cherry_mvp/features/products/product_page.dart';
 
 import 'package:cherry_mvp/features/discover/discover_page.dart';
+import 'package:cherry_mvp/features/settings/faq_page.dart';
 import 'package:cherry_mvp/features/settings/settings_page.dart';
 // main
 import 'package:flutter/material.dart';
@@ -28,6 +29,7 @@ class AppRoutes {
   static const String checkout = '/checkout';
   static const String checkoutComplete = '/checkoutComplete';
   static const String donationSuccess = '/donationSuccess';
+  static const String faqsPage = '/faq';
 
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
@@ -47,6 +49,8 @@ class AppRoutes {
         return MaterialPageRoute(builder: (_) => SettingsPage());
       case donations:
         return MaterialPageRoute(builder: (_) => DonationPage());
+      case faqsPage:
+        return MaterialPageRoute(builder: (_) => FaqPage());
       case checkout:
         return MaterialPageRoute(
           fullscreenDialog: true,
@@ -62,9 +66,7 @@ class AppRoutes {
       default:
         return MaterialPageRoute(
           builder: (_) => Scaffold(
-            body: Center(
-              child: Text('No route defined for ${settings.name}'),
-            ),
+            body: Center(child: Text('No route defined for ${settings.name}')),
           ),
         );
     }
