@@ -6,11 +6,7 @@ class BasketListItem extends StatelessWidget {
   final Product product;
   final VoidCallback? onRemove;
 
-  const BasketListItem({
-    super.key,
-    required this.product,
-    this.onRemove,
-  });
+  const BasketListItem({super.key, required this.product, this.onRemove});
 
   @override
   Widget build(BuildContext context) {
@@ -23,23 +19,24 @@ class BasketListItem extends StatelessWidget {
           AspectRatio(
             aspectRatio: 1,
             child: Container(
-                decoration: BoxDecoration(
-                  border: Border.all(
-                    color:
-                        Theme.of(context).colorScheme.surfaceContainerHighest,
-                    width: 4,
-                  ),
-                  borderRadius: BorderRadius.circular(8),
+              decoration: BoxDecoration(
+                border: Border.all(
                   color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                  width: 4,
                 ),
-                child: product.productImages.isNotEmpty
-                    ? ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: Image.network(
-                          product.productImages.first,
-                          fit: BoxFit.cover,
-                        ))
-                    : null),
+                borderRadius: BorderRadius.circular(8),
+                color: Theme.of(context).colorScheme.surfaceContainerHighest,
+              ),
+              child: product.productImages.isNotEmpty
+                  ? ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.network(
+                        product.productImages.first,
+                        fit: BoxFit.cover,
+                      ),
+                    )
+                  : null,
+            ),
           ),
           Expanded(
             child: Column(
@@ -65,14 +62,16 @@ class BasketListItem extends StatelessWidget {
                       child: SizedBox(
                         height: 40,
                         width: 40,
-                        child: Image.asset(product.charityImage),
+                        child: product.charityImage.isNotEmpty
+                            ? Image.network(product.charityImage)
+                            : SizedBox.shrink(),
                       ),
                     ),
                   ],
                 ),
               ],
             ),
-          )
+          ),
         ],
       ),
     );
