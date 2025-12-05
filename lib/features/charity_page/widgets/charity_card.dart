@@ -26,23 +26,25 @@ class CharityCardState extends State<CharityCard> {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Column(
-                    children: [
-                      ClipRRect(
-                        borderRadius: const BorderRadius.vertical(
-                          top: Radius.circular(12),
-                        ),
-                        child: widget.charity.imageUrl.isNotEmpty
-                            ? Image.network(
-                                widget.charity.imageUrl,
-                                height: 80,
-                                width: 80,
-                                fit: BoxFit.cover,
-                              )
-                            : SizedBox(height: 80, width: 80),
+                  Card(
+                    elevation: 5,
+                    shadowColor: Theme.of(context).colorScheme.shadow,
+                    child: ClipRRect(
+                      borderRadius: const BorderRadius.vertical(
+                        top: Radius.circular(10),
                       ),
-                    ],
+                      child: widget.charity.imageUrl.isNotEmpty
+                          ? Image.network(
+                              widget.charity.imageUrl,
+                              height: 90,
+                              width: 90,
+                              fit: BoxFit.contain,
+                            )
+                          : SizedBox(height: 80, width: 80),
+                    ),
                   ),
+
+                  SizedBox(width: 20),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
