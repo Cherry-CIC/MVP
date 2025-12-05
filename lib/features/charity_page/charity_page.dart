@@ -110,6 +110,7 @@ class CharityPageState extends State<CharityPage> {
     // Show charities list when data is loaded
     if (charities.isNotEmpty) {
       return ListView.builder(
+        shrinkWrap: true,
         itemCount: charities.length,
         itemBuilder: (context, index) {
           final charity = charities[index];
