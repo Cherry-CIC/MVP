@@ -335,8 +335,45 @@ class AppStrings {
   static const seeAllText = "See All";
   static const currencySymbol = "£";
 
-// Professional
+  // Professional
   static const professional = 'Charities';
-  static const signUpInstruction =
-      'Click below to sign up as a charity';
+  static const signUpInstruction = 'Click below to sign up as a charity';
+
+  //Faqs
+  static const generalInfo = 'General Info';
+  static const whatIsCherryQuestion = 'What is cherry?';
+  static const whatIsCherryAnswer =
+      'Cherry is a platform connecting buyers and sellers where all proceeds go to charity. Our mission is to help you give in style and show you the power of second-hand shopping.';
+  static const whoCanSellQuestion = 'Who can sell on cherry?';
+  static const whoCanSellAnswer =
+      'Cherry is open to anyone looking to sell their items on behalf of charity, so the funds go to something positive, and the climate doesn\'t take another hit from fast-fashion4. It also gives any charity, large or small, the opportunity to make money online without expensive overheads5.';
+  static const offers = 'Offers';
+  static const howDoIOfferQuestion = 'How do I make an offer?';
+  static const howDoIOfferAnswer =
+      'Use the Make an offer button to start the negotiation. Friendly offers can lead to friendly outcomes.';
+  static const offerDeclinedQuestion = 'What happens if my offer is declined?';
+  static const offerDeclinedAnswer =
+      'If the seller says no, you can feel free to make another offer or find another item. If the offer doesn\'t meet the seller\'s expectations, they may send a counteroffer.';
+  static const selling = 'Selling';
+  static const listItemQuestion = 'How do I list an item?';
+  static const listItemAnswer =
+      'First, download the free Cherry app. Once you have the app, take clear photos and fill in the details. Essential details that cannot be skipped include Photos (at least 1), Title, Category, Price, and Quality Rating. The app will guide you by showing similar listings to help you decide on the price.';
+  static const pickCharityQuestion = 'Can I pick the charity?';
+  static const pickCharityAnswer =
+      'Yes, you can choose a charity you\'re familiar with or browse available options. If you\'re unsure or leave the decision blank, the charity choice will automatically be left to the buyer. Selecting "Other Charities ok" ensures potential buyers can request a different charity, though the seller has the final say.';
+  static const buying = 'Buying';
+  static const deliveryOptionsQuestion = 'What delivery options are there?';
+  static const deliveryOptionsAnswer =
+      'When the item is in checkout, you can choose between available delivery options, such as standard and express. If you add multiple items to your bag, you\'ll have to select \'Cherry delivery\', which uses EVRi to collect and deliver all items.';
+  static const purchaseSecurityQuestion = 'What is purchase security?';
+  static const purchaseSecurityAnswer =
+      'Purchase Security is a mandatory fee (typically 3-8% of the item price before postage or kept between 6-8% of the total cost ) paid on each transaction to safeguard your money and ensure information is protected. It provides protection for your purchases, extra measures against fraud, and support from the Cherry team.';
+  static const trustAndSafety = 'Trust & Safety';
+  static const transactionSafetyQuestion =
+      'How does cherry keep transactions safe?';
+  static const transactionSafetyAnswer =
+      'Cherry maintains a high standard of security through proactive tools and policies. Key safety measures include: Purchase Security (mandatory Buyer Protection) , Secure Transactions (all payments are securely held and encrypted) , Anti-Spam Tools , Data Protection , and Risk Scoring (predictive analysis to identify suspicious activities).';
+  static const refundPolicyQuestion = 'What’s the refund policy?';
+  static const refundPolicyAnswer =
+      'Your order is protected when paying through Cherry, and you\'ll get a refund if your item doesn\'t arrive, is damaged in transit, or is significantly not as described (SNAD). You must submit a claim within 7 days of being notified the item should have been delivered or seems lost. Unless otherwise agreed, the buyer must cover the cost of the return';
 }

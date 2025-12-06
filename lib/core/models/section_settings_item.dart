@@ -1,8 +1,14 @@
-
-class SectionSettingsItem { 
-  final String title; 
-  final String trailing;    
+import 'package:flutter/material.dart';
+typedef ItemTapCallback = void Function(BuildContext context);
+class SectionSettingsItem {
+  final String title;
+  final String trailing;
+  final ItemTapCallback? onTap;
 
   const SectionSettingsItem(
-      {required this.title, required this.trailing});
-} 
+  {
+    this.onTap,
+    required this.title,
+    required this.trailing,
+  });
+}
