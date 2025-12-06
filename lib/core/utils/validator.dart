@@ -18,6 +18,20 @@ String? validateEmail(String? value) {
   return null;
 }
 
+String? validateUsername(String? value) {
+  if (value == null || value.isEmpty) {
+    return 'Username is required.';
+  }
+  if (value.length < 3 || value.length > 20) {
+    return 'Username must be between 3 and 20 characters.';
+  }
+  final regex = RegExp(r'^[a-zA-Z0-9_]+$');
+  if (!regex.hasMatch(value)) {
+    return 'Username can only contain letters, numbers, and underscores.';
+  }
+  return null;
+}
+
 String? validateFirstName(String? value) {
   if (value == null || value.isEmpty) {
     return "First name cannot be empty";
@@ -51,7 +65,6 @@ String? validateConfirmPassword(String? value, String? password) {
   }
   return null;
 }
-
 
 String? validateDonationFormFields(String? value) {
   if (value == null || value.isEmpty) {
