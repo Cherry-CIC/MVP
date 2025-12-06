@@ -1,3 +1,4 @@
+import 'package:cherry_mvp/core/models/donation_charity_model.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:cherry_mvp/core/config/config.dart';
 
@@ -32,28 +33,28 @@ class Charity {
 
 // Dummy data for testing
 final dummyCharities = [
-  Charity(
+  CharityCategories(
     id: "1",
     name: "Home-Start",
     imageUrl: AppImages.homeStart,
     createdAt: DateTime.parse("2024-01-01T00:00:00.000Z"),
     updatedAt: DateTime.parse("2024-01-01T00:00:00.000Z"),
   ),
-  Charity(
+  CharityCategories(
     id: "2",
     name: "MIND",
     imageUrl: AppImages.mind,
     createdAt: DateTime.parse("2024-01-01T00:00:00.000Z"),
     updatedAt: DateTime.parse("2024-01-01T00:00:00.000Z"),
   ),
-  Charity(
+  CharityCategories(
     id: "3",
     name: "Shelter",
     imageUrl: AppImages.shelter,
     createdAt: DateTime.parse("2024-01-01T00:00:00.000Z"),
     updatedAt: DateTime.parse("2024-01-01T00:00:00.000Z"),
   ),
-  Charity(
+  CharityCategories(
     id: "4",
     name: "WWF",
     imageUrl: AppImages.wwf,

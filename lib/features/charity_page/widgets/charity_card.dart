@@ -1,3 +1,4 @@
+import 'package:cherry_mvp/core/models/donation_charity_model.dart';
 import 'package:flutter/material.dart';
 import 'package:cherry_mvp/core/config/app_strings.dart';
 import 'package:cherry_mvp/features/charity_page/charity_model.dart';
@@ -7,7 +8,7 @@ class CharityCard extends StatefulWidget {
     super.key,
     required this.charity,
   });
-  final Charity charity;
+  final CharityCategories charity;
 
   @override
   CharityCardState createState() => CharityCardState();
@@ -31,7 +32,7 @@ class CharityCardState extends State<CharityCard> {
                   ClipRRect(
                     borderRadius:
                         const BorderRadius.vertical(top: Radius.circular(12)),
-                    child: Image.asset(
+                    child: Image.network(
                       widget.charity.imageUrl,
                       height: 80,
                       width: 80,

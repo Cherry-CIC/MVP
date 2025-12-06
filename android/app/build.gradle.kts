@@ -35,8 +35,8 @@ android {
         applicationId = "com.example.cherry_mvp"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdkVersion(localProperties.getProperty("flutter.minSdkVersion"))
-        targetSdkVersion(34)
+        minSdk = 25
+        targetSdk = 34
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }

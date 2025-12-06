@@ -1,5 +1,6 @@
+import 'package:cherry_mvp/core/models/donation_charity_model.dart';
 import 'package:cherry_mvp/features/charity_page/charity_repository.dart';
-import 'package:cherry_mvp/features/charity_page/charity_model.dart';
+
 import 'package:cherry_mvp/core/utils/utils.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:logging/logging.dart';
@@ -13,11 +14,11 @@ class CharityViewModel extends ChangeNotifier {
 
   // Private variables
   Status _status = Status.uninitialized;
-  List<Charity> _charities = [];
+  List<CharityCategories> _charities = [];
 
   // Public getters
   Status get status => _status;
-  List<Charity> get charities => _charities;
+  List<CharityCategories> get charities => _charities;
 
   Future<void> fetchCharities() async {
     _status = Status.loading;
