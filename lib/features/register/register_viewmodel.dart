@@ -19,14 +19,28 @@ class RegisterViewModel extends ChangeNotifier {
 
   final _log = Logger('RegisterViewModel');
 
-
-  Future<void> register(String firstName, String email, String phone, String password, File? image) async {
+  Future<void> register(
+    String firstName,
+    String email,
+    String username,
+    String phone,
+    String password,
+    File? image,
+  ) async {
     _status = Status.loading;
     notifyListeners();
 
-
     try {
-      final result = await registerRepository.register(RegisterRequest(firstname: firstName, email: email, phone: phone, password: password, imageFile: image));
+      final result = await registerRepository.register(
+        RegisterRequest(
+          firstname: firstName,
+          email: email,
+          phone: phone,
+          username: username,
+          password: password,
+          imageFile: image,
+        ),
+      );
       if (result.isSuccess) {
         _status = Status.success;
       } else {
@@ -39,5 +53,4 @@ class RegisterViewModel extends ChangeNotifier {
 
     notifyListeners();
   }
-
 }
