@@ -7,10 +7,10 @@ class GreetingLabel extends StatefulWidget {
   const GreetingLabel({super.key, required this.initialName});
 
   @override
-  State<GreetingLabel> createState() => _GreetingLableState();
+  State<GreetingLabel> createState() => _GreetingLabelState();
 }
 
-class _GreetingLableState extends State<GreetingLabel> {
+class _GreetingLabelState extends State<GreetingLabel> {
   late String name;
 
   @override
@@ -31,3 +31,4 @@ class _GreetingLableState extends State<GreetingLabel> {
         style: Theme.of(context).textTheme.headlineMedium);
   }
 }
+

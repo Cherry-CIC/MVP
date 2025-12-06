@@ -1,7 +1,7 @@
 import 'package:cherry_mvp/core/config/app_spacing.dart';
 import 'package:cherry_mvp/core/config/config.dart';
-import 'package:cherry_mvp/features/password_flow/wigets/greeting_lable.dart';
-import 'package:cherry_mvp/features/password_flow/wigets/hiddenpassoword_field.dart';
+import 'package:cherry_mvp/features/password_flow/widgets/greeting_label.dart';
+import 'package:cherry_mvp/features/password_flow/widgets/hidden_password_field.dart';
 import 'package:flutter/material.dart';
 
 class PasswordPage extends StatelessWidget {
@@ -44,11 +44,11 @@ class PasswordPage extends StatelessWidget {
                         ),
                       ),
                     ),
-                    SizedBox(height: AppSpacing.large), // TODO: Get from config
+                    SizedBox(height: AppSpacing.large),
 
                     GreetingLabel(initialName: 'Romaina'),
 
-                    SizedBox(height: AppSpacing.xl), // TODO: Get from config
+                    SizedBox(height: AppSpacing.xl),
 
                     HiddenPasswordField(),
                   ],
@@ -67,7 +67,7 @@ class PasswordPage extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   // "Not you" Text
-                  Text('Not you'),
+                  Text(AppStrings.userCheck),
                   // Icon Button
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
