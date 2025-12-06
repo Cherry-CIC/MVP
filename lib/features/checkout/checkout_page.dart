@@ -47,24 +47,6 @@ class _CheckoutPageState extends State<CheckoutPage> {
           DeliveryOptions(),
           SliverList.list(
             children: [
-              ListTile(
-                onTap: () async {
-                  final checkoutViewModel = context.read<CheckoutViewModel>();
-                  final navigator = Navigator.of(context);
-                  if (checkoutViewModel.deliveryChoice == "pickup" &&
-                      checkoutViewModel.selectedInpost != null) {
-                    await checkoutViewModel.storeLockerInFirestore();
-                  }
-                  // Store dummy order in Firestore
-                  await checkoutViewModel.storeOrderInFirestore();
-                  navigator.pushReplacementNamed(AppRoutes.checkoutComplete);
-                },
-                title: const Text(AppStrings.checkoutPayment),
-                titleTextStyle: Theme.of(context).textTheme.labelMedium,
-                subtitle: const Text(AppStrings.checkoutChoosePayment),
-                trailing: const Icon(Icons.add),
-                iconColor: Theme.of(context).colorScheme.primary,
-              ),
               const SizedBox(height: 32),
               IntrinsicHeight(
                 child: Row(
@@ -90,21 +72,19 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 width: double.infinity,
                 child: Consumer<CheckoutViewModel>(
                   builder: (context, viewModel, _) {
-                    WidgetsBinding.instance.addPostFrameCallback((_) async {
-                      if (viewModel.createOrderStatus.type ==
-                          StatusType.failure) {
-                        Fluttertoast.showToast(
-                          msg:
-                              viewModel.createOrderStatus.message ??
-                              "Something went wrong",
-                        );
-                      } else if (viewModel.createOrderStatus.type ==
-                          StatusType.success) {
-                        Fluttertoast.showToast(msg: "Payment Successful");
-                        await Future.delayed(const Duration(seconds: 1));
-                        gotoCheckoutComplete();
-                      }
-                    });
+                    if (viewModel.createOrderStatus.type ==
+                        StatusType.failure) {
+                      Fluttertoast.showToast(
+                        msg:
+                            viewModel.createOrderStatus.message ??
+                            "oops! Something went wrong",
+                      );
+                    } else if (viewModel.createOrderStatus.type ==
+                        StatusType.success) {
+                      Fluttertoast.showToast(msg: "Payment Successful");
+
+                      gotoCheckoutComplete();
+                    }
                     return FilledButton(
                       onPressed: () async {
                         if (viewModel.deliveryChoice != null) {
@@ -147,7 +127,8 @@ class _CheckoutPageState extends State<CheckoutPage> {
     );
   }
 
-  gotoCheckoutComplete() {
+  gotoCheckoutComplete() async {
+    await Future.delayed(const Duration(seconds: 1));
     Navigator.pushReplacementNamed(context, AppRoutes.checkoutComplete);
   }
 }

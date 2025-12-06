@@ -9,6 +9,8 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'core/router/router.dart';
+import 'package:cherry_mvp/core/theme/theme_notifier.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -18,13 +20,7 @@ void main() async {
   
   /// Initialize Firebase
   await Firebase.initializeApp();
-  
-  /// Initialize Stripe
-  final stripeKey = dotenv.env['STRIPE_PUBLISHABLE_KEY'];
-  if (stripeKey != null && stripeKey.isNotEmpty) {
-    Stripe.publishableKey = stripeKey;
-  }
-  
+
   SharedPreferences prefs = await SharedPreferences.getInstance();
 
   runApp(MultiProvider(providers: [...buildProviders(prefs)], child: MyApp()));

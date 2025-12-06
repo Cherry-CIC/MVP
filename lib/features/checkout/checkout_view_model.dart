@@ -376,6 +376,9 @@ class CheckoutViewModel extends ChangeNotifier {
         String clientSecret = response.value!.paymentIntent;
         String customer = response.value!.customer;
 
+        Stripe.publishableKey = response.value!.publishableKey;
+        await Stripe.instance.applySettings();
+
         // Init the payment sheet (configure Apple/Google Pay here)
         await Stripe.instance.initPaymentSheet(
           paymentSheetParameters: SetupPaymentSheetParameters(
@@ -393,20 +396,27 @@ class CheckoutViewModel extends ChangeNotifier {
         // Present the native PaymentSheet (it will show ApplePay/GooglePay if available)
         await Stripe.instance.presentPaymentSheet();
         return true;
+      } else {
+        _createOrderStatus = Status.failure(response.error.toString());
+        _log.severe('Create Payment intent Error :: ${response.error}');
+        notifyListeners();
+        return false;
       }
     } on StripeException catch (e) {
-      _createOrderStatus = Status.failure(e.toString());
+      _createOrderStatus = Status.failure(
+        e.error.localizedMessage ?? e.toString(),
+      );
       _log.severe(
         'Stripe Payment Error :: ${e.error.localizedMessage ?? e.toString()}',
       );
+      notifyListeners();
       return false;
     } catch (e) {
       _createOrderStatus = Status.failure(e.toString());
-      _log.severe('Error making payment:: $e');
+      _log.severe('Error making payment::: $e');
+      notifyListeners();
       return false;
     }
-    notifyListeners();
-    return false;
   }
 
   Future<void> createOrder() async {
@@ -422,15 +432,11 @@ class CheckoutViewModel extends ChangeNotifier {
             "country": AppStrings.unitedKingdomText,
           }
         : {
-            'line1': formattedShippingAddress,
-            "city":
-                shippingAddressComponents[AddressConstants.cityKey] ?? "London",
-            "state":
-                shippingAddressComponents[AddressConstants.stateKey] ??
-                "London",
+            'line1': _shippingAddress?.line1 ?? '',
+            "city": shippingAddressComponents[AddressConstants.cityKey] ?? "",
+            "state": shippingAddressComponents[AddressConstants.cityKey] ?? "",
             'postal_code':
-                shippingAddressComponents[AddressConstants.postalCodeKey] ??
-                "SW1 7AX",
+                shippingAddressComponents[AddressConstants.postalCodeKey] ?? "",
             "country":
                 shippingAddressComponents[AddressConstants.countryKey] ??
                 AppStrings.unitedKingdomText,
@@ -440,7 +446,7 @@ class CheckoutViewModel extends ChangeNotifier {
       "amount": total.toInt(),
       "productId": basketItems[0].id,
       "productName": basketItems[0].name,
-      "shipping": {"address": address, "name": "John Doe"},
+      "shipping": {"address": address, "name": 'John Doe'},
     };
     try {
       final result = await checkoutRepository.createOrder(orderData);
