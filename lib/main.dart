@@ -1,12 +1,9 @@
 import 'package:cherry_mvp/core/config/app_theme.dart';
-import 'package:cherry_mvp/core/router/router.dart';
-import 'package:cherry_mvp/core/theme/theme_notifier.dart';
-import 'package:cherry_mvp/core/utils/utils.dart';
 import 'package:cherry_mvp/features/welcome/welcome_page.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:flutter_stripe/flutter_stripe.dart';
+import 'core/utils/utils.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'core/router/router.dart';
@@ -17,10 +14,7 @@ void main() async {
 
   /// Load environment variables
   await dotenv.load();
-  
-  /// Initialize Firebase
   await Firebase.initializeApp();
-
   SharedPreferences prefs = await SharedPreferences.getInstance();
 
   runApp(MultiProvider(providers: [...buildProviders(prefs)], child: MyApp()));
