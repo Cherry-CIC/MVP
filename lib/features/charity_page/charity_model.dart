@@ -1,3 +1,4 @@
+import 'package:cherry_mvp/core/models/donation_charity_model.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:cherry_mvp/core/config/config.dart';
 

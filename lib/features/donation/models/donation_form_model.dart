@@ -13,10 +13,16 @@ final String addToCollectionText = "";
 final String categoryHintText = AppStrings.categoryText;
 final String charityText = AppStrings.charityText;
 final List<String> categoryDropdownList = [
-  'Category A',
-  'Category B',
-  'Category C',
-  'Category D'
+  'Women',
+  'Men',
+  'Children',
+  'Accessories',
+  'Unisex',
+  'Designer',
+  'Books',
+  'Toys & Board Game',
+  'CD’s & Vinyl',
+  'DVD’s & Video Games',
 ];
 
 final String charityHintText = AppStrings.charityText;

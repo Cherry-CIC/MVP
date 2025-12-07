@@ -19,16 +19,23 @@ class DashboardPage extends StatefulWidget {
 }
 
 class _DashboardPageState extends State<DashboardPage> {
-  @override
-  void initState() {
-    super.initState();
+  bool _hasInitialized = false;
 
-    Future.microtask(() {
-      if (mounted) {
-        context.read<CategoryViewModel>().fetchCategories();
-        context.read<HomeViewModel>().fetchProducts();
-      }
-    });
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    if (!_hasInitialized) {
+      _hasInitialized = true;
+
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final categoryVM = context.read<CategoryViewModel>();
+        final homeVM = context.read<HomeViewModel>();
+
+        categoryVM.fetchCategories();
+        homeVM.fetchProducts();
+      });
+    }
   }
 
   @override

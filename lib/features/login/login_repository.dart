@@ -50,6 +50,7 @@ class LoginRepository {
 
       return result;
     } else {
+      print(result.error);
       return Result.failure(result.error);
     }
   }

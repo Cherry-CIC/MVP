@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cherry_mvp/core/config/app_strings.dart';
+import 'package:cherry_mvp/core/utils/image_provider_helper.dart';
 import 'package:cherry_mvp/features/charity_page/charity_model.dart';
+import 'package:flutter/material.dart';
 
 class CharityCard extends StatefulWidget {
   const CharityCard({super.key, required this.charity});
@@ -15,30 +17,31 @@ class CharityCardState extends State<CharityCard> {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 15),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
           child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Card(
-                elevation: 5,
-                shadowColor: Theme.of(context).colorScheme.shadow,
-                child: ClipRRect(
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(10),
-                  ),
-                  child: widget.charity.imageUrl.isNotEmpty
-                      ? Image.network(
-                          widget.charity.imageUrl,
-                          height: 90,
-                          width: 90,
-                          fit: BoxFit.contain,
-                        )
-                      : SizedBox(height: 80, width: 80),
+              Container(
+                decoration: BoxDecoration(
+                  color: Theme.of(context).scaffoldBackgroundColor,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: .08),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
                 ),
+                child: widget.charity.imageUrl.isNotEmpty ? ImageProviderHelper.buildImage(
+                  imagePath: widget.charity.imageUrl,
+                  height: 80,
+                  width: 80,
+                  borderRadius: BorderRadius.circular(12),
+                )  : SizedBox(height: 80, width: 80),
               ),
-
-              SizedBox(width: 20),
+              const SizedBox(width: 15),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -48,10 +51,14 @@ class CharityCardState extends State<CharityCard> {
                       style: Theme.of(context).textTheme.titleSmall,
                     ),
                     Text(
-                      AppStrings.charityDescription,
+                      widget.charity.description ??
+                          AppStrings.charityDescription,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                      softWrap: true,
                     ),
                     Padding(
                       padding: const EdgeInsets.only(right: 10),

@@ -1,13 +1,12 @@
+import 'package:cherry_mvp/core/config/config.dart';
+import 'package:cherry_mvp/core/utils/image_provider_helper.dart';
+import 'package:cherry_mvp/core/utils/utils.dart';
+import 'package:cherry_mvp/features/charity_page/charity_model.dart';
+import 'package:cherry_mvp/features/charity_page/charity_viewmodel.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'package:cherry_mvp/core/config/config.dart';
-import 'package:cherry_mvp/core/utils/utils.dart';
-import 'package:cherry_mvp/features/charity_page/charity_viewmodel.dart';
-
 import 'widgets/charity_card.dart';
-
-import 'package:cherry_mvp/features/charity_page/charity_model.dart';
 
 class CharityPage extends StatefulWidget {
   const CharityPage({
@@ -46,10 +45,8 @@ class CharityPageState extends State<CharityPage> {
         return Scaffold(
           appBar: AppBar(
             leading: IconButton(
-              icon: Icon(
-                Icons.reply,
-                color: Theme.of(context).colorScheme.primary,
-                size: 20,
+              icon: ImageProviderHelper.buildImage(
+                imagePath: AppImages.backCharity,
               ),
               onPressed: () => Navigator.of(context).pop(),
             ),
@@ -67,6 +64,19 @@ class CharityPageState extends State<CharityPage> {
                     child: SearchAnchor.bar(
                       barHintText: AppStrings.searchCharities,
                       isFullScreen: true,
+                      barBackgroundColor: WidgetStateProperty.all(
+                        Theme.of(context).colorScheme.secondaryContainer,
+                      ),
+                      barElevation: WidgetStateProperty.all(0),
+                      barShape: WidgetStateProperty.all(
+                        RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                          side: BorderSide(
+                            color: AppColors.borderGrey,
+                            width: 1,
+                          ),
+                        ),
+                      ),
                       suggestionsBuilder: (context, controller) => [],
                     ),
                   ),

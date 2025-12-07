@@ -8,6 +8,7 @@ class AppImages {
   static const icSearch = '${_path}search.png';
   static const icMessage = '${_path}message.png';
   static const icProfile = '${_path}profile.png';
+  static const backIcon = '${_path}back_icon.png';
   static const icAdd = '${_path}add.png';
   static const icCam = '${_path}cam.png';
   static const icButton = '${_path}ic_button.png';
@@ -96,4 +97,5 @@ class AppImages {
   static const secureTransactions = '${_path}lock_icon.png';
   static const yourSupport = '${_path}support_icon.png';
   static const supportOurMission = '${_path}mission_icon.png';
+  static const backCharity = '${_path}back_charity.png';
 }
