@@ -67,8 +67,8 @@ class CharityCardState extends State<CharityCard> {
                           AppStrings.seeMore,
                           style: Theme.of(context).textTheme.labelMedium
                               ?.copyWith(
-                                color: Theme.of(context).colorScheme.primary,
-                              ),
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
                         ),
                       ),
                     ),
