@@ -33,28 +33,28 @@ class Charity {
 
 // Dummy data for testing
 final dummyCharities = [
-  CharityCategories(
+  Charity(
     id: "1",
     name: "Home-Start",
     imageUrl: AppImages.homeStart,
     createdAt: DateTime.parse("2024-01-01T00:00:00.000Z"),
     updatedAt: DateTime.parse("2024-01-01T00:00:00.000Z"),
   ),
-  CharityCategories(
+  Charity(
     id: "2",
     name: "MIND",
     imageUrl: AppImages.mind,
     createdAt: DateTime.parse("2024-01-01T00:00:00.000Z"),
     updatedAt: DateTime.parse("2024-01-01T00:00:00.000Z"),
   ),
-  CharityCategories(
+  Charity(
     id: "3",
     name: "Shelter",
     imageUrl: AppImages.shelter,
     createdAt: DateTime.parse("2024-01-01T00:00:00.000Z"),
     updatedAt: DateTime.parse("2024-01-01T00:00:00.000Z"),
   ),
-  CharityCategories(
+  Charity(
     id: "4",
     name: "WWF",
     imageUrl: AppImages.wwf,

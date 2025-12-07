@@ -1,13 +1,12 @@
-import 'package:cherry_mvp/core/models/donation_charity_model.dart';
+import 'package:cherry_mvp/core/config/config.dart';
+import 'package:cherry_mvp/core/utils/image_provider_helper.dart';
+import 'package:cherry_mvp/core/utils/utils.dart';
+import 'package:cherry_mvp/features/charity_page/charity_model.dart';
+import 'package:cherry_mvp/features/charity_page/charity_viewmodel.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'package:cherry_mvp/core/config/config.dart';
-import 'package:cherry_mvp/core/utils/utils.dart';
-import 'package:cherry_mvp/features/charity_page/charity_viewmodel.dart';
-
 import 'widgets/charity_card.dart';
-import 'package:cherry_mvp/features/charity_page/charity_model.dart';
 
 class CharityPage extends StatefulWidget {
   const CharityPage({
@@ -25,7 +24,6 @@ class CharityPage extends StatefulWidget {
 
 class CharityPageState extends State<CharityPage> {
   bool _hasInitialized = false;
-
   String? get _initialId => widget.initialCharityId;
 
   @override
@@ -47,10 +45,8 @@ class CharityPageState extends State<CharityPage> {
         return Scaffold(
           appBar: AppBar(
             leading: IconButton(
-              icon: Icon(
-                Icons.reply,
-                color: Theme.of(context).colorScheme.primary,
-                size: 20,
+              icon: ImageProviderHelper.buildImage(
+                imagePath: AppImages.backCharity,
               ),
               onPressed: () => Navigator.of(context).pop(),
             ),
@@ -68,6 +64,19 @@ class CharityPageState extends State<CharityPage> {
                     child: SearchAnchor.bar(
                       barHintText: AppStrings.searchCharities,
                       isFullScreen: true,
+                      barBackgroundColor: WidgetStateProperty.all(
+                        Theme.of(context).colorScheme.secondaryContainer,
+                      ),
+                      barElevation: WidgetStateProperty.all(0),
+                      barShape: WidgetStateProperty.all(
+                        RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                          side: BorderSide(
+                            color: AppColors.borderGrey,
+                            width: 1,
+                          ),
+                        ),
+                      ),
                       suggestionsBuilder: (context, controller) => [],
                     ),
                   ),
@@ -84,23 +93,23 @@ class CharityPageState extends State<CharityPage> {
     );
   }
 
-  /// 🔥 Fixed: Now uses CharityCategories
-  void _handleCharityTap(CharityCategories charity) {
+  void _handleCharityTap(Charity charity) {
     if (widget.selectionMode) {
       Navigator.of(context).pop(charity);
     }
   }
 
-  /// 🔥 Fixed: List<CharityCategories>
   Widget _buildCharityList(
       CharityViewModel viewModel,
       Status status,
-      List<CharityCategories> charities,
+      List<Charity> charities,
       ) {
+    // Show loading widget when fetching data
     if (status.type == StatusType.loading) {
       return const Center(child: CircularProgressIndicator());
     }
 
+    // Show error widget if failed
     if (status.type == StatusType.failure) {
       return Center(
         child: Column(
@@ -117,15 +126,14 @@ class CharityPageState extends State<CharityPage> {
       );
     }
 
+    // Show charities list when data is loaded
     if (charities.isNotEmpty) {
       return ListView.builder(
+        padding: const EdgeInsets.symmetric(vertical: 13, horizontal: 12),
         itemCount: charities.length,
         itemBuilder: (context, index) {
           final charity = charities[index];
-
-          final isSelected =
-              widget.selectionMode && charity.id == _initialId;
-
+          final isSelected = widget.selectionMode && charity.id == _initialId;
           return InkWell(
             onTap: () => _handleCharityTap(charity),
             child: Stack(
@@ -133,8 +141,8 @@ class CharityPageState extends State<CharityPage> {
                 CharityCard(charity: charity),
                 if (isSelected)
                   Positioned(
-                    right: 16,
-                    top: 16,
+                    right: 0,
+                    top: 4,
                     child: Icon(
                       Icons.check_circle,
                       color: Theme.of(context).colorScheme.primary,
@@ -147,6 +155,7 @@ class CharityPageState extends State<CharityPage> {
       );
     }
 
+    // Show empty state if no charities
     return Center(child: Text(AppStrings.noCharitiesAvailable));
   }
 }

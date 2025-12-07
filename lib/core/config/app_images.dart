@@ -96,4 +96,5 @@ class AppImages {
   static const secureTransactions = '${_path}lock_icon.png';
   static const yourSupport = '${_path}support_icon.png';
   static const supportOurMission = '${_path}mission_icon.png';
+  static const backCharity = '${_path}back_charity.png';
 }
