@@ -100,10 +100,10 @@ class CharityPageState extends State<CharityPage> {
   }
 
   Widget _buildCharityList(
-    CharityViewModel viewModel,
-    Status status,
-    List<Charity> charities,
-  ) {
+      CharityViewModel viewModel,
+      Status status,
+      List<Charity> charities,
+      ) {
     // Show loading widget when fetching data
     if (status.type == StatusType.loading) {
       return const Center(child: CircularProgressIndicator());
