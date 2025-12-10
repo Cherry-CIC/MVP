@@ -33,7 +33,7 @@ class MyApp extends StatelessWidget {
           theme: buildTheme(),
           darkTheme: buildTheme(Brightness.dark),
           themeMode: themeNotifier.mode,
-          home: WelcomePage(),
+          home: AuthGate(),
         );
       },
     );
