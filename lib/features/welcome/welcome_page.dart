@@ -181,32 +181,3 @@ class _WelcomePageState extends State<WelcomePage>
     );
   }
 }
-
-
-class AuthGate extends StatelessWidget {
-  const AuthGate({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return StreamBuilder<User?>(
-      stream: FirebaseAuth.instance.authStateChanges(),
-      builder: (context, snapshot) {
-
-        // Show splash while checking
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          );
-        }
-
-        // User is logged in → go to home page
-        if (snapshot.hasData) {
-          return const HomePage();
-        }
-
-        // User NOT logged in → go to your WelcomePage
-        return const WelcomePage();
-      },
-    );
-  }
-}
