@@ -100,10 +100,10 @@ class CharityPageState extends State<CharityPage> {
   }
 
   Widget _buildCharityList(
-      CharityViewModel viewModel,
-      Status status,
-      List<Charity> charities,
-      ) {
+    CharityViewModel viewModel,
+    Status status,
+    List<Charity> charities,
+  ) {
     // Show loading widget when fetching data
     if (status.type == StatusType.loading) {
       return const Center(child: CircularProgressIndicator());
@@ -125,33 +125,34 @@ class CharityPageState extends State<CharityPage> {
         ),
       );
     }
-
     // Show charities list when data is loaded
     if (charities.isNotEmpty) {
-      return ListView.builder(
-        padding: const EdgeInsets.symmetric(vertical: 13, horizontal: 12),
-        itemCount: charities.length,
-        itemBuilder: (context, index) {
-          final charity = charities[index];
-          final isSelected = widget.selectionMode && charity.id == _initialId;
-          return InkWell(
-            onTap: () => _handleCharityTap(charity),
-            child: Stack(
-              children: [
-                CharityCard(charity: charity),
-                if (isSelected)
-                  Positioned(
-                    right: 0,
-                    top: 4,
-                    child: Icon(
-                      Icons.check_circle,
-                      color: Theme.of(context).colorScheme.primary,
+      return Expanded(
+        child: ListView.builder(
+          shrinkWrap: true,
+          itemCount: charities.length,
+          itemBuilder: (context, index) {
+            final charity = charities[index];
+            final isSelected = widget.selectionMode && charity.id == _initialId;
+            return InkWell(
+              onTap: () => _handleCharityTap(charity),
+              child: Stack(
+                children: [
+                  CharityCard(charity: charity),
+                  if (isSelected)
+                    Positioned(
+                      right: 16,
+                      top: 16,
+                      child: Icon(
+                        Icons.check_circle,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
                     ),
-                  ),
-              ],
-            ),
-          );
-        },
+                ],
+              ),
+            );
+          },
+        ),
       );
     }
 

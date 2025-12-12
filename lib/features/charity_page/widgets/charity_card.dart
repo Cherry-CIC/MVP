@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:cherry_mvp/core/config/app_strings.dart';
 import 'package:cherry_mvp/core/utils/image_provider_helper.dart';
 import 'package:cherry_mvp/features/charity_page/charity_model.dart';
@@ -33,12 +34,12 @@ class CharityCardState extends State<CharityCard> {
                     ),
                   ],
                 ),
-                child: ImageProviderHelper.buildImage(
+                child: widget.charity.imageUrl.isNotEmpty ? ImageProviderHelper.buildImage(
                   imagePath: widget.charity.imageUrl,
                   height: 80,
                   width: 80,
                   borderRadius: BorderRadius.circular(12),
-                ),
+                )  : SizedBox(height: 80, width: 80),
               ),
               const SizedBox(width: 15),
               Expanded(
@@ -67,8 +68,8 @@ class CharityCardState extends State<CharityCard> {
                           AppStrings.seeMore,
                           style: Theme.of(context).textTheme.labelMedium
                               ?.copyWith(
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
                         ),
                       ),
                     ),
@@ -78,7 +79,12 @@ class CharityCardState extends State<CharityCard> {
             ],
           ),
         ),
-        Divider(height: 1),
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+          child: Divider(
+            color: Theme.of(context).colorScheme.shadow.withValues(alpha: 0.15),
+          ),
+        ),
       ],
     );
   }
