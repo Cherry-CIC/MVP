@@ -1,5 +1,4 @@
 import 'dart:ui';
-
 import 'package:cherry_mvp/features/welcome/widgets/signup_card.dart';
 import 'package:flutter/material.dart';
 import 'package:cherry_mvp/core/config/config.dart';
