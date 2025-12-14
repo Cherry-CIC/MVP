@@ -112,19 +112,19 @@ class AuthCard extends StatelessWidget {
               ),
               const SizedBox(height: 10),
               TextButton(
-                onPressed: () {
-                  isLoading
-                      ? () {}
-                      : isLogin
-                          ? navigator.replaceWith(AppRoutes.login)
-                          : navigator.replaceWith(AppRoutes.register);
-                },
-                child: Text(
-                  AppStrings.continueWithEmail,
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
+                style: TextButton.styleFrom(
+                  foregroundColor: AppColors.primaryAction,
+                  disabledForegroundColor:
+                      Theme.of(context).disabledColor,
                 ),
+                onPressed: isLoading
+                    ? null
+                    : () {
+                        isLogin
+                            ? navigator.replaceWith(AppRoutes.login)
+                            : navigator.replaceWith(AppRoutes.register);
+                      },
+                child: const Text(AppStrings.continueWithEmail),
               ),
             ],
           ),
