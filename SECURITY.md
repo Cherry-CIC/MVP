@@ -1,6 +1,6 @@
 # Security Policy
 
-cherry is an open source, charity-first resale platform handling real users, charities and sensitive data. We take security seriously and strongly encourage responsible disclosure of any vulnerabilities.
+cherry is an open source, charity-first resale platform handling real users, charities and sensitive data. We therefore take security very seriously and strongly encourage responsible and full disclosure of any vulnerabilities.
 
 ## Supported versions
 
@@ -39,10 +39,10 @@ You can report a vulnerability in either of these ways:
 1. **GitHub private security advisory** (preferred)  
    - Go to the repository on GitHub  
    - Click **Security** → **Report a vulnerability**  
-   - Fill in the advisory form with as much detail as possible  [oai_citation:0‡GitHub Docs](https://docs.github.com/code-security/security-advisories/guidance-on-reporting-and-writing/privately-reporting-a-security-vulnerability?utm_source=chatgpt.com)  
+   - Fill in the advisory form with as much detail as possible  [oai_citation:0‡GitHub Docs](https://docs.github.com/code-security/security-advisories/guidance-on-reporting-and-writing/privately-reporting-a-security-vulnerability)  
 
 2. **Email**  
-   - Send a detailed report to: `security@cherry.org.uk`  
+   - Send a detailed report to: `bradleyvenn@cherry.org.uk`  
    - Use the subject line: `SECURITY: <short description>`  
    - If you need to share particularly sensitive details, please ask for a secure channel in your first message.
 
@@ -64,7 +64,7 @@ Please avoid including real user data in examples. Synthetic or anonymised data 
 
 ## Disclosure and response process
 
-cherry is a volunteer-led, non-profit project. We cannot guarantee strict service-level agreements but we commit to the following targets:
+cherry is a volunteer-led, non-profit project. We cannot currently guarantee strict service-level agreements but we commit to the following targets:
 
 - **Initial acknowledgement**: within 5 business days of receiving your report  
 - **Initial triage** (confirm severity and scope): within 10 business days  
@@ -85,11 +85,11 @@ When a fix is ready we will:
 
 If we decide that a reported issue is not a security vulnerability, we will explain why and, where appropriate, track it as a regular bug or feature request.
 
-We follow the principle of **coordinated vulnerability disclosure**, making details public only after a mitigation or fix is available wherever reasonably possible.  [oai_citation:1‡Red Hat Developer](https://developers.redhat.com/articles/2024/02/06/security-policies-open-source-software?utm_source=chatgpt.com)  
+We follow the principle of **coordinated vulnerability disclosure**, making details public only after a mitigation or fix is available wherever reasonably possible.  [oai_citation:1‡Red Hat Developer](https://developers.redhat.com/articles/2024/02/06/security-policies-open-source-software)  
 
 ## Safe harbour for good faith research
 
-We welcome responsible security research that helps keep our users and charities safe. As long as you act in **good faith**, we commit not to pursue legal action or report you to authorities for your research on cherry systems covered by this policy.  [oai_citation:2‡Bugcrowd Docs](https://docs.bugcrowd.com/researchers/disclosure/disclose-io-and-safe-harbor/?utm_source=chatgpt.com)  
+We welcome responsible security research that helps keep our users and charities safe. As long as you act in **good faith**, we commit not to pursue legal action or report you to authorities for your research on cherry systems covered by this policy.  [oai_citation:2‡Bugcrowd Docs](https://docs.bugcrowd.com/researchers/disclosure/disclose-io-and-safe-harbor)  
 
 Good faith means that you:
 
@@ -126,7 +126,7 @@ For non-security bugs, feature requests, documentation improvements and general 
 - **GitHub Issues** for bug reports and feature requests  
 - **Pull requests** for code and documentation contributions
 
-This keeps security reports private and allows us to handle them with the care they require.  [oai_citation:3‡Open Source Guides](https://opensource.guide/security-best-practices-for-your-project/?utm_source=chatgpt.com)  
+This keeps security reports private and allows us to handle them with the care they require.  [oai_citation:3‡Open Source Guides](https://opensource.guide/security-best-practices-for-your-project)  
 
 ## No bug bounty (for now)
 
