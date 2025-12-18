@@ -94,4 +94,21 @@ class FirestoreService {
       return Result.failure(e.toString());
     }
   }
+
+  Future<Result<List<DocumentSnapshot>>> queryCollection(
+      String collectionPath, {
+        required String field,
+        required dynamic value,
+      }) async {
+    try {
+      final query = await firebaseFirestore
+          .collection(collectionPath)
+          .where(field, isEqualTo: value)
+          .get();
+
+      return Result.success(query.docs);
+    } catch (e) {
+      return Result.failure(e.toString());
+    }
+  }
 }

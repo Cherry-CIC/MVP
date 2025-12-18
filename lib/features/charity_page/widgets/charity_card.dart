@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:cherry_mvp/core/config/app_strings.dart';
+import 'package:cherry_mvp/core/utils/image_provider_helper.dart';
 import 'package:cherry_mvp/features/charity_page/charity_model.dart';
+import 'package:flutter/material.dart';
 
 class CharityCard extends StatefulWidget {
-  const CharityCard({
-    super.key,
-    required this.charity,
-  });
+  const CharityCard({super.key, required this.charity});
   final Charity charity;
 
   @override
@@ -16,61 +15,77 @@ class CharityCard extends StatefulWidget {
 class CharityCardState extends State<CharityCard> {
   @override
   Widget build(BuildContext context) {
-    double screenWidth = MediaQuery.of(context).size.width;
-
-    return Column(children: [
-      Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 15),
-              child:
-                  Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Column(children: [
-                  ClipRRect(
-                    borderRadius:
-                        const BorderRadius.vertical(top: Radius.circular(12)),
-                    child: Image.asset(
-                      widget.charity.imageUrl,
-                      height: 80,
-                      width: 80,
-                      fit: BoxFit.cover,
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                decoration: BoxDecoration(
+                  color: Theme.of(context).scaffoldBackgroundColor,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: .08),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
                     ),
-                  ),
-                ]),
-                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text(widget.charity.name,
-                      style: Theme.of(context).textTheme.titleSmall),
-                  SizedBox(
-                    width: screenWidth - 110,
-                    child: Expanded(
-                        child: Text(
-                      AppStrings.charityDescription,
+                  ],
+                ),
+                child: widget.charity.imageUrl.isNotEmpty ? ImageProviderHelper.buildImage(
+                  imagePath: widget.charity.imageUrl,
+                  height: 80,
+                  width: 80,
+                  borderRadius: BorderRadius.circular(12),
+                )  : SizedBox(height: 80, width: 80),
+              ),
+              const SizedBox(width: 15),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      widget.charity.name,
+                      style: Theme.of(context).textTheme.titleSmall,
+                    ),
+                    Text(
+                      widget.charity.description ??
+                          AppStrings.charityDescription,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color:
-                                Theme.of(context).colorScheme.onSurfaceVariant,
-                          ),
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
                       softWrap: true,
-                    )),
-                  ),
-                  Padding(
+                    ),
+                    Padding(
                       padding: const EdgeInsets.only(right: 10),
                       child: InkWell(
-                          onTap: () {},
-                          child: Text(AppStrings.seeMore,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .labelMedium
-                                  ?.copyWith(
-                                    color:
-                                        Theme.of(context).colorScheme.primary,
-                                  )))),
-                ]),
-              ]),
-            ),
-          ]),
-      const Padding(padding: EdgeInsets.symmetric(horizontal: 10), child: Divider()),
-    ]);
+                        onTap: () {},
+                        child: Text(
+                          AppStrings.seeMore,
+                          style: Theme.of(context).textTheme.labelMedium
+                              ?.copyWith(
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+          child: Divider(
+            color: Theme.of(context).colorScheme.shadow.withValues(alpha: 0.15),
+          ),
+        ),
+      ],
+    );
   }
 }

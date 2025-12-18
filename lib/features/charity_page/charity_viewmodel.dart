@@ -25,7 +25,7 @@ class CharityViewModel extends ChangeNotifier {
 
     try {
       final result = await charityRepository.fetchCharities();
-      
+
       if (result.isSuccess && result.value != null) {
         _charities = result.value!;
         _status = Status.success;

@@ -1,13 +1,12 @@
+import 'package:cherry_mvp/core/config/config.dart';
+import 'package:cherry_mvp/core/utils/image_provider_helper.dart';
+import 'package:cherry_mvp/core/utils/utils.dart';
+import 'package:cherry_mvp/features/charity_page/charity_model.dart';
+import 'package:cherry_mvp/features/charity_page/charity_viewmodel.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'package:cherry_mvp/core/config/config.dart';
-import 'package:cherry_mvp/core/utils/utils.dart';
-import 'package:cherry_mvp/features/charity_page/charity_viewmodel.dart';
-
 import 'widgets/charity_card.dart';
-
-import 'package:cherry_mvp/features/charity_page/charity_model.dart';
 
 class CharityPage extends StatefulWidget {
   const CharityPage({
@@ -38,43 +37,60 @@ class CharityPageState extends State<CharityPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<CharityViewModel>(builder: (context, viewModel, child) {
-      final charities = viewModel.charities;
-      final status = viewModel.status;
+    return Consumer<CharityViewModel>(
+      builder: (context, viewModel, child) {
+        final charities = viewModel.charities;
+        final status = viewModel.status;
 
-      return Scaffold(
-        appBar: AppBar(
-          leading: IconButton(
-            icon: Icon(
-              Icons.reply,
-              color: Theme.of(context).colorScheme.primary,
-              size: 20,
+        return Scaffold(
+          appBar: AppBar(
+            leading: IconButton(
+              icon: ImageProviderHelper.buildImage(
+                imagePath: AppImages.backCharity,
+              ),
+              onPressed: () => Navigator.of(context).pop(),
             ),
-            onPressed: () => Navigator.of(context).pop(),
+            title: Text(AppStrings.charitiesText),
+            centerTitle: true,
           ),
-          title: Text(AppStrings.charitiesText),
-          centerTitle: true,
-        ),
-        body: Container(
+          body: Container(
             padding: const EdgeInsets.only(top: 5),
-            child: Column(children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 10),
-                child: SizedBox(
-                  height: 40,
-                  child: SearchAnchor.bar(
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  child: SizedBox(
+                    height: 40,
+                    child: SearchAnchor.bar(
                       barHintText: AppStrings.searchCharities,
                       isFullScreen: true,
-                      suggestionsBuilder: (context, controller) => []),
+                      barBackgroundColor: WidgetStateProperty.all(
+                        Theme.of(context).colorScheme.secondaryContainer,
+                      ),
+                      barElevation: WidgetStateProperty.all(0),
+                      barShape: WidgetStateProperty.all(
+                        RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                          side: BorderSide(
+                            color: AppColors.borderGrey,
+                            width: 1,
+                          ),
+                        ),
+                      ),
+                      suggestionsBuilder: (context, controller) => [],
+                    ),
+                  ),
                 ),
-              ),
-              const Padding(padding: EdgeInsets.only(top: 8)),
-              Expanded(
-                child: _buildCharityList(viewModel, status, charities),
-              ),
-            ])),
-      );
-    });
+                const Padding(padding: EdgeInsets.only(top: 8)),
+                Expanded(
+                  child: _buildCharityList(viewModel, status, charities),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   void _handleCharityTap(Charity charity) {
@@ -84,7 +100,10 @@ class CharityPageState extends State<CharityPage> {
   }
 
   Widget _buildCharityList(
-      CharityViewModel viewModel, Status status, List<Charity> charities) {
+    CharityViewModel viewModel,
+    Status status,
+    List<Charity> charities,
+  ) {
     // Show loading widget when fetching data
     if (status.type == StatusType.loading) {
       return const Center(child: CircularProgressIndicator());
@@ -106,33 +125,34 @@ class CharityPageState extends State<CharityPage> {
         ),
       );
     }
-
     // Show charities list when data is loaded
     if (charities.isNotEmpty) {
-      return ListView.builder(
-        itemCount: charities.length,
-        itemBuilder: (context, index) {
-          final charity = charities[index];
-          final isSelected =
-              widget.selectionMode && charity.id == _initialId;
-          return InkWell(
-            onTap: () => _handleCharityTap(charity),
-            child: Stack(
-              children: [
-                CharityCard(charity: charity),
-                if (isSelected)
-                  Positioned(
-                    right: 16,
-                    top: 16,
-                    child: Icon(
-                      Icons.check_circle,
-                      color: Theme.of(context).colorScheme.primary,
+      return Expanded(
+        child: ListView.builder(
+          shrinkWrap: true,
+          itemCount: charities.length,
+          itemBuilder: (context, index) {
+            final charity = charities[index];
+            final isSelected = widget.selectionMode && charity.id == _initialId;
+            return InkWell(
+              onTap: () => _handleCharityTap(charity),
+              child: Stack(
+                children: [
+                  CharityCard(charity: charity),
+                  if (isSelected)
+                    Positioned(
+                      right: 16,
+                      top: 16,
+                      child: Icon(
+                        Icons.check_circle,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
                     ),
-                  ),
-              ],
-            ),
-          );
-        },
+                ],
+              ),
+            );
+          },
+        ),
       );
     }
 

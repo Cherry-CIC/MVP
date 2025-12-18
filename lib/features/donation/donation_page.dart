@@ -32,10 +32,13 @@ class _DonationPageState extends State<DonationPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-          leading: const CloseButton(),
-          title: const Text(
-            AppStrings.donationsText,
-          )),
+        centerTitle: true,
+        leading: const CloseButton(),
+        title: const Text(
+          AppStrings.donationsText,
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+      ),
       body: SingleChildScrollView(
         child: Column(
           children: [
