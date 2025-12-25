@@ -33,7 +33,6 @@ migrate_working_dir/
 pubspec.lock
 .pub/
 /build/
-/ios/build/
 
 # Firebase
 /android/app/google-services.json
@@ -41,6 +40,7 @@ pubspec.lock
 
 # iOS builds
 /ios/Pods/
+/ios/build/
 /ios/Podfile.lock
 /ios/Runner.xcodeproj
 /ios/Runner/GoogleService-Info.plist
