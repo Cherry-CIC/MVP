@@ -33,6 +33,7 @@ migrate_working_dir/
 pubspec.lock
 .pub/
 /build/
+/ios/build/
 
 # Firebase
 /android/app/google-services.json
