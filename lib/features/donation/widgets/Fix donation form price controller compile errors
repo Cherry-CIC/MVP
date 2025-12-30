@@ -37,7 +37,7 @@ class DonationFormState extends State<DonationForm> {
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
   final TextEditingController _addToCollectionController = TextEditingController();
-  final TextEditingController _customPriceController = TextEditingController();
+  final TextEditingController _priceController = TextEditingController();
 
   String selectedCategory = '';
   String selectedCategoryId = '';
@@ -51,6 +51,15 @@ class DonationFormState extends State<DonationForm> {
 
   Charity? selectedCharity;
   bool _hasInitialized = false;
+
+    @override
+  void dispose() {
+    _titleController.dispose();
+    _descriptionController.dispose();
+    _addToCollectionController.dispose();
+    _priceController.dispose();
+    super.dispose();
+  }
 
   @override
   void didChangeDependencies() {
@@ -441,49 +450,51 @@ class DonationFormState extends State<DonationForm> {
               //           ),
               //         ),
               // ),
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: donationViewModel.status.type == StatusType.loading
-                    ? const Center(child: CircularProgressIndicator())
-                    : SizedBox(
-                        height: 56,
-                        width: double.infinity,
-                        child: FilledButton(
-                          onPressed: () {
-                            if (_formKey.currentState!.validate()) {
-                              // Validate required dropdowns
-                              if (selectedPrice.isEmpty ||
-                                  selectedQuality.isEmpty ||
-                                  selectedSize.isEmpty) {
-                                Fluttertoast.showToast(
-                                    msg: AppStrings.pleaseSelectAllDropdowns);
-                                return;
-                              }
-                              if (selectedCharity == null) {
-                                Fluttertoast.showToast(
-                                    msg: AppStrings.pleaseSelectCharity);
-                                return;
-                              }
-                              if (widget.selectedImages == null || widget.selectedImages!.isEmpty) {
-                                Fluttertoast.showToast(
-                                    msg: AppStrings.pleaseAddPhoto);
-                                return;
-                              }
-                              final request = buildDonationRequest();
-                              donationViewModel.submitDonation(request);
-                            }
-                          },
-                          child: const Text(AppStrings.submitDonation),
-                        ),
-                      ),
-              ),
-            ],
+           Padding(
+  padding: const EdgeInsets.all(16),
+  child: donationViewModel.status.type == StatusType.loading
+      ? const Center(child: CircularProgressIndicator())
+      : SizedBox(
+          height: 56,
+          width: double.infinity,
+          child: FilledButton(
+            onPressed: () {
+              if (_formKey.currentState!.validate()) {
+                final priceText = _priceController.text.trim();
+
+                // Validate required dropdowns
+                if (priceText.isEmpty ||
+                    selectedQuality.isEmpty ||
+                    selectedSize.isEmpty) {
+                  Fluttertoast.showToast(
+                    msg: AppStrings.pleaseSelectAllDropdowns,
+                  );
+                  return;
+                }
+
+                if (selectedCharity == null) {
+                  Fluttertoast.showToast(
+                    msg: AppStrings.pleaseSelectCharity,
+                  );
+                  return;
+                }
+
+                if (widget.selectedImages == null ||
+                    widget.selectedImages!.isEmpty) {
+                  Fluttertoast.showToast(
+                    msg: AppStrings.pleaseAddPhoto,
+                  );
+                  return;
+                }
+
+                final request = buildDonationRequest();
+                donationViewModel.submitDonation(request);
+              }
+            },
+            child: const Text(AppStrings.submitDonation),
           ),
-        );
-      },
-    );
-  }
-}
+        ),
+),
 
 class _SelectionField extends StatelessWidget {
   const _SelectionField({
