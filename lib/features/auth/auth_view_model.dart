@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -15,6 +16,17 @@ class AuthViewModel extends ChangeNotifier {
   Status get status => _status;
   User? get currentUser => FirebaseAuth.instance.currentUser;
 
+  Future<String?> fetchDisplayName() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return null;
+
+    final doc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(uid)
+        .get();
+
+    return doc.data()?['displayName'];
+  }
   Future<void> logout(BuildContext context) async {
     _status = Status.loading;
     notifyListeners();
