@@ -6,27 +6,47 @@ import 'package:provider/provider.dart';
 import 'package:cherry_mvp/features/login/login_repository.dart';
 import 'package:cherry_mvp/core/router/router.dart';
 import 'package:cherry_mvp/core/utils/utils.dart';
+import '../../core/models/user.dart';
 
 class AuthViewModel extends ChangeNotifier {
   final LoginRepository loginRepository;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   AuthViewModel({required this.loginRepository});
 
   Status _status = Status.uninitialized;
   Status get status => _status;
+
+  UserCredentials? userCredentials;
+  bool isLoadingUser = false;
+
   User? get currentUser => FirebaseAuth.instance.currentUser;
 
-  Future<String?> fetchDisplayName() async {
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid == null) return null;
+  Future<void> loadCurrentUser() async {
+    if (currentUser == null) return;
 
-    final doc = await FirebaseFirestore.instance
+    isLoadingUser = true;
+    notifyListeners();
+
+    final doc = await _firestore
         .collection('users')
-        .doc(uid)
+        .doc(currentUser!.uid)
         .get();
 
-    return doc.data()?['displayName'];
+    if (doc.exists) {
+      userCredentials = UserCredentials.fromFirestore(
+        doc.data()!,
+        currentUser!.uid,
+      );
+    } else {
+      userCredentials = UserCredentials.fromAuth(currentUser!);
+    }
+
+    isLoadingUser = false;
+    print(userCredentials?.firstname);
+    notifyListeners();
   }
+
   Future<void> logout(BuildContext context) async {
     _status = Status.loading;
     notifyListeners();

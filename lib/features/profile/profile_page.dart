@@ -8,12 +8,21 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cherry_mvp/core/router/router.dart';
 
-class ProfilePage extends StatelessWidget {
+import '../auth/auth_view_model.dart';
+
+class ProfilePage extends StatefulWidget {
+  ProfilePage({super.key});
+
+  @override
+  State<ProfilePage> createState() => _ProfilePageState();
+}
+
+class _ProfilePageState extends State<ProfilePage> {
   final List<Color> charityColors = [
     Colors.red,
     Colors.blue,
     Colors.green,
-    Colors.orange
+    Colors.orange,
   ];
 
   final List<double> charityValues = [40, 30, 20, 10];
@@ -22,8 +31,9 @@ class ProfilePage extends StatelessWidget {
     'Charity A',
     'Charity B',
     'Charity C',
-    'Charity D'
+    'Charity D',
   ];
+
   final Map<String, dynamic> userInfoMap = {
     'username': AppStrings.profileUserInfoUsername,
     'location': AppStrings.profileUserInfoLocation,
@@ -34,8 +44,14 @@ class ProfilePage extends StatelessWidget {
     'awards': 0,
     'hasBuyerDiscounts': true,
   };
+  @override
+  void initState() {
+    super.initState();
 
-  ProfilePage({super.key});
+    Future.microtask(() {
+      context.read<AuthViewModel>().loadCurrentUser();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {

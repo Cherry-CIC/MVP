@@ -34,7 +34,7 @@ class LoginRepository {
       Map<String, dynamic> data = {
         FirestoreConstants.firstname: userCredentials?.firstname ?? "",
         FirestoreConstants.email: userCredentials?.email ?? "",
-        FirestoreConstants.phone: userCredentials?.phonenumber ?? "",
+        FirestoreConstants.phone: userCredentials?.phoneNumber ?? "",
         FirestoreConstants.id: userCredentials?.uid ?? "",
         FirestoreConstants.photoUrl: userCredentials?.photoUrl ?? "",
       };
@@ -66,7 +66,7 @@ class LoginRepository {
       Map<String, dynamic> data = {
         FirestoreConstants.firstname: userCredentials?.firstname ?? "",
         FirestoreConstants.email: userCredentials?.email ?? "",
-        FirestoreConstants.phone: userCredentials?.phonenumber ?? "",
+        FirestoreConstants.phone: userCredentials?.phoneNumber ?? "",
         FirestoreConstants.id: userCredentials?.uid ?? "",
         FirestoreConstants.photoUrl: userCredentials?.photoUrl ?? "",
       };

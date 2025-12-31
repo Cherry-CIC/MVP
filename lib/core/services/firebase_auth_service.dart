@@ -83,7 +83,7 @@ class FirebaseAuthService {
           email: user.user?.email,
           firstname: user.user?.displayName,
           photoUrl: user.user?.photoURL,
-          phonenumber: user.user?.phoneNumber,
+          phoneNumber: user.user?.phoneNumber,
         ),
       );
     } on FirebaseAuthException catch (e) {
@@ -109,7 +109,7 @@ class FirebaseAuthService {
           email: user.user?.email,
           firstname: user.user?.displayName,
           photoUrl: user.user?.photoURL,
-          phonenumber: user.user?.phoneNumber,
+          phoneNumber: user.user?.phoneNumber,
         ),
       );
     } on FirebaseAuthException catch (e) {
