@@ -44,11 +44,12 @@ final List<String> conditionDropdownList = [
 // New API fields
 final String qualityHintText = "Quality";
 final List<String> qualityDropdownList = [
-  "Premium",
-  "Excellent",
-  "Good",
-  "Fair",
-  "Poor"
+  "NEW",
+  "EXCELLENT",
+  "GOOD",
+  "FAIR",
+  "WORN",
+  "TEXTILES"
 ];
 
 final String sizeHintText = "Size";
