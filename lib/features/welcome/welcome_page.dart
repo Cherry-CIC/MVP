@@ -13,23 +13,19 @@ class WelcomePage extends StatefulWidget {
   State<WelcomePage> createState() => _WelcomePageState();
 }
 
-class _WelcomePageState extends State<WelcomePage>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _pulseAnimation;
+class _WelcomePageState extends State<WelcomePage> {
+  bool _logoVisible = false;
 
   @override
   void initState() {
     super.initState();
 
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 1),
-    )..repeat(reverse: true);
-
-    _pulseAnimation = Tween<double>(begin: 0.95, end: 1.05).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      setState(() {
+        _logoVisible = true;
+      });
+    });
   }
 
   //for card to show up
@@ -44,12 +40,6 @@ class _WelcomePageState extends State<WelcomePage>
 
   void closeCard() {
     setState(() => showBottomCard = false);
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
   }
 
   @override
@@ -70,10 +60,11 @@ class _WelcomePageState extends State<WelcomePage>
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  ScaleTransition(
-                    scale: _pulseAnimation,
+                  AnimatedOpacity(
+                    duration: const Duration(milliseconds: 450),
+                    curve: Curves.easeInOut,
+                    opacity: _logoVisible ? 1.0 : 0.0,
                     child: Image.asset(
-                      //change
                       AppImages.cherryLogo,
                       width: 350,
                     ),

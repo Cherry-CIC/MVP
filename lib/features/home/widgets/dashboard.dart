@@ -71,23 +71,51 @@ class _DashboardPageState extends State<DashboardPage> {
                 )
               // Show products grid when data is loaded
               else if (products.isNotEmpty)
-                GridView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: products.length,
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    crossAxisSpacing: 12,
-                    mainAxisSpacing: 12,
-                    childAspectRatio: 0.61,
-                  ),
-                  itemBuilder: (context, index) {
-                    return GestureDetector(
-                      onTap: () {
-                        productViewModel.setProduct(products[index]);
-                        navigator.navigateTo(AppRoutes.product);
+                Builder(
+                  builder: (context) {
+                    const int adFrequency = 6;
+
+                    final int productCount = products.length;
+                    final int adCount = productCount ~/ adFrequency;
+                    final int totalCount = productCount + adCount;
+
+                    return GridView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: totalCount,
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        crossAxisSpacing: 12,
+                        mainAxisSpacing: 12,
+                        childAspectRatio: 0.61,
+                      ),
+                      itemBuilder: (context, index) {
+                        final bool isAdPosition = productCount >= adFrequency &&
+                            (index + 1) % (adFrequency + 1) == 0;
+
+                        if (isAdPosition) {
+                          return const AdExample();
+                        }
+
+                        final int adsBefore =
+                            (index + 1) ~/ (adFrequency + 1);
+                        final int productIndex = index - adsBefore;
+
+                        if (productIndex < 0 || productIndex >= productCount) {
+                          return const SizedBox.shrink();
+                        }
+
+                        final product = products[productIndex];
+
+                        return GestureDetector(
+                          onTap: () {
+                            productViewModel.setProduct(product);
+                            navigator.navigateTo(AppRoutes.product);
+                          },
+                          child: ProductCard(product: product),
+                        );
                       },
-                      child: ProductCard(product: products[index]),
                     );
                   },
                 )
