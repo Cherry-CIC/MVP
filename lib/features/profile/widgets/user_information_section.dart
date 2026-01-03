@@ -48,7 +48,7 @@ class UserInformationSection extends StatelessWidget {
                 height: 48,
                 width: 48,
               ),
-              title: Text(userInformationSection.username),
+              title: Text(name ?? ""),
               titleTextStyle: Theme.of(context).textTheme.titleSmall,
               subtitle: Row(
                 spacing: 16,
