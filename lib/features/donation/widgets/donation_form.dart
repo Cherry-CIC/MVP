@@ -36,13 +36,11 @@ class DonationFormState extends State<DonationForm> {
 
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
-  final TextEditingController _addToCollectionController =
-      TextEditingController();
-  final TextEditingController _customPriceController = TextEditingController();
+  final TextEditingController _addToCollectionController = TextEditingController();
+  final TextEditingController _priceController = TextEditingController();
 
   String selectedCategory = '';
   String selectedCategoryId = '';
-  String selectedPrice = '';
   String selectedCondition = '';
   String selectedQuality = '';
   String selectedSize = '';
@@ -50,8 +48,6 @@ class DonationFormState extends State<DonationForm> {
   bool isSwitchedOpenToOtherCharity = false;
   bool isSwitchedOpenToOffer = false;
   bool isSwitchedApplicableBuyerDiscounts = false;
-
-  bool showCustomPriceField = false;
 
   Charity? selectedCharity;
   bool _hasInitialized = false;
@@ -80,11 +76,12 @@ class DonationFormState extends State<DonationForm> {
     setState(() => isSwitchedApplicableBuyerDiscounts = value);
   }
 
-  double _parsePrice(String priceString) {
-    if (priceString == "Custom Amount") {
-      return double.tryParse(_customPriceController.text) ?? 0.0;
+  double _parseEnteredPrice() {
+    final rawInput = _priceController.text.trim();
+    if (rawInput.isEmpty) {
+      return 0.0;
     }
-    return double.tryParse(priceString.replaceAll('£', '')) ?? 0.0;
+    return double.tryParse(rawInput.replaceAll('£', '')) ?? 0.0;
   }
 
   DonationRequest buildDonationRequest() {
@@ -95,8 +92,8 @@ class DonationFormState extends State<DonationForm> {
       charityId: selectedCharity?.id ?? '',
       quality: selectedQuality,
       size: selectedSize,
-      donation: _parsePrice(selectedPrice),
-      price: _parsePrice(selectedPrice),
+      donation: _parseEnteredPrice(),
+      price: _parseEnteredPrice(),
       localImages: widget.selectedImages,
     );
   }
@@ -105,11 +102,10 @@ class DonationFormState extends State<DonationForm> {
     _titleController.clear();
     _descriptionController.clear();
     _addToCollectionController.clear();
-    _customPriceController.clear();
+    _priceController.clear();
     setState(() {
       selectedCategory = '';
       selectedCategoryId = '';
-      selectedPrice = '';
       selectedCondition = '';
       selectedQuality = '';
       selectedSize = '';
@@ -117,9 +113,17 @@ class DonationFormState extends State<DonationForm> {
       isSwitchedOpenToOtherCharity = false;
       isSwitchedOpenToOffer = false;
       isSwitchedApplicableBuyerDiscounts = false;
-      showCustomPriceField = false;
     });
     widget.onClearImages?.call();
+  }
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _descriptionController.dispose();
+    _addToCollectionController.dispose();
+    _priceController.dispose();
+    super.dispose();
   }
 
   @override
@@ -206,6 +210,7 @@ class DonationFormState extends State<DonationForm> {
                       ),
                     );
                   } else if (categories.isEmpty) {
+                    
                     return DonationDropdownField(
                       formFieldsHintText: categoryHintText,
                       dropdownList: categoryDropdownList,
@@ -312,58 +317,42 @@ class DonationFormState extends State<DonationForm> {
                 },
               ),
 
-              DonationDropdownField(
-                formFieldsHintText: priceHintText,
-                dropdownList: priceDropdownList,
-                onChanged: (val) {
-                  setState(() {
-                    selectedPrice = val!;
-                    showCustomPriceField = val == "Custom Amount";
-                    if (!showCustomPriceField) {
-                      _customPriceController.clear();
-                    }
-                  });
-                },
-                charityImages: const [],
-                selectedValue: selectedPrice.isNotEmpty ? selectedPrice : null,
-              ),
-
-              if (showCustomPriceField)
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16.0,
-                    vertical: 8.0,
-                  ),
-                  child: TextFormField(
-                    controller: _customPriceController,
-                    decoration: const InputDecoration(
-                      labelText: AppStrings.enterCustomPrice,
-                      hintText: '0.00',
-                      prefixText: '£',
-                      border: OutlineInputBorder(),
-                    ),
-                    keyboardType: TextInputType.numberWithOptions(
-                      decimal: true,
-                    ),
-                    inputFormatters: [
-                      FilteringTextInputFormatter.allow(
-                        RegExp(r'^\d*\.?\d{0,2}'),
-                      ),
-                    ],
-                    validator: (value) {
-                      if (showCustomPriceField &&
-                          (value == null || value.isEmpty)) {
-                        return AppStrings.pleaseEnterPrice;
-                      }
-                      if (showCustomPriceField &&
-                          double.tryParse(value!) == null) {
-                        return AppStrings.pleaseEnterValidPrice;
-                      }
-                      return null;
-                    },
-                  ),
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16.0,
+                  vertical: 8.0,
                 ),
-
+                child: TextFormField(
+                  controller: _priceController,
+                  decoration: const InputDecoration(
+                    labelText: AppStrings.priceText,
+                    hintText: '0.00',
+                    prefixText: '£',
+                    border: OutlineInputBorder(),
+                  ),
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(
+                      RegExp(r'^\d*\.?\d{0,2}'),
+                    ),
+                  ],
+                  validator: (value) {
+                    final input = value?.trim() ?? '';
+                    if (input.isEmpty) {
+                      return 'Please enter a price';
+                    }
+                    final parsed = double.tryParse(input);
+                    if (parsed == null) {
+                      return 'Please enter a valid price';
+                    }
+                    if (parsed <= 0) {
+                      return 'Price must be greater than 0';
+                    }
+                    return null;
+                  },
+                ),
+              ),
               DonationDropdownField(
                 formFieldsHintText: qualityHintText,
                 dropdownList: qualityDropdownList,
@@ -429,115 +418,47 @@ class DonationFormState extends State<DonationForm> {
                 ),
               ),
 
-              // Padding(
-              //   padding: const EdgeInsets.all(16),
-              //   child: donationViewModel.status.type == StatusType.loading
-              //       ? const Center(child: CircularProgressIndicator())
-              //       : SizedBox(
-              //           height: 56,
-              //           width: double.infinity,
-              //           child: FilledButton(
-              //             onPressed: () {
-              //               if (_formKey.currentState!.validate()) {
-              //                 // Validate required dropdowns
-              //                 if (selectedPrice.isEmpty ||
-              //                     selectedQuality.isEmpty ||
-              //                     selectedSize.isEmpty) {
-              //                   Fluttertoast.showToast(
-              //                     msg: AppStrings.pleaseSelectAllDropdowns,
-              //                   );
-              //                   return;
-              //                 }
-              //                 if (selectedCharity == null) {
-              //                   Fluttertoast.showToast(
-              //                     msg: AppStrings.pleaseSelectCharity,
-              //                   );
-              //                   return;
-              //                 }
-              //                 if (widget.selectedImages == null ||
-              //                     widget.selectedImages!.isEmpty) {
-              //                   Fluttertoast.showToast(
-              //                     msg: AppStrings.pleaseAddPhoto,
-              //                   );
-              //                   return;
-              //                 }
-              //                 final request = buildDonationRequest();
-              //                 donationViewModel.submitDonation(request);
-              //               }
-              //             },
-              //             child: const Text(AppStrings.submitDonation),
-              //           ),
-              //         ),
-              // ),
               Padding(
                 padding: const EdgeInsets.all(16),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () => Navigator.of(context).pop(),
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          side: const BorderSide(color: Color(0xFFFF0050)),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(100),
-                          ),
-                        ),
-                        child: const Text(
-                          AppStrings.back,
-                          style: TextStyle(
-                            color: Color(0xFFFF0050),
-                            fontWeight: FontWeight.bold,
-                          ),
+                child: donationViewModel.status.type == StatusType.loading
+                    ? const Center(child: CircularProgressIndicator())
+                    : SizedBox(
+                        height: 56,
+                        width: double.infinity,
+                        child: FilledButton(
+                          onPressed: () {
+                            if (_formKey.currentState!.validate()) {
+                              final priceText = _priceController.text.trim();
+
+                              // Validate required dropdowns
+                              if (priceText.isEmpty ||
+                                  selectedQuality.isEmpty ||
+                                  selectedSize.isEmpty) {
+                                Fluttertoast.showToast(
+                                  msg: AppStrings.pleaseSelectAllDropdowns,
+                                );
+                                return;
+                              }
+                              if (selectedCharity == null) {
+                                Fluttertoast.showToast(
+                                  msg: AppStrings.pleaseSelectCharity,
+                                );
+                                return;
+                              }
+                              if (widget.selectedImages == null ||
+                                  widget.selectedImages!.isEmpty) {
+                                Fluttertoast.showToast(
+                                  msg: AppStrings.pleaseAddPhoto,
+                                );
+                                return;
+                              }
+                              final request = buildDonationRequest();
+                              donationViewModel.submitDonation(request);
+                            }
+                          },
+                          child: const Text(AppStrings.submitDonation),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: FilledButton(
-                        onPressed: () {
-                          if (_formKey.currentState!.validate()) {
-                            // Validate required dropdowns
-                            if (selectedPrice.isEmpty ||
-                                selectedQuality.isEmpty ||
-                                selectedSize.isEmpty) {
-                              Fluttertoast.showToast(
-                                msg: AppStrings.pleaseSelectAllDropdowns,
-                              );
-                              return;
-                            }
-                            if (selectedCharity == null) {
-                              Fluttertoast.showToast(
-                                msg: AppStrings.pleaseSelectCharity,
-                              );
-                              return;
-                            }
-                            if (widget.selectedImages == null ||
-                                widget.selectedImages!.isEmpty) {
-                              Fluttertoast.showToast(
-                                msg: AppStrings.pleaseAddPhoto,
-                              );
-                              return;
-                            }
-                            final request = buildDonationRequest();
-                            donationViewModel.submitDonation(request);
-                          }
-                        },
-                        style: FilledButton.styleFrom(
-                          backgroundColor: const Color(0xFFFF0050),
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(100),
-                          ),
-                        ),
-                        child: const Text(
-                          AppStrings.nextButton,
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
               ),
             ],
           ),
