@@ -166,6 +166,12 @@ class AppStrings {
   static const pleaseEnterPrice = 'Please enter a price';
   static const pleaseEnterValidPrice = 'Please enter a valid price';
 
+  // Donation Validation
+  static const pleaseSelectAllDropdowns = 'Please select all dropdowns';
+  static const pleaseSelectCharity = 'Please select a charity';
+  static const pleaseAddPhoto = 'Please add at least one photo';
+  static const submitDonation = 'Submit Donation';
+
   // Donation Submission
   static const donationSubmittedSuccessfully =
       'Donation submitted successfully!';
