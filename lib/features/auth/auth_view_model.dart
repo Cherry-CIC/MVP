@@ -16,11 +16,10 @@ class AuthViewModel extends ChangeNotifier {
 
   Status _status = Status.uninitialized;
   Status get status => _status;
+  User? get currentUser => FirebaseAuth.instance.currentUser;
 
   UserCredentials? userCredentials;
   bool isLoadingUser = false;
-
-  User? get currentUser => FirebaseAuth.instance.currentUser;
 
   Future<void> loadCurrentUser() async {
     if (currentUser == null) return;
