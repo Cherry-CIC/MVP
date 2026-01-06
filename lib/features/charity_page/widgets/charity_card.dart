@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:cherry_mvp/core/config/app_strings.dart';
 import 'package:cherry_mvp/core/utils/image_provider_helper.dart';
 import 'package:cherry_mvp/features/charity_page/charity_model.dart';
-import 'package:flutter/material.dart';
 
 class CharityCard extends StatefulWidget {
   const CharityCard({super.key, required this.charity});

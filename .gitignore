@@ -40,6 +40,7 @@ pubspec.lock
 
 # iOS builds
 /ios/Pods/
+/ios/build/
 /ios/Podfile.lock
 /ios/Runner.xcodeproj
 /ios/Runner/GoogleService-Info.plist
