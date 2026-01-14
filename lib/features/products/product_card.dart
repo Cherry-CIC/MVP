@@ -60,13 +60,13 @@ class ProductCard extends StatelessWidget {
                               child: Row(
                                 crossAxisAlignment: CrossAxisAlignment.center,
                                 mainAxisSize: MainAxisSize.min,
-                                spacing: 4,
                                 children: [
                                   Icon(Icons.favorite_border,
                                       size: 16,
                                       color: Theme.of(context)
                                           .colorScheme
                                           .onSurfaceVariant),
+                                  const SizedBox(width: 4),
                                   Text('14',
                                       style: Theme.of(context)
                                           .textTheme
@@ -109,14 +109,23 @@ class ProductCard extends StatelessWidget {
             const SizedBox(height: 4),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Expanded(
-                  child: Text(
-                    '£${product.price.toStringAsFixed(2)}',
-                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                          color: Theme.of(context).colorScheme.secondary,
-                        ),
-                  ),
+                Row(
+                  children: [
+                    Text(
+                      '£${product.price.toStringAsFixed(2)}',
+                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                    ),
+                    const SizedBox(width: 4),
+                    ImageProviderHelper.buildImage(
+                      imagePath: 'assets/images/shield_tick.png',
+                      width: 16,
+                      height: 16,
+                    ),
+                  ],
                 ),
                 ImageProviderHelper.buildImage(
                   imagePath: product.charityImage,
@@ -125,12 +134,6 @@ class ProductCard extends StatelessWidget {
                   fit: BoxFit.cover,
                 ),
               ],
-            ),
-            Text(
-              '£${product.price.toStringAsFixed(2)}',
-              style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
             ),
           ],
         ),
