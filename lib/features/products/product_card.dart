@@ -57,8 +57,11 @@ class ProductCard extends StatelessWidget {
                       ).colorScheme.surfaceContainerHighest,
                       type: MaterialType.button,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
-                        height: 32,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 4.5,
+                          vertical: 2,
+                        ),
+                        height: 22,
                         child: Ink(
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.center,
@@ -122,33 +125,40 @@ class ProductCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 4),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Text(
-                    '£${product.price.toStringAsFixed(2)}',
-                    style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                      color: Theme.of(context).colorScheme.secondary,
-                      fontSize: 16
-                    ),
+            Expanded(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    children: [
+                      Text(
+                        '£${product.price.toStringAsFixed(2)}',
+                        style: Theme.of(context).textTheme.headlineLarge
+                            ?.copyWith(
+                          color: Theme.of(context).colorScheme.secondary,
+                          fontSize: 16,
+                        ),
+                      ),
+                      const SizedBox(height: 11),
+                      Text(
+                        '£${product.price.toStringAsFixed(2)}',
+                        style: Theme.of(context).textTheme.headlineLarge
+                            ?.copyWith(
+                          color: Theme.of(context).colorScheme.primary,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-                if(product.charityImage.isNotEmpty)
-                ImageProviderHelper.buildImage(
-                  imagePath: product.charityImage,
-                  height: 20,
-                  width: 20,
-                  fit: BoxFit.cover,
-                ),
-              ],
-            ),
-            const SizedBox(height: 7),
-            Text(
-              '£${product.price.toStringAsFixed(2)}',
-              style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                color: Theme.of(context).colorScheme.primary,
-                fontSize: 16
+                  if (product.charityImage.isNotEmpty)
+                    ImageProviderHelper.buildImage(
+                      imagePath: product.charityImage,
+                      height: 35,
+                      width: 35,
+                      fit: BoxFit.cover,
+                    ),
+                ],
               ),
             ),
           ],
