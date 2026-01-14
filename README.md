@@ -1,135 +1,36 @@
 # CherryMVP
- 
-### Project Structure
 
-```
-assets/
-│   ├── images/       # Stores image assets
-│   └── fonts/        # Custom fonts
-lib/
-├── core/             # Core functionalities shared across the app
-│   ├── config/       # App constants
-│   │   ├── app_colors.dart    # Colors used in the app
-│   │   ├── app_strings.dart   # App strings (for localization readiness)
-│   │   ├── config.dart        # Simplified imports for config files
-│   ├── models/                # General models
-│   ├── services/              # Services (external dependencies like network)
-│   ├── utils/                 # Helper utilities
-│   ├── reusablewidgets/       # Shared reusable widgets
-│   └── router/                # Handles navigation
-├── features/                  # Main features
-│   ├── login/                 
-│   │   ├── models/
-│   │   │   ├── login_model.dart  
-│   │   ├── repository/
-│   │   │   ├── login_repository.dart  
-│   │   ├── viewmodel/
-│   │   │   ├── login_viewmodel.dart   
-│   │   ├── ui/
-│   │   │   ├── loginpage.dart   
-│   │   └── widgets/                # Sub-widgets used in login
-│   ├── register/              
-│   ├── home/                 
-│   ├── dashboard/          
-│   ├── profile/               
-└── main.dart                  # Entry point
-```
-### Key Points:
-- **MVVM Architecture**: The project uses the **MVVM approach** for separation of concerns.
-- **Provider**: The project uses **Provider** for state management and dependency injection.
-- **Feature Consistency**: Other features should follow the same approach as the **Login feature**, to ensure consistency.
-- **Welcome Page/LoginForm**: The **Pages** provide good example of how to navigate between screens and use other dependencies/resources within the app.
----
+<video src="https://framerusercontent.com/assets/9dyB60dgYnsiijWQyzsTocDOY.mp4" controls width="600">
+  Your browser does not support the video tag.
+</video>
 
-## Setup and How to Contribute
-### Prerequisites
+## Our Mission
 
-Make sure you have the following installed:
+cherry (yes, with a lowercase 'c') is a user-based platform (currently just a mobile app) that combines sustainable fashion with charitable giving.
 
-- Flutter SDK (latest stable version)
-- Android Studio (Recommended) / VS Code
-- An emulator or a real device
+It allows users to buy and sell pre-loved clothing and accessories, with 100% of the proceeds going directly to charities chosen by the users.
 
-### Step 1: Pick Up an Issue
-- Before you start working on a feature or bug fix, check the issues tab and pick one that you’d like to work on.
+We empower individuals to make a tangible, personal impact on the causes they care about, while promoting a circular economy and reducing the environmental harm and unethical practices caused by the fashion industry.
 
-### Step 1: Clone the Repository
-```shell
-git clone https://github.com/CherryCIC/MVP
-cd CherryMVP
-```
+Through a user-friendly platform and transparency above all, cherry facilitates a seamless, impactful way anyone (with clothes) can support a plethora of great causes, and every purchase contributes to a sustainable, fairer future!
 
-### Step 2: Create a Feature Branch from main
-```shell
-git checkout -b feature-new-feature
-```
+## Our Progress
 
-### Step 3: Create a .env file
-- Create a .env file in the root directory and update it with:
-```shell
-API_BASE_URL=https://cherry-backend-401854471349.europe-west2.run.app/api
+Our amazing volunteer team have been working hard to take the concept of cherry to an MVP product, proving the value and impact that cherry can have on the fashion industry. Our next steps are to move from MVP to a production ready solution, get real customers on our platform and start creating impact.
 
-USE_MOCK_DATA=false
-```
+### Open Source at Heart
 
-### Step 4: Install Dependencies
-- run
-```shell
-flutter clean (optional)
-flutter pub get
-```
+Cherry is built in the open because transparency, collaboration, and shared ownership are core to our mission.
 
-### Step 4: run the project
-```shell
-flutter run
-```
+By open-sourcing our platform, we invite the community to help shape a fairer, more sustainable future for fashion and charitable giving. Anyone can contribute, learn from the codebase, and hold us accountable to our values.
 
-### Step 5: Submit a Pull Request
-- Once you’re done with your changes, submit a pull request from your feature branch to the main branch of the CherryMVP repository
+Open source isn’t just a technical choice for cherry — it’s a statement about **trust**, **impact**, and **collective responsibility**.
 
-### Step 6: Follow the PR Guidelines
-- Add screenshots or images of any UI changes.
-- Provide a clear description of the changes made.
-- Ensure that the code follows the project's coding standards
-- Mention the issue number your PR addresses.
-Use the following format in your pull request description:
-```shell
-Fixes: #<issue_number>
-```
-This helps us track which issue the PR is resolving. Here's an example of a good PR description:
-```shell
-Fixes: #97
+## What to Contribute
 
-### Description of the Work Done:
-- Created the login UI
-- Integrated basic validation
+Amazing! Thank you so much for considering to volunteer your time and skills to our amazing project.
 
-### Screenshot (if UI was created or updated):
-[Attach screenshot here]
-```
+Firstly, please connect with our team over on Slack
+[![slack](https://img.shields.io/badge/Slack-4A154B?style=for-the-badge&logo=slack&logoColor=white)](https://cherry-aik4933.slack.com)
 
-### Understanding the Project Architecture
-To better understand the architecture of this project, please take a look at:
-- https://jimohyusuph.hashnode.dev/designing-the-mobile-architecture-for-cherry-flutter-app-my-thought-process
-it may also be helpful to read the official Flutter documentation using the links below: 
-- UI: https://docs.flutter.dev/ui/layout
-- Flutter App Architecture Guide: https://docs.flutter.dev/app-architecture/concepts
-- Compass App case study:https://docs.flutter.dev/app-architecture/case-study
-- Navigation: https://docs.flutter.dev/cookbook/navigation/navigation-basics
-- State Management: https://docs.flutter.dev/data-and-backend/state-mgmt/simple
-
-### Few House Keeping Notes
-- Please avoid using relative imports for items from the core folder. It's best to use the package-based import structure. For example:
-```dart 
-import 'package:cherry_mvp/core/utils/utils.dart'; 
-```
-
-- Avoid using relative imports, such as:
-```dart 
-import '../../core/utils/result.dart';
-```
-
-- Avoid hardcoding strings, images, and colors directly in the widgets. They should be referenced from app_colors, app_images, and app_strings.
-```dart 
-import 'package:cherry_mvp/core/config/config.dart';
-```
+Secondly, head over to our CONTRIBUTION.md document to find out how to start contributing.
