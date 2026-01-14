@@ -134,6 +134,7 @@ class ProductCard extends StatelessWidget {
                     ),
                   ),
                 ),
+                if(product.charityImage.isNotEmpty)
                 ImageProviderHelper.buildImage(
                   imagePath: product.charityImage,
                   height: 20,
