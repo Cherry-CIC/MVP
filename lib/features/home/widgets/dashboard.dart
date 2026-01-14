@@ -41,92 +41,96 @@ class _DashboardPageState extends State<DashboardPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<HomeViewModel>(
-      builder: (context, homeViewModel, _) {
-        final navigator = Provider.of<NavigationProvider>(
-          context,
-          listen: false,
-        );
-        final productViewModel = Provider.of<ProductViewModel>(
-          context,
-          listen: false,
-        );
-        final products = homeViewModel.products;
-        final status = homeViewModel.status;
+    return MediaQuery.removePadding(
+      context: context,
+      removeTop: true,
+      child: Consumer<HomeViewModel>(
+        builder: (context, homeViewModel, _) {
+          final navigator = Provider.of<NavigationProvider>(
+            context,
+            listen: false,
+          );
+          final productViewModel = Provider.of<ProductViewModel>(
+            context,
+            listen: false,
+          );
+          final products = homeViewModel.products;
+          final status = homeViewModel.status;
 
-        return Padding(
-          padding: const EdgeInsets.all(12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 12),
+          return Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 12),
 
-              // Show loading widget when fetching data
-              if (status.type == StatusType.loading)
-                const DashboardLoadingWidget()
-              // Show error widget if failed
-              else if (status.type == StatusType.failure)
-                DashboardErrorWidget(
-                  errorMessage: status.message,
-                  onRetry: () => homeViewModel.fetchProducts(),
-                )
-              // Show products grid when data is loaded
-              else if (products.isNotEmpty)
-                Builder(
-                  builder: (context) {
-                    const int adFrequency = 6;
+                // Show loading widget when fetching data
+                if (status.type == StatusType.loading)
+                  const DashboardLoadingWidget()
+                // Show error widget if failed
+                else if (status.type == StatusType.failure)
+                  DashboardErrorWidget(
+                    errorMessage: status.message,
+                    onRetry: () => homeViewModel.fetchProducts(),
+                  )
+                // Show products grid when data is loaded
+                else if (products.isNotEmpty)
+                  Builder(
+                    builder: (context) {
+                      const int adFrequency = 6;
 
-                    final int productCount = products.length;
-                    final int adCount = productCount ~/ adFrequency;
-                    final int totalCount = productCount + adCount;
+                      final int productCount = products.length;
+                      final int adCount = productCount ~/ adFrequency;
+                      final int totalCount = productCount + adCount;
 
-                    return GridView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: totalCount,
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        crossAxisSpacing: 12,
-                        mainAxisSpacing: 12,
-                        childAspectRatio: 0.61,
-                      ),
-                      itemBuilder: (context, index) {
-                        final bool isAdPosition = productCount >= adFrequency &&
-                            (index + 1) % (adFrequency + 1) == 0;
+                      return GridView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: totalCount,
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 12,
+                          mainAxisSpacing: 6,
+                          childAspectRatio: 0.6,
+                        ),
+                        itemBuilder: (context, index) {
+                          final bool isAdPosition = productCount >= adFrequency &&
+                              (index + 1) % (adFrequency + 1) == 0;
 
-                        if (isAdPosition) {
-                          return const AdExample();
-                        }
+                          if (isAdPosition) {
+                            return const AdExample();
+                          }
 
-                        final int adsBefore =
-                            (index + 1) ~/ (adFrequency + 1);
-                        final int productIndex = index - adsBefore;
+                          final int adsBefore =
+                              (index + 1) ~/ (adFrequency + 1);
+                          final int productIndex = index - adsBefore;
 
-                        if (productIndex < 0 || productIndex >= productCount) {
-                          return const SizedBox.shrink();
-                        }
+                          if (productIndex < 0 || productIndex >= productCount) {
+                            return const SizedBox.shrink();
+                          }
 
-                        final product = products[productIndex];
+                          final product = products[productIndex];
 
-                        return GestureDetector(
-                          onTap: () {
-                            productViewModel.setProduct(product);
-                            navigator.navigateTo(AppRoutes.product);
-                          },
-                          child: ProductCard(product: product),
-                        );
-                      },
-                    );
-                  },
-                )
-              // Show empty state if no products
-              else
-                const DashboardEmptyWidget(),
-            ],
-          ),
-        );
-      },
+                          return GestureDetector(
+                            onTap: () {
+                              productViewModel.setProduct(product);
+                              navigator.navigateTo(AppRoutes.product);
+                            },
+                            child: ProductCard(product: product),
+                          );
+                        },
+                      );
+                    },
+                  )
+                // Show empty state if no products
+                else
+                  const DashboardEmptyWidget(),
+              ],
+            ),
+          );
+        },
+      ),
     );
   }
 }
