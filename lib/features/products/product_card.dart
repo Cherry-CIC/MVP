@@ -128,8 +128,9 @@ class ProductCard extends StatelessWidget {
                 Expanded(
                   child: Text(
                     '£${product.price.toStringAsFixed(2)}',
-                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                    style: Theme.of(context).textTheme.headlineLarge?.copyWith(
                       color: Theme.of(context).colorScheme.secondary,
+                      fontSize: 16
                     ),
                   ),
                 ),
@@ -141,10 +142,12 @@ class ProductCard extends StatelessWidget {
                 ),
               ],
             ),
+            const SizedBox(height: 7),
             Text(
               '£${product.price.toStringAsFixed(2)}',
-              style: Theme.of(context).textTheme.labelLarge?.copyWith(
+              style: Theme.of(context).textTheme.headlineLarge?.copyWith(
                 color: Theme.of(context).colorScheme.primary,
+                fontSize: 16
               ),
             ),
           ],
