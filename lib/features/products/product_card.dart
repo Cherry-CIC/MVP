@@ -104,7 +104,31 @@ class ProductCard extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             Row(
+              mainAxisAlignment: MainAxisAlignment.start,
               children: [
+                Text(
+                  product.size.isNotEmpty
+                      ? product.size
+                            .split(' ')
+                            .map(
+                              (word) =>
+                                  word.isNotEmpty ? word[0].toUpperCase() : '',
+                            )
+                            .join()
+                      : '',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(fontSize: 14),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                  child: Text(
+                    "-",
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodySmall?.copyWith(fontSize: 14),
+                  ),
+                ),
                 Flexible(
                   child: Text(
                     product.quality,
@@ -112,14 +136,6 @@ class ProductCard extends StatelessWidget {
                     style: Theme.of(
                       context,
                     ).textTheme.bodySmall?.copyWith(fontSize: 14),
-                  ),
-                ),
-                SizedBox(width: 20),
-                Text(
-                  product.size,
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
                   ),
                 ),
               ],
@@ -136,18 +152,18 @@ class ProductCard extends StatelessWidget {
                         '£${product.price.toStringAsFixed(2)}',
                         style: Theme.of(context).textTheme.headlineLarge
                             ?.copyWith(
-                          color: Theme.of(context).colorScheme.secondary,
-                          fontSize: 16,
-                        ),
+                              color: Theme.of(context).colorScheme.secondary,
+                              fontSize: 16,
+                            ),
                       ),
                       const SizedBox(height: 11),
                       Text(
                         '£${product.price.toStringAsFixed(2)}',
                         style: Theme.of(context).textTheme.headlineLarge
                             ?.copyWith(
-                          color: Theme.of(context).colorScheme.primary,
-                          fontSize: 16,
-                        ),
+                              color: Theme.of(context).colorScheme.primary,
+                              fontSize: 16,
+                            ),
                       ),
                     ],
                   ),
