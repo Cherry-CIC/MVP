@@ -43,15 +43,29 @@ class BasketListItem extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(product.name),
-                Text(product.size),
-                const SizedBox(height: 8),
+                Text(
+                  product.name,
+                  maxLines: 1,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(fontSize: 16),
+                ),
+                SizedBox(height: 4),
+                Text(
+                  product.size,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(fontSize: 16),
+                ),
+                const SizedBox(height: 14.5),
                 Row(
                   children: [
                     Expanded(
                       child: Text(
                         '${AppStrings.currencySymbol}${product.price.toStringAsFixed(2)}',
-                        style: Theme.of(context).textTheme.titleSmall,
+                        style: Theme.of(
+                          context,
+                        ).textTheme.headlineLarge?.copyWith(fontSize: 18),
                       ),
                     ),
                     Material(
