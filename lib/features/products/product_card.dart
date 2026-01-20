@@ -8,6 +8,38 @@ class ProductCard extends StatelessWidget {
 
   const ProductCard({super.key, required this.product, this.onTap});
 
+  static const _sizeAbbreviations = {
+    'extra small': 'XS',
+    'x-small': 'XS',
+    'xsmall': 'XS',
+    'small': 'S',
+    'medium': 'M',
+    'large': 'L',
+    'extra large': 'XL',
+    'x-large': 'XL',
+    'xlarge': 'XL',
+    'extra extra large': 'XXL',
+    'xx-large': 'XXL',
+    'xxlarge': 'XXL',
+    'one size': 'OS',
+  };
+
+  String _formatSizeLabel(String size) {
+    if (size.isEmpty) return '';
+
+    final normalized = size.trim().toLowerCase();
+
+    // Check for known size names
+    if (_sizeAbbreviations.containsKey(normalized)) {
+      return _sizeAbbreviations[normalized]!;
+    }
+
+    // For unknown formats (numeric sizes etc.), pass through as-is
+    // Truncate to 6 characters max per acceptance criteria
+    final result = size.trim();
+    return result.length > 6 ? result.substring(0, 6) : result;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Material(
@@ -108,13 +140,7 @@ class ProductCard extends StatelessWidget {
               children: [
                 if (product.size.isNotEmpty) ...[
                   Text(
-                    product.size
-                        .split(' ')
-                        .map(
-                          (word) =>
-                              word.isNotEmpty ? word[0].toUpperCase() : '',
-                        )
-                        .join(),
+                    _formatSizeLabel(product.size),
                     style: Theme.of(
                       context,
                     ).textTheme.bodySmall?.copyWith(fontSize: 14),
