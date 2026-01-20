@@ -106,29 +106,29 @@ class ProductCard extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
-                Text(
-                  product.size.isNotEmpty
-                      ? product.size
-                            .split(' ')
-                            .map(
-                              (word) =>
-                                  word.isNotEmpty ? word[0].toUpperCase() : '',
-                            )
-                            .join()
-                      : '',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodySmall?.copyWith(fontSize: 14),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                  child: Text(
-                    "-",
+                if (product.size.isNotEmpty) ...[
+                  Text(
+                    product.size
+                        .split(' ')
+                        .map(
+                          (word) =>
+                              word.isNotEmpty ? word[0].toUpperCase() : '',
+                        )
+                        .join(),
                     style: Theme.of(
                       context,
                     ).textTheme.bodySmall?.copyWith(fontSize: 14),
                   ),
-                ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                    child: Text(
+                      "-",
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodySmall?.copyWith(fontSize: 14),
+                    ),
+                  ),
+                ],
                 Flexible(
                   child: Text(
                     product.quality,
