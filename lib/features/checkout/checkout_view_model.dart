@@ -101,6 +101,9 @@ class CheckoutViewModel extends ChangeNotifier {
   /// Whether a valid shipping address has been selected
   bool get hasShippingAddress => _shippingAddress != null;
 
+  //Whether user or logic has confirmed the shipping address
+  bool isShippingAddressConfirmed = false;
+
   // Payment properties
   bool _hasPaymentMethod = false;
 
@@ -109,6 +112,11 @@ class CheckoutViewModel extends ChangeNotifier {
 
   /// Whether the order is ready for checkout (has both address and payment method)
   bool get canCheckout => hasShippingAddress && hasPaymentMethod;
+
+  void setAddressConfirmed(bool value) {
+    isShippingAddressConfirmed = value;
+    notifyListeners();
+  }
 
   // Existing basket methods
   void addItem(Product product) {

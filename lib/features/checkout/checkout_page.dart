@@ -1,3 +1,4 @@
+import 'package:cherry_mvp/core/config/app_colors.dart';
 import 'package:cherry_mvp/core/config/app_strings.dart';
 import 'package:cherry_mvp/core/router/nav_routes.dart';
 import 'package:cherry_mvp/core/utils/status.dart';
@@ -16,6 +17,7 @@ class CheckoutPage extends StatefulWidget {
 }
 
 class _CheckoutPageState extends State<CheckoutPage> {
+  String _errorMessage = "";
   @override
   void initState() {
     super.initState();
@@ -45,6 +47,31 @@ class _CheckoutPageState extends State<CheckoutPage> {
             },
           ),
           DeliveryOptions(),
+
+          //if (_errorMessage.isNotEmpty)
+          if (_errorMessage.isNotEmpty)
+          SliverToBoxAdapter(
+            child: Container(
+              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primaryContainer,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: AppColors.primaryAction,
+                ),
+              ),
+              child: Text(
+                _errorMessage,
+                style: TextStyle(
+                  color: AppColors.primaryAction,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          ),
+
           SliverList.list(
             children: [
               const SizedBox(height: 32),
@@ -66,6 +93,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                   ],
                 ),
               ),
+
               Container(
                 margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 height: 56,
@@ -86,29 +114,42 @@ class _CheckoutPageState extends State<CheckoutPage> {
                       gotoCheckoutComplete();
                     }
                     return FilledButton(
-                      onPressed: () async {
-                        if (viewModel.deliveryChoice != null) {
-                          if (viewModel.deliveryChoice == "pickup" &&
-                              viewModel.selectedInpost != null) {
-                            await viewModel.storeLockerInFirestore();
-                          }
-                          // Store dummy order in Firestore
-                          await viewModel.storeOrderInFirestore();
+                      onPressed: 
+                      !viewModel.isShippingAddressConfirmed
+                      ? null
+                      : () async {
+                        if (viewModel.deliveryChoice == null) {
+                          setState(() => _errorMessage = AppStrings.checkoutDeliveryOptionRequired);
+                          return;
+                        }
 
-                          if (basket.total > 0) {
-                            bool result = await viewModel.payWithPaymentSheet(
-                              amount: basket.total,
-                            );
-                            if (result) {
-                              await viewModel.createOrder();
-                            }
-                          } else {
-                            Fluttertoast.showToast(msg: "Your basket is empty");
-                          }
-                        } else {
-                          Fluttertoast.showToast(
-                            msg: "Choose Shipping address",
-                          );
+                        // Validate pickup
+                        if (viewModel.deliveryChoice == 'pickup' &&
+                            viewModel.selectedInpost == null) {
+                          setState(() => _errorMessage = AppStrings.checkoutPickupLockerRequired);
+                          return;
+                        }
+
+                        if (!viewModel.hasPaymentMethod) {
+                          setState(() => _errorMessage = AppStrings.checkoutPaymentMethodRequired);
+                          return;
+                        }
+                        
+                        // Clear error
+                        setState(() => _errorMessage = '');
+
+                        // 4. Proceed with order
+                        await viewModel.storeOrderInFirestore();
+
+                        if (basket.total <= 0) {
+                          Fluttertoast.showToast(msg: "Your basket is empty");
+                          return;
+                        }
+
+                        bool result = await viewModel.payWithPaymentSheet(amount: basket.total);
+
+                        if (result) {
+                          await viewModel.createOrder();
                         }
                       },
                       child:

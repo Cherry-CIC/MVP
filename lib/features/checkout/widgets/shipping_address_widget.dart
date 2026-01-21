@@ -31,6 +31,7 @@ class _ShippingAddressWidgetState extends State<ShippingAddressWidget> {
   bool _useManualEntry = false;
   bool _apiAvailable = true;
 
+
   // Manual entry controllers
   final TextEditingController _addressLine1Controller = TextEditingController();
   final TextEditingController _addressLine2Controller = TextEditingController();
@@ -81,15 +82,21 @@ class _ShippingAddressWidgetState extends State<ShippingAddressWidget> {
     }
   }
 
+  void _updateAddressConfirmed(bool value) {
+    setState(() {
+      _isAddressConfirmed = value;
+      if (!value) {
+        _selectedAddress = null;
+      }
+    });
+
+    Provider.of<CheckoutViewModel>(context, listen: false)
+        .setAddressConfirmed(value);
+  }
+
   void _onAddressChanged() {
     // If address is confirmed and user starts typing, reset confirmation
-    if (_isAddressConfirmed) {
-      setState(() {
-        _isAddressConfirmed = false;
-        _selectedAddress = null;
-      });
-    }
-
+    _updateAddressConfirmed(false);
     if (_debounceTimer?.isActive ?? false) _debounceTimer!.cancel();
 
     _debounceTimer = Timer(const Duration(milliseconds: 500), () {
@@ -217,7 +224,7 @@ class _ShippingAddressWidgetState extends State<ShippingAddressWidget> {
     setState(() {
       _isLoading = false;
       _selectedAddress = details;
-      _isAddressConfirmed = details != null; // Mark as confirmed
+      _updateAddressConfirmed(details != null); // Mark as confirmed
     });
 
     // Unfocus the text field to prevent dropdown from showing again
@@ -230,7 +237,7 @@ class _ShippingAddressWidgetState extends State<ShippingAddressWidget> {
 
   void _editAddress() {
     setState(() {
-      _isAddressConfirmed = false;
+      _updateAddressConfirmed(false);
       _selectedAddress = null;
       _showPredictions = false;
     });
@@ -248,7 +255,7 @@ class _ShippingAddressWidgetState extends State<ShippingAddressWidget> {
   void _toggleEntryMode() {
     setState(() {
       _useManualEntry = !_useManualEntry;
-      _isAddressConfirmed = false;
+     _updateAddressConfirmed(false);
       _selectedAddress = null;
     });
   }
@@ -281,7 +288,7 @@ class _ShippingAddressWidgetState extends State<ShippingAddressWidget> {
 
       setState(() {
         _selectedAddress = manualAddress;
-        _isAddressConfirmed = true;
+        _updateAddressConfirmed(true);
         _addressController.text = manualAddress.formattedAddress;
       });
 
@@ -377,7 +384,7 @@ class _ShippingAddressWidgetState extends State<ShippingAddressWidget> {
                 context,
                 listen: false,
               ).setShippingAddress(savedAddress);
-              _isAddressConfirmed = true;
+              _updateAddressConfirmed(true);
               _addressController.text = savedAddress.formattedAddress;
             }
           });
@@ -627,6 +634,7 @@ class _ShippingAddressWidgetState extends State<ShippingAddressWidget> {
           // Address Line 1
           TextFormField(
             controller: _addressLine1Controller,
+            autovalidateMode: AutovalidateMode.onUserInteraction,
             decoration: const InputDecoration(
               labelText: AddressConstants.streetAddressLabel,
               hintText: AddressConstants.streetAddressHint,
@@ -658,6 +666,7 @@ class _ShippingAddressWidgetState extends State<ShippingAddressWidget> {
               Expanded(
                 flex: 2,
                 child: TextFormField(
+                  autovalidateMode: AutovalidateMode.onUserInteraction,
                   controller: _cityController,
                   decoration: const InputDecoration(
                     labelText: AddressConstants.townCityLabel,
@@ -674,8 +683,10 @@ class _ShippingAddressWidgetState extends State<ShippingAddressWidget> {
                 ),
               ),
               const SizedBox(width: 16),
+
               Expanded(
                 child: TextFormField(
+                  autovalidateMode: AutovalidateMode.onUserInteraction,
                   controller: _postcodeController,
                   decoration: const InputDecoration(
                     labelText: AddressConstants.postcodeLabel,
@@ -720,6 +731,7 @@ class _ShippingAddressWidgetState extends State<ShippingAddressWidget> {
             },
           ),
           const SizedBox(height: 16),
+
           SizedBox(
             width: double.infinity,
             height: 48,
