@@ -26,6 +26,14 @@ By open-sourcing our platform, we invite the community to help shape a fairer, m
 
 Open source isn’t just a technical choice for cherry — it’s a statement about **trust**, **impact**, and **collective responsibility**.
 
+## Backend API & Swagger Docs
+
+The backend API documentation is available at:
+
+**[Swagger UI - API Documentation](https://cherry-backend-401854471349.europe-west2.run.app/api-docs/)**
+
+This Swagger interface allows you to explore and test all available API endpoints directly in your browser.
+
 ## What to Contribute
 
 Amazing! Thank you so much for considering to volunteer your time and skills to our amazing project.
