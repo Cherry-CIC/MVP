@@ -8,6 +8,38 @@ class ProductCard extends StatelessWidget {
 
   const ProductCard({super.key, required this.product, this.onTap});
 
+  static const _sizeAbbreviations = {
+    'extra small': 'XS',
+    'x-small': 'XS',
+    'xsmall': 'XS',
+    'small': 'S',
+    'medium': 'M',
+    'large': 'L',
+    'extra large': 'XL',
+    'x-large': 'XL',
+    'xlarge': 'XL',
+    'extra extra large': 'XXL',
+    'xx-large': 'XXL',
+    'xxlarge': 'XXL',
+    'one size': 'OS',
+  };
+
+  String _formatSizeLabel(String size) {
+    if (size.isEmpty) return '';
+
+    final normalized = size.trim().toLowerCase();
+
+    // Check for known size names
+    if (_sizeAbbreviations.containsKey(normalized)) {
+      return _sizeAbbreviations[normalized]!;
+    }
+
+    // For unknown formats (numeric sizes etc.), pass through as-is
+    // Truncate to 6 characters max per acceptance criteria
+    final result = size.trim();
+    return result.length > 6 ? result.substring(0, 6) : result;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Material(
@@ -104,7 +136,25 @@ class ProductCard extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             Row(
+              mainAxisAlignment: MainAxisAlignment.start,
               children: [
+                if (product.size.isNotEmpty) ...[
+                  Text(
+                    _formatSizeLabel(product.size),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodySmall?.copyWith(fontSize: 14),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                    child: Text(
+                      "-",
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodySmall?.copyWith(fontSize: 14),
+                    ),
+                  ),
+                ],
                 Flexible(
                   child: Text(
                     product.quality,
@@ -112,14 +162,6 @@ class ProductCard extends StatelessWidget {
                     style: Theme.of(
                       context,
                     ).textTheme.bodySmall?.copyWith(fontSize: 14),
-                  ),
-                ),
-                SizedBox(width: 20),
-                Text(
-                  product.size,
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
                   ),
                 ),
               ],
@@ -136,18 +178,18 @@ class ProductCard extends StatelessWidget {
                         '£${product.price.toStringAsFixed(2)}',
                         style: Theme.of(context).textTheme.headlineLarge
                             ?.copyWith(
-                          color: Theme.of(context).colorScheme.secondary,
-                          fontSize: 16,
-                        ),
+                              color: Theme.of(context).colorScheme.secondary,
+                              fontSize: 16,
+                            ),
                       ),
                       const SizedBox(height: 11),
                       Text(
                         '£${product.price.toStringAsFixed(2)}',
                         style: Theme.of(context).textTheme.headlineLarge
                             ?.copyWith(
-                          color: Theme.of(context).colorScheme.primary,
-                          fontSize: 16,
-                        ),
+                              color: Theme.of(context).colorScheme.primary,
+                              fontSize: 16,
+                            ),
                       ),
                     ],
                   ),
