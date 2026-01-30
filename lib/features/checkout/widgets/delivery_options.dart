@@ -78,7 +78,9 @@ class _DeliveryOptionsState extends State<DeliveryOptions> {
               style: Theme.of(context).textTheme.titleSmall,
             ),
             price: basket.total,
-            style: Theme.of(context).textTheme.titleMedium,
+            style: Theme.of(
+              context,
+            ).textTheme.headlineLarge?.copyWith(fontSize: 16),
           ),
           const Divider(height: 32),
           if (_delivery == 'pickup') ...[

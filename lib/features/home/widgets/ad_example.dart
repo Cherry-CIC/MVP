@@ -9,11 +9,8 @@ class AdExample extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          child: Text(AppStrings.adText,
-              style: Theme.of(context).textTheme.titleMedium),
-        ),
+        Text(AppStrings.adText,
+            style: Theme.of(context).textTheme.titleMedium),
         Image.asset(AppImages.adImage),
       ],
     );
