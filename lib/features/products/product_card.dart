@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:cherry_mvp/core/models/model.dart';
 import 'package:cherry_mvp/core/utils/image_provider_helper.dart';
 
+import '../../core/config/app_strings.dart';
+
 class ProductCard extends StatelessWidget {
   final Product product;
   final VoidCallback? onTap;
@@ -184,33 +186,48 @@ class ProductCard extends StatelessWidget {
                             ),
                       ),
                       const SizedBox(height: 11),
-                      Text(
-                        '£${product.price.toStringAsFixed(2)}',
-                        style: Theme.of(context).textTheme.headlineLarge
-                            ?.copyWith(
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            '£${product.price.toStringAsFixed(2)}',
+                            style: Theme.of(context).textTheme.headlineLarge
+                                ?.copyWith(
+                                  color: Theme.of(context).colorScheme.primary,
+                                  fontSize: 16,
+                                ),
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            AppStrings.productIncl,
+                            style: Theme.of(context).textTheme.headlineLarge
+                                ?.copyWith(
                               color: Theme.of(context).colorScheme.primary,
                               fontSize: 16,
                             ),
+                          ),
+                          InkWell(
+                            borderRadius: BorderRadius.circular(16),
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      const PurchaseSecurity(),
+                                  fullscreenDialog: true,
+                                ),
+                              );
+                            },
+                            child: ImageProviderHelper.buildImage(
+                              imagePath: 'assets/images/shield_tick.png',
+                              width: 16,
+                              height: 16,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
-    const SizedBox(width: 4),
-    InkWell(
-    borderRadius: BorderRadius.circular(16),
-    onTap: () {
-    Navigator.of(context).push(
-    MaterialPageRoute(
-    builder: (context) => const PurchaseSecurity(),
-    fullscreenDialog: true,
-    ),
-    );
-    },
-    child: ImageProviderHelper.buildImage(
-    imagePath: 'assets/images/shield_tick.png',
-    width: 16,
-    height: 16,
-    ),
-    ),
                   if (product.charityImage.isNotEmpty)
                     ImageProviderHelper.buildImage(
                       imagePath: product.charityImage,
