@@ -1,3 +1,4 @@
+import 'package:cherry_mvp/features/checkout/purchase_security.dart';
 import 'package:flutter/material.dart';
 import 'package:cherry_mvp/core/models/model.dart';
 import 'package:cherry_mvp/core/utils/image_provider_helper.dart';
@@ -120,10 +121,21 @@ class ProductCard extends StatelessWidget {
                           ),
                     ),
                     const SizedBox(width: 4),
-                    ImageProviderHelper.buildImage(
-                      imagePath: 'assets/images/shield_tick.png',
-                      width: 16,
-                      height: 16,
+                    InkWell(
+                      borderRadius: BorderRadius.circular(16),
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => const PurchaseSecurity(),
+                            fullscreenDialog: true,
+                          ),
+                        );
+                      },
+                      child: ImageProviderHelper.buildImage(
+                        imagePath: 'assets/images/shield_tick.png',
+                        width: 16,
+                        height: 16,
+                      ),
                     ),
                   ],
                 ),
