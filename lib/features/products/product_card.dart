@@ -176,18 +176,20 @@ class ProductCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         '£${product.price.toStringAsFixed(2)}',
                         style: Theme.of(context).textTheme.headlineLarge
                             ?.copyWith(
                               color: Theme.of(context).colorScheme.secondary,
-                              fontSize: 16,
+                              fontSize: 14,
                             ),
                       ),
-                      const SizedBox(height: 11),
+                      const SizedBox(height: 2),
                       Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
@@ -203,9 +205,9 @@ class ProductCard extends StatelessWidget {
                             AppStrings.productIncl,
                             style: Theme.of(context).textTheme.headlineLarge
                                 ?.copyWith(
-                              color: Theme.of(context).colorScheme.primary,
-                              fontSize: 16,
-                            ),
+                                  color: Theme.of(context).colorScheme.primary,
+                                  fontSize: 16,
+                                ),
                           ),
                           InkWell(
                             borderRadius: BorderRadius.circular(16),
