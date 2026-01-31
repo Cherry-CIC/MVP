@@ -1,6 +1,9 @@
+import 'package:cherry_mvp/features/checkout/purchase_security.dart';
 import 'package:flutter/material.dart';
 import 'package:cherry_mvp/core/models/model.dart';
 import 'package:cherry_mvp/core/utils/image_provider_helper.dart';
+
+import '../../core/config/app_strings.dart';
 
 class ProductCard extends StatelessWidget {
   final Product product;
@@ -173,23 +176,57 @@ class ProductCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         '£${product.price.toStringAsFixed(2)}',
                         style: Theme.of(context).textTheme.headlineLarge
                             ?.copyWith(
                               color: Theme.of(context).colorScheme.secondary,
-                              fontSize: 16,
+                              fontSize: 14,
                             ),
                       ),
-                      const SizedBox(height: 11),
-                      Text(
-                        '£${product.price.toStringAsFixed(2)}',
-                        style: Theme.of(context).textTheme.headlineLarge
-                            ?.copyWith(
-                              color: Theme.of(context).colorScheme.primary,
-                              fontSize: 16,
+                      const SizedBox(height: 2),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            '£${product.price.toStringAsFixed(2)}',
+                            style: Theme.of(context).textTheme.headlineLarge
+                                ?.copyWith(
+                                  color: Theme.of(context).colorScheme.primary,
+                                  fontSize: 16,
+                                ),
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            AppStrings.productIncl,
+                            style: Theme.of(context).textTheme.headlineLarge
+                                ?.copyWith(
+                                  color: Theme.of(context).colorScheme.primary,
+                                  fontSize: 16,
+                                ),
+                          ),
+                          InkWell(
+                            borderRadius: BorderRadius.circular(16),
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      const PurchaseSecurity(),
+                                  fullscreenDialog: true,
+                                ),
+                              );
+                            },
+                            child: ImageProviderHelper.buildImage(
+                              imagePath: 'assets/images/shield_tick.png',
+                              width: 16,
+                              height: 16,
                             ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
