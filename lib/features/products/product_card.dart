@@ -2,6 +2,7 @@ import 'package:cherry_mvp/features/checkout/purchase_security.dart';
 import 'package:flutter/material.dart';
 import 'package:cherry_mvp/core/models/model.dart';
 import 'package:cherry_mvp/core/utils/image_provider_helper.dart';
+import 'package:cherry_mvp/core/config/app_spacing.dart';
 
 import '../../core/config/app_strings.dart';
 
@@ -55,7 +56,7 @@ class ProductCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             AspectRatio(
-              aspectRatio: 1,
+              aspectRatio: AppSpacing.imageContainerAspectRatio,
               child: Stack(
                 children: [
                   Positioned.fill(
