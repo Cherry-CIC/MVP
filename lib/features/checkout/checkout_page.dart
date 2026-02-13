@@ -22,7 +22,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<CheckoutViewModel>(context, listen: false).fetchUserLocker();
+      final vm = context.read<CheckoutViewModel>();
+      vm.resetCreateOrderStatus();
+      vm.fetchUserLocker();
     });
   }
 
@@ -74,7 +76,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
 
           SliverList.list(
             children: [
-              const SizedBox(height: 32),
+              const SizedBox(height: 50),
               IntrinsicHeight(
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -164,6 +166,49 @@ class _CheckoutPageState extends State<CheckoutPage> {
             ],
           ),
         ],
+      ),
+      bottomNavigationBar: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        height: 56,
+        width: double.infinity,
+        child: Consumer<CheckoutViewModel>(
+          builder: (context, viewModel, _) {
+
+            final canPay =  viewModel.selectedPaymentType != null 
+              &&  viewModel.deliveryChoice != null 
+              &&  (viewModel.deliveryChoice != "pickup" || viewModel.selectedInpost != null)
+              &&  basket.total > 0 
+              && viewModel.createOrderStatus.type != StatusType.loading;
+
+            if (viewModel.createOrderStatus.type ==  StatusType.failure) {
+              Fluttertoast.showToast(
+                msg: viewModel.createOrderStatus.message ?? "oops! Something went wrong",
+              );
+            } else if (viewModel.createOrderStatus.type ==  StatusType.success) {
+              Fluttertoast.showToast(msg: "Payment Successful");
+
+              gotoCheckoutComplete();
+            }
+
+            return FilledButton(
+              onPressed: canPay
+              ? () async {
+                  final paid = await viewModel.payWithPaymentSheet(
+                    amount: basket.total,
+                  );
+
+                  if (paid) {
+                    await viewModel.createOrder();
+                  }
+                }
+              : null, 
+
+              child: viewModel.createOrderStatus.type == StatusType.loading
+              ? const CircularProgressIndicator(color: Colors.white)
+              : Text(AppStrings.checkoutPay),
+            );
+          },
+        ),
       ),
     );
   }

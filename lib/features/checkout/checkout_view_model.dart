@@ -4,6 +4,7 @@ import 'package:cherry_mvp/core/models/inpost_model.dart';
 import 'package:cherry_mvp/core/models/product.dart';
 import 'package:cherry_mvp/core/utils/utils.dart';
 import 'package:cherry_mvp/features/checkout/checkout_repository.dart';
+import 'package:cherry_mvp/features/checkout/payment_type.dart';
 import 'package:cherry_mvp/features/checkout/widgets/shipping_address_widget.dart';
 import 'package:cherry_mvp/features/checkout/constants/address_constants.dart';
 import 'package:flutter/material.dart';
@@ -149,7 +150,16 @@ class CheckoutViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  PaymentType? selectedPaymentType;
   // Payment method methods
+  void setPaymentType(PaymentType type) {
+    selectedPaymentType = type;
+    notifyListeners();
+  }
+
+  PaymentType? getPaymentType () {
+    return selectedPaymentType;
+  }
 
   /// Sets whether a payment method has been configured
   void setPaymentMethod(bool hasPayment) {
@@ -470,4 +480,11 @@ class CheckoutViewModel extends ChangeNotifier {
     }
     notifyListeners();
   }
+
+  void resetCreateOrderStatus() {
+    _createOrderStatus = Status.uninitialized;
+    notifyListeners();
+  }
+
+  
 }

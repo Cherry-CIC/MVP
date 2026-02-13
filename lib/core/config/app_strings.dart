@@ -247,11 +247,11 @@ class AppStrings {
 
   // Payment Methods
   static const paymentMethodsTitle = 'Payment Methods';
-  static const paymentMethodsInfo =
-      'Your payment information will never be shared with the seller';
+  static const paymentMethodsInfo = 'Your payment information will never be shared with the seller';
+  static const paymentMethodsChoose = 'Choose a payment method';
   static const paymentMethodsCard = 'Card';
-  static const paymentMethodsGooglePay = 'Google Pay';
-  static const paymentMethodsApplePay = 'Apple Pay';
+  static const paymentMethodsGooglePay = 'Pay with Google Pay';
+  static const paymentMethodsApplePay = 'Pay with Apple Pay';
   static const paymentMethodsPay = 'Pay';
 
   // Purchase Security

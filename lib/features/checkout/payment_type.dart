@@ -1,5 +1,5 @@
 enum PaymentType {
   card,
-  google,
+  google ,
   apple,
 }
