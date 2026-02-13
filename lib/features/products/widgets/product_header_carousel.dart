@@ -37,11 +37,11 @@ class ProductHeaderCarousel extends StatelessWidget {
                 bottom: 16,
                 child: Consumer<ProductViewModel>(
                   builder: (context, viewModel, child) {
-                    final bool isLiked = viewModel.isLiked;
-                    final int count = viewModel.likesCount;
+                    final bool isLiked = viewModel.isProductLiked(product.id);
+                    final int count = viewModel.getLikesCount(product);
 
                     return GestureDetector(
-                      onTap: () => viewModel.toggleLike(),
+                      onTap: () => viewModel.toggleLike(product),
                       child: Material(
                         color: Colors.white,
                         elevation: 4,

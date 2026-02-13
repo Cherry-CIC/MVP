@@ -1,5 +1,7 @@
 import 'package:cherry_mvp/core/config/app_colors.dart';
+import 'package:cherry_mvp/core/config/app_images.dart';
 import 'package:cherry_mvp/core/models/model.dart';
+import 'package:cherry_mvp/features/checkout/purchase_security.dart';
 import 'package:flutter/material.dart';
 
 class ProductInformation extends StatelessWidget {
@@ -8,11 +10,20 @@ class ProductInformation extends StatelessWidget {
 
   const ProductInformation({super.key, required this.product, this.padding});
 
+  void _showPurchaseSecurity(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const PurchaseSecurity(),
+        fullscreenDialog: true,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: padding ??
-          EdgeInsets.symmetric(
+          const EdgeInsets.symmetric(
             horizontal: 16.0,
             vertical: 8.0,
           ),
@@ -20,45 +31,51 @@ class ProductInformation extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(product.name),
-          SizedBox(height: 4.0),
+          const SizedBox(height: 4.0),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
-            spacing: 16,
             children: [
-              SizedBox(
-                width: 110,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('£${product.donation.toStringAsFixed(2)}',
-                        style: TextStyle(
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onSurfaceVariant)),
-                    Row(
-                      spacing: 4,
-                      children: [
-                        Text('£${product.price.toStringAsFixed(2)}',
-                            style: TextStyle(
-                                color: Theme.of(context).colorScheme.primary)),
-                        Icon(
-                          Icons.verified_user,
-                          color: Theme.of(context).colorScheme.primary,
-                        )
-                      ],
-                    )
-                  ],
+              GestureDetector(
+                onTap: () => _showPurchaseSecurity(context),
+                child: SizedBox(
+                  width: 110,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('£${product.donation.toStringAsFixed(2)}',
+                          style: TextStyle(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant)),
+                      const SizedBox(height: 2),
+                      Row(
+                        children: [
+                          Text('£${product.price.toStringAsFixed(2)}',
+                              style: TextStyle(
+                                  color: Theme.of(context).colorScheme.primary)),
+                          const SizedBox(width: 4),
+                          Image.asset(
+                            AppImages.shieldTick,
+                            width: 16,
+                            height: 16,
+                          )
+                        ],
+                      )
+                    ],
+                  ),
                 ),
               ),
+              const SizedBox(width: 16),
               SizedBox(
                 width: 48,
                 child: Text(product.size,
                     style: TextStyle(
                         color: Theme.of(context).colorScheme.onSurfaceVariant)),
               ),
+              const SizedBox(width: 16),
               Expanded(
                 child: Text(product.quality,
-                    style: TextStyle(color: AppColors.green)),
+                    style: const TextStyle(color: AppColors.green)),
               ),
               Icon(
                 Icons.workspace_premium,
