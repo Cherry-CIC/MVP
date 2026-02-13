@@ -3,15 +3,24 @@ import 'package:flutter/material.dart';
 import 'package:cherry_mvp/core/models/model.dart';
 import 'package:cherry_mvp/core/utils/image_provider_helper.dart';
 import 'package:cherry_mvp/core/config/app_spacing.dart';
+import 'package:cherry_mvp/core/config/app_colors.dart';
+import 'package:cherry_mvp/core/config/app_images.dart';
 
 import '../../core/config/app_strings.dart';
 
-class ProductCard extends StatelessWidget {
+class ProductCard extends StatefulWidget {
   final Product product;
   final VoidCallback? onTap;
 
   const ProductCard({super.key, required this.product, this.onTap});
 
+  @override
+  State<ProductCard> createState() => _ProductCardState();
+}
+
+class _ProductCardState extends State<ProductCard> {
+  bool _isLiked = false;
+  
   static const _sizeAbbreviations = {
     'extra small': 'XS',
     'x-small': 'XS',
@@ -33,25 +42,24 @@ class ProductCard extends StatelessWidget {
 
     final normalized = size.trim().toLowerCase();
 
-    // Check for known size names
     if (_sizeAbbreviations.containsKey(normalized)) {
       return _sizeAbbreviations[normalized]!;
     }
 
-    // For unknown formats (numeric sizes etc.), pass through as-is
-    // Truncate to 6 characters max per acceptance criteria
     final result = size.trim();
     return result.length > 6 ? result.substring(0, 6) : result;
   }
 
   @override
   Widget build(BuildContext context) {
+    final int displayLikes = widget.product.likes + (_isLiked ? 1 : 0);
+
     return Material(
       type: MaterialType.transparency,
       borderRadius: BorderRadius.circular(8),
       child: InkWell(
         borderRadius: BorderRadius.circular(8),
-        onTap: onTap,
+        onTap: widget.onTap,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -75,7 +83,7 @@ class ProductCard extends StatelessWidget {
                           borderRadius: BorderRadius.circular(8),
                           image: DecorationImage(
                             image: ImageProviderHelper.getImageProvider(
-                              product.productImages.first,
+                              widget.product.productImages.first,
                             ),
                             fit: BoxFit.cover,
                           ),
@@ -86,38 +94,45 @@ class ProductCard extends StatelessWidget {
                   Positioned(
                     bottom: 16,
                     right: 16,
-                    child: Material(
-                      borderRadius: BorderRadius.circular(4),
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.surfaceContainerHighest,
-                      type: MaterialType.button,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 4.5,
-                          vertical: 2,
-                        ),
-                        height: 22,
-                        child: Ink(
+                    child: GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _isLiked = !_isLiked;
+                        });
+                      },
+                      child: Material(
+                        borderRadius: BorderRadius.circular(4),
+                        elevation: 2,
+                        color: Colors.white,
+                        type: MaterialType.button,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 4,
+                          ),
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.center,
                             mainAxisSize: MainAxisSize.min,
-                            spacing: 4,
                             children: [
-                              Icon(
-                                Icons.favorite_border,
-                                size: 16,
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.onSurfaceVariant,
-                              ),
+                              _isLiked
+                                  ? Image.asset(
+                                      AppImages.likeHeart,
+                                      height: 16,
+                                      fit: BoxFit.contain,
+                                      color: Colors.red,
+                                    )
+                                  : Icon(
+                                      Icons.favorite_outline,
+                                      size: 16,
+                                      color: AppColors.grey,
+                                    ),
+                              const SizedBox(width: 4),
                               Text(
-                                '14',
+                                displayLikes.toString(),
                                 style: Theme.of(context).textTheme.labelSmall
                                     ?.copyWith(
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.onSurfaceVariant,
+                                      fontWeight: FontWeight.bold,
+                                      color: _isLiked ? Colors.red : AppColors.grey,
                                     ),
                               ),
                             ],
@@ -131,7 +146,7 @@ class ProductCard extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              product.name,
+              widget.product.name,
               overflow: TextOverflow.ellipsis,
               maxLines: 1,
               style: Theme.of(
@@ -142,9 +157,9 @@ class ProductCard extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
-                if (product.size.isNotEmpty) ...[
+                if (widget.product.size.isNotEmpty) ...[
                   Text(
-                    _formatSizeLabel(product.size),
+                    _formatSizeLabel(widget.product.size),
                     style: Theme.of(
                       context,
                     ).textTheme.bodySmall?.copyWith(fontSize: 14),
@@ -161,7 +176,7 @@ class ProductCard extends StatelessWidget {
                 ],
                 Flexible(
                   child: Text(
-                    product.quality,
+                    widget.product.quality,
                     overflow: TextOverflow.ellipsis,
                     style: Theme.of(
                       context,
@@ -181,7 +196,7 @@ class ProductCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '£${product.price.toStringAsFixed(2)}',
+                        '£${widget.product.price.toStringAsFixed(2)}',
                         style: Theme.of(context).textTheme.headlineLarge
                             ?.copyWith(
                               color: Theme.of(context).colorScheme.secondary,
@@ -194,7 +209,7 @@ class ProductCard extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            '£${product.price.toStringAsFixed(2)}',
+                            '£${widget.product.price.toStringAsFixed(2)}',
                             style: Theme.of(context).textTheme.headlineLarge
                                 ?.copyWith(
                                   color: Theme.of(context).colorScheme.primary,
@@ -231,9 +246,9 @@ class ProductCard extends StatelessWidget {
                       ),
                     ],
                   ),
-                  if (product.charityImage.isNotEmpty)
+                  if (widget.product.charityImage.isNotEmpty)
                     ImageProviderHelper.buildImage(
-                      imagePath: product.charityImage,
+                      imagePath: widget.product.charityImage,
                       height: 35,
                       width: 35,
                       fit: BoxFit.cover,

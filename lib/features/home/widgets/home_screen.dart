@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:cherry_mvp/features/home/widgets/ad_example.dart';
 import 'package:cherry_mvp/features/home/widgets/dashboard.dart';
 import 'package:cherry_mvp/features/home/widgets/discover_button.dart';
 import 'package:provider/provider.dart';
@@ -29,19 +28,19 @@ class HomeScreenState extends State<HomeScreen> {
                 color: Theme.of(context).colorScheme.surfaceContainerHighest,
                 clipBehavior: Clip.antiAlias,
                 elevation: 1,
-                shape: StadiumBorder(),
+                shape: const StadiumBorder(),
                 child: InkWell(
                   onTap: context.read<SearchController>().openView,
                   child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     child: Row(
-                      spacing: 8,
                       children: [
                         Icon(
                           Icons.search,
                           size: 16,
                           color: Theme.of(context).colorScheme.secondary,
                         ),
+                        const SizedBox(width: 8),
                         Text(
                           'AI Search: Red Polka Dot Dress',
                           style: TextStyle(
@@ -55,12 +54,12 @@ class HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ),
-          SliverPadding(
+          const SliverPadding(
             padding: EdgeInsets.all(16),
             sliver: SliverToBoxAdapter(child: DiscoverButton()),
           ),
-          SliverToBoxAdapter(child: AdExample()),
-          SliverPadding(
+          // Removed the standalone AdExample() that was appearing at the top
+          const SliverPadding(
             padding: EdgeInsets.zero,
             sliver: SliverToBoxAdapter(child: DashboardPage()),
           ),
