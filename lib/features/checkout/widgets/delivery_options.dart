@@ -33,6 +33,23 @@ class _DeliveryOptionsState extends State<DeliveryOptions> {
   final TextEditingController cityController = TextEditingController();
 
   @override
+  void initState() {
+    super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final vm = context.read<CheckoutViewModel>();
+
+      if (vm.deliveryChoice!.isNotEmpty) {
+        setState(() {
+          _delivery = vm.deliveryChoice;
+          _deliverExpanded = _delivery == 'pickup' && vm.selectedInpost != null;
+        });
+      }
+    });
+  }
+
+
+  @override
   Widget build(BuildContext context) {
     final basket = context.read<CheckoutViewModel>();
     return SliverPadding(
