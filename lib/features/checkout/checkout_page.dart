@@ -5,6 +5,7 @@ import 'package:cherry_mvp/core/utils/status.dart';
 import 'package:cherry_mvp/features/checkout/checkout_view_model.dart';
 import 'package:cherry_mvp/features/checkout/widgets/basket_list_item.dart';
 import 'package:cherry_mvp/features/checkout/widgets/delivery_options.dart';
+import 'package:cherry_mvp/features/checkout/widgets/select_payment_type_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
@@ -74,6 +75,28 @@ class _CheckoutPageState extends State<CheckoutPage> {
             ),
           ),
 
+          SliverToBoxAdapter( 
+            child: Consumer<CheckoutViewModel>(
+              builder: (context, vm, _) { 
+              return ListTile( 
+                title: const Text("Payment"), 
+                subtitle: Text( 
+                vm.selectedPaymentType != null ? vm.selectedPaymentType!.name : AppStrings.paymentMethodsChoose, 
+                ), 
+                trailing: Icon( 
+                vm.selectedPaymentType != null ? Icons.check : Icons.add, 
+                color: Theme.of(context).colorScheme.primary, 
+                ), onTap: () { 
+                showModalBottomSheet( 
+                  context: context, isScrollControlled: true, 
+                  backgroundColor: Colors.transparent, builder: (_) => const SelectPaymentTypeBottomSheet(), 
+                ); 
+                } 
+              ); 
+              }, 
+            ), 
+          ),
+
           SliverList.list(
             children: [
               const SizedBox(height: 50),
@@ -96,72 +119,6 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 ),
               ),
 
-              Container(
-                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                height: 56,
-                width: double.infinity,
-                child: Consumer<CheckoutViewModel>(
-                  builder: (context, viewModel, _) {
-                    if (viewModel.createOrderStatus.type ==
-                        StatusType.failure) {
-                      Fluttertoast.showToast(
-                        msg:
-                            viewModel.createOrderStatus.message ??
-                            "oops! Something went wrong",
-                      );
-                    } else if (viewModel.createOrderStatus.type ==
-                        StatusType.success) {
-                      Fluttertoast.showToast(msg: "Payment Successful");
-
-                      gotoCheckoutComplete();
-                    }
-                    return FilledButton(
-                      onPressed: 
-                      !viewModel.isShippingAddressConfirmed
-                      ? null
-                      : () async {
-                        if (viewModel.deliveryChoice == null) {
-                          setState(() => _errorMessage = AppStrings.checkoutDeliveryOptionRequired);
-                          return;
-                        }
-
-                        // Validate pickup
-                        if (viewModel.deliveryChoice == 'pickup' &&
-                            viewModel.selectedInpost == null) {
-                          setState(() => _errorMessage = AppStrings.checkoutPickupLockerRequired);
-                          return;
-                        }
-
-                        if (!viewModel.hasPaymentMethod) {
-                          setState(() => _errorMessage = AppStrings.checkoutPaymentMethodRequired);
-                          return;
-                        }
-                        
-                        // Clear error
-                        setState(() => _errorMessage = '');
-
-                        // 4. Proceed with order
-                        await viewModel.storeOrderInFirestore();
-
-                        if (basket.total <= 0) {
-                          Fluttertoast.showToast(msg: "Your basket is empty");
-                          return;
-                        }
-
-                        bool result = await viewModel.payWithPaymentSheet(amount: basket.total);
-
-                        if (result) {
-                          await viewModel.createOrder();
-                        }
-                      },
-                      child:
-                          viewModel.createOrderStatus.type == StatusType.loading
-                          ? const CircularProgressIndicator(color: Colors.white)
-                          : Text(AppStrings.checkoutPay),
-                    );
-                  },
-                ),
-              ),
               SizedBox(height: MediaQuery.of(context).padding.bottom),
             ],
           ),
