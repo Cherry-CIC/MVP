@@ -8,6 +8,7 @@ import 'package:cherry_mvp/features/welcome/welcome_page.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
+import 'dart:io';
 
 class AuthCard extends StatelessWidget {
   final VoidCallback onClose;
@@ -22,24 +23,23 @@ class AuthCard extends StatelessWidget {
     final bool isLogin = mode == AuthMode.login;
     return Consumer<LoginViewModel>(builder: (context, viewModel, child) {
       final bool isLoading = viewModel.status.type == StatusType.loading;
+      
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (viewModel.status.type == StatusType.failure) {
-          Fluttertoast.showToast(
-              msg: viewModel.status.message == null
-                  ? ""
-                  : "${isLogin ? AppStrings.login : AppStrings.register} Failed");
+          // Show the specific error message from the viewmodel
+          final String errorMsg = viewModel.status.message ?? "Authentication Failed";
+          Fluttertoast.showToast(msg: errorMsg);
           viewModel.clearStatus();
         } else if (viewModel.status.type == StatusType.success) {
           Fluttertoast.showToast(
-              msg:
-                  "${isLogin ? AppStrings.login : AppStrings.register} Successful");
+              msg: "${isLogin ? AppStrings.login : AppStrings.register} Successful");
           viewModel.clearStatus();
-          //move to home
           navigator.replaceWith(AppRoutes.home);
         }
       });
+
       return Card(
-        color: Color(0xFFFAFAFA),
+        color: const Color(0xFFFAFAFA),
         margin: EdgeInsets.zero,
         elevation: 20,
         shape: const RoundedRectangleBorder(
@@ -56,15 +56,10 @@ class AuthCard extends StatelessWidget {
                   Expanded(
                     child: Text(
                         isLogin ? AppStrings.login : AppStrings.register,
-                        style: Theme.of(context).textTheme.titleMedium
-                        //  TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
-                        ),
+                        style: Theme.of(context).textTheme.titleMedium),
                   ),
                   IconButton(
-                    icon: const Icon(
-                      Icons.close,
-                      color: AppColors.black,
-                    ),
+                    icon: const Icon(Icons.close, color: AppColors.black),
                     onPressed: isLoading ? null : onClose,
                   ),
                 ],
@@ -72,33 +67,30 @@ class AuthCard extends StatelessWidget {
               ...(viewModel.status.type == StatusType.loading
                   ? [const LoadingView()]
                   : [
-                      SocialLoginButton(
-                        label: AppStrings.continueWithApple,
-                        iconAsset: AppImages.authAppleIcon,
-                        onPressed: () {
-                          loginViewModel.signInWithApple();
-                        },
-                      ),
-                      const SizedBox(height: 10),
+                      if (Platform.isIOS) ...[
+                        SocialLoginButton(
+                          label: AppStrings.continueWithApple,
+                          iconAsset: AppImages.authAppleIcon,
+                          onPressed: () => loginViewModel.signInWithApple(),
+                        ),
+                        const SizedBox(height: 10),
+                      ],
                       SocialLoginButton(
                         label: AppStrings.continueWithGoogle,
                         iconAsset: AppImages.authGoogleIcon,
-                        onPressed: () {
-                          loginViewModel.signInWithGoogle();
-                        },
+                        onPressed: () => loginViewModel.signInWithGoogle(),
                       ),
                     ]),
 
               const SizedBox(height: 10),
               Row(
                 children: [
-                  //colors have to be changes
                   Expanded(
                       child: Divider(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   )),
                   Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
                     child: Text(AppStrings.or,
                         style: TextStyle(
                           color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -114,15 +106,14 @@ class AuthCard extends StatelessWidget {
               TextButton(
                 style: TextButton.styleFrom(
                   foregroundColor: AppColors.primaryAction,
-                  disabledForegroundColor:
-                      Theme.of(context).disabledColor,
+                  disabledForegroundColor: Theme.of(context).disabledColor,
                 ),
                 onPressed: isLoading
                     ? null
                     : () {
                         isLogin
-                            ? navigator.replaceWith(AppRoutes.login)
-                            : navigator.replaceWith(AppRoutes.register);
+                            ? navigator.navigateTo(AppRoutes.login)
+                            : navigator.navigateTo(AppRoutes.register);
                       },
                 child: const Text(AppStrings.continueWithEmail),
               ),
