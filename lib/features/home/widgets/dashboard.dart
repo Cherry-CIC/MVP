@@ -83,6 +83,8 @@ class _DashboardPageState extends State<DashboardPage> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12),
               child: GridView.builder(
+                // RESET: Set padding to zero to prevent unintended vertical gaps between chunks
+                padding: EdgeInsets.zero,
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: productChunk.length,
@@ -99,14 +101,16 @@ class _DashboardPageState extends State<DashboardPage> {
                       productViewModel.setProduct(product);
                       navigator.navigateTo(AppRoutes.product);
                     },
-                    child: ProductCard(product: product),
+                    child: ProductCard(
+                      key: ValueKey(product.id),
+                      product: product,
+                    ),
                   );
                 },
               ),
             ),
           );
 
-          // Show the ad if we have completed a full chunk of 6
           if (productChunk.length == chunkSize) {
             children.add(
               const Padding(
