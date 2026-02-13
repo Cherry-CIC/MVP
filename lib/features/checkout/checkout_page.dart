@@ -79,7 +79,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
             child: Consumer<CheckoutViewModel>(
               builder: (context, vm, _) { 
               return ListTile( 
-                title: const Text("Payment"), 
+                title: const Text(AppStrings.checkoutPayment),
                 subtitle: Text( 
                 vm.selectedPaymentType != null ? vm.selectedPaymentType!.name : AppStrings.paymentMethodsChoose, 
                 ), 
@@ -137,15 +137,18 @@ class _CheckoutPageState extends State<CheckoutPage> {
               &&  basket.total > 0 
               && viewModel.createOrderStatus.type != StatusType.loading;
 
-            if (viewModel.createOrderStatus.type ==  StatusType.failure) {
-              Fluttertoast.showToast(
-                msg: viewModel.createOrderStatus.message ?? "oops! Something went wrong",
-              );
-            } else if (viewModel.createOrderStatus.type ==  StatusType.success) {
-              Fluttertoast.showToast(msg: "Payment Successful");
-
-              gotoCheckoutComplete();
-            }
+            //Stops payment from being triggered till rebuild and initState() runs
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (viewModel.createOrderStatus.type == StatusType.failure) {
+                Fluttertoast.showToast(
+                  msg: viewModel.createOrderStatus.message ?? "oops! Something went wrong",
+                );
+              }
+              if (viewModel.createOrderStatus.type == StatusType.success) {
+                Fluttertoast.showToast(msg: "Payment Successful");
+                gotoCheckoutComplete();
+              }
+            });
 
             return FilledButton(
               onPressed: canPay
