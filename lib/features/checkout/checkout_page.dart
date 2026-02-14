@@ -19,15 +19,42 @@ class CheckoutPage extends StatefulWidget {
 
 class _CheckoutPageState extends State<CheckoutPage> {
   String _errorMessage = "";
+  late final CheckoutViewModel vm;
+
   @override
   void initState() {
     super.initState();
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final vm = context.read<CheckoutViewModel>();
+      if (!mounted) return;
+
+      vm = context.read<CheckoutViewModel>();
       vm.resetCreateOrderStatus();
       vm.fetchUserLocker();
+      vm.addListener(_handleOrderStatus);
     });
   }
+
+
+  void _handleOrderStatus() {
+    if (!mounted) return;
+
+    final status = vm.createOrderStatus.type;
+
+    if (status == StatusType.failure) {
+      Fluttertoast.showToast(
+        msg: vm.createOrderStatus.message ?? "oops! Something went wrong",
+      );
+      vm.resetCreateOrderStatus();
+    }
+
+    if (status == StatusType.success) {
+      Fluttertoast.showToast(msg: "Payment Successful");
+      vm.resetCreateOrderStatus();
+      gotoCheckoutComplete();
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -137,19 +164,6 @@ class _CheckoutPageState extends State<CheckoutPage> {
               &&  basket.total > 0 
               && viewModel.createOrderStatus.type != StatusType.loading;
 
-            //Stops payment from being triggered till rebuild and initState() runs
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (viewModel.createOrderStatus.type == StatusType.failure) {
-                Fluttertoast.showToast(
-                  msg: viewModel.createOrderStatus.message ?? "oops! Something went wrong",
-                );
-              }
-              if (viewModel.createOrderStatus.type == StatusType.success) {
-                Fluttertoast.showToast(msg: "Payment Successful");
-                gotoCheckoutComplete();
-              }
-            });
-
             return FilledButton(
               onPressed: canPay
               ? () async {
@@ -177,4 +191,11 @@ class _CheckoutPageState extends State<CheckoutPage> {
     await Future.delayed(const Duration(seconds: 1));
     Navigator.pushReplacementNamed(context, AppRoutes.checkoutComplete);
   }
+
+  @override
+  void dispose() {
+    vm.removeListener(_handleOrderStatus);
+    super.dispose();
+  }
+
 }
