@@ -3,6 +3,8 @@ import 'package:cherry_mvp/core/config/app_strings.dart';
 import 'package:cherry_mvp/core/models/user_section.dart';
 import 'package:cherry_mvp/core/router/nav_provider.dart';
 import 'package:cherry_mvp/core/router/nav_routes.dart';
+import 'package:cherry_mvp/core/services/services.dart';
+import 'package:cherry_mvp/core/utils/donor_discount_state_store.dart';
 import 'package:cherry_mvp/features/checkout/checkout_view_model.dart';
 import 'package:cherry_mvp/features/products/widgets/product_highlight_title.dart';
 import 'package:cherry_mvp/features/products/widgets/product_information.dart';
@@ -33,21 +35,32 @@ class ProductPage extends StatelessWidget {
           ProductHeaderCarousel(product),
           SliverList.list(
             children: [
-              SellerInformation(
-                user: UserInformation(
-                  username: 'John Doe',
-                  location: 'New York, USA',
-                  reviewsCount: 120,
-                  followersCount: 300,
-                  followingCount: 150,
-                  rating: 3.5,
-                  awards: 37,
-                  hasBuyerDiscounts: true,
-                ),
-                charity: product.charity?.imageUrl != null
-                    ? Image.network(product.charity!.imageUrl)
-                    : SizedBox.shrink(),
-                padding: const EdgeInsets.fromLTRB(16, 24, 16, 16),
+              FutureBuilder<String?>(
+                future: UsernameService.getUsername(product.userId ?? ''),
+                builder: (context, snapshot) {
+                  final resolvedUsername = snapshot.data?.trim();
+                  final sellerUsername =
+                      (resolvedUsername != null && resolvedUsername.isNotEmpty)
+                      ? resolvedUsername
+                      : 'User';
+
+                  return SellerInformation(
+                    user: UserInformation(
+                      username: sellerUsername,
+                      location: 'New York, USA',
+                      reviewsCount: 120,
+                      followersCount: 300,
+                      followingCount: 150,
+                      rating: 3.5,
+                      awards: 37,
+                      hasBuyerDiscounts: true,
+                    ),
+                    charity: product.charity?.imageUrl != null
+                        ? Image.network(product.charity!.imageUrl)
+                        : SizedBox.shrink(),
+                    padding: const EdgeInsets.fromLTRB(16, 24, 16, 16),
+                  );
+                },
               ),
               const Divider(thickness: 8),
               ProductInformation(
@@ -64,21 +77,40 @@ class ProductPage extends StatelessWidget {
                 ),
               ),
               const Divider(thickness: 8),
-              ProductHighlightTile(
-                onTap: () {},
-                leadingText: AppStrings.productPageBuyerDiscountActive,
-                trailingText: AppStrings.productPageBuy2Get1HalfPrice,
-                trailingIcon: const Icon(Icons.arrow_forward),
-              ),
-              ProductHighlightTile(
-                onTap: () {},
-                leadingText: AppStrings.productPageOpenToOtherCharities,
-                trailingText: AppStrings.productPageRequestOtherCharity,
-                trailingIcon: Image.asset(
-                  AppImages.sale,
-                  height: 24,
-                  width: 24,
+              FutureBuilder<bool?>(
+                future: DonorDiscountStateStore.getDonorDiscountState(
+                  product.id,
                 ),
+                builder: (context, snapshot) {
+                  final bool isDonorDiscountActive = snapshot.data ?? false;
+                  final donorDiscountLabel = isDonorDiscountActive
+                      ? AppStrings.productPageBuyerDiscountActive
+                      : AppStrings.productPageDonorDiscountInactive;
+                  final donorDiscountDetail = isDonorDiscountActive
+                      ? AppStrings.productPageBuy2Get1HalfPrice
+                      : AppStrings.productPageDonorDiscountInactiveDetail;
+
+                  return Column(
+                    children: [
+                      ProductHighlightTile(
+                        onTap: () {},
+                        leadingText: donorDiscountLabel,
+                        trailingText: donorDiscountDetail,
+                        trailingIcon: Image.asset(
+                          AppImages.sale,
+                          height: 24,
+                          width: 24,
+                        ),
+                      ),
+                      ProductHighlightTile(
+                        onTap: () {},
+                        leadingText: AppStrings.productPageOpenToOtherCharities,
+                        trailingText: AppStrings.productPageRequestOtherCharity,
+                        trailingIcon: const Icon(Icons.arrow_forward),
+                      ),
+                    ],
+                  );
+                },
               ),
               Padding(
                 padding: const EdgeInsets.all(16),
