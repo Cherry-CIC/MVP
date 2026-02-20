@@ -28,7 +28,7 @@ final class CheckoutRepository implements ICheckoutRepository {
   Future<Result> fetchNearestInPosts(String postalCode) async {
     try {
       final result = await _apiService.get(
-        "${ApiEndpoints.inpostLockers} ?postcode=$postalCode&maxDistance=30",
+        "${ApiEndpoints.inpostLockers}?postcode=$postalCode&maxDistance=30",
       );
       if (result.isSuccess && result.value != null) {
         final data = result.value;
@@ -72,11 +72,18 @@ final class CheckoutRepository implements ICheckoutRepository {
   Future<void> storeOrderInFirestore(Map<String, dynamic> orderData) async {
     // Use a generated order ID (timestamp-based)
     final orderId = DateTime.now().millisecondsSinceEpoch.toString();
+    final uid = _firestoreService.currentUserId;
+    final payload = {
+      ...orderData,
+      'user_id': uid ?? '',
+      'updated_at': DateTime.now().toIso8601String(),
+    };
+
     await _firestoreService.saveDocument(
       FirestoreConstants.orders,
       orderId,
-      orderData,
-      isOrder: true,
+      payload,
+      isOrder: false,
     );
   }
 
@@ -95,7 +102,8 @@ final class CheckoutRepository implements ICheckoutRepository {
     double amount,
   ) async {
     //  call backend API which returns client_secret
-    var data = {"amount": amount};
+    final int amountInMinorUnits = (amount * 100).round();
+    var data = {"amount": amountInMinorUnits};
 
     try {
       final result = await _apiService.post(

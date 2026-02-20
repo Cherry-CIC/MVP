@@ -4,6 +4,7 @@ import 'package:cherry_mvp/core/models/inpost_model.dart';
 import 'package:cherry_mvp/core/models/product.dart';
 import 'package:cherry_mvp/core/utils/utils.dart';
 import 'package:cherry_mvp/features/checkout/checkout_repository.dart';
+import 'package:cherry_mvp/features/checkout/models/payment_intent.dart';
 import 'package:cherry_mvp/features/checkout/payment_type.dart';
 import 'package:cherry_mvp/features/checkout/widgets/shipping_address_widget.dart';
 import 'package:cherry_mvp/features/checkout/constants/address_constants.dart';
@@ -109,7 +110,7 @@ class CheckoutViewModel extends ChangeNotifier {
   bool _hasPaymentMethod = false;
 
   /// Whether a payment method has been set
-  bool get hasPaymentMethod => _hasPaymentMethod;
+  bool get hasPaymentMethod => selectedPaymentType != null || _hasPaymentMethod;
 
   /// Whether the order is ready for checkout (has both address and payment method)
   bool get canCheckout => hasShippingAddress && hasPaymentMethod;
@@ -154,16 +155,27 @@ class CheckoutViewModel extends ChangeNotifier {
   // Payment method methods
   void setPaymentType(PaymentType type) {
     selectedPaymentType = type;
+    _hasPaymentMethod = true;
     notifyListeners();
   }
 
-  PaymentType? getPaymentType () {
+  PaymentType? getPaymentType() {
     return selectedPaymentType;
   }
 
   /// Sets whether a payment method has been configured
   void setPaymentMethod(bool hasPayment) {
     _hasPaymentMethod = hasPayment;
+    if (!hasPayment) {
+      selectedPaymentType = null;
+    }
+    notifyListeners();
+  }
+
+  /// Clears any selected payment method.
+  void clearPaymentMethod() {
+    selectedPaymentType = null;
+    _hasPaymentMethod = false;
     notifyListeners();
   }
 
@@ -191,7 +203,10 @@ class CheckoutViewModel extends ChangeNotifier {
   /// Clears shipping address and payment method but preserves basket items
   void resetCheckout() {
     _shippingAddress = null;
+    selectedPaymentType = null;
     _hasPaymentMethod = false;
+    isShippingAddressConfirmed = false;
+    selectedInpost = null;
     _basketItems.clear();
     deliveryChoice = null;
     _createOrderStatus = Status.uninitialized;
@@ -276,7 +291,7 @@ class CheckoutViewModel extends ChangeNotifier {
 
       // Call the repository to create the order via API
       final result = await checkoutRepository.createOrder(orderData);
-      
+
       if (result.isSuccess) {
         _log.info('Checkout processed successfully');
         return true;
@@ -298,16 +313,26 @@ class CheckoutViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      //final result = await checkoutRepository.fetchNearestInPosts(postalCode);
+      final result = await checkoutRepository.fetchNearestInPosts(postalCode);
+
+      if (result.isSuccess && result.value != null) {
+        final parsedInposts = _parseInpostList(result.value);
+        if (parsedInposts.isNotEmpty) {
+          _nearestInpost
+            ..clear()
+            ..addAll(parsedInposts);
+        }
+      }
+
       if (_nearestInpost.isNotEmpty) {
         showLocker = true;
         _status = Status.success;
       } else {
         _status = Status.failure(
-          //result.error ??
-          'Pickup points currently unavailable, please try again later',
+          result.error ??
+              'Pickup points currently unavailable, please try again later',
         );
-        _log.warning('Fetch nearest inPost locker failed! ');
+        _log.warning('Fetch nearest inPost locker failed: ${result.error}');
       }
     } catch (e) {
       _status = Status.failure(e.toString());
@@ -329,23 +354,45 @@ class CheckoutViewModel extends ChangeNotifier {
     final result = await checkoutRepository.fetchUserLocker();
     if (result.isSuccess) {
       final doc = result.value;
-      if (doc != null && doc.exists) {
-        // hydrate your selectedInpost here
-        selectedInpost = InpostModel(
-          id: doc.get(FirestoreConstants.id),
-          name: doc.get(FirestoreConstants.name),
-          address: doc.get(FirestoreConstants.address),
-          postcode: doc.get(FirestoreConstants.postcode),
-          lat: doc.get(FirestoreConstants.lat),
-          long: doc.get(FirestoreConstants.long),
-        );
-        hasLocker = true;
-        showLocker = true;
-        _status = Status.success;
-        notifyListeners();
+      if (doc != null && doc.exists && doc.data() is Map<String, dynamic>) {
+        final data = doc.data() as Map<String, dynamic>;
+        final id = (data[FirestoreConstants.id] ?? '').toString();
+        final name = (data[FirestoreConstants.name] ?? '').toString();
+        final address = (data[FirestoreConstants.address] ?? '').toString();
+        final postcode = (data[FirestoreConstants.postcode] ?? '').toString();
+        final lat = (data[FirestoreConstants.lat] ?? '').toString();
+        final long = (data[FirestoreConstants.long] ?? '').toString();
+
+        if (id.isNotEmpty &&
+            name.isNotEmpty &&
+            address.isNotEmpty &&
+            postcode.isNotEmpty) {
+          selectedInpost = InpostModel(
+            id: id,
+            name: name,
+            address: address,
+            postcode: postcode,
+            lat: lat,
+            long: long,
+          );
+          hasLocker = true;
+          showLocker = true;
+          _status = Status.success;
+        } else {
+          hasLocker = false;
+          showLocker = false;
+          selectedInpost = null;
+        }
+      } else {
+        hasLocker = false;
+        showLocker = false;
+        selectedInpost = null;
       }
+      notifyListeners();
       return Result.success(null);
     } else {
+      _status = Status.failure(result.error?.toString() ?? 'Unknown error');
+      notifyListeners();
       return Result.failure(result.error);
     }
   }
@@ -383,6 +430,14 @@ class CheckoutViewModel extends ChangeNotifier {
   }
 
   Future<bool> payWithPaymentSheet({required double amount}) async {
+    if (selectedPaymentType == null) {
+      _createOrderStatus = Status.failure(
+        AppStrings.checkoutPaymentMethodRequired,
+      );
+      notifyListeners();
+      return false;
+    }
+
     _createOrderStatus = Status.loading;
     notifyListeners();
 
@@ -391,24 +446,18 @@ class CheckoutViewModel extends ChangeNotifier {
       final response = await checkoutRepository.createPaymentIntent(amount);
 
       if (response.isSuccess && response.value != null) {
-        String clientSecret = response.value!.paymentIntent;
-        String customer = response.value!.customer;
+        final paymentResponse = response.value!;
 
-        Stripe.publishableKey = response.value!.publishableKey;
+        Stripe.publishableKey = paymentResponse.publishableKey;
         await Stripe.instance.applySettings();
 
-        // Init the payment sheet (configure Apple/Google Pay here)
+        final setupParams = _buildPaymentSheetParameters(
+          paymentResponse,
+          selectedPaymentType!,
+        );
+
         await Stripe.instance.initPaymentSheet(
-          paymentSheetParameters: SetupPaymentSheetParameters(
-            paymentIntentClientSecret: clientSecret,
-            customerId: customer,
-            merchantDisplayName: "cherry",
-            //applePay: PaymentSheetApplePay(merchantCountryCode: "GB"),
-            googlePay: PaymentSheetGooglePay(
-              merchantCountryCode: "GB",
-              testEnv: true, // true for testing
-            ),
-          ),
+          paymentSheetParameters: setupParams,
         );
 
         // Present the native PaymentSheet (it will show ApplePay/GooglePay if available)
@@ -441,6 +490,12 @@ class CheckoutViewModel extends ChangeNotifier {
     _createOrderStatus = Status.loading;
     notifyListeners();
 
+    if (basketItems.isEmpty) {
+      _createOrderStatus = Status.failure('Your basket is empty');
+      notifyListeners();
+      return;
+    }
+
     final Map<String, dynamic> address = deliveryChoice == "pickup"
         ? {
             "line1": selectedInpost?.address ?? '',
@@ -452,7 +507,7 @@ class CheckoutViewModel extends ChangeNotifier {
         : {
             'line1': _shippingAddress?.line1 ?? '',
             "city": shippingAddressComponents[AddressConstants.cityKey] ?? "",
-            "state": shippingAddressComponents[AddressConstants.cityKey] ?? "",
+            "state": shippingAddressComponents[AddressConstants.stateKey] ?? "",
             'postal_code':
                 shippingAddressComponents[AddressConstants.postalCodeKey] ?? "",
             "country":
@@ -461,7 +516,7 @@ class CheckoutViewModel extends ChangeNotifier {
           };
 
     final Map<String, dynamic> orderData = {
-      "amount": total.toInt(),
+      "amount": _toMinorUnits(total),
       "productId": basketItems[0].id,
       "productName": basketItems[0].name,
       "shipping": {"address": address, "name": 'John Doe'},
@@ -481,10 +536,98 @@ class CheckoutViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  int _toMinorUnits(double amount) {
+    return (amount * 100).round();
+  }
+
+  SetupPaymentSheetParameters _buildPaymentSheetParameters(
+    PaymentIntentResponse paymentResponse,
+    PaymentType paymentType,
+  ) {
+    final customerId = paymentResponse.customer.trim();
+    final ephemeralKey = paymentResponse.ephemeralKey.trim();
+    final hasCustomerContext = customerId.isNotEmpty && ephemeralKey.isNotEmpty;
+
+    final googlePay = paymentType == PaymentType.google
+        ? const PaymentSheetGooglePay(merchantCountryCode: "GB", testEnv: true)
+        : null;
+    final applePay = paymentType == PaymentType.apple
+        ? const PaymentSheetApplePay(merchantCountryCode: "GB")
+        : null;
+
+    if (hasCustomerContext) {
+      return SetupPaymentSheetParameters(
+        paymentIntentClientSecret: paymentResponse.paymentIntent,
+        customerId: customerId,
+        customerEphemeralKeySecret: ephemeralKey,
+        merchantDisplayName: "cherry",
+        googlePay: googlePay,
+        applePay: applePay,
+      );
+    }
+
+    return SetupPaymentSheetParameters(
+      paymentIntentClientSecret: paymentResponse.paymentIntent,
+      merchantDisplayName: "cherry",
+      googlePay: googlePay,
+      applePay: applePay,
+    );
+  }
+
   void resetCreateOrderStatus() {
     _createOrderStatus = Status.uninitialized;
     notifyListeners();
   }
 
-  
+  List<InpostModel> _parseInpostList(dynamic payload) {
+    final dynamic listData = payload is Map<String, dynamic>
+        ? (payload['data'] ?? payload['lockers'] ?? payload['items'])
+        : payload;
+
+    if (listData is! List) return [];
+
+    final lockers = <InpostModel>[];
+    for (final item in listData) {
+      final locker = _parseInpostItem(item);
+      if (locker != null) {
+        lockers.add(locker);
+      }
+    }
+    return lockers;
+  }
+
+  InpostModel? _parseInpostItem(dynamic item) {
+    if (item is! Map) return null;
+    final map = Map<String, dynamic>.from(item);
+
+    String readFirst(List<String> keys) {
+      for (final key in keys) {
+        final value = map[key];
+        if (value != null && value.toString().trim().isNotEmpty) {
+          return value.toString().trim();
+        }
+      }
+      return '';
+    }
+
+    final id = readFirst(['id', 'lockerId', 'code']);
+    final name = readFirst(['name', 'lockerName']);
+    final address = readFirst(['address', 'line1', 'street']);
+    final postcode = readFirst(['postcode', 'postalCode', 'postCode']);
+    final lat = readFirst(['lat', 'latitude']);
+    final long = readFirst(['long', 'lng', 'longitude']);
+
+    if (id.isEmpty || name.isEmpty || address.isEmpty || postcode.isEmpty) {
+      return null;
+    }
+
+    return InpostModel(
+      id: id,
+      name: name,
+      address: address,
+      postcode: postcode,
+      lat: lat,
+      long: long,
+    );
+  }
 }

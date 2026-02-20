@@ -1,6 +1,7 @@
 import 'package:cherry_mvp/core/config/firestore_constants.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cherry_mvp/core/utils/result.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'error_string.dart';
 
@@ -10,6 +11,8 @@ class FirestoreService {
 
   FirestoreService({required this.firebaseFirestore, required this.prefs});
 
+  String? get currentUserId => _resolveCurrentUserId();
+
   Future<Result<DocumentSnapshot>> getDocument(
     String collectionName,
     String documentId, {
@@ -18,7 +21,10 @@ class FirestoreService {
     try {
       dynamic documentSnapshot;
       if (isOrder) {
-        final uid = prefs.getString(FirestoreConstants.id);
+        final uid = _resolveCurrentUserId();
+        if (uid == null || uid.isEmpty) {
+          return Result.failure(ErrorStrings.unauthorizedError);
+        }
         documentSnapshot = await firebaseFirestore
             .collection(collectionName)
             .doc(documentId)
@@ -50,7 +56,10 @@ class FirestoreService {
   }) async {
     try {
       if (isOrder) {
-        final uid = prefs.getString(FirestoreConstants.id);
+        final uid = _resolveCurrentUserId();
+        if (uid == null || uid.isEmpty) {
+          return Result.failure(ErrorStrings.unauthorizedError);
+        }
         await firebaseFirestore
             .collection(collectionName)
             .doc(documentId)
@@ -96,10 +105,10 @@ class FirestoreService {
   }
 
   Future<Result<List<DocumentSnapshot>>> queryCollection(
-      String collectionPath, {
-        required String field,
-        required dynamic value,
-      }) async {
+    String collectionPath, {
+    required String field,
+    required dynamic value,
+  }) async {
     try {
       final query = await firebaseFirestore
           .collection(collectionPath)
@@ -110,5 +119,13 @@ class FirestoreService {
     } catch (e) {
       return Result.failure(e.toString());
     }
+  }
+
+  String? _resolveCurrentUserId() {
+    final cachedId = prefs.getString(FirestoreConstants.id);
+    if (cachedId != null && cachedId.isNotEmpty) {
+      return cachedId;
+    }
+    return FirebaseAuth.instance.currentUser?.uid;
   }
 }
