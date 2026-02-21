@@ -78,7 +78,7 @@ git checkout -b feature-new-feature
 - Create a .env file in the root directory and update it with:
 
 ```shell
-API_BASE_URL=https://cherry-backend-401854471349.europe-west2.run.app/api
+API_BASE_URL=https://cherry-backend-401854471349.europe-west2.run.app
 
 USE_MOCK_DATA=false
 ```

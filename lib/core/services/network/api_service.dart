@@ -93,44 +93,60 @@ class DioApiService implements ApiService {
     Map<String, dynamic>? queryParameters,
   }) async {
     try {
+      final resolvedEndpoint = _resolveEndpoint(endpoint);
       final response = await _dio.get(
-        endpoint,
+        resolvedEndpoint,
         queryParameters: queryParameters,
       );
       return Result.success(response.data as T);
     } on DioException catch (e) {
       _log.severe('GET $endpoint failed: ${e.message}');
       return Result.failure(_handleDioError(e));
+    } catch (e, stackTrace) {
+      _log.severe('GET $endpoint unexpected error: $e', e, stackTrace);
+      return Result.failure(_handleUnexpectedError(e));
     }
   }
 
   @override
   Future<Result<T>> post<T>(String endpoint, {dynamic data}) async {
     try {
-      final response = await _dio.post(endpoint, data: data);
+      final resolvedEndpoint = _resolveEndpoint(endpoint);
+      final response = await _dio.post(resolvedEndpoint, data: data);
       return Result.success(response.data as T);
     } on DioException catch (e) {
       return Result.failure(_handleDioError(e));
+    } catch (e, stackTrace) {
+      _log.severe('POST $endpoint unexpected error: $e', e, stackTrace);
+      return Result.failure(_handleUnexpectedError(e));
     }
   }
 
   @override
   Future<Result<T>> put<T>(String endpoint, {dynamic data}) async {
     try {
-      final response = await _dio.put(endpoint, data: data);
+      final resolvedEndpoint = _resolveEndpoint(endpoint);
+      final response = await _dio.put(resolvedEndpoint, data: data);
       return Result.success(response.data as T);
     } on DioException catch (e) {
       return Result.failure(_handleDioError(e));
+    } catch (e, stackTrace) {
+      _log.severe('PUT $endpoint unexpected error: $e', e, stackTrace);
+      return Result.failure(_handleUnexpectedError(e));
     }
   }
 
   @override
   Future<Result<T>> delete<T>(String endpoint) async {
     try {
-      final response = await _dio.delete(endpoint);
+      final resolvedEndpoint = _resolveEndpoint(endpoint);
+      final response = await _dio.delete(resolvedEndpoint);
       return Result.success(response.data as T);
     } on DioException catch (e) {
       return Result.failure(_handleDioError(e));
+    } catch (e, stackTrace) {
+      _log.severe('DELETE $endpoint unexpected error: $e', e, stackTrace);
+      return Result.failure(_handleUnexpectedError(e));
     }
   }
 
@@ -166,7 +182,42 @@ class DioApiService implements ApiService {
     return ErrorStrings.networkError;
   }
 
+  String _handleUnexpectedError(Object error) {
+    if (error is TypeError || error is CastError) {
+      return ErrorStrings.apiError;
+    }
+
+    if (error is FormatException) {
+      return ErrorStrings.apiError;
+    }
+
+    final message = error.toString().trim();
+    if (message.isEmpty) {
+      return ErrorStrings.apiError;
+    }
+
+    return message;
+  }
+
   String _stripTrailingSlash(String url) {
     return url.endsWith('/') ? url.substring(0, url.length - 1) : url;
+  }
+
+  String _resolveEndpoint(String endpoint) {
+    final trimmed = endpoint.trim();
+    if (trimmed.isEmpty) return trimmed;
+
+    if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+      return trimmed;
+    }
+
+    final normalised = trimmed.startsWith('/') ? trimmed : '/$trimmed';
+    final basePath = Uri.parse(_dio.options.baseUrl).path;
+
+    if (basePath.endsWith('/api') && normalised.startsWith('/api/')) {
+      return normalised.substring(4);
+    }
+
+    return normalised;
   }
 }
