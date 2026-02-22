@@ -18,9 +18,10 @@ class _SelectPaymentTypeBottomSheetState extends State<SelectPaymentTypeBottomSh
   Widget build(BuildContext context) {
     return Consumer<CheckoutViewModel>(
       builder: (context, vm, _) {
-        final selected = vm.selectedPaymentType;
+        //final selected = vm.selectedPaymentType;
     
         return BottomSheet(
+          backgroundColor:  Theme.of(context).colorScheme.onTertiary,
           onClosing: () {},
           shape: const BeveledRectangleBorder(),
           builder: (context) => Column(
@@ -29,7 +30,7 @@ class _SelectPaymentTypeBottomSheetState extends State<SelectPaymentTypeBottomSh
             children: [
               Container(
                 decoration: BoxDecoration(
-                  color: AppColors.pinkBackground
+                  color: Theme.of(context).colorScheme.secondaryContainer
                 ),
                 padding: const EdgeInsets.symmetric(
                   horizontal: 16,
