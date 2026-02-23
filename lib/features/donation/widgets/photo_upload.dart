@@ -4,6 +4,7 @@ import 'dart:ui';
 import 'package:cherry_mvp/core/config/app_colors.dart';
 import 'package:cherry_mvp/core/config/app_strings.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 
 class PhotoUpload extends StatefulWidget {
@@ -17,9 +18,68 @@ class PhotoUpload extends StatefulWidget {
 }
 
 class _PhotoUploadState extends State<PhotoUpload> {
+  static const double _maxImageHeight = 1024;
+  static const int _compressedImageQuality = 85;
+
   List<XFile> selectedImages = [];
   final PageController _pageController = PageController();
   int _currentImageIndex = 0;
+
+  bool _shouldRetryWithoutTransforms(PlatformException error) {
+    final message = (error.message ?? '').toLowerCase();
+    final details = (error.details?.toString() ?? '').toLowerCase();
+
+    return error.code == 'invalid_image' &&
+        (message.contains('cannot load representation') ||
+            message.contains('public.jpeg') ||
+            details.contains('nsitemprovidererrordomain') ||
+            details.contains('public.jpeg'));
+  }
+
+  Future<List<XFile>> _pickGalleryImages(ImagePicker picker) async {
+    try {
+      return await picker.pickMultiImage(
+        maxHeight: _maxImageHeight,
+        imageQuality: _compressedImageQuality,
+        requestFullMetadata: false,
+      );
+    } on PlatformException catch (error) {
+      if (!_shouldRetryWithoutTransforms(error)) {
+        rethrow;
+      }
+
+      return picker.pickMultiImage(requestFullMetadata: false);
+    }
+  }
+
+  Future<XFile?> _pickCameraImage(ImagePicker picker) async {
+    try {
+      return await picker.pickImage(
+        source: ImageSource.camera,
+        maxHeight: _maxImageHeight,
+        imageQuality: _compressedImageQuality,
+        requestFullMetadata: false,
+      );
+    } on PlatformException catch (error) {
+      if (!_shouldRetryWithoutTransforms(error)) {
+        rethrow;
+      }
+
+      return picker.pickImage(
+        source: ImageSource.camera,
+        requestFullMetadata: false,
+      );
+    }
+  }
+
+  String _platformImageErrorMessage(PlatformException error) {
+    if (_shouldRetryWithoutTransforms(error)) {
+      return 'Some selected photos could not be loaded. '
+          'Please try different photos or add them one at a time.';
+    }
+
+    return '${AppStrings.errorPickingImage}: ${error.message ?? error.code}';
+  }
 
   @override
   void initState() {
@@ -58,11 +118,7 @@ class _PhotoUploadState extends State<PhotoUpload> {
       final picker = ImagePicker();
       if (source == ImageSource.gallery) {
         // Allow multiple selection from gallery
-        final List<XFile> picked = await picker.pickMultiImage(
-          maxWidth: double.infinity,
-          maxHeight: 1024,
-          imageQuality: 85,
-        );
+        final List<XFile> picked = await _pickGalleryImages(picker);
 
         if (picked.isNotEmpty) {
           // Filter out duplicates based on file path
@@ -99,12 +155,7 @@ class _PhotoUploadState extends State<PhotoUpload> {
         }
       } else {
         // Single image from camera
-        final XFile? picked = await picker.pickImage(
-          source: source,
-          maxWidth: double.infinity,
-          maxHeight: 1024,
-          imageQuality: 85,
-        );
+        final XFile? picked = await _pickCameraImage(picker);
 
         if (picked != null) {
           // Check for duplicates
@@ -133,6 +184,12 @@ class _PhotoUploadState extends State<PhotoUpload> {
             }
           }
         }
+      }
+    } on PlatformException catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(_platformImageErrorMessage(error))),
+        );
       }
     } catch (e) {
       if (mounted) {
@@ -200,6 +257,19 @@ class _PhotoUploadState extends State<PhotoUpload> {
     await pickImages(source);
   }
 
+  void _openImageViewer(int initialIndex) {
+    if (selectedImages.isEmpty) return;
+
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => _PhotoViewerPage(
+          images: selectedImages,
+          initialIndex: initialIndex,
+        ),
+      ),
+    );
+  }
+
   Widget _buildImageCarousel() {
     return Container(
       decoration: BoxDecoration(
@@ -223,12 +293,15 @@ class _PhotoUploadState extends State<PhotoUpload> {
             },
             itemCount: selectedImages.length,
             itemBuilder: (context, index) {
-              return Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(20),
-                  image: DecorationImage(
-                    image: FileImage(File(selectedImages[index].path)),
-                    fit: BoxFit.cover,
+              return GestureDetector(
+                onTap: () => _openImageViewer(index),
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(20),
+                    image: DecorationImage(
+                      image: FileImage(File(selectedImages[index].path)),
+                      fit: BoxFit.cover,
+                    ),
                   ),
                 ),
               );
@@ -348,7 +421,9 @@ class _PhotoUploadState extends State<PhotoUpload> {
                 Icon(
                   Icons.image_outlined,
                   size: 48,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurfaceVariant.withOpacity(0.5),
                 ),
                 const SizedBox(height: 8),
                 Text(
@@ -387,6 +462,123 @@ class _PhotoUploadState extends State<PhotoUpload> {
   void dispose() {
     _pageController.dispose();
     super.dispose();
+  }
+}
+
+class _PhotoViewerPage extends StatefulWidget {
+  final List<XFile> images;
+  final int initialIndex;
+
+  const _PhotoViewerPage({
+    required this.images,
+    required this.initialIndex,
+  });
+
+  @override
+  State<_PhotoViewerPage> createState() => _PhotoViewerPageState();
+}
+
+class _PhotoViewerPageState extends State<_PhotoViewerPage> {
+  static const double _dismissDragThreshold = 160;
+  static const double _dismissVelocityThreshold = 900;
+
+  late final PageController _pageController;
+  late int _currentIndex;
+  double _verticalDragOffset = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentIndex = widget.initialIndex;
+    _pageController = PageController(initialPage: widget.initialIndex);
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  void _resetDragOffset() {
+    if (_verticalDragOffset == 0) return;
+    setState(() {
+      _verticalDragOffset = 0;
+    });
+  }
+
+  void _handleVerticalDragUpdate(DragUpdateDetails details) {
+    final nextOffset = (_verticalDragOffset + details.delta.dy).clamp(
+      0.0,
+      double.infinity,
+    );
+
+    setState(() {
+      _verticalDragOffset = nextOffset;
+    });
+  }
+
+  void _handleVerticalDragEnd(DragEndDetails details) {
+    final velocity = details.primaryVelocity ?? 0;
+    final shouldDismiss =
+        _verticalDragOffset >= _dismissDragThreshold ||
+        velocity >= _dismissVelocityThreshold;
+
+    if (shouldDismiss) {
+      Navigator.of(context).maybePop();
+      return;
+    }
+
+    _resetDragOffset();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final dragProgress = (_verticalDragOffset / _dismissDragThreshold).clamp(
+      0.0,
+      1.0,
+    );
+    final backgroundOpacity = 1 - (dragProgress * 0.35);
+
+    return Scaffold(
+      backgroundColor: Colors.black.withOpacity(backgroundOpacity),
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        foregroundColor: Colors.white,
+        title: Text('${_currentIndex + 1} / ${widget.images.length}'),
+      ),
+      body: GestureDetector(
+        behavior: HitTestBehavior.translucent,
+        onVerticalDragUpdate: _handleVerticalDragUpdate,
+        onVerticalDragEnd: _handleVerticalDragEnd,
+        onVerticalDragCancel: _resetDragOffset,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          curve: Curves.easeOut,
+          transform: Matrix4.translationValues(0, _verticalDragOffset, 0),
+          child: PageView.builder(
+            controller: _pageController,
+            itemCount: widget.images.length,
+            onPageChanged: (index) {
+              setState(() {
+                _currentIndex = index;
+              });
+            },
+            itemBuilder: (context, index) {
+              return InteractiveViewer(
+                minScale: 1,
+                maxScale: 4,
+                child: Center(
+                  child: Image.file(
+                    File(widget.images[index].path),
+                    fit: BoxFit.contain,
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ),
+    );
   }
 }
 
