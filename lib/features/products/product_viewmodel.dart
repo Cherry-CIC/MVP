@@ -4,37 +4,44 @@ import 'package:flutter/cupertino.dart';
 
 class ProductViewModel extends ChangeNotifier {
   Product? _product;
-  bool _isLiked = false;
-  int _localLikesOffset = 0;
+  
+  // Centralized tracker: Map<ProductID, IsLiked>
+  final Map<String, bool> _likedProducts = {};
 
   Product? get product => _product;
-  bool get isLiked => _isLiked;
-  
-  int get likesCount {
-    if (_product == null) return 0;
-    return _product!.likes + _localLikesOffset;
-  }
 
   final ProductRepository productRepository;
 
   ProductViewModel({required this.productRepository});
 
+  // Check if a specific product is liked
+  bool isProductLiked(String productId) {
+    return _likedProducts[productId] ?? false;
+  }
+
+  // Get dynamic count for a product
+  int getLikesCount(Product product) {
+    bool isLiked = _likedProducts[product.id] ?? false;
+    return product.likes + (isLiked ? 1 : 0);
+  }
+
   void setProduct(Product product) {
     _product = product;
-    _isLiked = false; // Reset for new product, in future this would come from backend
-    _localLikesOffset = 0;
     notifyListeners();
   }
 
-  void toggleLike() {
-    if (_product == null) return;
+  void toggleLike(Product product) {
+    final String id = product.id;
+    final bool currentStatus = _likedProducts[id] ?? false;
     
-    _isLiked = !_isLiked;
-    _localLikesOffset = _isLiked ? 1 : 0;
+    _likedProducts[id] = !currentStatus;
     
-    // In the future, this is where the backend call would go:
-    // productRepository.likeProduct(_product!.id, _isLiked);
+    // In future: productRepository.likeProduct(id, !currentStatus);
     
     notifyListeners();
   }
+  
+  // For the Product Page (the currently active product)
+  bool get isCurrentProductLiked => _product != null && (_likedProducts[_product!.id] ?? false);
+  int get currentProductLikesCount => _product == null ? 0 : getLikesCount(_product!);
 }
