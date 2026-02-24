@@ -19,7 +19,10 @@ plugins {
 android {
     namespace = "com.example.cherry_mvp"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = localProperties.getProperty("flutter.ndkVersion")
+    val ndk = localProperties.getProperty("flutter.ndkVersion")
+    if (ndk != null) {
+        ndkVersion = ndk
+    }
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
