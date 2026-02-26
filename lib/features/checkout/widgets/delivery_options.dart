@@ -3,12 +3,14 @@
 import 'package:cherry_mvp/core/config/config.dart';
 import 'package:cherry_mvp/core/utils/utils.dart';
 import 'package:cherry_mvp/features/checkout/checkout_view_model.dart';
+import 'package:cherry_mvp/features/checkout/payment_type.dart';
 import 'package:cherry_mvp/features/checkout/widgets/outlined.dart';
 import 'package:cherry_mvp/features/checkout/purchase_security.dart';
 import 'package:cherry_mvp/features/checkout/widgets/pickup_points_empty_widget.dart';
 import 'package:cherry_mvp/features/checkout/widgets/pickup_points_error_widget.dart';
 import 'package:cherry_mvp/features/checkout/widgets/pickup_points_loading_widget.dart';
 import 'package:cherry_mvp/features/checkout/widgets/price_list_item.dart';
+import 'package:cherry_mvp/features/checkout/widgets/select_payment_type_bottom_sheet.dart';
 import 'package:cherry_mvp/features/checkout/widgets/share_location_dialog.dart';
 import 'package:cherry_mvp/features/checkout/widgets/shipping_address_widget.dart';
 import 'package:cherry_mvp/features/checkout/widgets/shipping_list_item.dart';
@@ -39,7 +41,7 @@ class _DeliveryOptionsState extends State<DeliveryOptions> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final vm = context.read<CheckoutViewModel>();
 
-      if (vm.deliveryChoice!.isNotEmpty) {
+      if ((vm.deliveryChoice ?? '').isNotEmpty) {
         setState(() {
           _delivery = vm.deliveryChoice;
           _deliverExpanded = _delivery == 'pickup' && vm.selectedInpost != null;
@@ -48,6 +50,16 @@ class _DeliveryOptionsState extends State<DeliveryOptions> {
     });
   }
 
+  String _paymentTypeLabel(PaymentType type) {
+    switch (type) {
+      case PaymentType.card:
+        return AppStrings.paymentMethodsCard;
+      case PaymentType.google:
+        return AppStrings.paymentMethodsGooglePay;
+      case PaymentType.apple:
+        return AppStrings.paymentMethodsApplePay;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -419,6 +431,45 @@ class _DeliveryOptionsState extends State<DeliveryOptions> {
               },
             ),
           ],
+          const SizedBox(height: 16),
+          Text(
+            AppStrings.checkoutPayment,
+            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Consumer<CheckoutViewModel>(
+            builder: (context, model, _) {
+              final selectedType = model.selectedPaymentType;
+              return Outlined(
+                child: ListTile(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                  leading: const Icon(Icons.credit_card),
+                  title: Text(
+                    selectedType == null
+                        ? AppStrings.checkoutChoosePayment
+                        : _paymentTypeLabel(selectedType),
+                  ),
+                  subtitle: selectedType == null
+                      ? Text(
+                          AppStrings.paymentMethodsChoose,
+                          style: Theme.of(context).textTheme.labelSmall,
+                        )
+                      : null,
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () async {
+                    await showModalBottomSheet<PaymentType>(
+                      context: context,
+                      isScrollControlled: true,
+                      builder: (context) =>
+                          const SelectPaymentTypeBottomSheet(),
+                    );
+                  },
+                ),
+              );
+            },
+          ),
           const Divider(height: 16),
         ],
       ),
