@@ -8,6 +8,7 @@ import 'package:cherry_mvp/features/register/register_viewmodel.dart';
 import 'package:cherry_mvp/core/utils/utils.dart';
 import 'package:cherry_mvp/core/router/router.dart';
 import 'package:cherry_mvp/features/welcome/widgets/auth_form_shell.dart';
+import 'package:cherry_mvp/features/shared_widgets/labeled_input_field.dart';
 
 class RegisterForm extends StatefulWidget {
   const RegisterForm({super.key});
@@ -50,12 +51,20 @@ class _RegisterFormState extends State<RegisterForm> {
   @override
   void initState() {
     super.initState();
-    _userNameFocus.addListener(() => _onFocusChanged(_userNameFocus, _userNameKey));
-    _firstNameFocus.addListener(() => _onFocusChanged(_firstNameFocus, _firstNameKey));
+    _userNameFocus.addListener(
+      () => _onFocusChanged(_userNameFocus, _userNameKey),
+    );
+    _firstNameFocus.addListener(
+      () => _onFocusChanged(_firstNameFocus, _firstNameKey),
+    );
     _emailFocus.addListener(() => _onFocusChanged(_emailFocus, _emailKey));
     _phoneFocus.addListener(() => _onFocusChanged(_phoneFocus, _phoneKey));
-    _passwordFocus.addListener(() => _onFocusChanged(_passwordFocus, _passwordKey));
-    _confirmPasswordFocus.addListener(() => _onFocusChanged(_confirmPasswordFocus, _confirmPasswordKey));
+    _passwordFocus.addListener(
+      () => _onFocusChanged(_passwordFocus, _passwordKey),
+    );
+    _confirmPasswordFocus.addListener(
+      () => _onFocusChanged(_confirmPasswordFocus, _confirmPasswordKey),
+    );
   }
 
   void _onFocusChanged(FocusNode node, GlobalKey key) {
@@ -144,96 +153,65 @@ class _RegisterFormState extends State<RegisterForm> {
               const SizedBox(height: 20),
 
               // Username Field
-              Container(
-                key: _userNameKey,
-                child: TextFormField(
-                  controller: _userNameController,
-                  focusNode: _userNameFocus,
-                  validator: validateUsername,
-                  decoration: const InputDecoration(
-                    hintText: 'Username',
-                    prefixIcon: Icon(Icons.person),
-                  ),
-                ),
+              LabeledInputField(
+                label: 'Username',
+                hint: 'Enter your username',
+                controller: _userNameController,
+                validator: validateUsername,
+                prefixIcon: Icons.person,
               ),
               const SizedBox(height: 20),
 
               // FirstName Field
-              Container(
-                key: _firstNameKey,
-                child: TextFormField(
-                  controller: _firstNameController,
-                  focusNode: _firstNameFocus,
-                  validator: validateFirstName,
-                  decoration: const InputDecoration(
-                    hintText: 'First Name',
-                    prefixIcon: Icon(Icons.person),
-                  ),
-                ),
+              LabeledInputField(
+                label: 'First Name',
+                hint: 'Enter your first name',
+                controller: _firstNameController,
+                validator: validateFirstName,
+                prefixIcon: Icons.person,
               ),
               const SizedBox(height: 20),
 
               // Email Field
-              Container(
-                key: _emailKey,
-                child: TextFormField(
-                  controller: _emailController,
-                  focusNode: _emailFocus,
-                  keyboardType: TextInputType.emailAddress,
-                  validator: validateEmail,
-                  decoration: const InputDecoration(
-                    hintText: 'Email',
-                    prefixIcon: Icon(Icons.email),
-                  ),
-                ),
+              LabeledInputField(
+                label: 'Email',
+                hint: 'Enter your email',
+                controller: _emailController,
+                validator: validateEmail,
+                prefixIcon: Icons.email,
               ),
               const SizedBox(height: 20),
 
-              Container(
-                key: _phoneKey,
-                child: TextFormField(
-                  controller: _phoneNumberController,
-                  focusNode: _phoneFocus,
-                  keyboardType: TextInputType.phone,
-                  validator: validatePhoneNumber,
-                  decoration: const InputDecoration(
-                    hintText: 'Phone Number',
-                    prefixIcon: Icon(Icons.phone),
-                  ),
-                ),
+              // Phone Number
+              LabeledInputField(
+                label: 'Phone Number',
+                hint: 'Enter your phone number',
+                controller: _phoneNumberController,
+                validator: validatePhoneNumber,
+                prefixIcon: Icons.phone,
               ),
               const SizedBox(height: 20),
 
               // Password Field
-              Container(
-                key: _passwordKey,
-                child: TextFormField(
-                  controller: _passwordController,
-                  focusNode: _passwordFocus,
-                  obscureText: true,
-                  validator: validatePassword,
-                  decoration: const InputDecoration(
-                    hintText: 'Password',
-                    prefixIcon: Icon(Icons.lock),
-                  ),
-                ),
+              LabeledInputField(
+                label: 'Password',
+                hint: 'Enter your password',
+                controller: _passwordController,
+                validator: validatePassword,
+                prefixIcon: Icons.lock,
+                obscureText: true,
               ),
               const SizedBox(height: 20),
 
               // Confirm Password Field
-              Container(
-                key: _confirmPasswordKey,
-                child: TextFormField(
-                  controller: _confirmPasswordController,
-                  focusNode: _confirmPasswordFocus,
-                  obscureText: true,
-                  validator: (value) =>
-                      validateConfirmPassword(value, _passwordController.text),
-                  decoration: const InputDecoration(
-                    hintText: 'Confirm Password',
-                    prefixIcon: Icon(Icons.lock),
-                  ),
-                ),
+              LabeledInputField(
+                label: 'Confirm Password',
+                hint: 'Confirm your password',
+                controller: _confirmPasswordController,
+                validator: (value) =>
+                    validateConfirmPassword(value, _passwordController.text),
+                prefixIcon: Icons.lock,
+                obscureText: true,
               ),
               const SizedBox(height: 20),
 

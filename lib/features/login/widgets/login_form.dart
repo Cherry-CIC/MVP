@@ -6,6 +6,7 @@ import 'package:cherry_mvp/core/config/config.dart';
 import 'package:cherry_mvp/core/utils/utils.dart';
 import 'package:cherry_mvp/core/router/router.dart';
 import 'package:cherry_mvp/features/welcome/widgets/auth_form_shell.dart';
+import 'package:cherry_mvp/features/shared_widgets/labeled_input_field.dart';
 
 class LoginForm extends StatefulWidget {
   const LoginForm({super.key});
@@ -75,34 +76,23 @@ class LoginFormState extends State<LoginForm> {
             children: [
               const SizedBox(height: 16),
               // Email Field
-              Container(
-                key: _emailKey,
-                child: TextFormField(
-                  controller: _emailController,
-                  focusNode: _emailFocus,
-                  keyboardType: TextInputType.emailAddress,
-                  validator: validateEmail,
-                  decoration: const InputDecoration(
-                    hintText: 'Email',
-                    prefixIcon: Icon(Icons.email),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
+           LabeledInputField(
+              label: 'Email',
+              hint: 'Enter your email',
+              controller: _emailController,
+              validator: validateEmail,
+              prefixIcon: Icons.email,
+            ),
               // Password Field
-              Container(
-                key: _passwordKey,
-                child: TextFormField(
-                  controller: _passwordController,
-                  focusNode: _passwordFocus,
-                  obscureText: true,
-                  validator: validatePassword,
-                  decoration: const InputDecoration(
-                    hintText: 'Password',
-                    prefixIcon: Icon(Icons.lock),
-                  ),
-                ),
-              ),
+            const SizedBox(height: 16),
+            LabeledInputField(
+            label: 'Password',
+            hint: 'Enter your password',
+            controller: _passwordController,
+            validator: validatePassword,
+            prefixIcon: Icons.lock,
+            obscureText: true,
+            ),
               const SizedBox(height: 16),
               // Consumer to listen to LoginViewModel
               Consumer<LoginViewModel>(
