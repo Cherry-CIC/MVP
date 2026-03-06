@@ -160,7 +160,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
 
             final canPay =  viewModel.selectedPaymentType != null 
               &&  viewModel.deliveryChoice != null 
-              &&  (viewModel.deliveryChoice != "pickup" || viewModel.selectedInpost != null)
+              &&  (viewModel.deliveryChoice != "pickup" || viewModel.selectedPickupPoint != null)
               &&  basket.total > 0 
               && viewModel.createOrderStatus.type != StatusType.loading;
 
