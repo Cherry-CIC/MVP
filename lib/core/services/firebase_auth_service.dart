@@ -64,43 +64,27 @@ class FirebaseAuthService {
       // Trigger the authentication flow
       final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
 
+      // Handled user null case
+      if (googleUser == null) {
+        // User cancelled
+        return Result.failure('Sign in aborted by user');
+      }
+
       // Obtain the auth details from the request
-      final GoogleSignInAuthentication? googleAuth =
-          await googleUser?.authentication;
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
 
       // Create a new credential
       final credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth?.accessToken,
-        idToken: googleAuth?.idToken,
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
       );
 
       final user = await FirebaseAuth.instance.signInWithCredential(credential);
 
-      // Once signed in, return the UserCredential
-      return Result.success(
-        UserCredentials(
-          uid: user.user?.uid,
-          email: user.user?.email,
-          firstname: user.user?.displayName,
-          photoUrl: user.user?.photoURL,
-          phoneNumber: user.user?.phoneNumber,
-        ),
-      );
-    } on FirebaseAuthException catch (e) {
-      return Result.failure(e.message ?? ErrorStrings.friendlyError);
-    } catch (e) {
-      return Result.failure(e.toString());
-    }
-  }
-
-  Future<Result<UserCredentials>> signInWithApple() async {
-    try {
-      final appleProvider = AppleAuthProvider();
-      final UserCredential user;
-      if (kIsWeb) {
-        user = await FirebaseAuth.instance.signInWithPopup(appleProvider);
-      } else {
-        user = await FirebaseAuth.instance.signInWithProvider(appleProvider);
+      // Handle userCredential null check
+      if (user.user == null) {
+        return Result.failure('No user returned from Google sign-in');
       }
       // Once signed in, return the UserCredential
       return Result.success(
@@ -113,9 +97,42 @@ class FirebaseAuthService {
         ),
       );
     } on FirebaseAuthException catch (e) {
-      return Result.failure(e.message ?? ErrorStrings.friendlyError);
+      debugPrint('FirebaseAuthException: ${e.code} ${e.message}');
+      return Result.failure(e.message ?? 'Firebase Auth error');
     } catch (e) {
-      return Result.failure(e.toString());
+      debugPrint('Unknown exception: $e');
+      return Result.failure('Google sign-in failed: $e');
+    }
+  }
+
+  Future<Result<UserCredentials>> signInWithApple() async {
+    try {
+      final appleProvider = AppleAuthProvider();
+      final UserCredential user;
+      if (kIsWeb) {
+        user = await FirebaseAuth.instance.signInWithPopup(appleProvider);
+      } else {
+        user = await FirebaseAuth.instance.signInWithProvider(appleProvider);
+      }
+      if (user.user == null) {
+        return Result.failure('No user returned from Apple sign-in');
+      }
+      // Once signed in, return the UserCredential
+      return Result.success(
+        UserCredentials(
+          uid: user.user?.uid,
+          email: user.user?.email,
+          firstname: user.user?.displayName,
+          photoUrl: user.user?.photoURL,
+          phoneNumber: user.user?.phoneNumber,
+        ),
+      );
+    } on FirebaseAuthException catch (e) {
+      debugPrint('FirebaseAuthException: ${e.code} ${e.message}');
+      return Result.failure(e.message ?? 'Firebase Auth error');
+    } catch (e) {
+      debugPrint('Unknown exception: $e');
+      return Result.failure('Apple sign-in failed: $e');
     }
   }
 
