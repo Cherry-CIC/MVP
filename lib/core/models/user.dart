@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 class UserCredentials {
   final String? uid;
   final String? email;
+  final String? username;
   final String? firstname;
   final String? photoUrl;
   final String? phoneNumber;
@@ -10,6 +11,7 @@ class UserCredentials {
   UserCredentials({
     required this.uid,
     required this.email,
+    this.username,
     this.firstname,
     this.photoUrl,
     this.phoneNumber,
@@ -19,6 +21,7 @@ class UserCredentials {
     return UserCredentials(
       uid: uid,
       email: data['email'],
+      username: data['username'],
       firstname: data['firstname'],
       photoUrl: data['photoUrl'],
     );
