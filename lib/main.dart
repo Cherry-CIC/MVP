@@ -1,4 +1,5 @@
 import 'package:cherry_mvp/core/config/app_theme.dart';
+import 'package:cherry_mvp/core/config/environment_config.dart';
 import 'package:cherry_mvp/features/welcome/widgets/auth_gate.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -19,22 +20,37 @@ void main() async {
   await dotenv.load();
 
   await Firebase.initializeApp();
-
-  // Connect to local emulators in debug mode
-  if (kDebugMode) {
-    try {
-      const host = 'localhost';
-      await FirebaseAuth.instance.useAuthEmulator(host, 9099);
-      FirebaseFirestore.instance.useFirestoreEmulator(host, 8080);
-      print('Connected to Firebase Emulators');
-    } catch (e) {
-      print('Failed to connect to Firebase Emulators: $e');
-    }
-  }
+  await _configureFirebaseEmulators();
 
   SharedPreferences prefs = await SharedPreferences.getInstance();
 
   runApp(MultiProvider(providers: [...buildProviders(prefs)], child: MyApp()));
+}
+
+Future<void> _configureFirebaseEmulators() async {
+  if (!kDebugMode) {
+    return;
+  }
+
+  final emulatorConfig = AppEnvironment.firebaseEmulatorConfig;
+  if (emulatorConfig == null) {
+    return;
+  }
+
+  await FirebaseAuth.instance.useAuthEmulator(
+    emulatorConfig.host,
+    emulatorConfig.authPort,
+  );
+  FirebaseFirestore.instance.useFirestoreEmulator(
+    emulatorConfig.host,
+    emulatorConfig.firestorePort,
+  );
+
+  debugPrint(
+    'Firebase emulators enabled on ${emulatorConfig.host} '
+    '(auth: ${emulatorConfig.authPort}, '
+    'firestore: ${emulatorConfig.firestorePort})',
+  );
 }
 
 class MyApp extends StatelessWidget {
