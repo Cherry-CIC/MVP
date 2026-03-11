@@ -1,6 +1,8 @@
 import 'package:cherry_mvp/core/config/app_strings.dart';
 import 'package:cherry_mvp/core/config/config.dart';
+import 'package:cherry_mvp/core/models/courier_model.dart';
 import 'package:cherry_mvp/core/models/inpost_model.dart';
+import 'package:cherry_mvp/core/models/pickup_point_model.dart';
 import 'package:cherry_mvp/core/models/product.dart';
 import 'package:cherry_mvp/core/utils/utils.dart';
 import 'package:cherry_mvp/features/checkout/checkout_repository.dart';
@@ -27,38 +29,63 @@ class CheckoutViewModel extends ChangeNotifier {
 
   final List<Product> _basketItems = [];
 
-  final List<InpostModel> _nearestInpost = [
-    InpostModel(
+  final List<CourierModel> _couriers = [
+    CourierModel(id: 'inpost', name: 'InPost'),
+    CourierModel(id: 'yodel', name: 'Yodel'),
+  ];
+  List<CourierModel> get couriers => _couriers;
+
+  CourierModel? selectedCourier;
+
+  final List<PickupPointModel> _nearestPickupPoints = [
+    PickupPointModel(
       id: "002",
       name: "Aldi Locker — Camden",
       address: "Camden High Street, London",
       postcode: "NW1 8QP",
       lat: "51.5413",
       long: "-0.1460",
+      courierId: "inpost",
     ),
-    InpostModel(
+    PickupPointModel(
       id: "010",
       name: "Aldi Locker — Deansgate",
       address: "Deansgate, Manchester",
       postcode: "M3 2BW",
       lat: "53.4808",
       long: "-2.2474",
+      courierId: "inpost",
     ),
-    InpostModel(
+    PickupPointModel(
       id: "030",
       name: "Aldi Locker — Temple Gate",
       address: "Temple Gate, Bristol",
       postcode: "BS1 6PL",
       lat: "51.4490",
       long: "-2.5830",
+      courierId: "inpost",
+    ),
+    PickupPointModel(
+      id: "y001",
+      name: "Yodel Store — Costcutter",
+      address: "High Street, Manchester",
+      postcode: "M1 1AA",
+      lat: "53.4810",
+      long: "-2.2470",
+      courierId: "yodel",
     ),
   ];
-  List<InpostModel> get nearestInpost => _nearestInpost;
+  List<PickupPointModel> get nearestPickupPoints {
+    if (selectedCourier == null) return [];
+    return _nearestPickupPoints.where((p) => p.courierId == selectedCourier!.id).toList();
+  }
 
+  PickupPointModel? selectedPickupPoint;
+
+  // Keep this for legacy compatibility if it's used elsewhere, otherwise we can migrate completely.
   InpostModel? selectedInpost;
 
   bool showLocker = false;
-
   bool hasLocker = false;
 
   String? deliveryChoice;
@@ -73,8 +100,48 @@ class CheckoutViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  setSelectedCourier(CourierModel? courier) {
+    selectedCourier = courier;
+    selectedPickupPoint = null; // reset pickup point when changing couriers
+    notifyListeners();
+  }
+
+  setSelectedPickupPoint(PickupPointModel? point) {
+    selectedPickupPoint = point;
+    
+    // For legacy support if needed
+    if (point != null) {
+      selectedInpost = InpostModel(
+        id: point.id,
+        name: point.name,
+        address: point.address,
+        postcode: point.postcode,
+        lat: point.lat,
+        long: point.long,
+      );
+    } else {
+      selectedInpost = null;
+    }
+    
+    notifyListeners();
+  }
+
+  // Legacy method for compatibility
   setSelectedInpost(var data) {
     selectedInpost = data;
+    if (data != null) {
+      selectedPickupPoint = PickupPointModel(
+        id: data.id,
+        name: data.name,
+        address: data.address,
+        postcode: data.postcode,
+        lat: data.lat,
+        long: data.long,
+        courierId: 'inpost',
+      );
+    } else {
+      selectedPickupPoint = null;
+    }
     notifyListeners();
   }
 
@@ -292,29 +359,32 @@ class CheckoutViewModel extends ChangeNotifier {
     }
   }
 
-  // fetch nearest inPost locker for pickup
-  Future<void> fetchNearestInPosts(String postalCode) async {
+  // fetch nearest pickup lockers/stores
+  Future<void> fetchNearestPickupPoints(String postalCode) async {
     _status = Status.loading;
     notifyListeners();
 
     try {
-      //final result = await checkoutRepository.fetchNearestInPosts(postalCode);
-      if (_nearestInpost.isNotEmpty) {
+      // simulated API delay
+      await Future.delayed(const Duration(milliseconds: 500));
+      if (_nearestPickupPoints.isNotEmpty) {
         showLocker = true;
         _status = Status.success;
       } else {
-        _status = Status.failure(
-          //result.error ??
-          'Pickup points currently unavailable, please try again later',
-        );
-        _log.warning('Fetch nearest inPost locker failed! ');
+        _status = Status.failure('Pickup points currently unavailable, please try again later');
+        _log.warning('Fetch nearest pickup points failed!');
       }
     } catch (e) {
       _status = Status.failure(e.toString());
-      _log.severe('Fetch nearest inPost locker error:: $e');
+      _log.severe('Fetch nearest pickup points error:: $e');
     }
 
     notifyListeners();
+  }
+
+  // legacy method
+  Future<void> fetchNearestInPosts(String postalCode) async {
+    return fetchNearestPickupPoints(postalCode);
   }
 
   Future<void> storeLockerInFirestore() async {
@@ -330,7 +400,7 @@ class CheckoutViewModel extends ChangeNotifier {
     if (result.isSuccess) {
       final doc = result.value;
       if (doc != null && doc.exists) {
-        // hydrate your selectedInpost here
+        // hydrate your selected pickup point here
         selectedInpost = InpostModel(
           id: doc.get(FirestoreConstants.id),
           name: doc.get(FirestoreConstants.name),
@@ -339,6 +409,17 @@ class CheckoutViewModel extends ChangeNotifier {
           lat: doc.get(FirestoreConstants.lat),
           long: doc.get(FirestoreConstants.long),
         );
+        
+        selectedPickupPoint = PickupPointModel(
+          id: doc.get(FirestoreConstants.id),
+          name: doc.get(FirestoreConstants.name),
+          address: doc.get(FirestoreConstants.address),
+          postcode: doc.get(FirestoreConstants.postcode),
+          lat: doc.get(FirestoreConstants.lat),
+          long: doc.get(FirestoreConstants.long),
+          courierId: 'inpost',
+        );
+        
         hasLocker = true;
         showLocker = true;
         _status = Status.success;
@@ -443,10 +524,10 @@ class CheckoutViewModel extends ChangeNotifier {
 
     final Map<String, dynamic> address = deliveryChoice == "pickup"
         ? {
-            "line1": selectedInpost?.address ?? '',
+            "line1": selectedPickupPoint?.address ?? '',
             "city": "London",
             "state": "London",
-            "postal_code": selectedInpost?.postcode ?? '',
+            "postal_code": selectedPickupPoint?.postcode ?? '',
             "country": AppStrings.unitedKingdomText,
           }
         : {
@@ -460,11 +541,23 @@ class CheckoutViewModel extends ChangeNotifier {
                 AppStrings.unitedKingdomText,
           };
 
+    final Map<String, dynamic> deliveryDetails = deliveryChoice == 'pickup'
+        ? {
+            "deliveryMethod": "pickup_point",
+            "courier": selectedPickupPoint?.courierId ?? 'unknown',
+            "pickupPointId": selectedPickupPoint?.id ?? 'unknown',
+            "pickupPointName": selectedPickupPoint?.name ?? 'unknown',
+          }
+        : {
+            "deliveryMethod": "ship_to_home",
+          };
+
     final Map<String, dynamic> orderData = {
       "amount": total.toInt(),
       "productId": basketItems[0].id,
       "productName": basketItems[0].name,
       "shipping": {"address": address, "name": 'John Doe'},
+      "delivery": deliveryDetails,
     };
     try {
       final result = await checkoutRepository.createOrder(orderData);

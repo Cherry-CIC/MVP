@@ -39,10 +39,10 @@ class _DeliveryOptionsState extends State<DeliveryOptions> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final vm = context.read<CheckoutViewModel>();
 
-      if (vm.deliveryChoice!.isNotEmpty) {
+      if (vm.deliveryChoice?.isNotEmpty == true) {
         setState(() {
           _delivery = vm.deliveryChoice;
-          _deliverExpanded = _delivery == 'pickup' && vm.selectedInpost != null;
+          _deliverExpanded = _delivery == 'pickup' && vm.selectedPickupPoint != null;
         });
       }
     });
@@ -226,34 +226,18 @@ class _DeliveryOptionsState extends State<DeliveryOptions> {
             value: 'pickup',
             groupValue: _delivery,
             onChanged: (value) {
-              if (postcodeController.text.isEmpty &&
-                  context.read<CheckoutViewModel>().selectedInpost == null) {
-                Fluttertoast.showToast(
-                  msg: "Postcode required",
-                  backgroundColor: AppColors.red,
-                  textColor: AppColors.white,
-                );
-                return;
-              }
               setState(() {
                 _delivery = value;
-
-                if (context.read<CheckoutViewModel>().selectedInpost != null) {
-                  _deliverExpanded = true;
-                }
+                _deliverExpanded = true;
               });
               Provider.of<CheckoutViewModel>(
                 context,
                 listen: false,
               ).setDeliveryChoice(value ?? '');
-              if (context.read<CheckoutViewModel>().selectedInpost == null) {
-                showDialog(
-                  context: context,
-                  builder: (context) => ShareLocationDialog(
-                    postcode: postcodeController.text.trim(),
-                  ),
-                );
-              }
+              Provider.of<CheckoutViewModel>(
+                context,
+                listen: false,
+              ).setShowLocker(true);
             },
           ),
           const SizedBox(height: 8),
@@ -302,25 +286,19 @@ class _DeliveryOptionsState extends State<DeliveryOptions> {
                   builder: (context, model, _) {
                     final status = model.status;
 
-                    final inposts = model.nearestInpost;
-
                     if (status.type == StatusType.loading) {
-                      PickupPointsLoadingWidget();
+                      return PickupPointsLoadingWidget();
                     } else if (status.type == StatusType.failure) {
-                      PickupPointErrorWidget(
+                      return PickupPointErrorWidget(
                         errorMessage: status.message,
-                        onRetry: () => model.fetchNearestInPosts(
+                        onRetry: () => model.fetchNearestPickupPoints(
                           postcodeController.text.trim(),
                         ),
                       );
-                    } else if (status.type == StatusType.success) {
-                      if (inposts.isEmpty) {
-                        return PickupPointsEmptyWidget();
-                      }
+                    } else if (status.type == StatusType.success || status.type == StatusType.uninitialized) {
 
                       if (_deliverExpanded) {
-                        if (model.selectedInpost != null &&
-                            context.watch<CheckoutViewModel>().hasLocker) {
+                        if (model.selectedPickupPoint != null) {
                           // case: locker already selected
                           return Outlined(
                             child: Column(
@@ -332,7 +310,7 @@ class _DeliveryOptionsState extends State<DeliveryOptions> {
                                       Provider.of<CheckoutViewModel>(
                                         context,
                                         listen: false,
-                                      ).setSelectedInpost(null);
+                                      ).setSelectedPickupPoint(null);
                                       Provider.of<CheckoutViewModel>(
                                         context,
                                         listen: false,
@@ -341,6 +319,10 @@ class _DeliveryOptionsState extends State<DeliveryOptions> {
                                         context,
                                         listen: false,
                                       ).setShowLocker(false);
+                                      Provider.of<CheckoutViewModel>(
+                                        context,
+                                        listen: false,
+                                      ).setSelectedCourier(null);
                                       setState(() {
                                         _delivery = null;
                                       });
@@ -351,9 +333,9 @@ class _DeliveryOptionsState extends State<DeliveryOptions> {
                                 CheckboxListTile(
                                   controlAffinity:
                                       ListTileControlAffinity.leading,
-                                  title: Text(model.selectedInpost?.name ?? ''),
+                                  title: Text(model.selectedPickupPoint?.name ?? ''),
                                   subtitle: Text(
-                                    model.selectedInpost?.address ?? '',
+                                    model.selectedPickupPoint?.address ?? '',
                                   ),
                                   value: true,
                                   onChanged: null,
@@ -361,35 +343,91 @@ class _DeliveryOptionsState extends State<DeliveryOptions> {
                               ],
                             ),
                           );
-                        } else {
-                          // case: show list of lockers
+                        } else if (model.selectedCourier == null) {
                           return Outlined(
                             child: ListView.builder(
                               shrinkWrap: true,
                               physics: const NeverScrollableScrollPhysics(),
-                              itemCount: inposts.length,
+                              itemCount: model.couriers.length,
                               itemBuilder: (context, index) {
-                                final data = inposts[index];
+                                final courier = model.couriers[index];
                                 return Column(
                                   children: [
-                                    CheckboxListTile(
-                                      controlAffinity:
-                                          ListTileControlAffinity.leading,
-                                      title: Text(data.name),
-                                      subtitle: Text(data.address),
-                                      value:
-                                          model.selectedInpost?.id == data.id,
-                                      onChanged: (val) {
-                                        if (val == true) {
-                                          model.setSelectedInpost(data);
-                                        }
+                                    ListTile(
+                                      title: Text('${courier.name} Pick-up Points'),
+                                      trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                                      onTap: () {
+                                        model.setSelectedCourier(courier);
+                                        model.fetchNearestPickupPoints(postcodeController.text.trim());
                                       },
                                     ),
-                                    if (index != inposts.length - 1)
+                                    if (index != model.couriers.length - 1)
                                       const Divider(height: 1),
                                   ],
                                 );
                               },
+                            ),
+                          );
+                        } else {
+                          // case: Courier selected, show points
+                          final points = model.nearestPickupPoints;
+                          
+                          if (points.isEmpty) {
+                            return PickupPointsEmptyWidget();
+                          }
+                          
+                          return Outlined(
+                            child: Column(
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                                  child: Row(
+                                    children: [
+                                      IconButton(
+                                        icon: const Icon(Icons.arrow_back, size: 18),
+                                        padding: EdgeInsets.zero,
+                                        constraints: const BoxConstraints(),
+                                        onPressed: () {
+                                          model.setSelectedCourier(null);
+                                        },
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        '${model.selectedCourier?.name} Points',
+                                        style: Theme.of(context).textTheme.titleSmall,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const Divider(height: 1),
+                                ListView.builder(
+                                  shrinkWrap: true,
+                                  physics: const NeverScrollableScrollPhysics(),
+                                  itemCount: points.length,
+                                  itemBuilder: (context, index) {
+                                    final data = points[index];
+                                    return Column(
+                                      children: [
+                                        CheckboxListTile(
+                                          controlAffinity:
+                                              ListTileControlAffinity.leading,
+                                          title: Text(data.name),
+                                          subtitle: Text(data.address),
+                                          value:
+                                              model.selectedPickupPoint?.id == data.id,
+                                          onChanged: (val) {
+                                            if (val == true) {
+                                              model.setSelectedPickupPoint(data);
+                                            }
+                                          },
+                                        ),
+                                        if (index != points.length - 1)
+                                          const Divider(height: 1),
+                                      ],
+                                    );
+                                  },
+                                ),
+                              ],
                             ),
                           );
                         }
