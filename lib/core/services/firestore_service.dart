@@ -8,8 +8,13 @@ import 'error_string.dart';
 class FirestoreService {
   final FirebaseFirestore firebaseFirestore;
   final SharedPreferences prefs;
+  final FirebaseAuth _firebaseAuth;
 
-  FirestoreService({required this.firebaseFirestore, required this.prefs});
+  FirestoreService({
+    required this.firebaseFirestore,
+    required this.prefs,
+    FirebaseAuth? firebaseAuth,
+  }) : _firebaseAuth = firebaseAuth ?? FirebaseAuth.instance;
 
   String? get currentUserId => _resolveCurrentUserId();
 
@@ -122,10 +127,15 @@ class FirestoreService {
   }
 
   String? _resolveCurrentUserId() {
+    final authUserId = _firebaseAuth.currentUser?.uid;
+    if (authUserId != null && authUserId.isNotEmpty) {
+      return authUserId;
+    }
+
     final cachedId = prefs.getString(FirestoreConstants.id);
     if (cachedId != null && cachedId.isNotEmpty) {
       return cachedId;
     }
-    return FirebaseAuth.instance.currentUser?.uid;
+    return null;
   }
 }

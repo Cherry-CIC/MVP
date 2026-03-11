@@ -317,9 +317,9 @@ class _DeliveryOptionsState extends State<DeliveryOptions> {
                     final inposts = model.nearestInpost;
 
                     if (status.type == StatusType.loading) {
-                      PickupPointsLoadingWidget();
+                      return PickupPointsLoadingWidget();
                     } else if (status.type == StatusType.failure) {
-                      PickupPointErrorWidget(
+                      return PickupPointErrorWidget(
                         errorMessage: status.message,
                         onRetry: () => model.fetchNearestInPosts(
                           postcodeController.text.trim(),
@@ -407,7 +407,7 @@ class _DeliveryOptionsState extends State<DeliveryOptions> {
                         }
                       }
                     }
-                    return SizedBox.shrink();
+                    return const SizedBox.shrink();
                   },
                 ),
               ],
