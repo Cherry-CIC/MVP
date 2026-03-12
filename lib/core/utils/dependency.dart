@@ -50,6 +50,7 @@ List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
       create: (_) => FirestoreService(
         firebaseFirestore: FirebaseFirestore.instance,
         prefs: prefs,
+        firebaseAuth: FirebaseAuth.instance,
       ),
     ),
     Provider<StorageProvider>(

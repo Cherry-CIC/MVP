@@ -25,6 +25,12 @@ class AppStrings {
   static const forgotPassword = 'Forgot Password?';
   static const forgotPasswordInstruction =
       'Please type your email and we’ll get in touch';
+  static const usernameSetupTitle = 'Who is this?';
+  static const usernameSetupSubtitle = 'Enter the name you will like to go by.';
+  static const usernameSetupHint = 'Username';
+  static const usernameTakenError = 'Username is already taken.';
+  static const usernameSaveFailed =
+      'Could not save username. Please try again.';
   static const email = 'Email';
   static const sendEmail = 'Send email';
   static const userCheck = 'Not you';
@@ -50,7 +56,7 @@ class AppStrings {
   static const profileUserInfoSectionUser = "User";
   static const profileUserInfoSectionFollowing = "following";
   static const profileUserInfoSectionFollowers = "followers";
-  static const profileUserInfoSectionBuyerDiscount = "Buyer Discounts Active";
+  static const profileUserInfoSectionBuyerDiscount = "Donor discounts active";
   static const profileUserInfoSectionBuyerAwards = "Awards";
   static const profileUserInfoSectionBuyerReviews = "Reviews";
   static const profileUserInfoLocation = "United Kingdom";
@@ -58,7 +64,7 @@ class AppStrings {
   static const profileUserOrders = "Orders";
   static const profileUserLiked = "Liked";
   static const profileUserListings = "Listings";
-  static const profileUserBuyerDisc = "Buyer discounts";
+  static const profileUserBuyerDisc = "Donor discounts";
 
   // Profile: Donations & Activity
   static const profileUserActivityBought = 'Bought';
@@ -145,7 +151,9 @@ class AppStrings {
   static const openToOtherCharitiesText = "Open to other charities";
   static const openToOffersText = "Open to offers";
   static const applicableForBuyerDiscountsText =
-      "Applicable for buyer discounts";
+      "Applicable for donor discounts";
+  static const donorDiscountsActiveText = "Donor discounts active";
+  static const donorDiscountsInactiveText = "Donor discounts inactive";
 
   // Donation Fields
   static const titleText = "Title";
@@ -187,7 +195,10 @@ class AppStrings {
 
   // Product Page
   static const productPageDescription = "Description";
-  static const productPageBuyerDiscountActive = 'Buyer discount active';
+  static const productPageBuyerDiscountActive = 'Donor discounts active';
+  static const productPageDonorDiscountInactive = 'Donor discounts inactive';
+  static const productPageDonorDiscountInactiveDetail =
+      'Donor Discounts Currently Inactive';
   static const productPageBuy2Get1HalfPrice = 'Buy 2 get 1 half price';
   static const productPageOpenToOtherCharities = 'Open to other charities';
   static const productPageRequestOtherCharity = 'Request other charity';
@@ -227,7 +238,8 @@ class AppStrings {
   static const checkoutImpactSummary = 'Impact Summary';
   static const checkoutReview = 'Review';
   static const checkoutContinueShopping = 'Continue Shopping';
-  static const checkoutDeliveryOptionRequired = 'Please choose a delivery option';
+  static const checkoutDeliveryOptionRequired =
+      'Please choose a delivery option';
   static const checkoutPickupLockerRequired = 'Please select a pickup locker';
   static const checkoutPaymentMethodRequired = 'Please select a payment method';
 
@@ -247,7 +259,8 @@ class AppStrings {
 
   // Payment Methods
   static const paymentMethodsTitle = 'Payment Methods';
-  static const paymentMethodsInfo = 'Your payment information will never be shared with the seller';
+  static const paymentMethodsInfo =
+      'Your payment information will never be shared with the seller';
   static const paymentMethodsChoose = 'Choose a payment method';
   static const paymentMethodsCard = 'Card';
   static const paymentMethodsGooglePay = 'Pay with Google Pay';
