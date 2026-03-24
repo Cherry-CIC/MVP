@@ -75,26 +75,30 @@ class LoginFormState extends State<LoginForm> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 16),
+
               // Email Field
-           LabeledInputField(
-              label: 'Email',
-              hint: 'Enter your email',
-              controller: _emailController,
-              validator: validateEmail,
-              prefixIcon: Icons.email,
-            ),
-              // Password Field
-            const SizedBox(height: 16),
-            LabeledInputField(
-            label: 'Password',
-            hint: 'Enter your password',
-            controller: _passwordController,
-            validator: validatePassword,
-            prefixIcon: Icons.lock,
-            obscureText: true,
-            ),
+              LabeledInputField(
+                label: 'Email',
+                hint: 'Enter your email',
+                controller: _emailController,
+                validator: validateEmail,
+                prefixIcon: Icons.email,
+              ),
+
               const SizedBox(height: 16),
-              // Consumer to listen to LoginViewModel
+
+              // Password Field
+              LabeledInputField(
+                label: 'Password',
+                hint: 'Enter your password',
+                controller: _passwordController,
+                validator: validatePassword,
+                prefixIcon: Icons.lock,
+                obscureText: true,
+              ),
+
+              const SizedBox(height: 16),
+
               Consumer<LoginViewModel>(
                 builder: (context, viewModel, child) {
                   WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -102,7 +106,6 @@ class LoginFormState extends State<LoginForm> {
                       Fluttertoast.showToast(msg: viewModel.status.message ?? "");
                     } else if (viewModel.status.type == StatusType.success) {
                       Fluttertoast.showToast(msg: "Login Successful");
-                      //move to home
                       navigator.replaceWith(AppRoutes.home);
                     }
                   });
@@ -110,16 +113,21 @@ class LoginFormState extends State<LoginForm> {
                   return Column(
                     children: [
                       viewModel.status.type == StatusType.loading
-                          ? const Center(
-                              child: CircularProgressIndicator(),
-                            )
+                          ? const Center(child: CircularProgressIndicator())
                           : SizedBox(
                               width: double.infinity,
                               child: FilledButton(
                                 onPressed: () {
+                                  final trimmedEmail = _emailController.text.trim();
+
+                                  _emailController.value = _emailController.value.copyWith(
+                                    text: trimmedEmail,
+                                    selection: TextSelection.collapsed(offset: trimmedEmail.length),
+                                  );
+
                                   if (_formKey.currentState!.validate()) {
                                     viewModel.login(
-                                      _emailController.text,
+                                      trimmedEmail,
                                       _passwordController.text,
                                     );
                                   }
@@ -131,19 +139,21 @@ class LoginFormState extends State<LoginForm> {
                   );
                 },
               ),
+
               const SizedBox(height: 8),
+
               SizedBox(
                 width: double.infinity,
                 child: TextButton(
-                    onPressed: () => navigator.replaceWith(AppRoutes.register),
-                    child: Text(AppStrings.createAccount)),
+                  onPressed: () => navigator.replaceWith(AppRoutes.register),
+                  child: Text(AppStrings.createAccount),
+                ),
               ),
+
               SizedBox(
                 width: double.infinity,
                 child: TextButton(
-                  onPressed: () {
-                    // navigator.replaceWith(AppRoutes.home);
-                  },
+                  onPressed: () {},
                   child: Center(
                     child: Text(
                       AppStrings.forgotPassword,
