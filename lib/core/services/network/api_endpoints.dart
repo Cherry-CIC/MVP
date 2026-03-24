@@ -1,8 +1,4 @@
-
-
-
-
-  class ApiEndpoints {
+class ApiEndpoints {
     static const String products = '/products';
     static const String productsWithDetails = '/products/with-details';
 
@@ -15,4 +11,7 @@
     static const String charities = '/charities';
     static const String paymentIntent = '/payment/create-payment-intent';
     static const String createOrder = '/order/create';
+
+    // Auth related
+    static const String deleteAccount = '/auth/account';
   }
