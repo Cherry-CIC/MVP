@@ -130,6 +130,11 @@ class LoginFormState extends State<LoginForm> {
                                       trimmedEmail,
                                       _passwordController.text,
                                     );
+                                    if (viewModel.status.type == StatusType.success) {
+                                      Fluttertoast.showToast(msg: "Login Successful");
+                                    } else {
+                                      Fluttertoast.showToast(msg: viewModel.status.message ?? "");
+                                    }
                                   }
                                 },
                                 child: const Text("Submit"),

@@ -2,17 +2,17 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:provider/provider.dart';
-import 'package:cherry_mvp/features/login/login_repository.dart';
+import 'package:cherry_mvp/core/models/user.dart';
 import 'package:cherry_mvp/core/router/router.dart';
 import 'package:cherry_mvp/core/utils/utils.dart';
-import '../../core/models/user.dart';
+import 'package:cherry_mvp/features/login/login_repository.dart';
 
 class AuthViewModel extends ChangeNotifier {
   final LoginRepository loginRepository;
+  final NavigationProvider navigator;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  AuthViewModel({required this.loginRepository});
+  AuthViewModel({required this.loginRepository, required this.navigator});
 
   Status _status = Status.uninitialized;
   Status get status => _status;
@@ -27,10 +27,7 @@ class AuthViewModel extends ChangeNotifier {
     isLoadingUser = true;
     notifyListeners();
 
-    final doc = await _firestore
-        .collection('users')
-        .doc(currentUser!.uid)
-        .get();
+    final doc = await _firestore.collection('users').doc(currentUser!.uid).get();
 
     if (doc.exists) {
       userCredentials = UserCredentials.fromFirestore(
@@ -58,13 +55,7 @@ class AuthViewModel extends ChangeNotifier {
         await prefs.clear();
 
         _status = Status.success;
-
-        if (context.mounted) {
-          Provider.of<NavigationProvider>(
-            context,
-            listen: false,
-          ).replaceWith(AppRoutes.welcome);
-        }
+        navigator.goBack();
       } else {
         _status = Status.failure(result.error ?? "Logout failed");
         if (context.mounted) {
