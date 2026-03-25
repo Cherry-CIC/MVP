@@ -76,52 +76,45 @@ class LoginFormState extends State<LoginForm> {
             children: [
               const SizedBox(height: 16),
               // Email Field
-           LabeledInputField(
-              label: 'Email',
-              hint: 'Enter your email',
-              controller: _emailController,
-              validator: validateEmail,
-              prefixIcon: Icons.email,
-            ),
+              LabeledInputField(
+                label: 'Email',
+                hint: 'Enter your email',
+                controller: _emailController,
+                validator: validateEmail,
+                prefixIcon: Icons.email,
+              ),
               // Password Field
-            const SizedBox(height: 16),
-            LabeledInputField(
-            label: 'Password',
-            hint: 'Enter your password',
-            controller: _passwordController,
-            validator: validatePassword,
-            prefixIcon: Icons.lock,
-            obscureText: true,
-            ),
+              const SizedBox(height: 16),
+              LabeledInputField(
+                label: 'Password',
+                hint: 'Enter your password',
+                controller: _passwordController,
+                validator: validatePassword,
+                prefixIcon: Icons.lock,
+                obscureText: true,
+              ),
               const SizedBox(height: 16),
               // Consumer to listen to LoginViewModel
               Consumer<LoginViewModel>(
                 builder: (context, viewModel, child) {
-                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                    if (viewModel.status.type == StatusType.failure) {
-                      Fluttertoast.showToast(msg: viewModel.status.message ?? "");
-                    } else if (viewModel.status.type == StatusType.success) {
-                      Fluttertoast.showToast(msg: "Login Successful");
-                      //move to home
-                      navigator.replaceWith(AppRoutes.home);
-                    }
-                  });
-
                   return Column(
                     children: [
                       viewModel.status.type == StatusType.loading
-                          ? const Center(
-                              child: CircularProgressIndicator(),
-                            )
+                          ? const Center(child: CircularProgressIndicator())
                           : SizedBox(
                               width: double.infinity,
                               child: FilledButton(
-                                onPressed: () {
+                                onPressed: () async {
                                   if (_formKey.currentState!.validate()) {
-                                    viewModel.login(
+                                    await viewModel.login(
                                       _emailController.text,
                                       _passwordController.text,
                                     );
+                                    if (viewModel.status.type == StatusType.success) {
+                                      Fluttertoast.showToast(msg: "Login Successful");
+                                    } else {
+                                      Fluttertoast.showToast(msg: viewModel.status.message ?? "");
+                                    }
                                   }
                                 },
                                 child: const Text("Submit"),
@@ -135,8 +128,9 @@ class LoginFormState extends State<LoginForm> {
               SizedBox(
                 width: double.infinity,
                 child: TextButton(
-                    onPressed: () => navigator.replaceWith(AppRoutes.register),
-                    child: Text(AppStrings.createAccount)),
+                  onPressed: () => navigator.replaceWith(AppRoutes.register),
+                  child: Text(AppStrings.createAccount),
+                ),
               ),
               SizedBox(
                 width: double.infinity,
