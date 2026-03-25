@@ -82,6 +82,7 @@ class LoginFormState extends State<LoginForm> {
                 controller: _emailController,
                 validator: validateEmail,
                 prefixIcon: Icons.email,
+                keyboardType: KeyboardType.emailAddress,
               ),
               // Password Field
               const SizedBox(height: 16),
@@ -92,9 +93,9 @@ class LoginFormState extends State<LoginForm> {
                 validator: validatePassword,
                 prefixIcon: Icons.lock,
                 obscureText: true,
+                isLastField: true,
               ),
               const SizedBox(height: 16),
-              // Consumer to listen to LoginViewModel
               Consumer<LoginViewModel>(
                 builder: (context, viewModel, child) {
                   return Column(
@@ -135,9 +136,7 @@ class LoginFormState extends State<LoginForm> {
               SizedBox(
                 width: double.infinity,
                 child: TextButton(
-                  onPressed: () {
-                    // navigator.replaceWith(AppRoutes.home);
-                  },
+                  onPressed: () {},
                   child: Center(
                     child: Text(
                       AppStrings.forgotPassword,
