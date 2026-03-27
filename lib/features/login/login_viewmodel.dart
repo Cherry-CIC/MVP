@@ -1,13 +1,15 @@
-import 'package:cherry_mvp/features/login/login_repository.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:cherry_mvp/core/utils/utils.dart';
 import 'package:logging/logging.dart';
+import 'package:cherry_mvp/core/router/nav_provider.dart';
+import 'package:cherry_mvp/features/login/login_repository.dart';
+import 'package:cherry_mvp/core/utils/utils.dart';
 import 'login_model.dart';
 
 class LoginViewModel extends ChangeNotifier {
   final LoginRepository loginRepository;
+  final NavigationProvider navigator;
 
-  LoginViewModel({required this.loginRepository});
+  LoginViewModel({required this.loginRepository, required this.navigator});
 
   //private variable (not exposed)
   Status _status = Status.uninitialized;
@@ -26,10 +28,10 @@ class LoginViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final result = await loginRepository
-          .login(LoginRequest(email: email, password: password));
+      final result = await loginRepository.login(LoginRequest(email: email, password: password));
       if (result.isSuccess) {
         _status = Status.success;
+        navigator.goBack();
       } else {
         _status = Status.failure(result.error ?? "");
         _log.warning('Login failed! ${result.error}');

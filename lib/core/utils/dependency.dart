@@ -128,6 +128,7 @@ List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
     ChangeNotifierProvider<LoginViewModel>(
       create: (context) => LoginViewModel(
         loginRepository: Provider.of<LoginRepository>(context, listen: false),
+        navigator: Provider.of<NavigationProvider>(context, listen: false),
       ),
     ),
     ChangeNotifierProvider<RegisterViewModel>(
@@ -202,6 +203,7 @@ List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
     ChangeNotifierProvider<AuthViewModel>(
       create: (context) => AuthViewModel(
         loginRepository: Provider.of<LoginRepository>(context, listen: false),
+        navigator: Provider.of<NavigationProvider>(context, listen: false),
       ),
     ),
   ];
