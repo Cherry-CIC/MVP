@@ -75,6 +75,7 @@ class LoginFormState extends State<LoginForm> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 16),
+
               // Email Field
               LabeledInputField(
                 label: 'Email',
@@ -83,8 +84,10 @@ class LoginFormState extends State<LoginForm> {
                 validator: validateEmail,
                 prefixIcon: Icons.email,
               ),
-              // Password Field
+
               const SizedBox(height: 16),
+
+              // Password Field
               LabeledInputField(
                 label: 'Password',
                 hint: 'Enter your password',
@@ -93,10 +96,20 @@ class LoginFormState extends State<LoginForm> {
                 prefixIcon: Icons.lock,
                 obscureText: true,
               ),
+
               const SizedBox(height: 16),
-              // Consumer to listen to LoginViewModel
+
               Consumer<LoginViewModel>(
                 builder: (context, viewModel, child) {
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (viewModel.status.type == StatusType.failure) {
+                      Fluttertoast.showToast(msg: viewModel.status.message ?? "");
+                    } else if (viewModel.status.type == StatusType.success) {
+                      Fluttertoast.showToast(msg: "Login Successful");
+                      navigator.replaceWith(AppRoutes.home);
+                    }
+                  });
+
                   return Column(
                     children: [
                       viewModel.status.type == StatusType.loading
@@ -104,10 +117,17 @@ class LoginFormState extends State<LoginForm> {
                           : SizedBox(
                               width: double.infinity,
                               child: FilledButton(
-                                onPressed: () async {
+                                onPressed: () {
+                                  final trimmedEmail = _emailController.text.trim();
+
+                                  _emailController.value = _emailController.value.copyWith(
+                                    text: trimmedEmail,
+                                    selection: TextSelection.collapsed(offset: trimmedEmail.length),
+                                  );
+
                                   if (_formKey.currentState!.validate()) {
-                                    await viewModel.login(
-                                      _emailController.text,
+                                    viewModel.login(
+                                      trimmedEmail,
                                       _passwordController.text,
                                     );
                                     if (viewModel.status.type == StatusType.success) {
@@ -124,7 +144,9 @@ class LoginFormState extends State<LoginForm> {
                   );
                 },
               ),
+
               const SizedBox(height: 8),
+
               SizedBox(
                 width: double.infinity,
                 child: TextButton(
@@ -132,12 +154,11 @@ class LoginFormState extends State<LoginForm> {
                   child: Text(AppStrings.createAccount),
                 ),
               ),
+
               SizedBox(
                 width: double.infinity,
                 child: TextButton(
-                  onPressed: () {
-                    // navigator.replaceWith(AppRoutes.home);
-                  },
+                  onPressed: () {},
                   child: Center(
                     child: Text(
                       AppStrings.forgotPassword,
