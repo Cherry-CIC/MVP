@@ -19,15 +19,13 @@ class RegisterForm extends StatefulWidget {
 
 class _RegisterFormState extends State<RegisterForm> {
   bool isUsernameChecking = false;
-  String? _usernameError;
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _userNameController = TextEditingController();
   final TextEditingController _firstNameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _phoneNumberController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController =
-      TextEditingController();
+  final TextEditingController _confirmPasswordController = TextEditingController();
 
   final _scrollController = ScrollController();
   final _userNameFocus = FocusNode();
@@ -101,7 +99,6 @@ class _RegisterFormState extends State<RegisterForm> {
     super.dispose();
   }
 
-  // Function to pick an image
   Future<void> _pickImage() async {
     final XFile? pickedFile = await _picker.pickImage(
       source: ImageSource.gallery,
@@ -179,6 +176,7 @@ class _RegisterFormState extends State<RegisterForm> {
                 controller: _emailController,
                 validator: validateEmail,
                 prefixIcon: Icons.email,
+                keyboardType: KeyboardType.emailAddress,
               ),
               const SizedBox(height: 20),
 
@@ -189,6 +187,7 @@ class _RegisterFormState extends State<RegisterForm> {
                 controller: _phoneNumberController,
                 validator: validatePhoneNumber,
                 prefixIcon: Icons.phone,
+                keyboardType: KeyboardType.phoneNo,
               ),
               const SizedBox(height: 20),
 
@@ -208,14 +207,13 @@ class _RegisterFormState extends State<RegisterForm> {
                 label: 'Confirm Password',
                 hint: 'Confirm your password',
                 controller: _confirmPasswordController,
-                validator: (value) =>
-                    validateConfirmPassword(value, _passwordController.text),
+                validator: (value) => validateConfirmPassword(value, _passwordController.text),
                 prefixIcon: Icons.lock,
                 obscureText: true,
+                isLastField: true,
               ),
               const SizedBox(height: 20),
 
-              // Consumer to listen to RegisterViewModel
               Consumer<RegisterViewModel>(
                 builder: (context, viewModel, child) {
                   WidgetsBinding.instance.addPostFrameCallback((_) {
