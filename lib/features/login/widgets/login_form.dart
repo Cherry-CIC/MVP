@@ -83,6 +83,7 @@ class LoginFormState extends State<LoginForm> {
                 controller: _emailController,
                 validator: validateEmail,
                 prefixIcon: Icons.email,
+                keyboardType: KeyboardType.emailAddress,
               ),
 
               const SizedBox(height: 16),
@@ -95,6 +96,7 @@ class LoginFormState extends State<LoginForm> {
                 validator: validatePassword,
                 prefixIcon: Icons.lock,
                 obscureText: true,
+                isLastField: true,
               ),
 
               const SizedBox(height: 16),
