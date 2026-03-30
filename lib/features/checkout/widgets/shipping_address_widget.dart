@@ -20,6 +20,8 @@ class ShippingAddressWidget extends StatefulWidget {
 }
 
 class _ShippingAddressWidgetState extends State<ShippingAddressWidget> {
+  static const Duration _networkTimeout = Duration(seconds: 8);
+
   final TextEditingController _addressController = TextEditingController();
   final FocusNode _addressFocusNode = FocusNode();
   Timer? _debounceTimer;
@@ -30,7 +32,6 @@ class _ShippingAddressWidgetState extends State<ShippingAddressWidget> {
   bool _isAddressConfirmed = false;
   bool _useManualEntry = false;
   bool _apiAvailable = true;
-
 
   // Manual entry controllers
   final TextEditingController _addressLine1Controller = TextEditingController();
@@ -90,8 +91,10 @@ class _ShippingAddressWidgetState extends State<ShippingAddressWidget> {
       }
     });
 
-    Provider.of<CheckoutViewModel>(context, listen: false)
-        .setAddressConfirmed(value);
+    Provider.of<CheckoutViewModel>(
+      context,
+      listen: false,
+    ).setAddressConfirmed(value);
   }
 
   void _onAddressChanged() {
@@ -130,7 +133,7 @@ class _ShippingAddressWidgetState extends State<ShippingAddressWidget> {
           '&types=${AddressConstants.addressTypeFilter}'
           '&components=${AddressConstants.countryRestriction}';
 
-      final response = await http.get(Uri.parse(url));
+      final response = await http.get(Uri.parse(url)).timeout(_networkTimeout);
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = json.decode(response.body);
@@ -189,7 +192,7 @@ class _ShippingAddressWidgetState extends State<ShippingAddressWidget> {
           '&key=$_apiKey'
           '&fields=formatted_address,address_components,geometry';
 
-      final response = await http.get(Uri.parse(url));
+      final response = await http.get(Uri.parse(url)).timeout(_networkTimeout);
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = json.decode(response.body);
@@ -255,7 +258,7 @@ class _ShippingAddressWidgetState extends State<ShippingAddressWidget> {
   void _toggleEntryMode() {
     setState(() {
       _useManualEntry = !_useManualEntry;
-     _updateAddressConfirmed(false);
+      _updateAddressConfirmed(false);
       _selectedAddress = null;
     });
   }
@@ -332,7 +335,8 @@ class _ShippingAddressWidgetState extends State<ShippingAddressWidget> {
           .doc(user.uid)
           .collection('address')
           .doc('shipping')
-          .set(addressData, SetOptions(merge: true));
+          .set(addressData, SetOptions(merge: true))
+          .timeout(_networkTimeout);
 
       debugPrint('Address saved to Firestore successfully');
       return true;
@@ -355,7 +359,8 @@ class _ShippingAddressWidgetState extends State<ShippingAddressWidget> {
           .doc(user.uid)
           .collection('address')
           .doc('shipping')
-          .get();
+          .get()
+          .timeout(_networkTimeout);
 
       if (doc.exists) {
         final data = doc.data();
