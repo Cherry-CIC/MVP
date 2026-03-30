@@ -72,7 +72,7 @@ class SettingsCategoryGroup extends StatelessWidget {
 
               if (shouldLogout == true && context.mounted) {
                 context.read<LoginViewModel>().clearStatus();
-                context.read<AuthViewModel>().logout(context);
+                await context.read<AuthViewModel>().logout(context);
               }
             },
           );
