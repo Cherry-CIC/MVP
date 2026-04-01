@@ -2,6 +2,7 @@ import 'package:cherry_mvp/core/models/model.dart';
 import 'package:cherry_mvp/core/services/services.dart';
 import 'package:cherry_mvp/core/config/config.dart';
 import 'package:cherry_mvp/core/utils/utils.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'login_model.dart';
 
 class LoginRepository {
@@ -38,11 +39,10 @@ class LoginRepository {
         FirestoreConstants.id: userCredentials?.uid ?? "",
         FirestoreConstants.photoUrl: userCredentials?.photoUrl ?? "",
       };
-      await _firestoreService.saveDocument(
-        FirestoreConstants.pathUserCollection,
-        userCredentials?.uid ?? "",
-        data,
-      );
+      await _firestoreService.firebaseFirestore
+          .collection(FirestoreConstants.pathUserCollection)
+          .doc(userCredentials?.uid ?? "")
+          .set(data, SetOptions(merge: true));
 
       //proceed to fetch user details
 
@@ -70,11 +70,10 @@ class LoginRepository {
         FirestoreConstants.id: userCredentials?.uid ?? "",
         FirestoreConstants.photoUrl: userCredentials?.photoUrl ?? "",
       };
-      await _firestoreService.saveDocument(
-        FirestoreConstants.pathUserCollection,
-        userCredentials?.uid ?? "",
-        data,
-      );
+      await _firestoreService.firebaseFirestore
+          .collection(FirestoreConstants.pathUserCollection)
+          .doc(userCredentials?.uid ?? "")
+          .set(data, SetOptions(merge: true));
 
       //proceed to fetch user details
 
@@ -95,19 +94,24 @@ class LoginRepository {
 
     if (result.isSuccess) {
       final document = result.value;
+      final data = document?.data() as Map<String, dynamic>?;
       // Store user data to shared preferences
       await _firestoreService.prefs.setString(FirestoreConstants.id, uid);
       await _firestoreService.prefs.setString(
+        FirestoreConstants.username,
+        (data?[FirestoreConstants.username] as String?) ?? "",
+      );
+      await _firestoreService.prefs.setString(
         FirestoreConstants.firstname,
-        document?.get(FirestoreConstants.firstname),
+        (data?[FirestoreConstants.firstname] as String?) ?? "",
       );
       await _firestoreService.prefs.setString(
         FirestoreConstants.photoUrl,
-        document?.get(FirestoreConstants.photoUrl) ?? "",
+        (data?[FirestoreConstants.photoUrl] as String?) ?? "",
       );
       await _firestoreService.prefs.setString(
         FirestoreConstants.email,
-        document?.get(FirestoreConstants.email) ?? "",
+        (data?[FirestoreConstants.email] as String?) ?? "",
       );
 
       return Result.success(null);

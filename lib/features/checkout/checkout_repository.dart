@@ -79,11 +79,19 @@ final class CheckoutRepository implements ICheckoutRepository {
   Future<void> storeOrderInFirestore(Map<String, dynamic> orderData) async {
     // Use a generated order ID (timestamp-based)
     final orderId = DateTime.now().millisecondsSinceEpoch.toString();
+    final uid = _firestoreService.currentUserId;
+    final payload = {
+      ...orderData,
+      'user_id': uid ?? '',
+      'updated_at': DateTime.now().toIso8601String(),
+    };
+
+  
     final result = await _firestoreService.saveDocument(
       FirestoreConstants.orders,
       orderId,
-      orderData,
-      isOrder: true,
+      payload,
+      isOrder: false,
     );
 
     if (!result.isSuccess) {
