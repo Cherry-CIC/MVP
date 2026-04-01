@@ -1,5 +1,6 @@
 import 'package:cherry_mvp/core/config/app_colors.dart';
 import 'package:cherry_mvp/core/config/app_strings.dart';
+import 'package:cherry_mvp/core/utils/donor_discount_state_store.dart';
 import 'package:cherry_mvp/core/utils/utils.dart';
 import 'package:cherry_mvp/core/router/router.dart';
 import 'package:cherry_mvp/core/models/category.dart';
@@ -36,7 +37,8 @@ class DonationFormState extends State<DonationForm> {
 
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
-  final TextEditingController _addToCollectionController = TextEditingController();
+  final TextEditingController _addToCollectionController =
+      TextEditingController();
   final TextEditingController _priceController = TextEditingController();
 
   String selectedCategory = '';
@@ -130,16 +132,22 @@ class DonationFormState extends State<DonationForm> {
   Widget build(BuildContext context) {
     return Consumer<DonationViewModel>(
       builder: (context, donationViewModel, child) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
+        WidgetsBinding.instance.addPostFrameCallback((_) async {
           if (donationViewModel.status.type == StatusType.success &&
               donationViewModel.lastSubmission != null) {
-            _clearForm();
-            donationViewModel.resetStatus();
-            Navigator.of(context).pop();
+            final navigator = Navigator.of(context);
             final navigationProvider = Provider.of<NavigationProvider>(
               context,
               listen: false,
             );
+            await DonorDiscountStateStore.setDonorDiscountState(
+              donationViewModel.lastSubmission!.id,
+              isSwitchedApplicableBuyerDiscounts,
+            );
+            if (!mounted) return;
+            _clearForm();
+            donationViewModel.resetStatus();
+            navigator.pop();
             navigationProvider.navigateTo(AppRoutes.donationSuccess);
           } else if (donationViewModel.status.type == StatusType.failure) {
             final errorMessage =
@@ -210,7 +218,6 @@ class DonationFormState extends State<DonationForm> {
                       ),
                     );
                   } else if (categories.isEmpty) {
-                    
                     return DonationDropdownField(
                       formFieldsHintText: categoryHintText,
                       dropdownList: categoryDropdownList,
@@ -330,8 +337,9 @@ class DonationFormState extends State<DonationForm> {
                     prefixText: '£',
                     border: OutlineInputBorder(),
                   ),
-                  keyboardType:
-                      const TextInputType.numberWithOptions(decimal: true),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
                   inputFormatters: [
                     FilteringTextInputFormatter.allow(
                       RegExp(r'^\d*\.?\d{0,2}'),

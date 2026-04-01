@@ -13,7 +13,9 @@ service cloud.firestore {
     // all client requests to your Firestore database will be denied until you Update
     // your rules
     match /{document=**} {
-      allow read, write: if request.time < timestamp.date(2025, 12, 31);
+      // Extended to keep MVP environments functional.
+      // TODO: replace with authenticated per-collection rules before production scale.
+      allow read, write: if request.time < timestamp.date(2030, 12, 31);
     }
   }
 }
