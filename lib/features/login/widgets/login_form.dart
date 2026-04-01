@@ -103,15 +103,6 @@ class LoginFormState extends State<LoginForm> {
 
               Consumer<LoginViewModel>(
                 builder: (context, viewModel, child) {
-                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                    if (viewModel.status.type == StatusType.failure) {
-                      Fluttertoast.showToast(msg: viewModel.status.message ?? "");
-                    } else if (viewModel.status.type == StatusType.success) {
-                      Fluttertoast.showToast(msg: "Login Successful");
-                      navigator.replaceWith(AppRoutes.home);
-                    }
-                  });
-
                   return Column(
                     children: [
                       viewModel.status.type == StatusType.loading
@@ -119,7 +110,7 @@ class LoginFormState extends State<LoginForm> {
                           : SizedBox(
                               width: double.infinity,
                               child: FilledButton(
-                                onPressed: () {
+                                onPressed: () async {
                                   final trimmedEmail = _emailController.text.trim();
 
                                   _emailController.value = _emailController.value.copyWith(
@@ -128,7 +119,7 @@ class LoginFormState extends State<LoginForm> {
                                   );
 
                                   if (_formKey.currentState!.validate()) {
-                                    viewModel.login(
+                                    await viewModel.login(
                                       trimmedEmail,
                                       _passwordController.text,
                                     );

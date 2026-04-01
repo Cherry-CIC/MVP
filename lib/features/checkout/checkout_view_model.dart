@@ -1,4 +1,3 @@
-import 'package:cherry_mvp/core/config/app_strings.dart';
 import 'package:cherry_mvp/core/config/config.dart';
 import 'package:cherry_mvp/core/models/inpost_model.dart';
 import 'package:cherry_mvp/core/models/product.dart';
@@ -28,32 +27,7 @@ class CheckoutViewModel extends ChangeNotifier {
 
   final List<Product> _basketItems = [];
 
-  final List<InpostModel> _nearestInpost = [
-    InpostModel(
-      id: "002",
-      name: "Aldi Locker — Camden",
-      address: "Camden High Street, London",
-      postcode: "NW1 8QP",
-      lat: "51.5413",
-      long: "-0.1460",
-    ),
-    InpostModel(
-      id: "010",
-      name: "Aldi Locker — Deansgate",
-      address: "Deansgate, Manchester",
-      postcode: "M3 2BW",
-      lat: "53.4808",
-      long: "-2.2474",
-    ),
-    InpostModel(
-      id: "030",
-      name: "Aldi Locker — Temple Gate",
-      address: "Temple Gate, Bristol",
-      postcode: "BS1 6PL",
-      lat: "51.4490",
-      long: "-2.5830",
-    ),
-  ];
+  final List<InpostModel> _nearestInpost = [];
   List<InpostModel> get nearestInpost => _nearestInpost;
 
   InpostModel? selectedInpost;
@@ -314,27 +288,35 @@ class CheckoutViewModel extends ChangeNotifier {
 
     try {
       final result = await checkoutRepository.fetchNearestInPosts(postalCode);
+      final parsedInposts = result.isSuccess && result.value != null
+          ? _parseInpostList(result.value)
+          : const <InpostModel>[];
 
-      if (result.isSuccess && result.value != null) {
-        final parsedInposts = _parseInpostList(result.value);
-        if (parsedInposts.isNotEmpty) {
-          _nearestInpost
-            ..clear()
-            ..addAll(parsedInposts);
-        }
-      }
+      _nearestInpost
+        ..clear()
+        ..addAll(parsedInposts);
 
-      if (_nearestInpost.isNotEmpty) {
+      if (parsedInposts.isNotEmpty) {
         showLocker = true;
         _status = Status.success;
       } else {
+        showLocker = false;
         _status = Status.failure(
-          result.error ??
-              'Pickup points currently unavailable, please try again later',
+          result.isSuccess
+              ? 'Pickup points currently unavailable, please try again later'
+              : (result.error ??
+                    'Pickup points currently unavailable, please try again later'),
         );
-        _log.warning('Fetch nearest inPost locker failed: ${result.error}');
+        _log.warning(
+          result.isSuccess
+              ? 'Fetch nearest inPost locker returned an empty or invalid '
+                    'payload for postcode $postalCode'
+              : 'Fetch nearest inPost locker failed: ${result.error}',
+        );
       }
     } catch (e) {
+      showLocker = false;
+      _nearestInpost.clear();
       _status = Status.failure(e.toString());
       _log.severe('Fetch nearest inPost locker error:: $e');
     }
@@ -426,7 +408,12 @@ class CheckoutViewModel extends ChangeNotifier {
       },
       'created_at': DateTime.now().toIso8601String(),
     };
-    await checkoutRepository.storeOrderInFirestore(orderData);
+    try {
+      await checkoutRepository.storeOrderInFirestore(orderData);
+    } catch (e) {
+      _log.severe('Error storing order to firestore:: $e');
+      rethrow;
+    }
   }
 
   Future<bool> payWithPaymentSheet({required double amount}) async {

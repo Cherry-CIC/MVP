@@ -32,8 +32,9 @@ final class CheckoutRepository implements ICheckoutRepository {
       );
       if (result.isSuccess && result.value != null) {
         final data = result.value;
-
-        final jsonList = data['data'] ?? data;
+        final jsonList = data is Map<String, dynamic>
+            ? (data['data'] ?? data['lockers'] ?? data['items'] ?? data)
+            : data;
         //<List<Locker>>
         // final categories =
         //     jsonList.map((json) => Category.fromJson(json)).toList();
@@ -60,12 +61,18 @@ final class CheckoutRepository implements ICheckoutRepository {
       FirestoreConstants.long: data.long,
     };
 
-    await _firestoreService.saveDocument(
+    final result = await _firestoreService.saveDocument(
       FirestoreConstants.orders,
       FirestoreConstants.pickup,
       lockerData,
       isOrder: true,
     );
+
+    if (!result.isSuccess) {
+      throw StateError(
+        result.error ?? 'Unable to store pickup locker in Firestore.',
+      );
+    }
   }
 
   @override
@@ -79,12 +86,17 @@ final class CheckoutRepository implements ICheckoutRepository {
       'updated_at': DateTime.now().toIso8601String(),
     };
 
-    await _firestoreService.saveDocument(
+  
+    final result = await _firestoreService.saveDocument(
       FirestoreConstants.orders,
       orderId,
       payload,
       isOrder: false,
     );
+
+    if (!result.isSuccess) {
+      throw StateError(result.error ?? 'Unable to store order in Firestore.');
+    }
   }
 
   @override

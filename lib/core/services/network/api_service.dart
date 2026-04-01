@@ -1,9 +1,9 @@
 import 'dart:async';
+import 'package:cherry_mvp/core/config/environment_config.dart';
 import 'package:dio/dio.dart';
 import 'package:cherry_mvp/core/services/error_string.dart';
 import 'package:cherry_mvp/core/utils/result.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:logging/logging.dart';
 import 'package:pretty_dio_logger/pretty_dio_logger.dart';
 
@@ -18,8 +18,9 @@ abstract class ApiService {
 }
 
 class DioApiService implements ApiService {
-  static const String _defaultApiBaseUrl =
-      'https://cherry-backend-401854471349.europe-west2.run.app';
+  static const Duration _authTokenTimeout = Duration(seconds: 8);
+  static const int _maxRetryAttempts = 1;
+  static const String _retryAttemptKey = 'retry_attempt';
 
   late final Dio _dio;
   final FirebaseAuth _firebaseAuth;
@@ -27,14 +28,14 @@ class DioApiService implements ApiService {
 
   DioApiService({FirebaseAuth? firebaseAuth})
     : _firebaseAuth = firebaseAuth ?? FirebaseAuth.instance {
-    // Simple resolution: use .env if it exists, otherwise use default
-    final baseUrl = dotenv.env['API_BASE_URL'] ?? _defaultApiBaseUrl;
+    final baseUrl = AppEnvironment.apiBaseUrl;
 
     _dio = Dio(
       BaseOptions(
-        baseUrl: _stripTrailingSlash(baseUrl),
+        baseUrl: baseUrl,
         connectTimeout: const Duration(seconds: 15),
         receiveTimeout: const Duration(seconds: 15),
+        sendTimeout: const Duration(seconds: 15),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
@@ -42,7 +43,7 @@ class DioApiService implements ApiService {
       ),
     );
 
-    _log.info('API initialized with base URL: ${_dio.options.baseUrl}');
+    _log.info('API initialised with base URL: ${_dio.options.baseUrl}');
     _setupInterceptors();
   }
 
@@ -51,27 +52,35 @@ class DioApiService implements ApiService {
       InterceptorsWrapper(
         onRequest: (options, handler) async {
           try {
-            final user = _firebaseAuth.currentUser;
-            if (user != null) {
-              // Get token with a short timeout to prevent "infinite loading" if Firebase hangs
-              final idToken = await user.getIdToken().timeout(
-                const Duration(seconds: 3),
-                onTimeout: () {
-                  _log.warning(
-                    'Firebase token fetch timed out, proceeding without auth header',
-                  );
-                  return '';
-                },
-              );
-
-              if (idToken.isNotEmpty) {
-                options.headers['Authorization'] = 'Bearer $idToken';
-              }
-            }
+            await _attachAuthHeader(options);
+          } on TimeoutException catch (e) {
+            _log.severe(
+              'Timed out retrieving Firebase ID token for ${options.path}: $e',
+            );
+          } on FirebaseAuthException catch (e) {
+            _log.severe(
+              'Firebase auth error retrieving token for ${options.path}: '
+              '${e.code}',
+            );
           } catch (e) {
-            _log.warning('Error attaching auth token: $e');
+            _log.warning('Auth interceptor error for ${options.path}: $e');
           }
           return handler.next(options);
+        },
+        onError: (error, handler) async {
+          if (error.response?.statusCode == 401) {
+            _log.warning(
+              'Unauthorized access to ${error.requestOptions.method} '
+              '${error.requestOptions.path}',
+            );
+          }
+
+          final retryResponse = await _retryRequestIfSafe(error);
+          if (retryResponse != null) {
+            return handler.resolve(retryResponse);
+          }
+
+          return handler.next(error);
         },
       ),
     );
@@ -93,102 +102,102 @@ class DioApiService implements ApiService {
     Map<String, dynamic>? queryParameters,
   }) async {
     try {
-      final resolvedEndpoint = _resolveEndpoint(endpoint);
       final response = await _dio.get(
-        resolvedEndpoint,
+        endpoint,
         queryParameters: queryParameters,
       );
       return Result.success(response.data as T);
     } on DioException catch (e) {
-      _log.severe('GET $endpoint failed: ${e.message}');
       return Result.failure(_handleDioError(e));
-    } catch (e, stackTrace) {
-      _log.severe('GET $endpoint unexpected error: $e', e, stackTrace);
-      return Result.failure(_handleUnexpectedError(e));
+    } catch (e) {
+      _log.severe('Unexpected error in GET $endpoint: $e');
+      return Result.failure(ErrorStrings.friendlyError);
     }
   }
 
   @override
   Future<Result<T>> post<T>(String endpoint, {dynamic data}) async {
     try {
-      final resolvedEndpoint = _resolveEndpoint(endpoint);
-      final response = await _dio.post(resolvedEndpoint, data: data);
+      final response = await _dio.post(endpoint, data: data);
       return Result.success(response.data as T);
     } on DioException catch (e) {
       return Result.failure(_handleDioError(e));
-    } catch (e, stackTrace) {
-      _log.severe('POST $endpoint unexpected error: $e', e, stackTrace);
-      return Result.failure(_handleUnexpectedError(e));
+    } catch (e) {
+      _log.severe('Unexpected error in POST $endpoint: $e');
+      return Result.failure(ErrorStrings.friendlyError);
     }
   }
 
   @override
   Future<Result<T>> put<T>(String endpoint, {dynamic data}) async {
     try {
-      final resolvedEndpoint = _resolveEndpoint(endpoint);
-      final response = await _dio.put(resolvedEndpoint, data: data);
+      final response = await _dio.put(endpoint, data: data);
       return Result.success(response.data as T);
     } on DioException catch (e) {
       return Result.failure(_handleDioError(e));
-    } catch (e, stackTrace) {
-      _log.severe('PUT $endpoint unexpected error: $e', e, stackTrace);
-      return Result.failure(_handleUnexpectedError(e));
+    } catch (e) {
+      _log.severe('Unexpected error in PUT $endpoint: $e');
+      return Result.failure(ErrorStrings.friendlyError);
     }
   }
 
   @override
   Future<Result<T>> delete<T>(String endpoint) async {
     try {
-      final resolvedEndpoint = _resolveEndpoint(endpoint);
-      final response = await _dio.delete(resolvedEndpoint);
+      final response = await _dio.delete(endpoint);
       return Result.success(response.data as T);
     } on DioException catch (e) {
       return Result.failure(_handleDioError(e));
-    } catch (e, stackTrace) {
-      _log.severe('DELETE $endpoint unexpected error: $e', e, stackTrace);
-      return Result.failure(_handleUnexpectedError(e));
+    } catch (e) {
+      _log.severe('Unexpected error in DELETE $endpoint: $e');
+      return Result.failure(ErrorStrings.friendlyError);
     }
   }
 
   String _handleDioError(DioException e) {
-    if (e.type == DioExceptionType.connectionTimeout ||
-        e.type == DioExceptionType.receiveTimeout) {
-      return ErrorStrings.timeoutError;
-    }
-    if (e.type == DioExceptionType.connectionError) {
-      return ErrorStrings.networkError;
+    _log.warning('DioException occurred: ${e.type} - ${e.message}');
+
+    switch (e.type) {
+      case DioExceptionType.connectionTimeout:
+      case DioExceptionType.sendTimeout:
+      case DioExceptionType.receiveTimeout:
+        return ErrorStrings.timeoutError;
+      case DioExceptionType.badCertificate:
+        return ErrorStrings.serverError;
+      case DioExceptionType.cancel:
+        return ErrorStrings.friendlyError;
+      case DioExceptionType.connectionError:
+      case DioExceptionType.unknown:
+        return ErrorStrings.networkError;
+      case DioExceptionType.badResponse:
+        return _handleBadResponse(e);
     }
 
+  String _handleBadResponse(DioException e) {
     final statusCode = e.response?.statusCode;
-    if (statusCode == 401 || statusCode == 403) {
-      return ErrorStrings.unauthorizedError;
-    }
-    if (statusCode != null && statusCode >= 500) {
-      return ErrorStrings.serverError;
-    }
+    final data = e.response?.data;
 
-    final responseData = e.response?.data;
-    if (responseData is Map<String, dynamic>) {
-      final message = responseData['message']?.toString();
-      if (message != null && message.trim().isNotEmpty) {
-        return message.trim();
-      }
-      final error = responseData['error']?.toString();
-      if (error != null && error.trim().isNotEmpty) {
-        return error.trim();
-      }
-    }
+    _log.warning('Bad response: $statusCode - $data');
 
-    return ErrorStrings.networkError;
-  }
-
-  String _handleUnexpectedError(Object error) {
-    if (error is TypeError || error is CastError) {
-      return ErrorStrings.apiError;
-    }
-
-    if (error is FormatException) {
-      return ErrorStrings.apiError;
+    switch (statusCode) {
+      case 400:
+      case 403:
+      case 404:
+      case 422:
+      case 429:
+        final serverMessage = _extractErrorMessage(data);
+        if (serverMessage != null) {
+          _log.info('Server validation error: $serverMessage');
+        }
+        return ErrorStrings.apiError;
+      case 401:
+        return ErrorStrings.unauthorizedError;
+      case 500:
+      case 502:
+      case 503:
+        return ErrorStrings.serverError;
+      default:
+        return ErrorStrings.friendlyError;
     }
 
     final message = error.toString().trim();
@@ -199,25 +208,70 @@ class DioApiService implements ApiService {
     return message;
   }
 
-  String _stripTrailingSlash(String url) {
-    return url.endsWith('/') ? url.substring(0, url.length - 1) : url;
+  Future<void> _attachAuthHeader(RequestOptions options) async {
+    final user = _firebaseAuth.currentUser;
+    if (user == null) {
+      return;
+    }
+
+    final idToken = await user.getIdToken().timeout(_authTokenTimeout);
+    final trimmedToken = (idToken ?? '').trim();
+
+    if (trimmedToken.isEmpty) {
+      throw StateError('Firebase returned an empty ID token.');
+    }
+
+    options.headers['Authorization'] = 'Bearer $trimmedToken';
   }
 
-  String _resolveEndpoint(String endpoint) {
-    final trimmed = endpoint.trim();
-    if (trimmed.isEmpty) return trimmed;
-
-    if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
-      return trimmed;
+  Future<Response<dynamic>?> _retryRequestIfSafe(DioException error) async {
+    if (!_shouldRetry(error)) {
+      return null;
     }
 
-    final normalised = trimmed.startsWith('/') ? trimmed : '/$trimmed';
-    final basePath = Uri.parse(_dio.options.baseUrl).path;
-
-    if (basePath.endsWith('/api') && normalised.startsWith('/api/')) {
-      return normalised.substring(4);
+    final requestOptions = error.requestOptions;
+    if (!_isRetryableMethod(requestOptions.method)) {
+      return null;
     }
 
-    return normalised;
+    final attempt = (requestOptions.extra[_retryAttemptKey] as int?) ?? 0;
+    if (attempt >= _maxRetryAttempts) {
+      return null;
+    }
+
+    requestOptions.extra[_retryAttemptKey] = attempt + 1;
+    _log.info(
+      'Retrying ${requestOptions.method} ${requestOptions.path} '
+      '(attempt ${attempt + 1})',
+    );
+
+    try {
+      return await _dio.fetch<dynamic>(requestOptions);
+    } on DioException catch (retryError) {
+      _log.warning(
+        'Retry failed for ${requestOptions.method} ${requestOptions.path}: '
+        '${retryError.message}',
+      );
+      return null;
+    }
+  }
+
+  bool _shouldRetry(DioException error) {
+    switch (error.type) {
+      case DioExceptionType.connectionTimeout:
+      case DioExceptionType.sendTimeout:
+      case DioExceptionType.receiveTimeout:
+      case DioExceptionType.connectionError:
+        return true;
+      case DioExceptionType.badCertificate:
+      case DioExceptionType.badResponse:
+      case DioExceptionType.cancel:
+      case DioExceptionType.unknown:
+        return false;
+    }
+  }
+
+  bool _isRetryableMethod(String method) {
+    return method.toUpperCase() == 'GET';
   }
 }

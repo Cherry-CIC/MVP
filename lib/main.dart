@@ -1,6 +1,10 @@
 import 'package:cherry_mvp/core/config/app_theme.dart';
+import 'package:cherry_mvp/core/config/environment_config.dart';
 import 'package:cherry_mvp/features/welcome/widgets/auth_gate.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'core/utils/utils.dart';
 import 'package:flutter/material.dart';
@@ -14,10 +18,39 @@ void main() async {
 
   /// Load environment variables
   await dotenv.load();
+
   await Firebase.initializeApp();
+  await _configureFirebaseEmulators();
+
   SharedPreferences prefs = await SharedPreferences.getInstance();
 
   runApp(MultiProvider(providers: [...buildProviders(prefs)], child: MyApp()));
+}
+
+Future<void> _configureFirebaseEmulators() async {
+  if (!kDebugMode) {
+    return;
+  }
+
+  final emulatorConfig = AppEnvironment.firebaseEmulatorConfig;
+  if (emulatorConfig == null) {
+    return;
+  }
+
+  await FirebaseAuth.instance.useAuthEmulator(
+    emulatorConfig.host,
+    emulatorConfig.authPort,
+  );
+  FirebaseFirestore.instance.useFirestoreEmulator(
+    emulatorConfig.host,
+    emulatorConfig.firestorePort,
+  );
+
+  debugPrint(
+    'Firebase emulators enabled on ${emulatorConfig.host} '
+    '(auth: ${emulatorConfig.authPort}, '
+    'firestore: ${emulatorConfig.firestorePort})',
+  );
 }
 
 class MyApp extends StatelessWidget {

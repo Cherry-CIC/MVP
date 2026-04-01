@@ -4,6 +4,9 @@ class ApiEndpoints {
   static const String products = '$_apiPrefix/products';
   static const String productsWithDetails = '$_apiPrefix/products/with-details';
 
+  // Auth sync
+  static const String authSync = '$_apiPrefix/auth/sync';
+
   // Versioned endpoints (if we need API versioning)
   static const String apiVersion = 'v1';
   static String versioned(String endpoint) => '/$apiVersion$endpoint';

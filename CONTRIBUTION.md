@@ -75,13 +75,33 @@ git checkout -b feature-new-feature
 
 ### Step 3: Create a .env file
 
-- Create a .env file in the root directory and update it with:
+- Copy the example file and update it for your setup:
+
+```shell
+cp .env.example .env
+```
+
+- Minimum required values:
 
 ```shell
 API_BASE_URL=https://cherry-backend-401854471349.europe-west2.run.app
 
 USE_MOCK_DATA=false
 ```
+
+- Add `GOOGLE_API_KEY` if you want shipping address autocomplete to work during local testing.
+
+- Optional local Firebase emulator values for debug builds only:
+
+```shell
+USE_FIREBASE_EMULATORS=false
+FIREBASE_EMULATOR_HOST=localhost
+FIREBASE_AUTH_EMULATOR_PORT=9099
+FIRESTORE_EMULATOR_PORT=8080
+```
+
+- `API_BASE_URL` should be the backend root URL. Do not add `/api`, because the app already prefixes API routes.
+- If you are using Android emulators with Firebase emulators, set `FIREBASE_EMULATOR_HOST=10.0.2.2`. On physical devices, use your machine’s local network IP.
 
 ### Step 4: Install Dependencies
 
