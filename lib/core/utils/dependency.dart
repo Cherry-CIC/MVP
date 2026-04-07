@@ -35,20 +35,22 @@ List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
   // Configuration flag - reads from environment variable
   final bool useMockData = dotenv.env['USE_MOCK_DATA'] == 'true';
   return [
+    Provider<FirebaseAuth>(create: (_) => FirebaseAuth.instance),
+    Provider<FirebaseFirestore>(create: (_) => FirebaseFirestore.instance),
     Provider(create: (_) => NavigationProvider()),
     ChangeNotifierProvider(create: (_) => ThemeNotifier(prefs)),
 
     // Add API Service
     Provider<ApiService>(
-      create: (_) => DioApiService(firebaseAuth: FirebaseAuth.instance),
+      create: (context) => DioApiService(firebaseAuth: Provider.of<FirebaseAuth>(context, listen: false)),
     ),
 
     Provider<FirebaseAuthService>(
-      create: (_) => FirebaseAuthService(firebaseAuth: FirebaseAuth.instance),
+      create: (context) => FirebaseAuthService(firebaseAuth: Provider.of<FirebaseAuth>(context, listen: false)),
     ),
     Provider<FirestoreService>(
-      create: (_) => FirestoreService(
-        firebaseFirestore: FirebaseFirestore.instance,
+      create: (context) => FirestoreService(
+        firebaseFirestore: Provider.of<FirebaseFirestore>(context, listen: false),
         prefs: prefs,
         firebaseAuth: FirebaseAuth.instance,
       ),
@@ -95,7 +97,7 @@ List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
               context,
               listen: false,
             ),
-            firebaseAuth: FirebaseAuth.instance,
+            firebaseAuth: Provider.of<FirebaseAuth>(context, listen: false),
           );
         }
       },
@@ -193,6 +195,8 @@ List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
       create: (context) => AuthViewModel(
         loginRepository: Provider.of<LoginRepository>(context, listen: false),
         navigator: Provider.of<NavigationProvider>(context, listen: false),
+        firebaseAuth: Provider.of<FirebaseAuth>(context, listen: false),
+        firestore: Provider.of<FirebaseFirestore>(context, listen: false),
       ),
     ),
   ];

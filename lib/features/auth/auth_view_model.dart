@@ -10,13 +10,19 @@ import 'package:cherry_mvp/features/login/login_repository.dart';
 class AuthViewModel extends ChangeNotifier {
   final LoginRepository loginRepository;
   final NavigationProvider navigator;
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseAuth firebaseAuth;
+  final FirebaseFirestore firestore;
 
-  AuthViewModel({required this.loginRepository, required this.navigator});
+  AuthViewModel({
+    required this.loginRepository,
+    required this.navigator,
+    required this.firebaseAuth,
+    required this.firestore,
+  });
 
   Status _status = Status.uninitialized;
   Status get status => _status;
-  User? get currentUser => FirebaseAuth.instance.currentUser;
+  User? get currentUser => firebaseAuth.currentUser;
 
   UserCredentials? userCredentials;
   bool isLoadingUser = false;
@@ -27,7 +33,7 @@ class AuthViewModel extends ChangeNotifier {
     isLoadingUser = true;
     notifyListeners();
 
-    final doc = await _firestore.collection('users').doc(currentUser!.uid).get();
+    final doc = await firestore.collection('users').doc(currentUser!.uid).get();
 
     if (doc.exists) {
       userCredentials = UserCredentials.fromFirestore(
