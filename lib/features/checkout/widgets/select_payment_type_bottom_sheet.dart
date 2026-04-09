@@ -8,20 +8,20 @@ class SelectPaymentTypeBottomSheet extends StatefulWidget {
   const SelectPaymentTypeBottomSheet({super.key});
 
   @override
-  State<SelectPaymentTypeBottomSheet> createState() =>
-      _SelectPaymentTypeBottomSheetState();
+  State<SelectPaymentTypeBottomSheet> createState() =>   _SelectPaymentTypeBottomSheetState();
 }
 
-class _SelectPaymentTypeBottomSheetState
-    extends State<SelectPaymentTypeBottomSheet> {
+class _SelectPaymentTypeBottomSheetState extends State<SelectPaymentTypeBottomSheet> {
+  PaymentType? _selected;
+
   @override
   Widget build(BuildContext context) {
     return Consumer<CheckoutViewModel>(
       builder: (context, vm, _) {
-        final selected = vm.selectedPaymentType;
-
+        //final selected = vm.selectedPaymentType;
+    
         return BottomSheet(
-          backgroundColor: Theme.of(context).colorScheme.onTertiary,
+          backgroundColor:  Theme.of(context).colorScheme.onTertiary,
           onClosing: () {},
           shape: const BeveledRectangleBorder(),
           builder: (context) => Column(
@@ -30,8 +30,7 @@ class _SelectPaymentTypeBottomSheetState
             children: [
               Container(
                 decoration: BoxDecoration(
-                  color:
-                      Theme.of(context).colorScheme.secondaryContainer,
+                  color: Theme.of(context).colorScheme.secondaryContainer
                 ),
                 padding: const EdgeInsets.symmetric(
                   horizontal: 16,
@@ -43,37 +42,34 @@ class _SelectPaymentTypeBottomSheetState
                   style: Theme.of(context).textTheme.headlineSmall,
                 ),
               ),
-
               ListTile(
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 20),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 20),
                 title: Text(AppStrings.paymentMethodsInfo),
-                titleTextStyle:
-                    Theme.of(context).textTheme.labelSmall,
-                textColor:
-                    Theme.of(context).colorScheme.onSurfaceVariant,
+                titleTextStyle: Theme.of(context).textTheme.labelSmall,
+                textColor: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
+              Divider(height: 1, color: AppColors.grey,),
 
-              Divider(height: 1, color: AppColors.grey),
-              const SizedBox(height: 30),
-
-              /// CARD
+              const SizedBox(height: 30,),
               ListTile(
                 leading: const Icon(Icons.credit_card),
                 title: Text(AppStrings.paymentMethodsCard),
                 trailing: Radio<PaymentType>(
-                  value: PaymentType.card,
-                  groupValue: selected,
-                  onChanged: (value) =>
-                      vm.setPaymentType(value!),
+                  value: PaymentType.card,   
+                  groupValue: vm.selectedPaymentType ,
+                  onChanged: (value) {
+                    vm.setPaymentType(value!);
+                    setState(() => _selected = value);
+                  },             
                 ),
-                onTap: () =>
-                    vm.setPaymentType(PaymentType.card),
+                onTap: () {
+                  vm.setPaymentType(PaymentType.card);
+                  _selected = PaymentType.card;
+                } 
               ),
+              Divider(height: 1, color: AppColors.grey,),
 
-              Divider(height: 1, color: AppColors.grey),
-
-              /// GOOGLE PAY
+              // Google Pay
               ListTile(
                 leading: Image.asset(
                   AppImages.paymentMethodsGoogleIcon,
@@ -83,17 +79,20 @@ class _SelectPaymentTypeBottomSheetState
                 title: Text(AppStrings.paymentMethodsGooglePay),
                 trailing: Radio<PaymentType>(
                   value: PaymentType.google,
-                  groupValue: selected,
-                  onChanged: (value) =>
-                      vm.setPaymentType(value!),
+                  groupValue: vm.selectedPaymentType ,
+                  onChanged: (value) {
+                    vm.setPaymentType(value!);
+                    setState(() => _selected = value);
+                  },
                 ),
-                onTap: () =>
-                    vm.setPaymentType(PaymentType.google),
+                onTap: () {
+                  vm.setPaymentType(PaymentType.google);
+                  _selected = PaymentType.google;
+                } 
               ),
+              Divider(height: 1, color: AppColors.grey,),
 
-              Divider(height: 1, color: AppColors.grey),
-
-              /// APPLE PAY
+              // Apple Pay
               ListTile(
                 leading: Image.asset(
                   AppImages.paymentMethodsAppleIcon,
@@ -103,45 +102,40 @@ class _SelectPaymentTypeBottomSheetState
                 title: Text(AppStrings.paymentMethodsApplePay),
                 trailing: Radio<PaymentType>(
                   value: PaymentType.apple,
-                  groupValue: selected,
-                  onChanged: (value) =>
-                      vm.setPaymentType(value!),
+                  groupValue: vm.selectedPaymentType ,
+                  onChanged: (value) {
+                    vm.setPaymentType(value!);
+                    setState(() => _selected = value);
+                  },
                 ),
-                onTap: () =>
-                    vm.setPaymentType(PaymentType.apple),
+                onTap: () {
+                  vm.setPaymentType(PaymentType.apple);
+                  _selected = PaymentType.apple;
+                } 
               ),
-
-              Divider(height: 1, color: AppColors.grey),
+              Divider(height: 1, color: AppColors.grey,),
               const SizedBox(height: 32),
 
               Container(
                 height: 48,
                 width: double.infinity,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: FilledButton(
                   style: FilledButton.styleFrom(
-                    foregroundColor:
-                        Theme.of(context).colorScheme.surface,
-                    backgroundColor:
-                        Theme.of(context).colorScheme.onSurface,
+                    foregroundColor: Theme.of(context).colorScheme.surface,
+                    backgroundColor: Theme.of(context).colorScheme.onSurface,
                   ),
-                  onPressed: selected != null
-                      ? () =>
-                          Navigator.pop(context, selected)
+                  onPressed: _selected != null
+                      ? () => Navigator.pop(context, _selected)
                       : null,
                   child: Text(AppStrings.continueText),
                 ),
               ),
-
-              SizedBox(
-                height:
-                    MediaQuery.of(context).padding.bottom + 16,
-              ),
+              SizedBox(height: MediaQuery.of(context).padding.bottom + 16),
             ],
-          ),
+          )
         );
-      },
+      }
     );
   }
 }

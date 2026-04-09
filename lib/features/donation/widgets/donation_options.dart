@@ -37,8 +37,8 @@ class DonationOptions extends StatelessWidget {
           subtitle: Text(
             '${AppStrings.giveYourBuyerText}\n${AppStrings.easyWayText}',
             style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
           ),
         ),
         Padding(
@@ -57,15 +57,13 @@ class DonationOptions extends StatelessWidget {
                 onChanged: toggleSwitchOpenToOffer ?? (value) {},
               ),
               DonationOption(
-                labelText: isSwitchedApplicableBuyerDiscounts
-                    ? AppStrings.donorDiscountsActiveText
-                    : AppStrings.donorDiscountsInactiveText,
+                labelText: AppStrings.applicableForBuyerDiscountsText,
                 value: isSwitchedApplicableBuyerDiscounts,
                 onChanged: toggleSwitchApplicableBuyerDiscounts ?? (value) {},
               ),
             ],
           ),
-        ),
+        )
       ],
     );
   }
