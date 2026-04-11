@@ -29,6 +29,9 @@ class CheckoutViewModel extends ChangeNotifier {
 
   final List<Product> _basketItems = [];
 
+  final List<InpostModel> _nearestInpost = [];
+  List<InpostModel> get nearestInpost => _nearestInpost;
+
   final List<CourierModel> _couriers = [
     CourierModel(id: 'inpost', name: 'InPost'),
     CourierModel(id: 'yodel', name: 'Yodel'),
