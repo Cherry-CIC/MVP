@@ -18,8 +18,6 @@ class FirestoreService {
 
   String? get currentUserId => _resolveCurrentUserId();
 
-  String? get currentUserId => _resolveCurrentUserId();
-
   Future<Result<DocumentSnapshot>> getDocument(
     String collectionName,
     String documentId, {
@@ -39,10 +37,7 @@ class FirestoreService {
             .doc(uid)
             .get();
       } else {
-        documentSnapshot = await firebaseFirestore
-            .collection(collectionName)
-            .doc(documentId)
-            .get();
+        documentSnapshot = await firebaseFirestore.collection(collectionName).doc(documentId).get();
       }
 
       if (documentSnapshot.exists) {
@@ -74,10 +69,7 @@ class FirestoreService {
             .doc(uid)
             .set(data);
       } else {
-        await firebaseFirestore
-            .collection(collectionName)
-            .doc(documentId)
-            .set(data);
+        await firebaseFirestore.collection(collectionName).doc(documentId).set(data);
       }
 
       return Result.success(null);
@@ -101,10 +93,7 @@ class FirestoreService {
     String userId,
   ) async {
     try {
-      final querySnapshot = await firebaseFirestore
-          .collection('products')
-          .where('userId', isEqualTo: userId)
-          .get();
+      final querySnapshot = await firebaseFirestore.collection('products').where('userId', isEqualTo: userId).get();
       return Result.success(querySnapshot.docs);
     } catch (e) {
       return Result.failure(e.toString());
@@ -117,10 +106,7 @@ class FirestoreService {
     required dynamic value,
   }) async {
     try {
-      final query = await firebaseFirestore
-          .collection(collectionPath)
-          .where(field, isEqualTo: value)
-          .get();
+      final query = await firebaseFirestore.collection(collectionPath).where(field, isEqualTo: value).get();
 
       return Result.success(query.docs);
     } catch (e) {
