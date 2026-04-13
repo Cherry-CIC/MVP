@@ -32,8 +32,10 @@ class ShippingListItem<T> extends StatelessWidget {
           groupValue: groupValue,
           onChanged: onChanged,
         ),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        onTap: () => onChanged?.call(value),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        onTap: () => onChanged?.call(groupValue),
       ),
     );
   }

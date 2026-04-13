@@ -22,28 +22,17 @@ class UserInformationSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<AuthViewModel>(
       builder: (context, auth, _) {
-        final username = auth.userCredentials?.username?.trim();
-        final firstName = auth.userCredentials?.firstname?.trim();
-        final email = auth.userCredentials?.email?.trim();
-        final emailName = (email != null && email.contains('@'))
-            ? email.split('@').first
-            : email;
-
-        final name = (username != null && username.isNotEmpty)
-            ? username
-            : (firstName != null && firstName.isNotEmpty)
-            ? firstName
-            : (emailName != null && emailName.isNotEmpty)
-            ? emailName
-            : 'User';
-
+        final name =
+            auth.userCredentials?.firstname ?? auth.userCredentials?.email;
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             /// Top Greeting Row
             ListTile(
               contentPadding: EdgeInsets.zero,
-              title: Text("${AppStrings.greeting}, $name!"),
+              title: Text(
+                "${AppStrings.greeting}${name != null && name.isNotEmpty ? ', $name' : ''}!",
+              ),
               titleTextStyle: Theme.of(context).textTheme.titleLarge,
               trailing: IconButton(
                 onPressed: onSettingsPressed,
@@ -59,7 +48,7 @@ class UserInformationSection extends StatelessWidget {
                 height: 48,
                 width: 48,
               ),
-              title: Text(name),
+              title: Text(name ?? ""),
               titleTextStyle: Theme.of(context).textTheme.titleSmall,
               subtitle: Row(
                 spacing: 16,

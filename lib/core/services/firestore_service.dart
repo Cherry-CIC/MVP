@@ -18,8 +18,6 @@ class FirestoreService {
 
   String? get currentUserId => _resolveCurrentUserId();
 
-  String? get currentUserId => _resolveCurrentUserId();
-
   Future<Result<DocumentSnapshot>> getDocument(
     String collectionName,
     String documentId, {

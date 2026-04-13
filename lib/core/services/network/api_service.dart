@@ -172,6 +172,7 @@ class DioApiService implements ApiService {
       case DioExceptionType.badResponse:
         return _handleBadResponse(e);
     }
+  }
 
   String _handleBadResponse(DioException e) {
     final statusCode = e.response?.statusCode;
@@ -199,13 +200,13 @@ class DioApiService implements ApiService {
       default:
         return ErrorStrings.friendlyError;
     }
+  }
 
-    final message = error.toString().trim();
-    if (message.isEmpty) {
-      return ErrorStrings.apiError;
+  String? _extractErrorMessage(dynamic data) {
+    if (data is Map<String, dynamic>) {
+      return data['message'] ?? data['error'] ?? data['detail'];
     }
-
-    return message;
+    return null;
   }
 
   Future<void> _attachAuthHeader(RequestOptions options) async {
