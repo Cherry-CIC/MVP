@@ -8,11 +8,11 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  firebase_core: ^4.6.0
-  firebase_auth: ^6.3.0
-  firebase_storage: ^13.2.0
-  cloud_firestore: ^6.2.0
-  cloud_functions: ^6.1.0
+  firebase_core: ^4.7.0
+  firebase_auth: ^6.4.0
+  firebase_storage: ^13.3.0
+  cloud_firestore: ^6.3.0
+  cloud_functions: ^6.2.0
   cupertino_icons: ^1.0.9
   shared_preferences: ^2.5.5
   provider: ^6.1.5+1
@@ -29,7 +29,7 @@ dependencies:
   pretty_dio_logger: ^1.4.0
   json_annotation: ^4.11.0
   http: ^1.6.0
-  flutter_stripe: ^12.5.0
+  flutter_stripe: ^12.6.0
 
 dev_dependencies:
   flutter_test:
