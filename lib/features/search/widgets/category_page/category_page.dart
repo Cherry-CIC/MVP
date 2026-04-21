@@ -1,14 +1,12 @@
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:cherry_mvp/core/config/config.dart';
+import 'package:cherry_mvp/core/models/category.dart';
 import 'package:cherry_mvp/core/utils/utils.dart';
 import 'package:cherry_mvp/features/categories/category_view_model.dart';
 import 'package:cherry_mvp/features/categories/widget/category_empty_widget.dart';
 import 'package:cherry_mvp/features/categories/widget/category_error_widget.dart';
 import 'package:cherry_mvp/features/search/widgets/category_tile_widget.dart';
-import 'package:flutter/material.dart';
-import 'package:cherry_mvp/core/config/app_images.dart';
-import 'package:cherry_mvp/core/config/config.dart';
-import 'package:provider/provider.dart';
-
-import 'package:cherry_mvp/core/models/category.dart';
 
 class CategoryPage extends StatefulWidget {
   const CategoryPage({
@@ -44,7 +42,7 @@ class CategoryPageState extends State<CategoryPage> {
 
   void _handleCategoryTap(Category category) {
     if (widget.selectionMode) {
-      Navigator.of(context).pop(category);
+      context.read<CategoryViewModel>().goBack(category);
     }
   }
 
@@ -90,9 +88,7 @@ class CategoryPageState extends State<CategoryPage> {
             return ListView.separated(
               itemBuilder: (BuildContext context, int index) {
                 final category = categories[index];
-                final isSelected =
-                    widget.initialCategoryId != null &&
-                    category.id == widget.initialCategoryId;
+                final isSelected = widget.initialCategoryId != null && category.id == widget.initialCategoryId;
 
                 return Padding(
                   padding: const EdgeInsets.symmetric(vertical: 10),

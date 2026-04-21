@@ -1,8 +1,9 @@
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:cherry_mvp/core/config/app_colors.dart';
 import 'package:cherry_mvp/core/config/app_images.dart';
 import 'package:cherry_mvp/core/models/model.dart';
-import 'package:cherry_mvp/features/checkout/purchase_security.dart';
-import 'package:flutter/material.dart';
+import 'package:cherry_mvp/features/products/product_viewmodel.dart';
 
 class ProductInformation extends StatelessWidget {
   final Product product;
@@ -10,19 +11,11 @@ class ProductInformation extends StatelessWidget {
 
   const ProductInformation({super.key, required this.product, this.padding});
 
-  void _showPurchaseSecurity(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => const PurchaseSecurity(),
-        fullscreenDialog: true,
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: padding ??
+      padding:
+          padding ??
           const EdgeInsets.symmetric(
             horizontal: 16.0,
             vertical: 8.0,
@@ -36,31 +29,31 @@ class ProductInformation extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               GestureDetector(
-                onTap: () => _showPurchaseSecurity(context),
+                onTap: () => context.read<ProductViewModel>().showPurchaseSecurity(),
                 child: SizedBox(
                   width: 110,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('£${product.donation.toStringAsFixed(2)}',
-                          style: TextStyle(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onSurfaceVariant)),
+                      Text(
+                        '£${product.donation.toStringAsFixed(2)}',
+                        style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                      ),
                       const SizedBox(height: 2),
                       Row(
                         children: [
-                          Text('£${product.price.toStringAsFixed(2)}',
-                              style: TextStyle(
-                                  color: Theme.of(context).colorScheme.primary)),
+                          Text(
+                            '£${product.price.toStringAsFixed(2)}',
+                            style: TextStyle(color: Theme.of(context).colorScheme.primary),
+                          ),
                           const SizedBox(width: 4),
                           Image.asset(
                             AppImages.shieldTick,
                             width: 16,
                             height: 16,
-                          )
+                          ),
                         ],
-                      )
+                      ),
                     ],
                   ),
                 ),
@@ -68,21 +61,18 @@ class ProductInformation extends StatelessWidget {
               const SizedBox(width: 16),
               SizedBox(
                 width: 48,
-                child: Text(product.size,
-                    style: TextStyle(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant)),
+                child: Text(product.size, style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
               ),
               const SizedBox(width: 16),
               Expanded(
-                child: Text(product.quality,
-                    style: const TextStyle(color: AppColors.green)),
+                child: Text(product.quality, style: const TextStyle(color: AppColors.green)),
               ),
               Icon(
                 Icons.workspace_premium,
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ],
-          )
+          ),
         ],
       ),
     );

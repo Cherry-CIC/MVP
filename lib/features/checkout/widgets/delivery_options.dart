@@ -1,11 +1,14 @@
 // ignore_for_file: unnecessary_const
 
+import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:provider/provider.dart';
 import 'package:cherry_mvp/core/config/config.dart';
 import 'package:cherry_mvp/core/utils/utils.dart';
 import 'package:cherry_mvp/features/checkout/checkout_view_model.dart';
+import 'package:cherry_mvp/features/checkout/constants/address_constants.dart';
 import 'package:cherry_mvp/features/checkout/payment_type.dart';
 import 'package:cherry_mvp/features/checkout/widgets/outlined.dart';
-import 'package:cherry_mvp/features/checkout/purchase_security.dart';
 import 'package:cherry_mvp/features/checkout/widgets/pickup_points_empty_widget.dart';
 import 'package:cherry_mvp/features/checkout/widgets/pickup_points_error_widget.dart';
 import 'package:cherry_mvp/features/checkout/widgets/pickup_points_loading_widget.dart';
@@ -14,10 +17,6 @@ import 'package:cherry_mvp/features/checkout/widgets/select_payment_type_bottom_
 import 'package:cherry_mvp/features/checkout/widgets/share_location_dialog.dart';
 import 'package:cherry_mvp/features/checkout/widgets/shipping_address_widget.dart';
 import 'package:cherry_mvp/features/checkout/widgets/shipping_list_item.dart';
-import 'package:cherry_mvp/features/checkout/constants/address_constants.dart';
-import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
-import 'package:provider/provider.dart';
 
 class DeliveryOptions extends StatefulWidget {
   const DeliveryOptions({super.key});
@@ -81,14 +80,7 @@ class _DeliveryOptionsState extends State<DeliveryOptions> {
                 const SizedBox(width: 4),
                 InkWell(
                   borderRadius: BorderRadius.circular(16),
-                  onTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => const PurchaseSecurity(),
-                        fullscreenDialog: true,
-                      ),
-                    );
-                  },
+                  onTap: () => context.read<CheckoutViewModel>().showPurchaseSecurity(),
                   child: const Icon(Icons.info, size: 16),
                 ),
               ],
@@ -238,8 +230,7 @@ class _DeliveryOptionsState extends State<DeliveryOptions> {
             value: 'pickup',
             groupValue: _delivery,
             onChanged: (value) {
-              if (postcodeController.text.isEmpty &&
-                  context.read<CheckoutViewModel>().selectedInpost == null) {
+              if (postcodeController.text.isEmpty && context.read<CheckoutViewModel>().selectedInpost == null) {
                 Fluttertoast.showToast(
                   msg: "Postcode required",
                   backgroundColor: AppColors.red,
@@ -292,21 +283,17 @@ class _DeliveryOptionsState extends State<DeliveryOptions> {
           ),
 
           // Show pickup points when pickup is selected
-          if (_delivery == 'pickup' &&
-              context.watch<CheckoutViewModel>().showLocker) ...[
+          if (_delivery == 'pickup' && context.watch<CheckoutViewModel>().showLocker) ...[
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: 8),
                 Outlined(
                   child: ListTile(
-                    onTap: () =>
-                        setState(() => _deliverExpanded = !_deliverExpanded),
+                    onTap: () => setState(() => _deliverExpanded = !_deliverExpanded),
                     leading: const Icon(Icons.map),
                     title: const Text(AppStrings.checkoutPickupPoint),
-                    trailing: _deliverExpanded
-                        ? const Icon(Icons.expand_less)
-                        : const Icon(Icons.expand_more),
+                    trailing: _deliverExpanded ? const Icon(Icons.expand_less) : const Icon(Icons.expand_more),
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -331,8 +318,7 @@ class _DeliveryOptionsState extends State<DeliveryOptions> {
                       }
 
                       if (_deliverExpanded) {
-                        if (model.selectedInpost != null &&
-                            context.watch<CheckoutViewModel>().hasLocker) {
+                        if (model.selectedInpost != null && context.watch<CheckoutViewModel>().hasLocker) {
                           // case: locker already selected
                           return Outlined(
                             child: Column(
@@ -361,8 +347,7 @@ class _DeliveryOptionsState extends State<DeliveryOptions> {
                                   ),
                                 ),
                                 CheckboxListTile(
-                                  controlAffinity:
-                                      ListTileControlAffinity.leading,
+                                  controlAffinity: ListTileControlAffinity.leading,
                                   title: Text(model.selectedInpost?.name ?? ''),
                                   subtitle: Text(
                                     model.selectedInpost?.address ?? '',
@@ -385,20 +370,17 @@ class _DeliveryOptionsState extends State<DeliveryOptions> {
                                 return Column(
                                   children: [
                                     CheckboxListTile(
-                                      controlAffinity:
-                                          ListTileControlAffinity.leading,
+                                      controlAffinity: ListTileControlAffinity.leading,
                                       title: Text(data.name),
                                       subtitle: Text(data.address),
-                                      value:
-                                          model.selectedInpost?.id == data.id,
+                                      value: model.selectedInpost?.id == data.id,
                                       onChanged: (val) {
                                         if (val == true) {
                                           model.setSelectedInpost(data);
                                         }
                                       },
                                     ),
-                                    if (index != inposts.length - 1)
-                                      const Divider(height: 1),
+                                    if (index != inposts.length - 1) const Divider(height: 1),
                                   ],
                                 );
                               },
@@ -447,9 +429,7 @@ class _DeliveryOptionsState extends State<DeliveryOptions> {
                   contentPadding: const EdgeInsets.symmetric(horizontal: 16),
                   leading: const Icon(Icons.credit_card),
                   title: Text(
-                    selectedType == null
-                        ? AppStrings.checkoutChoosePayment
-                        : _paymentTypeLabel(selectedType),
+                    selectedType == null ? AppStrings.checkoutChoosePayment : _paymentTypeLabel(selectedType),
                   ),
                   subtitle: selectedType == null
                       ? Text(
@@ -462,8 +442,7 @@ class _DeliveryOptionsState extends State<DeliveryOptions> {
                     await showModalBottomSheet<PaymentType>(
                       context: context,
                       isScrollControlled: true,
-                      builder: (context) =>
-                          const SelectPaymentTypeBottomSheet(),
+                      builder: (context) => const SelectPaymentTypeBottomSheet(),
                     );
                   },
                 ),

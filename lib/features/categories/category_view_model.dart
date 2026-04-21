@@ -1,15 +1,17 @@
-import 'package:cherry_mvp/core/config/app_images.dart';
-import 'package:cherry_mvp/core/models/model.dart';
-import 'package:cherry_mvp/core/utils/status.dart';
-import 'package:cherry_mvp/features/categories/category_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
+import 'package:cherry_mvp/core/config/app_images.dart';
+import 'package:cherry_mvp/core/models/model.dart';
+import 'package:cherry_mvp/core/router/nav_provider.dart';
+import 'package:cherry_mvp/core/utils/status.dart';
+import 'package:cherry_mvp/features/categories/category_repository.dart';
 
 class CategoryViewModel extends ChangeNotifier {
   final ICategoryRepository categoryRepository;
+  final NavigationProvider navigator;
   final _log = Logger('CategoryViewModel');
 
-  CategoryViewModel({required this.categoryRepository});
+  CategoryViewModel({required this.categoryRepository, required this.navigator});
 
   Status _status = Status.uninitialized;
 
@@ -83,5 +85,9 @@ class CategoryViewModel extends ChangeNotifier {
     }
 
     notifyListeners();
+  }
+
+  void goBack([Category? category]) {
+    navigator.goBack(category);
   }
 }
