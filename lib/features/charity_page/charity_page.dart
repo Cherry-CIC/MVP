@@ -1,12 +1,11 @@
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:cherry_mvp/core/config/config.dart';
 import 'package:cherry_mvp/core/utils/image_provider_helper.dart';
 import 'package:cherry_mvp/core/utils/utils.dart';
 import 'package:cherry_mvp/features/charity_page/charity_model.dart';
 import 'package:cherry_mvp/features/charity_page/charity_viewmodel.dart';
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-
-import 'widgets/charity_card.dart';
+import 'package:cherry_mvp/features/charity_page/widgets/charity_card.dart';
 
 class CharityPage extends StatefulWidget {
   const CharityPage({
@@ -29,10 +28,12 @@ class CharityPageState extends State<CharityPage> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (!_hasInitialized) {
-      _hasInitialized = true;
-      context.read<CharityViewModel>().fetchCharities();
-    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_hasInitialized) {
+        _hasInitialized = true;
+        context.read<CharityViewModel>().fetchCharities();
+      }
+    });
   }
 
   @override
@@ -48,7 +49,7 @@ class CharityPageState extends State<CharityPage> {
               icon: ImageProviderHelper.buildImage(
                 imagePath: AppImages.backCharity,
               ),
-              onPressed: () => Navigator.of(context).pop(),
+              onPressed: () => viewModel.goBack(),
             ),
             title: Text(AppStrings.charitiesText),
             centerTitle: true,
@@ -95,7 +96,7 @@ class CharityPageState extends State<CharityPage> {
 
   void _handleCharityTap(Charity charity) {
     if (widget.selectionMode) {
-      Navigator.of(context).pop(charity);
+      context.read<CharityViewModel>().goBack(charity);
     }
   }
 
@@ -127,32 +128,30 @@ class CharityPageState extends State<CharityPage> {
     }
     // Show charities list when data is loaded
     if (charities.isNotEmpty) {
-      return Expanded(
-        child: ListView.builder(
-          shrinkWrap: true,
-          itemCount: charities.length,
-          itemBuilder: (context, index) {
-            final charity = charities[index];
-            final isSelected = widget.selectionMode && charity.id == _initialId;
-            return InkWell(
-              onTap: () => _handleCharityTap(charity),
-              child: Stack(
-                children: [
-                  CharityCard(charity: charity),
-                  if (isSelected)
-                    Positioned(
-                      right: 16,
-                      top: 16,
-                      child: Icon(
-                        Icons.check_circle,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
+      return ListView.builder(
+        shrinkWrap: true,
+        itemCount: charities.length,
+        itemBuilder: (context, index) {
+          final charity = charities[index];
+          final isSelected = widget.selectionMode && charity.id == _initialId;
+          return InkWell(
+            onTap: () => _handleCharityTap(charity),
+            child: Stack(
+              children: [
+                CharityCard(charity: charity),
+                if (isSelected)
+                  Positioned(
+                    right: 16,
+                    top: 16,
+                    child: Icon(
+                      Icons.check_circle,
+                      color: Theme.of(context).colorScheme.primary,
                     ),
-                ],
-              ),
-            );
-          },
-        ),
+                  ),
+              ],
+            ),
+          );
+        },
       );
     }
 

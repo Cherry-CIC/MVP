@@ -1,15 +1,16 @@
-import 'package:cherry_mvp/features/charity_page/charity_repository.dart';
-import 'package:cherry_mvp/features/charity_page/charity_model.dart';
-import 'package:cherry_mvp/core/utils/utils.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:logging/logging.dart';
+import 'package:cherry_mvp/core/router/nav_provider.dart';
+import 'package:cherry_mvp/core/utils/utils.dart';
+import 'package:cherry_mvp/features/charity_page/charity_model.dart';
+import 'package:cherry_mvp/features/charity_page/charity_repository.dart';
 
 class CharityViewModel extends ChangeNotifier {
-
   final _log = Logger('CharityViewModel');
   final ICharityRepository charityRepository;
+  final NavigationProvider navigator;
 
-  CharityViewModel({required this.charityRepository});
+  CharityViewModel({required this.charityRepository, required this.navigator});
 
   // Private variables
   Status _status = Status.uninitialized;
@@ -39,5 +40,9 @@ class CharityViewModel extends ChangeNotifier {
     }
 
     notifyListeners();
+  }
+
+  void goBack([Charity? charity]) {
+    navigator.goBack(charity);
   }
 }

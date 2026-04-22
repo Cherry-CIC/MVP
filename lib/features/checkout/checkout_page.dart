@@ -1,14 +1,13 @@
+import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:provider/provider.dart';
 import 'package:cherry_mvp/core/config/app_colors.dart';
 import 'package:cherry_mvp/core/config/app_strings.dart';
-import 'package:cherry_mvp/core/router/nav_routes.dart';
 import 'package:cherry_mvp/core/utils/status.dart';
 import 'package:cherry_mvp/features/checkout/checkout_view_model.dart';
 import 'package:cherry_mvp/features/checkout/widgets/basket_list_item.dart';
 import 'package:cherry_mvp/features/checkout/widgets/delivery_options.dart';
 import 'package:cherry_mvp/features/checkout/widgets/select_payment_type_bottom_sheet.dart';
-import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
-import 'package:provider/provider.dart';
 
 class CheckoutPage extends StatefulWidget {
   const CheckoutPage({super.key});
@@ -35,7 +34,6 @@ class _CheckoutPageState extends State<CheckoutPage> {
     });
   }
 
-
   void _handleOrderStatus() {
     if (!mounted) return;
 
@@ -51,10 +49,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
     if (status == StatusType.success) {
       Fluttertoast.showToast(msg: "Payment Successful");
       vm.resetCreateOrderStatus();
-      gotoCheckoutComplete();
+      vm.gotoCheckoutComplete();
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -80,48 +77,51 @@ class _CheckoutPageState extends State<CheckoutPage> {
 
           //if (_errorMessage.isNotEmpty)
           if (_errorMessage.isNotEmpty)
-          SliverToBoxAdapter(
-            child: Container(
-              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primaryContainer,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: AppColors.primaryAction,
+            SliverToBoxAdapter(
+              child: Container(
+                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.primaryContainer,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: AppColors.primaryAction,
+                  ),
                 ),
-              ),
-              child: Text(
-                _errorMessage,
-                style: TextStyle(
-                  color: AppColors.primaryAction,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
+                child: Text(
+                  _errorMessage,
+                  style: TextStyle(
+                    color: AppColors.primaryAction,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ),
             ),
-          ),
 
-          SliverToBoxAdapter( 
+          SliverToBoxAdapter(
             child: Consumer<CheckoutViewModel>(
-              builder: (context, vm, _) { 
-              return ListTile( 
-                title: const Text(AppStrings.checkoutPayment),
-                subtitle: Text( 
-                vm.selectedPaymentType != null ? vm.selectedPaymentType!.name : AppStrings.paymentMethodsChoose, 
-                ), 
-                trailing: Icon( 
-                vm.selectedPaymentType != null ? Icons.check : Icons.add, 
-                color: Theme.of(context).colorScheme.primary, 
-                ), onTap: () { 
-                showModalBottomSheet( 
-                  context: context, isScrollControlled: true, 
-                  backgroundColor: Colors.transparent, builder: (_) => const SelectPaymentTypeBottomSheet(), 
-                ); 
-                } 
-              ); 
-              }, 
-            ), 
+              builder: (context, vm, _) {
+                return ListTile(
+                  title: const Text(AppStrings.checkoutPayment),
+                  subtitle: Text(
+                    vm.selectedPaymentType != null ? vm.selectedPaymentType!.name : AppStrings.paymentMethodsChoose,
+                  ),
+                  trailing: Icon(
+                    vm.selectedPaymentType != null ? Icons.check : Icons.add,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  onTap: () {
+                    showModalBottomSheet(
+                      context: context,
+                      isScrollControlled: true,
+                      backgroundColor: Colors.transparent,
+                      builder: (_) => const SelectPaymentTypeBottomSheet(),
+                    );
+                  },
+                );
+              },
+            ),
           ),
 
           SliverList.list(
@@ -157,29 +157,29 @@ class _CheckoutPageState extends State<CheckoutPage> {
         width: double.infinity,
         child: Consumer<CheckoutViewModel>(
           builder: (context, viewModel, _) {
-
-            final canPay =  viewModel.selectedPaymentType != null 
-              &&  viewModel.deliveryChoice != null 
-              &&  (viewModel.deliveryChoice != "pickup" || viewModel.selectedInpost != null)
-              &&  basket.total > 0 
-              && viewModel.createOrderStatus.type != StatusType.loading;
+            final canPay =
+                viewModel.selectedPaymentType != null &&
+                viewModel.deliveryChoice != null &&
+                (viewModel.deliveryChoice != "pickup" || viewModel.selectedInpost != null) &&
+                basket.total > 0 &&
+                viewModel.createOrderStatus.type != StatusType.loading;
 
             return FilledButton(
               onPressed: canPay
-              ? () async {
-                  final paid = await viewModel.payWithPaymentSheet(
-                    amount: basket.total,
-                  );
+                  ? () async {
+                      final paid = await viewModel.payWithPaymentSheet(
+                        amount: basket.total,
+                      );
 
-                  if (paid) {
-                    await viewModel.createOrder();
-                  }
-                }
-              : null, 
+                      if (paid) {
+                        await viewModel.createOrder();
+                      }
+                    }
+                  : null,
 
               child: viewModel.createOrderStatus.type == StatusType.loading
-              ? const CircularProgressIndicator(color: Colors.white)
-              : Text(AppStrings.checkoutPay),
+                  ? const CircularProgressIndicator(color: Colors.white)
+                  : Text(AppStrings.checkoutPay),
             );
           },
         ),
@@ -187,15 +187,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
     );
   }
 
-  gotoCheckoutComplete() async {
-    await Future.delayed(const Duration(seconds: 1));
-    Navigator.pushReplacementNamed(context, AppRoutes.checkoutComplete);
-  }
-
   @override
   void dispose() {
     vm.removeListener(_handleOrderStatus);
     super.dispose();
   }
-
 }

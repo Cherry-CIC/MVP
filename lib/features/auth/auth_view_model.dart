@@ -43,6 +43,8 @@ class AuthViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  // TODO: ideally, instead of passing context and handling SnackBars here, they should be handled in the
+  // TODO: calling view. Need to refactor.
   Future<void> logout(BuildContext context) async {
     _status = Status.loading;
     notifyListeners();

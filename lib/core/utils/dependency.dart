@@ -159,43 +159,33 @@ List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
     ),
     ChangeNotifierProvider<ProductViewModel>(
       create: (context) => ProductViewModel(
-        productRepository: Provider.of<ProductRepository>(
-          context,
-          listen: false,
-        ),
+        productRepository: Provider.of<ProductRepository>(context, listen: false),
+        navigator: Provider.of<NavigationProvider>(context, listen: false),
       ),
     ),
     ChangeNotifierProvider<DonationViewModel>(
       create: (context) => DonationViewModel(
-        donationRepository: Provider.of<IDonationRepository>(
-          context,
-          listen: false,
-        ),
+        donationRepository: Provider.of<IDonationRepository>(context, listen: false),
+        navigator: Provider.of<NavigationProvider>(context, listen: false),
       ),
     ),
     ChangeNotifierProvider<CategoryViewModel>(
       create: (context) => CategoryViewModel(
-        categoryRepository: Provider.of<ICategoryRepository>(
-          context,
-          listen: false,
-        ),
+        categoryRepository: Provider.of<ICategoryRepository>(context, listen: false),
+        navigator: Provider.of<NavigationProvider>(context, listen: false),
       ),
     ),
 
     ChangeNotifierProvider<CheckoutViewModel>(
       create: (context) => CheckoutViewModel(
-        checkoutRepository: Provider.of<ICheckoutRepository>(
-          context,
-          listen: false,
-        ),
+        checkoutRepository: Provider.of<ICheckoutRepository>(context, listen: false),
+        navigator: Provider.of<NavigationProvider>(context, listen: false),
       ),
     ),
     ChangeNotifierProvider<CharityViewModel>(
       create: (context) => CharityViewModel(
-        charityRepository: Provider.of<ICharityRepository>(
-          context,
-          listen: false,
-        ),
+        charityRepository: Provider.of<ICharityRepository>(context, listen: false),
+        navigator: Provider.of<NavigationProvider>(context, listen: false),
       ),
     ),
     // Logout provider

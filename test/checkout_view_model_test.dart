@@ -1,9 +1,14 @@
+import 'package:cherry_mvp/core/router/nav_provider.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:mockito/annotations.dart';
 import 'package:cherry_mvp/core/utils/result.dart';
 import 'package:cherry_mvp/core/utils/status.dart';
 import 'package:cherry_mvp/features/checkout/checkout_repository.dart';
 import 'package:cherry_mvp/features/checkout/checkout_view_model.dart';
 import 'package:cherry_mvp/features/checkout/widgets/shipping_address_widget.dart';
-import 'package:flutter_test/flutter_test.dart';
+
+@GenerateNiceMocks([MockSpec<NavigationProvider>()])
+import 'checkout_view_model_test.mocks.dart';
 
 class FakeCheckoutRepository implements ICheckoutRepository {
   FakeCheckoutRepository({this.fetchNearestResult});
@@ -25,10 +30,13 @@ class FakeCheckoutRepository implements ICheckoutRepository {
 void main() {
   group('CheckoutViewModel', () {
     late CheckoutViewModel viewModel;
+    late MockNavigationProvider mockNavigator;
 
     setUp(() {
+      mockNavigator = MockNavigationProvider();
       viewModel = CheckoutViewModel(
         checkoutRepository: FakeCheckoutRepository(),
+        navigator: mockNavigator,
       );
     });
 
@@ -213,9 +221,8 @@ void main() {
       'should fail pickup lookup when the response cannot be parsed',
       () async {
         viewModel = CheckoutViewModel(
-          checkoutRepository: FakeCheckoutRepository(
-            fetchNearestResult: Result.success({'unexpected': 'payload'}),
-          ),
+          checkoutRepository: FakeCheckoutRepository(fetchNearestResult: Result.success({'unexpected': 'payload'})),
+          navigator: mockNavigator,
         );
 
         await viewModel.fetchNearestInPosts('SW1A 1AA');
@@ -240,6 +247,7 @@ void main() {
             },
           ]),
         ),
+        navigator: mockNavigator,
       );
 
       await viewModel.fetchNearestInPosts('SW1A 1AA');

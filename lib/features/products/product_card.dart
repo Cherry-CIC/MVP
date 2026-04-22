@@ -1,14 +1,12 @@
-import 'package:cherry_mvp/features/checkout/purchase_security.dart';
-import 'package:cherry_mvp/features/products/product_viewmodel.dart';
 import 'package:flutter/material.dart';
-import 'package:cherry_mvp/core/models/model.dart';
-import 'package:cherry_mvp/core/utils/image_provider_helper.dart';
-import 'package:cherry_mvp/core/config/app_spacing.dart';
+import 'package:provider/provider.dart';
 import 'package:cherry_mvp/core/config/app_colors.dart';
 import 'package:cherry_mvp/core/config/app_images.dart';
-import 'package:provider/provider.dart';
-
-import '../../core/config/app_strings.dart';
+import 'package:cherry_mvp/core/config/app_strings.dart';
+import 'package:cherry_mvp/core/config/app_spacing.dart';
+import 'package:cherry_mvp/core/models/model.dart';
+import 'package:cherry_mvp/core/utils/image_provider_helper.dart';
+import 'package:cherry_mvp/features/products/product_viewmodel.dart';
 
 class ProductCard extends StatelessWidget {
   final Product product;
@@ -43,15 +41,6 @@ class ProductCard extends StatelessWidget {
 
     final result = size.trim();
     return result.length > 6 ? result.substring(0, 6) : result;
-  }
-
-  void _showPurchaseSecurity(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => const PurchaseSecurity(),
-        fullscreenDialog: true,
-      ),
-    );
   }
 
   @override
@@ -132,11 +121,10 @@ class ProductCard extends StatelessWidget {
                                   const SizedBox(width: 4),
                                   Text(
                                     displayLikes.toString(),
-                                    style: Theme.of(context).textTheme.labelSmall
-                                        ?.copyWith(
-                                          fontWeight: FontWeight.bold,
-                                          color: isLiked ? Colors.red : AppColors.grey,
-                                        ),
+                                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      color: isLiked ? Colors.red : AppColors.grey,
+                                    ),
                                   ),
                                 ],
                               ),
@@ -195,18 +183,17 @@ class ProductCard extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       GestureDetector(
-                        onTap: () => _showPurchaseSecurity(context),
+                        onTap: viewModel.showPurchaseSecurity,
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
                               '£${product.price.toStringAsFixed(2)}',
-                              style: Theme.of(context).textTheme.headlineLarge
-                                  ?.copyWith(
-                                    color: Theme.of(context).colorScheme.secondary,
-                                    fontSize: 14,
-                                  ),
+                              style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                                color: Theme.of(context).colorScheme.secondary,
+                                fontSize: 14,
+                              ),
                             ),
                             const SizedBox(height: 2),
                             Row(
@@ -215,20 +202,18 @@ class ProductCard extends StatelessWidget {
                               children: [
                                 Text(
                                   '£${product.price.toStringAsFixed(2)}',
-                                  style: Theme.of(context).textTheme.headlineLarge
-                                      ?.copyWith(
-                                        color: Theme.of(context).colorScheme.primary,
-                                        fontSize: 16,
-                                      ),
+                                  style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                                    color: Theme.of(context).colorScheme.primary,
+                                    fontSize: 16,
+                                  ),
                                 ),
                                 const SizedBox(width: 4),
                                 Text(
                                   AppStrings.productIncl,
-                                  style: Theme.of(context).textTheme.headlineLarge
-                                      ?.copyWith(
-                                        color: Theme.of(context).colorScheme.primary,
-                                        fontSize: 16,
-                                      ),
+                                  style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                                    color: Theme.of(context).colorScheme.primary,
+                                    fontSize: 16,
+                                  ),
                                 ),
                                 const SizedBox(width: 4),
                                 Image.asset(

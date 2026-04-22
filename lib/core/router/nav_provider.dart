@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cherry_mvp/features/checkout/purchase_security.dart';
 
 class NavigationProvider {
   final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -15,7 +16,16 @@ class NavigationProvider {
     return navigatorKey.currentState!.pushNamedAndRemoveUntil(routeName, predicate, arguments: arguments);
   }
 
-  void goBack() {
-    navigatorKey.currentState!.pop();
+  void goBack([Object? arguments]) {
+    navigatorKey.currentState!.pop(arguments);
+  }
+
+  Future<void> showPurchaseSecurity() async {
+    await navigatorKey.currentState!.push(
+      MaterialPageRoute(
+        builder: (context) => const PurchaseSecurity(),
+        fullscreenDialog: true,
+      ),
+    );
   }
 }
