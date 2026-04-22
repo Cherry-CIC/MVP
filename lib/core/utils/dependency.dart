@@ -1,35 +1,35 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:provider/provider.dart';
+import 'package:provider/single_child_widget.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:cherry_mvp/core/router/router.dart';
+import 'package:cherry_mvp/core/services/services.dart';
+import 'package:cherry_mvp/core/theme/theme_notifier.dart';
 import 'package:cherry_mvp/features/auth/auth_view_model.dart';
+import 'package:cherry_mvp/features/categories/category_repository.dart';
 import 'package:cherry_mvp/features/categories/category_view_model.dart';
-import 'package:cherry_mvp/features/checkout/checkout_repository.dart';
 import 'package:cherry_mvp/features/charity_page/charity_repository.dart';
 import 'package:cherry_mvp/features/charity_page/charity_viewmodel.dart';
+import 'package:cherry_mvp/features/checkout/checkout_repository.dart';
 import 'package:cherry_mvp/features/checkout/checkout_view_model.dart';
-import 'package:cherry_mvp/features/categories/category_repository.dart';
 import 'package:cherry_mvp/features/discover/discover_repository.dart';
 import 'package:cherry_mvp/features/discover/discover_viewmodel.dart';
 import 'package:cherry_mvp/features/donation/donation_repository.dart';
 import 'package:cherry_mvp/features/donation/donation_view_model.dart';
+import 'package:cherry_mvp/features/home/home_repository.dart';
+import 'package:cherry_mvp/features/home/home_viewmodel.dart';
+import 'package:cherry_mvp/features/login/login_repository.dart';
+import 'package:cherry_mvp/features/login/login_viewmodel.dart';
 import 'package:cherry_mvp/features/products/product_repository.dart';
 import 'package:cherry_mvp/features/products/product_viewmodel.dart';
+import 'package:cherry_mvp/features/register/register_repository.dart';
+import 'package:cherry_mvp/features/register/register_viewmodel.dart';
 import 'package:cherry_mvp/features/search/search_repository.dart';
 import 'package:cherry_mvp/features/search/search_viewmodel.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_storage/firebase_storage.dart';
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:provider/single_child_widget.dart';
-import 'package:cherry_mvp/core/services/services.dart';
-import 'package:cherry_mvp/features/login/login_repository.dart';
-import 'package:cherry_mvp/features/register/register_repository.dart';
-import 'package:cherry_mvp/features/home/home_repository.dart';
-import 'package:cherry_mvp/features/login/login_viewmodel.dart';
-import 'package:cherry_mvp/features/register/register_viewmodel.dart';
-import 'package:cherry_mvp/features/home/home_viewmodel.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cherry_mvp/core/router/router.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:cherry_mvp/core/theme/theme_notifier.dart';
 
 List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
   // Configuration flag - reads from environment variable
@@ -134,10 +134,8 @@ List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
     ),
     ChangeNotifierProvider<RegisterViewModel>(
       create: (context) => RegisterViewModel(
-        registerRepository: Provider.of<RegisterRepository>(
-          context,
-          listen: false,
-        ),
+        registerRepository: Provider.of<RegisterRepository>(context, listen: false),
+        navigator: Provider.of<NavigationProvider>(context, listen: false),
       ),
     ),
     ChangeNotifierProvider<HomeViewModel>(
