@@ -22,11 +22,35 @@
           }
         },
         {
+          "client_id": "401854471349-5equ9b47s44qkn2oaje1c6enk11n81mb.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.cherry_mvp",
+            "certificate_hash": "efd0029e8d28686a6afc209444b32609a1d69660"
+          }
+        },
+        {
           "client_id": "401854471349-7hge5fqq72tubpt3c9eno1imaqaauk3v.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.example.cherry_mvp",
             "certificate_hash": "56ab5746cd03aa952cd82945e2aa5ae0abfd070c"
+          }
+        },
+        {
+          "client_id": "401854471349-aaaok4o6r79cn1vrmdv7bh4hk1cgfrrc.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.cherry_mvp",
+            "certificate_hash": "8111477239c2c04fb50dc905334925203bea747b"
+          }
+        },
+        {
+          "client_id": "401854471349-j1tki5dfg47h74ffolnobubh04b8ac8n.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.cherry_mvp",
+            "certificate_hash": "868940988fb4bad2518beeb191f71174d345fb8f"
           }
         },
         {

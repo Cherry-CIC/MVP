@@ -1,15 +1,18 @@
+import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:provider/provider.dart';
 import 'package:cherry_mvp/features/home/home_page.dart';
 import 'package:cherry_mvp/features/welcome/welcome_page.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
 
 class AuthGate extends StatelessWidget {
   const AuthGate({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final firebaseAuth = context.read<FirebaseAuth>();
+
     return StreamBuilder<User?>(
-      stream: FirebaseAuth.instance.authStateChanges(),
+      stream: firebaseAuth.authStateChanges(),
       builder: (context, snapshot) {
         // Show splash while checking auth status
         if (snapshot.connectionState == ConnectionState.waiting) {

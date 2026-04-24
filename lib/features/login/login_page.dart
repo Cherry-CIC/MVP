@@ -1,5 +1,7 @@
-import 'package:cherry_mvp/core/config/config.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:cherry_mvp/core/config/config.dart';
+import 'package:cherry_mvp/features/login/login_viewmodel.dart';
 import 'package:cherry_mvp/features/login/widgets/login_form.dart';
 
 class LoginPage extends StatelessWidget {
@@ -15,7 +17,7 @@ class LoginPage extends StatelessWidget {
             width: 24,
             height: 24,
           ),
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: () => context.read<LoginViewModel>().goBack(),
         ),
         title: const Text('Login'),
       ),

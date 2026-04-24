@@ -1,24 +1,28 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_stripe/flutter_stripe.dart';
+import 'package:logging/logging.dart';
 import 'package:cherry_mvp/core/config/config.dart';
 import 'package:cherry_mvp/core/models/courier_model.dart';
 import 'package:cherry_mvp/core/models/inpost_model.dart';
 import 'package:cherry_mvp/core/models/pickup_point_model.dart';
 import 'package:cherry_mvp/core/models/product.dart';
+import 'package:cherry_mvp/core/router/nav_provider.dart';
+import 'package:cherry_mvp/core/router/nav_routes.dart';
 import 'package:cherry_mvp/core/utils/utils.dart';
 import 'package:cherry_mvp/features/checkout/checkout_repository.dart';
+import 'package:cherry_mvp/features/checkout/constants/address_constants.dart';
 import 'package:cherry_mvp/features/checkout/models/payment_intent.dart';
 import 'package:cherry_mvp/features/checkout/payment_type.dart';
 import 'package:cherry_mvp/features/checkout/widgets/shipping_address_widget.dart';
 import 'package:cherry_mvp/features/checkout/constants/address_constants.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_stripe/flutter_stripe.dart';
-import 'package:logging/logging.dart';
 
 /// ViewModel for managing checkout state including basket items, shipping address, and payment method
 class CheckoutViewModel extends ChangeNotifier {
   final ICheckoutRepository checkoutRepository;
+  final NavigationProvider navigator;
   final _log = Logger('CheckoutViewModel');
 
-  CheckoutViewModel({required this.checkoutRepository});
+  CheckoutViewModel({required this.checkoutRepository, required this.navigator});
 
   Status _status = Status.uninitialized;
 
@@ -259,8 +263,7 @@ class CheckoutViewModel extends ChangeNotifier {
     if (_shippingAddress == null) return {};
 
     return {
-      AddressConstants.streetKey:
-          '${_shippingAddress!.streetNumber} ${_shippingAddress!.route}'.trim(),
+      AddressConstants.streetKey: '${_shippingAddress!.streetNumber} ${_shippingAddress!.route}'.trim(),
       AddressConstants.cityKey: _shippingAddress!.locality,
       AddressConstants.stateKey: _shippingAddress!.administrativeAreaLevel1,
       AddressConstants.postalCodeKey: _shippingAddress!.postalCode,
@@ -295,10 +298,7 @@ class CheckoutViewModel extends ChangeNotifier {
     final postalCode = components[AddressConstants.postalCodeKey]?.trim() ?? '';
 
     // Basic validation - could be enhanced with format validation
-    return street.isNotEmpty &&
-        city.isNotEmpty &&
-        postalCode.isNotEmpty &&
-        _isValidPostalCode(postalCode);
+    return street.isNotEmpty && city.isNotEmpty && postalCode.isNotEmpty && _isValidPostalCode(postalCode);
   }
 
   /// Helper method to validate postal code format (UK postcode validation)
@@ -332,16 +332,11 @@ class CheckoutViewModel extends ChangeNotifier {
             .toList(),
         'shipping_address': {
           'formatted_address': formattedShippingAddress,
-          AddressConstants.streetKey:
-              shippingAddressComponents[AddressConstants.streetKey],
-          AddressConstants.cityKey:
-              shippingAddressComponents[AddressConstants.cityKey],
-          AddressConstants.stateKey:
-              shippingAddressComponents[AddressConstants.stateKey],
-          'postal_code':
-              shippingAddressComponents[AddressConstants.postalCodeKey],
-          AddressConstants.countryKey:
-              shippingAddressComponents[AddressConstants.countryKey],
+          AddressConstants.streetKey: shippingAddressComponents[AddressConstants.streetKey],
+          AddressConstants.cityKey: shippingAddressComponents[AddressConstants.cityKey],
+          AddressConstants.stateKey: shippingAddressComponents[AddressConstants.stateKey],
+          'postal_code': shippingAddressComponents[AddressConstants.postalCodeKey],
+          AddressConstants.countryKey: shippingAddressComponents[AddressConstants.countryKey],
           'latitude': _shippingAddress?.latitude,
           'longitude': _shippingAddress?.longitude,
         },
@@ -399,8 +394,7 @@ class CheckoutViewModel extends ChangeNotifier {
         _status = Status.failure(
           result.isSuccess
               ? 'Pickup points currently unavailable, please try again later'
-              : (result.error ??
-                    'Pickup points currently unavailable, please try again later'),
+              : (result.error ?? 'Pickup points currently unavailable, please try again later'),
         );
         _log.warning(
           result.isSuccess
@@ -480,9 +474,7 @@ class CheckoutViewModel extends ChangeNotifier {
               'id': item.id,
               'name': item.name,
               'price': item.price,
-              'image': item.productImages.isNotEmpty
-                  ? item.productImages.first
-                  : null,
+              'image': item.productImages.isNotEmpty ? item.productImages.first : null,
             },
           )
           .toList(),
@@ -587,11 +579,8 @@ class CheckoutViewModel extends ChangeNotifier {
             'line1': _shippingAddress?.line1 ?? '',
             "city": shippingAddressComponents[AddressConstants.cityKey] ?? "",
             "state": shippingAddressComponents[AddressConstants.stateKey] ?? "",
-            'postal_code':
-                shippingAddressComponents[AddressConstants.postalCodeKey] ?? "",
-            "country":
-                shippingAddressComponents[AddressConstants.countryKey] ??
-                AppStrings.unitedKingdomText,
+            'postal_code': shippingAddressComponents[AddressConstants.postalCodeKey] ?? "",
+            "country": shippingAddressComponents[AddressConstants.countryKey] ?? AppStrings.unitedKingdomText,
           };
 
     final Map<String, dynamic> deliveryDetails = deliveryChoice == 'pickup'
@@ -642,9 +631,7 @@ class CheckoutViewModel extends ChangeNotifier {
     final googlePay = paymentType == PaymentType.google
         ? const PaymentSheetGooglePay(merchantCountryCode: "GB", testEnv: true)
         : null;
-    final applePay = paymentType == PaymentType.apple
-        ? const PaymentSheetApplePay(merchantCountryCode: "GB")
-        : null;
+    final applePay = paymentType == PaymentType.apple ? const PaymentSheetApplePay(merchantCountryCode: "GB") : null;
 
     if (hasCustomerContext) {
       return SetupPaymentSheetParameters(
@@ -720,5 +707,18 @@ class CheckoutViewModel extends ChangeNotifier {
       lat: lat,
       long: long,
     );
+  }
+
+  Future<void> goToHome() async {
+    await navigator.navigateToAndRemoveUntil(AppRoutes.home, (Route<dynamic> route) => false);
+  }
+
+  Future<void> gotoCheckoutComplete() async {
+    await Future.delayed(const Duration(seconds: 1));
+    await navigator.replaceWith(AppRoutes.checkoutComplete);
+  }
+
+  Future<void> showPurchaseSecurity() async {
+    await navigator.showPurchaseSecurity();
   }
 }

@@ -1,14 +1,18 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cherry_mvp/core/models/model.dart';
+import 'package:cherry_mvp/core/services/error_string.dart';
+import 'package:cherry_mvp/core/services/google_auth_service.dart';
 import 'package:cherry_mvp/core/utils/result.dart';
-import 'package:flutter/foundation.dart';
-import 'package:google_sign_in/google_sign_in.dart';
-import 'error_string.dart';
 
 class FirebaseAuthService {
   final FirebaseAuth firebaseAuth;
 
   FirebaseAuthService({required this.firebaseAuth});
+
+  late GoogleAuthService _googleAuthService = GoogleAuthService();
 
   Future<Result<UserCredentials>> signUp(String email, String password) async {
     try {
@@ -62,38 +66,20 @@ class FirebaseAuthService {
   Future<Result<UserCredentials>> signInWithGoogle() async {
     try {
       // Trigger the authentication flow
-      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
-
-      // Handled user null case
-      if (googleUser == null) {
-        // User cancelled
-        return Result.failure('Sign in aborted by user');
-      }
-
-      // Obtain the auth details from the request
-      final GoogleSignInAuthentication googleAuth =
-          await googleUser.authentication;
-
-      // Create a new credential
-      final credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
-      );
-
-      final user = await FirebaseAuth.instance.signInWithCredential(credential);
+      final userCredential = await _googleAuthService.signInWithGoogleFirebase(firebaseAuth);
 
       // Handle userCredential null check
-      if (user.user == null) {
+      if (userCredential.user == null) {
         return Result.failure('No user returned from Google sign-in');
       }
       // Once signed in, return the UserCredential
       return Result.success(
         UserCredentials(
-          uid: user.user?.uid,
-          email: user.user?.email,
-          firstname: user.user?.displayName,
-          photoUrl: user.user?.photoURL,
-          phoneNumber: user.user?.phoneNumber,
+          uid: userCredential.user?.uid,
+          email: userCredential.user?.email,
+          firstname: userCredential.user?.displayName,
+          photoUrl: userCredential.user?.photoURL,
+          phoneNumber: userCredential.user?.phoneNumber,
         ),
       );
     } on FirebaseAuthException catch (e) {
@@ -110,9 +96,9 @@ class FirebaseAuthService {
       final appleProvider = AppleAuthProvider();
       final UserCredential user;
       if (kIsWeb) {
-        user = await FirebaseAuth.instance.signInWithPopup(appleProvider);
+        user = await firebaseAuth.signInWithPopup(appleProvider);
       } else {
-        user = await FirebaseAuth.instance.signInWithProvider(appleProvider);
+        user = await firebaseAuth.signInWithProvider(appleProvider);
       }
       if (user.user == null) {
         return Result.failure('No user returned from Apple sign-in');
@@ -139,9 +125,8 @@ class FirebaseAuthService {
   Future<Result<void>> logout() async {
     try {
       await firebaseAuth.signOut();
-      if (await GoogleSignIn().isSignedIn()) {
-        await GoogleSignIn().signOut();
-      }
+      // will sign out if signed in through google_sign_in, and do nothing otherwise.
+      await _googleAuthService.signOut();
 
       return Result.success(null);
     } catch (e) {

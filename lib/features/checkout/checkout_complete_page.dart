@@ -1,12 +1,10 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
+import 'package:provider/provider.dart';
 import 'package:cherry_mvp/core/config/config.dart';
 import 'package:cherry_mvp/features/checkout/checkout_view_model.dart';
 import 'package:cherry_mvp/features/checkout/widgets/basket_list_item.dart';
 import 'package:cherry_mvp/features/checkout/widgets/checkout_action_button.dart';
-import 'package:cherry_mvp/features/home/home_page.dart';
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
-import 'package:provider/provider.dart';
 
 class CheckoutCompletePage extends StatelessWidget {
   const CheckoutCompletePage({super.key});
@@ -79,8 +77,7 @@ class CheckoutCompletePage extends StatelessWidget {
                 ),
               ),
             ),
-            for (final product in basket.basketItems)
-              BasketListItem(product: product),
+            for (final product in basket.basketItems) BasketListItem(product: product),
             Container(
               height: 160,
               padding: const EdgeInsets.all(16),
@@ -133,15 +130,9 @@ class CheckoutCompletePage extends StatelessWidget {
               height: 56,
               width: double.infinity,
               child: FilledButton(
-                onPressed: () {
-                  Provider.of<CheckoutViewModel>(
-                    context,
-                    listen: false,
-                  ).resetCheckout();
-                  Navigator.of(context).pushAndRemoveUntil(
-                    CupertinoPageRoute(builder: (context) => HomePage()),
-                    (Route<dynamic> route) => false,
-                  );
+                onPressed: () async {
+                  context.read<CheckoutViewModel>().resetCheckout();
+                  await context.read<CheckoutViewModel>().goToHome();
                 },
                 child: Text(AppStrings.checkoutContinueShopping),
               ),

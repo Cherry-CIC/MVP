@@ -56,4 +56,8 @@ class RegisterViewModel extends ChangeNotifier {
 
     notifyListeners();
   }
+
+  void goBack() {
+    navigator.goBack();
+  }
 }
