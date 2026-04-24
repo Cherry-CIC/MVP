@@ -1,10 +1,9 @@
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:cherry_mvp/core/config/app_strings.dart';
 import 'package:cherry_mvp/core/models/product.dart';
 import 'package:cherry_mvp/core/widgets/product_image_card.dart';
-import 'package:cherry_mvp/core/router/nav_routes.dart';
 import 'package:cherry_mvp/features/products/product_viewmodel.dart';
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
 class ItemsInSupport extends StatelessWidget {
   final List<Product> products;
@@ -24,8 +23,7 @@ class ItemsInSupport extends StatelessWidget {
           children: [
             Row(
               children: [
-                Text(AppStrings.itemsInSupportText,
-                    style: Theme.of(context).textTheme.titleLarge),
+                Text(AppStrings.itemsInSupportText, style: Theme.of(context).textTheme.titleLarge),
                 const Spacer(),
                 Text(AppStrings.seeAllText),
               ],
@@ -40,12 +38,7 @@ class ItemsInSupport extends StatelessWidget {
                 itemBuilder: (context, index) {
                   final product = products[index];
                   return GestureDetector(
-                    onTap: () {
-                      final productViewModel =
-                          Provider.of<ProductViewModel>(context, listen: false);
-                      productViewModel.setProduct(product);
-                      Navigator.pushNamed(context, AppRoutes.product);
-                    },
+                    onTap: () => context.read<ProductViewModel>().goToProductPage(product),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(12),
                       child: SizedBox(

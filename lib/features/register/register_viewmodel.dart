@@ -1,15 +1,17 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
+import 'package:logging/logging.dart';
+import 'package:cherry_mvp/core/router/nav_provider.dart';
+import 'package:cherry_mvp/core/utils/utils.dart';
 import 'package:cherry_mvp/features/register/register_model.dart';
 import 'package:cherry_mvp/features/register/register_repository.dart';
-import 'package:flutter/cupertino.dart';
-import 'package:cherry_mvp/core/utils/utils.dart';
-import 'package:logging/logging.dart';
 
 class RegisterViewModel extends ChangeNotifier {
   final RegisterRepository registerRepository;
+  final NavigationProvider navigator;
 
-  RegisterViewModel({required this.registerRepository});
+  RegisterViewModel({required this.registerRepository, required this.navigator});
 
   //private variable (not exposed)
   Status _status = Status.uninitialized;
@@ -43,6 +45,7 @@ class RegisterViewModel extends ChangeNotifier {
       );
       if (result.isSuccess) {
         _status = Status.success;
+        navigator.goBack();
       } else {
         _status = Status.failure(result.error ?? "");
         _log.warning('Registration failed! ${result.error}');
@@ -52,5 +55,9 @@ class RegisterViewModel extends ChangeNotifier {
     }
 
     notifyListeners();
+  }
+
+  void goBack() {
+    navigator.goBack();
   }
 }

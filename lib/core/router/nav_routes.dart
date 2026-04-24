@@ -3,8 +3,6 @@ import 'package:cherry_mvp/features/checkout/checkout_complete_page.dart';
 import 'package:cherry_mvp/features/checkout/checkout_page.dart';
 import 'package:cherry_mvp/features/donation/donation_page.dart';
 import 'package:cherry_mvp/features/donation/successful_upload_page.dart';
-import 'package:cherry_mvp/features/products/product_page.dart';
-
 import 'package:cherry_mvp/features/discover/discover_page.dart';
 import 'package:cherry_mvp/features/settings/faq_page.dart';
 import 'package:cherry_mvp/features/settings/settings_page.dart';
@@ -13,6 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:cherry_mvp/features/register/register_page.dart';
 import 'package:cherry_mvp/features/welcome/widgets/post_auth_username_gate.dart';
 import 'package:cherry_mvp/features/login/login_page.dart';
+import 'package:cherry_mvp/features/products/product_page.dart';
 import 'package:cherry_mvp/features/welcome/welcome_page.dart';
 
 class AppRoutes {
@@ -30,6 +29,8 @@ class AppRoutes {
   static const String checkoutComplete = '/checkoutComplete';
   static const String donationSuccess = '/donationSuccess';
   static const String faqsPage = '/faq';
+  static const String category = '/category';
+  static const String charity = '/charity';
 
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
@@ -63,6 +64,22 @@ class AppRoutes {
         );
       case donationSuccess:
         return MaterialPageRoute(builder: (_) => const SuccessfulUploadPage());
+      case category:
+        final args = settings.arguments as Map<String, dynamic>?;
+        return MaterialPageRoute(
+          builder: (_) => CategoryPage(
+            selectionMode: args?['selectionMode'] ?? false,
+            initialCategoryId: args?['initialCategoryId'],
+          ),
+        );
+      case charity:
+        final args = settings.arguments as Map<String, dynamic>?;
+        return MaterialPageRoute(
+          builder: (_) => CharityPage(
+            selectionMode: args?['selectionMode'] ?? false,
+            initialCharityId: args?['initialCharityId'],
+          ),
+        );
       default:
         return MaterialPageRoute(
           builder: (_) => Scaffold(

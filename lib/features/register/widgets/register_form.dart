@@ -4,11 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
-import 'package:cherry_mvp/features/register/register_viewmodel.dart';
-import 'package:cherry_mvp/core/utils/utils.dart';
 import 'package:cherry_mvp/core/router/router.dart';
-import 'package:cherry_mvp/features/welcome/widgets/auth_form_shell.dart';
+import 'package:cherry_mvp/core/utils/utils.dart';
+import 'package:cherry_mvp/features/register/register_viewmodel.dart';
 import 'package:cherry_mvp/features/shared_widgets/labeled_input_field.dart';
+import 'package:cherry_mvp/features/welcome/widgets/auth_form_shell.dart';
 
 class RegisterForm extends StatefulWidget {
   const RegisterForm({super.key});
@@ -216,23 +216,6 @@ class _RegisterFormState extends State<RegisterForm> {
 
               Consumer<RegisterViewModel>(
                 builder: (context, viewModel, child) {
-                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                    if (viewModel.status.type == StatusType.failure) {
-                      Fluttertoast.showToast(
-                        msg: viewModel.status.message ?? "",
-                      );
-                    } else if (viewModel.status.type == StatusType.success) {
-                      Fluttertoast.showToast(msg: "Registration Successful");
-
-                      // Clear form fields after successful registration
-                      _emailController.clear();
-                      _passwordController.clear();
-                      _confirmPasswordController.clear();
-
-                      navigator.replaceWith(AppRoutes.home);
-                    }
-                  });
-
                   return Column(
                     children: [
                       viewModel.status.type == StatusType.loading
@@ -240,9 +223,9 @@ class _RegisterFormState extends State<RegisterForm> {
                           : SizedBox(
                               width: double.infinity,
                               child: FilledButton(
-                                onPressed: () {
+                                onPressed: () async {
                                   if (_formKey.currentState!.validate()) {
-                                    viewModel.register(
+                                    await viewModel.register(
                                       _firstNameController.text,
                                       _emailController.text,
                                       _userNameController.text,
@@ -250,6 +233,11 @@ class _RegisterFormState extends State<RegisterForm> {
                                       _passwordController.text,
                                       _selectedImage,
                                     );
+                                    if (viewModel.status.type == StatusType.failure) {
+                                      Fluttertoast.showToast(msg: viewModel.status.message ?? "");
+                                    } else if (viewModel.status.type == StatusType.success) {
+                                      Fluttertoast.showToast(msg: "Registration Successful");
+                                    }
                                   }
                                 },
                                 child: const Text("Submit"),

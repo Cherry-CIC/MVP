@@ -1,11 +1,13 @@
 import 'dart:io';
 import 'dart:ui';
 
-import 'package:cherry_mvp/core/config/app_colors.dart';
-import 'package:cherry_mvp/core/config/app_strings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
+import 'package:cherry_mvp/core/config/app_colors.dart';
+import 'package:cherry_mvp/core/config/app_strings.dart';
+import 'package:cherry_mvp/features/donation/donation_view_model.dart';
 
 class PhotoUpload extends StatefulWidget {
   final Function(List<XFile>)? onImagesChanged;
@@ -99,12 +101,9 @@ class _PhotoUploadState extends State<PhotoUpload> {
       if (widget.initialImages != null && widget.initialImages!.isNotEmpty) {
         setState(() {
           selectedImages = List.from(widget.initialImages!);
-          _currentImageIndex = selectedImages.isNotEmpty
-              ? selectedImages.length - 1
-              : 0;
+          _currentImageIndex = selectedImages.isNotEmpty ? selectedImages.length - 1 : 0;
         });
-      } else if (widget.initialImages == null ||
-          widget.initialImages!.isEmpty) {
+      } else if (widget.initialImages == null || widget.initialImages!.isEmpty) {
         setState(() {
           selectedImages.clear();
           _currentImageIndex = 0;
@@ -203,8 +202,7 @@ class _PhotoUploadState extends State<PhotoUpload> {
   void _removeImage(int index) {
     setState(() {
       selectedImages.removeAt(index);
-      if (_currentImageIndex >= selectedImages.length &&
-          selectedImages.isNotEmpty) {
+      if (_currentImageIndex >= selectedImages.length && selectedImages.isNotEmpty) {
         _currentImageIndex = selectedImages.length - 1;
       } else if (selectedImages.isEmpty) {
         _currentImageIndex = 0;
@@ -213,8 +211,7 @@ class _PhotoUploadState extends State<PhotoUpload> {
     widget.onImagesChanged?.call(selectedImages);
 
     // Animate to valid page if needed
-    if (selectedImages.isNotEmpty &&
-        _currentImageIndex < selectedImages.length) {
+    if (selectedImages.isNotEmpty && _currentImageIndex < selectedImages.length) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (_pageController.hasClients) {
           _pageController.animateToPage(
@@ -238,16 +235,12 @@ class _PhotoUploadState extends State<PhotoUpload> {
             ListTile(
               leading: const Icon(Icons.camera_alt),
               title: const Text(AppStrings.cameraPhoto),
-              onTap: () {
-                Navigator.pop(context, ImageSource.camera);
-              },
+              onTap: () => context.read<DonationViewModel>().selectType(ImageSource.camera),
             ),
             ListTile(
               leading: const Icon(Icons.photo_library),
               title: const Text(AppStrings.galleryPhotoMultiple),
-              onTap: () {
-                Navigator.pop(context, ImageSource.gallery);
-              },
+              onTap: () => context.read<DonationViewModel>().selectType(ImageSource.gallery),
             ),
           ],
         ),
@@ -383,9 +376,7 @@ class _PhotoUploadState extends State<PhotoUpload> {
                     height: 8,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: _currentImageIndex == index
-                          ? Colors.white
-                          : Colors.white54,
+                      color: _currentImageIndex == index ? Colors.white : Colors.white54,
                     ),
                   ),
                 ),
@@ -450,9 +441,7 @@ class _PhotoUploadState extends State<PhotoUpload> {
         spacing: 16,
         children: [
           Text(AppStrings.takePhotoInstruction),
-          selectedImages.isNotEmpty
-              ? _buildImageCarousel()
-              : _buildEmptyState(),
+          selectedImages.isNotEmpty ? _buildImageCarousel() : _buildEmptyState(),
         ],
       ),
     );
@@ -621,9 +610,7 @@ class _DashedBorderPainter extends CustomPainter {
     for (final PathMetric metric in source.computeMetrics()) {
       double distance = 0.0;
       while (distance < metric.length) {
-        final double len = (distance + dashArray < metric.length)
-            ? dashArray
-            : metric.length - distance;
+        final double len = (distance + dashArray < metric.length) ? dashArray : metric.length - distance;
         dest.addPath(metric.extractPath(distance, distance + len), Offset.zero);
         distance += dashArray + gap;
       }

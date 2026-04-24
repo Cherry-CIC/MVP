@@ -1,9 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:logging/logging.dart';
 import 'package:cherry_mvp/core/router/nav_provider.dart';
-import 'package:cherry_mvp/features/login/login_repository.dart';
 import 'package:cherry_mvp/core/utils/utils.dart';
-import 'login_model.dart';
+import 'package:cherry_mvp/features/login/login_model.dart';
+import 'package:cherry_mvp/features/login/login_repository.dart';
 
 class LoginViewModel extends ChangeNotifier {
   final LoginRepository loginRepository;
@@ -80,5 +80,9 @@ class LoginViewModel extends ChangeNotifier {
     }
 
     notifyListeners();
+  }
+
+  void goBack() {
+    navigator.goBack();
   }
 }

@@ -8,8 +8,10 @@ class AuthGate extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final firebaseAuth = context.read<FirebaseAuth>();
+
     return StreamBuilder<User?>(
-      stream: FirebaseAuth.instance.authStateChanges(),
+      stream: firebaseAuth.authStateChanges(),
       builder: (context, snapshot) {
         // Show splash while checking auth status
         if (snapshot.connectionState == ConnectionState.waiting) {
