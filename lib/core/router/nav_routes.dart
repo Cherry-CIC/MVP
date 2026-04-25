@@ -6,7 +6,6 @@ import 'package:cherry_mvp/features/checkout/checkout_page.dart';
 import 'package:cherry_mvp/features/donation/donation_page.dart';
 import 'package:cherry_mvp/features/donation/successful_upload_page.dart';
 import 'package:cherry_mvp/features/discover/discover_page.dart';
-import 'package:cherry_mvp/features/home/home_page.dart';
 import 'package:cherry_mvp/features/login/login_page.dart';
 import 'package:cherry_mvp/features/products/product_page.dart';
 import 'package:cherry_mvp/features/register/register_page.dart';
@@ -14,6 +13,7 @@ import 'package:cherry_mvp/features/search/widgets/category_page/category_page.d
 import 'package:cherry_mvp/features/settings/faq_page.dart';
 import 'package:cherry_mvp/features/settings/settings_page.dart';
 import 'package:cherry_mvp/features/welcome/welcome_page.dart';
+import 'package:cherry_mvp/features/welcome/widgets/post_auth_username_gate.dart';
 
 class AppRoutes {
   static const String welcome = '/welcome';
@@ -44,7 +44,7 @@ class AppRoutes {
       case product:
         return MaterialPageRoute(builder: (_) => ProductPage());
       case home:
-        return MaterialPageRoute(builder: (_) => HomePage());
+        return MaterialPageRoute(builder: (_) => const PostAuthUsernameGate());
       case discover:
         return MaterialPageRoute(builder: (_) => DiscoverPage());
       case settingspage:

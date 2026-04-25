@@ -26,8 +26,7 @@ class DioApiService implements ApiService {
   final FirebaseAuth _firebaseAuth;
   final _log = Logger('DioApiService');
 
-  DioApiService({FirebaseAuth? firebaseAuth})
-    : _firebaseAuth = firebaseAuth ?? FirebaseAuth.instance {
+  DioApiService({FirebaseAuth? firebaseAuth}) : _firebaseAuth = firebaseAuth ?? FirebaseAuth.instance {
     final baseUrl = AppEnvironment.apiBaseUrl;
 
     _dio = Dio(
