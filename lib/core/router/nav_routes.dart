@@ -1,18 +1,19 @@
 // feature/118-product-details-page
+import 'package:flutter/material.dart';
+import 'package:cherry_mvp/features/charity_page/charity_page.dart';
 import 'package:cherry_mvp/features/checkout/checkout_complete_page.dart';
 import 'package:cherry_mvp/features/checkout/checkout_page.dart';
 import 'package:cherry_mvp/features/donation/donation_page.dart';
 import 'package:cherry_mvp/features/donation/successful_upload_page.dart';
 import 'package:cherry_mvp/features/discover/discover_page.dart';
-import 'package:cherry_mvp/features/settings/faq_page.dart';
-import 'package:cherry_mvp/features/settings/settings_page.dart';
-// main
-import 'package:flutter/material.dart';
-import 'package:cherry_mvp/features/register/register_page.dart';
-import 'package:cherry_mvp/features/welcome/widgets/post_auth_username_gate.dart';
 import 'package:cherry_mvp/features/login/login_page.dart';
 import 'package:cherry_mvp/features/products/product_page.dart';
+import 'package:cherry_mvp/features/register/register_page.dart';
+import 'package:cherry_mvp/features/search/widgets/category_page/category_page.dart';
+import 'package:cherry_mvp/features/settings/faq_page.dart';
+import 'package:cherry_mvp/features/settings/settings_page.dart';
 import 'package:cherry_mvp/features/welcome/welcome_page.dart';
+import 'package:cherry_mvp/features/welcome/widgets/post_auth_username_gate.dart';
 
 class AppRoutes {
   static const String welcome = '/welcome';

@@ -3,6 +3,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
 import 'package:cherry_mvp/core/config/app_colors.dart';
 import 'package:cherry_mvp/core/config/app_strings.dart';
+import 'package:cherry_mvp/core/router/nav_routes.dart';
 import 'package:cherry_mvp/core/utils/status.dart';
 import 'package:cherry_mvp/features/checkout/checkout_view_model.dart';
 import 'package:cherry_mvp/features/checkout/payment_type.dart';
@@ -109,9 +110,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 return ListTile(
                   title: const Text(AppStrings.checkoutPayment),
                   subtitle: Text(
-                    vm.selectedPaymentType != null
-                        ? vm.selectedPaymentType!.name
-                        : AppStrings.paymentMethodsChoose,
+                    vm.selectedPaymentType != null ? vm.selectedPaymentType!.name : AppStrings.paymentMethodsChoose,
                   ),
                   trailing: Icon(
                     vm.selectedPaymentType != null ? Icons.check : Icons.add,
@@ -145,9 +144,8 @@ class _CheckoutPageState extends State<CheckoutPage> {
                     Text(
                       AppStrings.checkoutSecure,
                       style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                            color:
-                                Theme.of(context).colorScheme.onSurfaceVariant,
-                          ),
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                     ),
                   ],
                 ),
@@ -164,21 +162,18 @@ class _CheckoutPageState extends State<CheckoutPage> {
         width: double.infinity,
         child: Consumer<CheckoutViewModel>(
           builder: (context, viewModel, _) {
-            final isLoading =
-                viewModel.createOrderStatus.type == StatusType.loading;
+            final isLoading = viewModel.createOrderStatus.type == StatusType.loading;
 
-            final hasDeliveryChoice =
-                (viewModel.deliveryChoice ?? '').isNotEmpty;
+            final hasDeliveryChoice = (viewModel.deliveryChoice ?? '').isNotEmpty;
             final isPickup = viewModel.deliveryChoice == 'pickup';
 
-            final hasValidDelivery = hasDeliveryChoice &&
+            final hasValidDelivery =
+                hasDeliveryChoice &&
                 (isPickup
                     ? viewModel.selectedInpost != null
-                    : viewModel.isShippingAddressConfirmed &&
-                        viewModel.hasShippingAddress);
+                    : viewModel.isShippingAddressConfirmed && viewModel.hasShippingAddress);
 
-            final canAttemptPayment =
-                hasValidDelivery && basket.total > 0 && !isLoading;
+            final canAttemptPayment = hasValidDelivery && basket.total > 0 && !isLoading;
 
             return FilledButton(
               onPressed: canAttemptPayment
@@ -186,8 +181,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                       // ✅ require payment method
                       if (!viewModel.hasPaymentMethod) {
                         setState(() {
-                          _errorMessage =
-                              AppStrings.checkoutPaymentMethodRequired;
+                          _errorMessage = AppStrings.checkoutPaymentMethodRequired;
                         });
 
                         await showModalBottomSheet<PaymentType>(

@@ -1,7 +1,8 @@
+import 'package:provider/provider.dart';
+import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cherry_mvp/features/welcome/welcome_page.dart';
 import 'package:cherry_mvp/features/welcome/widgets/post_auth_username_gate.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
 
 class AuthGate extends StatelessWidget {
   const AuthGate({super.key});
