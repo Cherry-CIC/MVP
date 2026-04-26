@@ -207,7 +207,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                       }
                     }
                   : null,
-              child: isLoading
+              child: viewModel.createOrderStatus.type == StatusType.loading
                   ? const SizedBox(
                       height: 22,
                       width: 22,
