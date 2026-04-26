@@ -1,8 +1,8 @@
+import 'package:provider/provider.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:provider/provider.dart';
-import 'package:cherry_mvp/features/home/home_page.dart';
 import 'package:cherry_mvp/features/welcome/welcome_page.dart';
+import 'package:cherry_mvp/features/welcome/widgets/post_auth_username_gate.dart';
 
 class AuthGate extends StatelessWidget {
   const AuthGate({super.key});
@@ -21,7 +21,7 @@ class AuthGate extends StatelessWidget {
 
         // If user is logged in then go to home page
         if (snapshot.hasData) {
-          return const HomePage();
+          return const PostAuthUsernameGate();
         }
 
         // If user is not logged in then go to the WelcomePage
