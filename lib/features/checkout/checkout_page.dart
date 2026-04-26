@@ -5,6 +5,7 @@ import 'package:cherry_mvp/core/config/app_colors.dart';
 import 'package:cherry_mvp/core/config/app_strings.dart';
 import 'package:cherry_mvp/core/utils/status.dart';
 import 'package:cherry_mvp/features/checkout/checkout_view_model.dart';
+import 'package:cherry_mvp/features/checkout/payment_type.dart';
 import 'package:cherry_mvp/features/checkout/widgets/basket_list_item.dart';
 import 'package:cherry_mvp/features/checkout/widgets/delivery_options.dart';
 import 'package:cherry_mvp/features/checkout/widgets/select_payment_type_bottom_sheet.dart';
@@ -197,7 +198,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                       }
                     }
                   : null,
-              child: isLoading
+              child: viewModel.createOrderStatus.type == StatusType.loading
                   ? const SizedBox(
                       height: 22,
                       width: 22,
