@@ -25,6 +25,7 @@ Map<String, dynamic> _$PaymentIntentResponseToJson(
 PaymentIntentData _$PaymentIntentDataFromJson(Map<String, dynamic> json) =>
     PaymentIntentData(
       paymentIntent: json['paymentIntent'] as String,
+      paymentIntentId: json['paymentIntentId'] as String?,
       ephemeralKey: json['ephemeralKey'] as String,
       customer: json['customer'] as String,
       publishableKey: json['publishableKey'] as String,
@@ -33,6 +34,7 @@ PaymentIntentData _$PaymentIntentDataFromJson(Map<String, dynamic> json) =>
 Map<String, dynamic> _$PaymentIntentDataToJson(PaymentIntentData instance) =>
     <String, dynamic>{
       'paymentIntent': instance.paymentIntent,
+      'paymentIntentId': instance.paymentIntentId,
       'ephemeralKey': instance.ephemeralKey,
       'customer': instance.customer,
       'publishableKey': instance.publishableKey,

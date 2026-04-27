@@ -242,6 +242,21 @@ class AppStrings {
       'Please choose a delivery option';
   static const checkoutPickupLockerRequired = 'Please select a pickup locker';
   static const checkoutPaymentMethodRequired = 'Please select a payment method';
+  static const checkoutDeliveryAddressRequired =
+      'Please confirm your delivery address';
+  static const checkoutPaymentFailed =
+      'Payment could not be completed. Please try again.';
+  static const checkoutPaymentCancelled = 'Payment was cancelled.';
+  static const checkoutPaymentDetailsUnavailable =
+      'Payment details could not be confirmed. Please try again.';
+  static const checkoutOrderCreationFailed =
+      'We could not create your order after payment. Please try again.';
+  static const checkoutShipmentFailed =
+      'Your order was created, but delivery could not be confirmed. Please contact support if this continues.';
+  static const checkoutShipmentPending =
+      'Payment complete. Your order is placed and delivery is still being arranged.';
+  static const checkoutRetryOrder = 'Retry order';
+  static const checkoutDeliveryPending = 'Delivery pending';
 
   // Card Details
   static const cardDetailsTitle = 'Card Details';

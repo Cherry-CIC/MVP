@@ -131,14 +131,10 @@ final class CheckoutRepository implements ICheckoutRepository {
         data: order,
       );
       if (result.isSuccess && result.value != null) {
-        final data = result.value;
-
-        final jsonList = data['data'] ?? data;
-
-        return Result.success(jsonList);
+        return Result.success(result.value);
       } else {
         return Result.failure(
-          result.error ?? 'Error creating payment, please try again later',
+          result.error ?? 'Error creating order, please try again later',
         );
       }
     } catch (e) {

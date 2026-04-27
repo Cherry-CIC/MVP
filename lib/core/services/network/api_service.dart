@@ -3,29 +3,33 @@ import 'package:dio/dio.dart';
 import 'package:cherry_mvp/core/services/error_string.dart';
 import 'package:cherry_mvp/core/utils/result.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:logging/logging.dart';
 import 'package:pretty_dio_logger/pretty_dio_logger.dart';
 
 abstract class ApiService {
-  Future<Result<T>> get<T>(String endpoint, {Map<String, dynamic>? queryParameters});
+  Future<Result<T>> get<T>(
+    String endpoint, {
+    Map<String, dynamic>? queryParameters,
+  });
   Future<Result<T>> post<T>(String endpoint, {dynamic data});
   Future<Result<T>> put<T>(String endpoint, {dynamic data});
   Future<Result<T>> delete<T>(String endpoint);
 }
 
 class DioApiService implements ApiService {
-  static const String _defaultApiBaseUrl = 'https://cherry-backend-401854471349.europe-west2.run.app';
-  
+  static const String _defaultApiBaseUrl =
+      'https://cherry-backend-401854471349.europe-west2.run.app';
+
   late final Dio _dio;
   final FirebaseAuth _firebaseAuth;
   final _log = Logger('DioApiService');
 
   DioApiService({FirebaseAuth? firebaseAuth})
-      : _firebaseAuth = firebaseAuth ?? FirebaseAuth.instance {
-    
+    : _firebaseAuth = firebaseAuth ?? FirebaseAuth.instance {
     final baseUrl = dotenv.env['API_BASE_URL'] ?? _defaultApiBaseUrl;
-    
+
     _dio = Dio(
       BaseOptions(
         baseUrl: _stripTrailingSlash(baseUrl),
@@ -53,7 +57,7 @@ class DioApiService implements ApiService {
                 const Duration(seconds: 3),
                 onTimeout: () => '',
               );
-              
+
               if (idToken.isNotEmpty) {
                 options.headers['Authorization'] = 'Bearer $idToken';
               }
@@ -66,21 +70,29 @@ class DioApiService implements ApiService {
       ),
     );
 
-    _dio.interceptors.add(
-      PrettyDioLogger(
-        requestHeader: true,
-        requestBody: true,
-        responseBody: true,
-        error: true,
-        compact: true,
-      ),
-    );
+    if (kDebugMode) {
+      _dio.interceptors.add(
+        PrettyDioLogger(
+          requestHeader: false,
+          requestBody: false,
+          responseBody: false,
+          error: true,
+          compact: true,
+        ),
+      );
+    }
   }
 
   @override
-  Future<Result<T>> get<T>(String endpoint, {Map<String, dynamic>? queryParameters}) async {
+  Future<Result<T>> get<T>(
+    String endpoint, {
+    Map<String, dynamic>? queryParameters,
+  }) async {
     try {
-      final response = await _dio.get(endpoint, queryParameters: queryParameters);
+      final response = await _dio.get(
+        endpoint,
+        queryParameters: queryParameters,
+      );
       return Result.success(response.data as T);
     } on DioException catch (e) {
       return Result.failure(_handleDioError(e));
@@ -118,7 +130,8 @@ class DioApiService implements ApiService {
   }
 
   String _handleDioError(DioException e) {
-    if (e.type == DioExceptionType.connectionTimeout || e.type == DioExceptionType.receiveTimeout) {
+    if (e.type == DioExceptionType.connectionTimeout ||
+        e.type == DioExceptionType.receiveTimeout) {
       return ErrorStrings.timeoutError;
     }
     return ErrorStrings.networkError;

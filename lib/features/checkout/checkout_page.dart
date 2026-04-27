@@ -19,7 +19,7 @@ class CheckoutPage extends StatefulWidget {
 
 class _CheckoutPageState extends State<CheckoutPage> {
   String _errorMessage = "";
-  late final CheckoutViewModel vm;
+  CheckoutViewModel? vm;
 
   @override
   void initState() {
@@ -29,32 +29,55 @@ class _CheckoutPageState extends State<CheckoutPage> {
       if (!mounted) return;
 
       vm = context.read<CheckoutViewModel>();
-      vm.resetCreateOrderStatus();
-      vm.fetchUserLocker();
-      vm.addListener(_handleOrderStatus);
+      vm!.resetCreateOrderStatus();
+      vm!.fetchUserLocker();
+      vm!.addListener(_handleOrderStatus);
     });
   }
 
-
   void _handleOrderStatus() {
     if (!mounted) return;
+    final checkoutViewModel = vm;
+    if (checkoutViewModel == null) return;
 
-    final status = vm.createOrderStatus.type;
+    final status = checkoutViewModel.createOrderStatus.type;
+    final flowState = checkoutViewModel.checkoutFlowState;
 
-    if (status == StatusType.failure) {
-      Fluttertoast.showToast(
-        msg: vm.createOrderStatus.message ?? "oops! Something went wrong",
-      );
-      vm.resetCreateOrderStatus();
+    if (status == StatusType.success &&
+        flowState == CheckoutFlowState.shipmentPending) {
+      final message =
+          checkoutViewModel.createOrderStatus.message ??
+          AppStrings.checkoutShipmentPending;
+      setState(() {
+        _errorMessage = message;
+      });
+      Fluttertoast.showToast(msg: message);
+      checkoutViewModel.resetCreateOrderStatus();
+      return;
     }
 
-    if (status == StatusType.success) {
-      Fluttertoast.showToast(msg: "Payment Successful");
-      vm.resetCreateOrderStatus();
+    if (status == StatusType.success &&
+        flowState == CheckoutFlowState.shipmentCreated) {
+      setState(() {
+        _errorMessage = "";
+      });
+      Fluttertoast.showToast(msg: "Payment successful");
+      checkoutViewModel.resetCreateOrderStatus();
       gotoCheckoutComplete();
+      return;
+    }
+
+    if (status == StatusType.failure || status == StatusType.canceled) {
+      final message =
+          checkoutViewModel.createOrderStatus.message ??
+          "Oops! Something went wrong";
+      setState(() {
+        _errorMessage = message;
+      });
+      Fluttertoast.showToast(msg: message);
+      checkoutViewModel.resetCreateOrderStatus();
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -80,48 +103,51 @@ class _CheckoutPageState extends State<CheckoutPage> {
 
           //if (_errorMessage.isNotEmpty)
           if (_errorMessage.isNotEmpty)
-          SliverToBoxAdapter(
-            child: Container(
-              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primaryContainer,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: AppColors.primaryAction,
+            SliverToBoxAdapter(
+              child: Container(
+                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.primaryContainer,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: AppColors.primaryAction),
                 ),
-              ),
-              child: Text(
-                _errorMessage,
-                style: TextStyle(
-                  color: AppColors.primaryAction,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
+                child: Text(
+                  _errorMessage,
+                  style: TextStyle(
+                    color: AppColors.primaryAction,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ),
             ),
-          ),
 
-          SliverToBoxAdapter( 
+          SliverToBoxAdapter(
             child: Consumer<CheckoutViewModel>(
-              builder: (context, vm, _) { 
-              return ListTile( 
-                title: const Text(AppStrings.checkoutPayment),
-                subtitle: Text( 
-                vm.selectedPaymentType != null ? vm.selectedPaymentType!.name : AppStrings.paymentMethodsChoose, 
-                ), 
-                trailing: Icon( 
-                vm.selectedPaymentType != null ? Icons.check : Icons.add, 
-                color: Theme.of(context).colorScheme.primary, 
-                ), onTap: () { 
-                showModalBottomSheet( 
-                  context: context, isScrollControlled: true, 
-                  backgroundColor: Colors.transparent, builder: (_) => const SelectPaymentTypeBottomSheet(), 
-                ); 
-                } 
-              ); 
-              }, 
-            ), 
+              builder: (context, vm, _) {
+                return ListTile(
+                  title: const Text(AppStrings.checkoutPayment),
+                  subtitle: Text(
+                    vm.selectedPaymentType != null
+                        ? vm.selectedPaymentType!.name
+                        : AppStrings.paymentMethodsChoose,
+                  ),
+                  trailing: Icon(
+                    vm.selectedPaymentType != null ? Icons.check : Icons.add,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  onTap: () {
+                    showModalBottomSheet(
+                      context: context,
+                      isScrollControlled: true,
+                      backgroundColor: Colors.transparent,
+                      builder: (_) => const SelectPaymentTypeBottomSheet(),
+                    );
+                  },
+                );
+              },
+            ),
           ),
 
           SliverList.list(
@@ -157,29 +183,39 @@ class _CheckoutPageState extends State<CheckoutPage> {
         width: double.infinity,
         child: Consumer<CheckoutViewModel>(
           builder: (context, viewModel, _) {
+            final hasDeliveryDetails = viewModel.deliveryChoice == "pickup"
+                ? viewModel.selectedInpost != null
+                : viewModel.deliveryChoice == "home"
+                ? viewModel.hasShippingAddress &&
+                      viewModel.isShippingAddressConfirmed
+                : false;
 
-            final canPay =  viewModel.selectedPaymentType != null 
-              &&  viewModel.deliveryChoice != null 
-              &&  (viewModel.deliveryChoice != "pickup" || viewModel.selectedInpost != null)
-              &&  basket.total > 0 
-              && viewModel.createOrderStatus.type != StatusType.loading;
+            final canStartPayment =
+                viewModel.selectedPaymentType != null &&
+                hasDeliveryDetails &&
+                viewModel.total > 0 &&
+                !viewModel.isCheckoutProcessing &&
+                !viewModel.hasCompletedCheckout;
+
+            final canPay = viewModel.canRetryOrderCreation || canStartPayment;
 
             return FilledButton(
               onPressed: canPay
-              ? () async {
-                  final paid = await viewModel.payWithPaymentSheet(
-                    amount: basket.total,
-                  );
+                  ? () async {
+                      setState(() {
+                        _errorMessage = "";
+                      });
+                      if (viewModel.canRetryOrderCreation) {
+                        await viewModel.retryOrderCreation();
+                      } else {
+                        await viewModel.submitCheckout();
+                      }
+                    }
+                  : null,
 
-                  if (paid) {
-                    await viewModel.createOrder();
-                  }
-                }
-              : null, 
-
-              child: viewModel.createOrderStatus.type == StatusType.loading
-              ? const CircularProgressIndicator(color: Colors.white)
-              : Text(AppStrings.checkoutPay),
+              child: viewModel.isCheckoutProcessing
+                  ? const CircularProgressIndicator(color: Colors.white)
+                  : Text(viewModel.checkoutActionLabel),
             );
           },
         ),
@@ -194,8 +230,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
 
   @override
   void dispose() {
-    vm.removeListener(_handleOrderStatus);
+    vm?.removeListener(_handleOrderStatus);
     super.dispose();
   }
-
 }

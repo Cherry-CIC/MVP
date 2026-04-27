@@ -20,6 +20,7 @@ class PaymentIntentResponse {
   Map<String, dynamic> toJson() => _$PaymentIntentResponseToJson(this);
 
   String get paymentIntent => data.paymentIntent;
+  String? get paymentIntentId => data.paymentIntentId;
   String get ephemeralKey => data.ephemeralKey;
   String get customer => data.customer;
   String get publishableKey => data.publishableKey;
@@ -28,12 +29,14 @@ class PaymentIntentResponse {
 @JsonSerializable()
 class PaymentIntentData {
   final String paymentIntent;
+  final String? paymentIntentId;
   final String ephemeralKey;
   final String customer;
   final String publishableKey;
 
   PaymentIntentData({
     required this.paymentIntent,
+    this.paymentIntentId,
     required this.ephemeralKey,
     required this.customer,
     required this.publishableKey,
