@@ -1,4 +1,3 @@
-import 'package:cherry_mvp/core/models/donation_charity_model.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:cherry_mvp/core/config/config.dart';
 
@@ -25,8 +24,7 @@ class Charity {
   });
 
   // Use generated methods
-  factory Charity.fromJson(Map<String, dynamic> json) =>
-      _$CharityFromJson(json);
+  factory Charity.fromJson(Map<String, dynamic> json) => _$CharityFromJson(json);
 
   Map<String, dynamic> toJson() => _$CharityToJson(this);
 }
