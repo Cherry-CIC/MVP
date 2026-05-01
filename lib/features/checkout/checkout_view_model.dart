@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:logging/logging.dart';
 import 'package:cherry_mvp/core/config/config.dart';
 import 'package:cherry_mvp/core/models/inpost_model.dart';
@@ -12,10 +13,34 @@ import 'package:cherry_mvp/features/checkout/constants/address_constants.dart';
 import 'package:cherry_mvp/features/checkout/models/payment_intent.dart';
 import 'package:cherry_mvp/features/checkout/payment_type.dart';
 import 'package:cherry_mvp/features/checkout/widgets/shipping_address_widget.dart';
-import 'package:cherry_mvp/features/checkout/constants/address_constants.dart';
+
+enum CheckoutFlowState {
+  uninitialized,
+  paymentProcessing,
+  paymentCompleted,
+  orderCreationProcessing,
+  orderCreated,
+  shipmentCreated,
+  shipmentPending,
+  paymentFailure,
+  orderCreationFailure,
+  shipmentFailure,
+}
 
 /// ViewModel for managing checkout state including basket items, shipping address, and payment method
 class CheckoutViewModel extends ChangeNotifier {
+  static const int _mvpDefaultShippingWeightGrams = 500;
+  static const String _gbCountryCode = 'GB';
+  static const String _pickupDeliveryChoice = 'pickup';
+  static const String _pickupDeliveryType = 'pickup_point';
+  static const String _homeDeliveryType = 'home';
+  static const String _pickupShippingOptionId = 'mvp-pickup-point-delivery';
+  static const String _homeShippingOptionId = 'mvp-home-delivery';
+  static const String _pickupShippingOptionName = 'MVP pick-up point delivery';
+  static const String _homeShippingOptionName = 'MVP home delivery';
+  static const String _pickupShippingCarrier = 'inpost';
+  static const String _homeShippingCarrier = 'evri';
+
   final ICheckoutRepository checkoutRepository;
   final NavigationProvider navigator;
   final _log = Logger('CheckoutViewModel');
@@ -28,6 +53,25 @@ class CheckoutViewModel extends ChangeNotifier {
 
   Status _createOrderStatus = Status.uninitialized;
   Status get createOrderStatus => _createOrderStatus;
+
+  CheckoutFlowState _checkoutFlowState = CheckoutFlowState.uninitialized;
+  CheckoutFlowState get checkoutFlowState => _checkoutFlowState;
+
+  String? _lastPaymentIntentId;
+  String? get lastPaymentIntentId => _lastPaymentIntentId;
+
+  bool get isCheckoutProcessing =>
+      _checkoutFlowState == CheckoutFlowState.paymentProcessing ||
+      _checkoutFlowState == CheckoutFlowState.paymentCompleted ||
+      _checkoutFlowState == CheckoutFlowState.orderCreationProcessing;
+
+  bool get hasCompletedCheckout =>
+      _checkoutFlowState == CheckoutFlowState.shipmentCreated ||
+      _checkoutFlowState == CheckoutFlowState.shipmentPending;
+
+  bool get canRetryOrderCreation =>
+      _checkoutFlowState == CheckoutFlowState.orderCreationFailure &&
+      (_lastPaymentIntentId?.trim().isNotEmpty ?? false);
 
   final List<Product> _basketItems = [];
 
@@ -42,17 +86,17 @@ class CheckoutViewModel extends ChangeNotifier {
 
   String? deliveryChoice;
 
-  setDeliveryChoice(String val) {
+  void setDeliveryChoice(String val) {
     deliveryChoice = val;
     notifyListeners();
   }
 
-  setShowLocker(bool val) {
+  void setShowLocker(bool val) {
     showLocker = val;
     notifyListeners();
   }
 
-  setSelectedInpost(var data) {
+  void setSelectedInpost(var data) {
     selectedInpost = data;
     notifyListeners();
   }
@@ -92,6 +136,12 @@ class CheckoutViewModel extends ChangeNotifier {
 
   /// Whether the order is ready for checkout (has both address and payment method)
   bool get canCheckout => hasShippingAddress && hasPaymentMethod;
+
+  bool get hasValidDeliveryDetails {
+    if ((deliveryChoice ?? '').isEmpty) return false;
+    if (_isPickupDelivery) return selectedInpost != null;
+    return isShippingAddressConfirmed && hasShippingAddress && validateShippingAddress();
+  }
 
   void setAddressConfirmed(bool value) {
     isShippingAddressConfirmed = value;
@@ -187,6 +237,8 @@ class CheckoutViewModel extends ChangeNotifier {
     _basketItems.clear();
     deliveryChoice = null;
     _createOrderStatus = Status.uninitialized;
+    _checkoutFlowState = CheckoutFlowState.uninitialized;
+    _lastPaymentIntentId = null;
     notifyListeners();
   }
 
@@ -222,58 +274,8 @@ class CheckoutViewModel extends ChangeNotifier {
     if (!canCheckout) return false;
     if (!validateShippingAddress()) return false;
 
-    try {
-      // Prepare order data for API call
-      final Map<String, dynamic> orderData = {
-        'items': basketItems
-            .map(
-              (item) => {
-                'id': item.id,
-                'name': item.name,
-                'price': item.price,
-                // Add other product fields as needed
-              },
-            )
-            .toList(),
-        'shipping_address': {
-          'formatted_address': formattedShippingAddress,
-          AddressConstants.streetKey: shippingAddressComponents[AddressConstants.streetKey],
-          AddressConstants.cityKey: shippingAddressComponents[AddressConstants.cityKey],
-          AddressConstants.stateKey: shippingAddressComponents[AddressConstants.stateKey],
-          'postal_code': shippingAddressComponents[AddressConstants.postalCodeKey],
-          AddressConstants.countryKey: shippingAddressComponents[AddressConstants.countryKey],
-          'latitude': _shippingAddress?.latitude,
-          'longitude': _shippingAddress?.longitude,
-        },
-        'totals': {
-          'item_total': itemTotal,
-          'security_fee': securityFee,
-          'postage': postage,
-          'total': total,
-        },
-      };
-
-      // Validate order data structure
-      if (orderData['items'] == null || (orderData['items'] as List).isEmpty) {
-        return false;
-      }
-
-      // Call the repository to create the order via API
-      final result = await checkoutRepository.createOrder(orderData);
-
-      if (result.isSuccess) {
-        _log.info('Checkout processed successfully');
-        return true;
-      } else {
-        _log.warning('Checkout failed: ${result.error}');
-        return false;
-      }
-    } catch (e) {
-      // Log error for debugging purposes
-      _log.severe('Checkout error: $e');
-      debugPrint('${AddressConstants.checkoutError}: $e');
-      return false;
-    }
+    await submitCheckout();
+    return hasCompletedCheckout;
   }
 
   Future<void> onConfirmLocation(String postalCode) async {
@@ -410,20 +412,42 @@ class CheckoutViewModel extends ChangeNotifier {
     }
   }
 
-  Future<bool> payWithPaymentSheet({required double amount}) async {
-    if (selectedPaymentType == null) {
+  Future<void> submitCheckout() async {
+    final paymentIntentId = await payWithPaymentSheet(amount: total);
+    if (paymentIntentId == null) return;
+
+    await createOrder(paymentIntentId: paymentIntentId);
+  }
+
+  Future<void> retryOrderCreation() async {
+    final paymentIntentId = _lastPaymentIntentId?.trim();
+    if (paymentIntentId == null || paymentIntentId.isEmpty) {
+      _checkoutFlowState = CheckoutFlowState.orderCreationFailure;
+      _createOrderStatus = Status.failure(
+        AppStrings.checkoutPaymentDetailsUnavailable,
+      );
+      notifyListeners();
+      return;
+    }
+
+    await createOrder(paymentIntentId: paymentIntentId);
+  }
+
+  Future<String?> payWithPaymentSheet({required double amount}) async {
+    if (!hasPaymentMethod || selectedPaymentType == null) {
+      _checkoutFlowState = CheckoutFlowState.paymentFailure;
       _createOrderStatus = Status.failure(
         AppStrings.checkoutPaymentMethodRequired,
       );
       notifyListeners();
-      return false;
+      return null;
     }
 
+    _checkoutFlowState = CheckoutFlowState.paymentProcessing;
     _createOrderStatus = Status.loading;
     notifyListeners();
 
     try {
-      // To create a PaymentIntent and return the client_secret
       final response = await checkoutRepository.createPaymentIntent(amount);
 
       if (response.isSuccess && response.value != null) {
@@ -443,75 +467,281 @@ class CheckoutViewModel extends ChangeNotifier {
 
         // Present the native PaymentSheet (it will show ApplePay/GooglePay if available)
         await Stripe.instance.presentPaymentSheet();
-        return true;
-      } else {
-        _createOrderStatus = Status.failure(response.error.toString());
-        _log.severe('Create Payment intent Error :: ${response.error}');
+
+        final paymentIntentId = _resolvePaymentIntentId(paymentResponse);
+        if (paymentIntentId == null) {
+          _checkoutFlowState = CheckoutFlowState.paymentFailure;
+          _createOrderStatus = Status.failure(
+            AppStrings.checkoutPaymentDetailsUnavailable,
+          );
+          _log.severe('Payment details unavailable after PaymentSheet completion');
+          notifyListeners();
+          return null;
+        }
+
+        _lastPaymentIntentId = paymentIntentId;
+        _checkoutFlowState = CheckoutFlowState.paymentCompleted;
         notifyListeners();
-        return false;
+        return paymentIntentId;
+      } else {
+        _checkoutFlowState = CheckoutFlowState.paymentFailure;
+        _createOrderStatus = Status.failure(
+          AppStrings.checkoutPaymentDetailsUnavailable,
+        );
+        _log.severe('Unexpected payment failure');
+        notifyListeners();
+        return null;
       }
     } on StripeException catch (e) {
+      final wasCancelled = e.error.code == FailureCode.Canceled;
+      _checkoutFlowState = CheckoutFlowState.paymentFailure;
       _createOrderStatus = Status.failure(
-        e.error.localizedMessage ?? e.toString(),
+        wasCancelled ? AppStrings.checkoutPaymentCancelled : AppStrings.checkoutPaymentFailed,
       );
-      _log.severe(
-        'Stripe Payment Error :: ${e.error.localizedMessage ?? e.toString()}',
-      );
+      _log.severe('Stripe payment failed during PaymentSheet presentation');
       notifyListeners();
-      return false;
+      return null;
     } catch (e) {
-      _createOrderStatus = Status.failure(e.toString());
-      _log.severe('Error making payment::: $e');
+      _checkoutFlowState = CheckoutFlowState.paymentFailure;
+      _createOrderStatus = Status.failure(AppStrings.checkoutPaymentFailed);
+      _log.severe('Unexpected payment failure');
       notifyListeners();
-      return false;
+      return null;
     }
   }
 
-  Future<void> createOrder() async {
-    _createOrderStatus = Status.loading;
-    notifyListeners();
+  Future<void> createOrder({required String paymentIntentId}) async {
+    final trimmedPaymentIntentId = paymentIntentId.trim();
 
-    if (basketItems.isEmpty) {
-      _createOrderStatus = Status.failure('Your basket is empty');
+    if (trimmedPaymentIntentId.isEmpty) {
+      _checkoutFlowState = CheckoutFlowState.orderCreationFailure;
+      _createOrderStatus = Status.failure(
+        AppStrings.checkoutPaymentDetailsUnavailable,
+      );
       notifyListeners();
       return;
     }
 
-    final Map<String, dynamic> address = deliveryChoice == "pickup"
-        ? {
-            "line1": selectedInpost?.address ?? '',
-            "city": "London",
-            "state": "London",
-            "postal_code": selectedInpost?.postcode ?? '',
-            "country": AppStrings.unitedKingdomText,
-          }
-        : {
-            'line1': _shippingAddress?.line1 ?? '',
-            "city": shippingAddressComponents[AddressConstants.cityKey] ?? "",
-            "state": shippingAddressComponents[AddressConstants.stateKey] ?? "",
-            'postal_code': shippingAddressComponents[AddressConstants.postalCodeKey] ?? "",
-            "country": shippingAddressComponents[AddressConstants.countryKey] ?? AppStrings.unitedKingdomText,
-          };
+    final validationMessage = _orderCreationValidationMessage();
+    if (validationMessage != null) {
+      _checkoutFlowState = CheckoutFlowState.orderCreationFailure;
+      _createOrderStatus = Status.failure(validationMessage);
+      notifyListeners();
+      return;
+    }
 
-    final Map<String, dynamic> orderData = {
-      "amount": _toMinorUnits(total),
-      "productId": basketItems[0].id,
-      "productName": basketItems[0].name,
-      "shipping": {"address": address, "name": 'John Doe'},
-    };
+    _checkoutFlowState = CheckoutFlowState.orderCreationProcessing;
+    _createOrderStatus = Status.loading;
+    notifyListeners();
+
+    final orderData = _buildOrderPayload(trimmedPaymentIntentId);
     try {
       final result = await checkoutRepository.createOrder(orderData);
       if (result.isSuccess) {
-        _createOrderStatus = Status.success;
+        _checkoutFlowState = _resolveShipmentFlowState(result.value);
+        _createOrderStatus = _checkoutFlowState == CheckoutFlowState.shipmentFailure
+            ? Status.failure(AppStrings.checkoutShipmentFailed)
+            : Status.success;
       } else {
-        _createOrderStatus = Status.failure(result.error ?? "");
-        _log.warning('Create order failed! ${result.error}');
+        _checkoutFlowState = CheckoutFlowState.orderCreationFailure;
+        _createOrderStatus = Status.failure(
+          AppStrings.checkoutOrderCreationFailed,
+        );
+        _log.warning('Order creation failed after payment');
       }
     } catch (e) {
-      _createOrderStatus = Status.failure(e.toString());
-      _log.severe('Create order failed! ${e.toString()}');
+      _checkoutFlowState = CheckoutFlowState.orderCreationFailure;
+      _createOrderStatus = Status.failure(
+        AppStrings.checkoutOrderCreationFailed,
+      );
+      _log.severe('Unexpected order creation failure');
     }
     notifyListeners();
+  }
+
+  String? _orderCreationValidationMessage() {
+    if (basketItems.isEmpty) return 'Your basket is empty';
+    if ((deliveryChoice ?? '').isEmpty) {
+      return AppStrings.checkoutDeliveryOptionRequired;
+    }
+    if (_isPickupDelivery) {
+      return selectedInpost == null ? AppStrings.checkoutPickupLockerRequired : null;
+    }
+    if (!isShippingAddressConfirmed || !hasShippingAddress || !validateShippingAddress()) {
+      return AppStrings.checkoutDeliveryAddressRequired;
+    }
+    return null;
+  }
+
+  bool get _isPickupDelivery => deliveryChoice == _pickupDeliveryChoice;
+
+  Map<String, dynamic> _buildOrderPayload(String paymentIntentId) {
+    final product = basketItems.first;
+    final isPickup = _isPickupDelivery;
+
+    // TODO: Replace these MVP fallback values with the selected Sendcloud
+    // shipping option once option selection is wired into checkout.
+    return {
+      'amount': _toMinorUnits(total),
+      'paymentIntentId': paymentIntentId,
+      'deliveryType': isPickup ? _pickupDeliveryType : _homeDeliveryType,
+      'shippingOptionId': isPickup ? _pickupShippingOptionId : _homeShippingOptionId,
+      'shippingWeight': _mvpDefaultShippingWeightGrams,
+      'shipping': {
+        'address': isPickup ? _buildPickupAddress() : _buildHomeAddress(),
+        'name': _resolveShippingName(),
+      },
+      'productId': product.id,
+      'productName': product.name,
+      'shippingOptionName': isPickup ? _pickupShippingOptionName : _homeShippingOptionName,
+      'shippingOptionPrice': isPickup ? 0 : _toMinorUnits(postage),
+      'shippingCarrier': isPickup ? _pickupShippingCarrier : _homeShippingCarrier,
+      if (isPickup) 'pickupPoint': _buildPickupPointPayload(),
+    };
+  }
+
+  Map<String, dynamic> _buildHomeAddress() {
+    return {
+      'line1': shippingAddressComponents[AddressConstants.streetKey] ?? '',
+      'city': shippingAddressComponents[AddressConstants.cityKey] ?? '',
+      'postal_code': shippingAddressComponents[AddressConstants.postalCodeKey] ?? '',
+      'country': _gbCountryCode,
+    };
+  }
+
+  Map<String, dynamic> _buildPickupAddress() {
+    final pickup = selectedInpost;
+    return {
+      'line1': pickup?.address ?? '',
+      'city': _resolvePickupCity(),
+      'postal_code': pickup?.postcode ?? '',
+      'country': _gbCountryCode,
+    };
+  }
+
+  Map<String, dynamic> _buildPickupPointPayload() {
+    final pickup = selectedInpost;
+    return {
+      'id': pickup?.id ?? '',
+      'name': pickup?.name ?? '',
+      'addressLine1': pickup?.address ?? '',
+      'city': _resolvePickupCity(),
+      'postalCode': pickup?.postcode ?? '',
+      'country': _gbCountryCode,
+      'carrier': _pickupShippingCarrier,
+    };
+  }
+
+  String _resolvePickupCity() {
+    final pickup = selectedInpost;
+    if (pickup == null) return '';
+
+    // TODO: Replace this best-effort parsing with structured Sendcloud pickup
+    // point address fields when they are available in checkout.
+    final postcode = pickup.postcode.trim();
+    var addressWithoutPostcode = pickup.address.trim();
+    if (postcode.isNotEmpty) {
+      addressWithoutPostcode = addressWithoutPostcode
+          .replaceAll(RegExp(RegExp.escape(postcode), caseSensitive: false), '')
+          .trim();
+    }
+
+    final addressParts = addressWithoutPostcode
+        .split(',')
+        .map((part) => part.trim())
+        .where((part) => part.isNotEmpty)
+        .toList();
+    if (addressParts.length < 2) return '';
+
+    return addressParts.last;
+  }
+
+  String _resolveShippingName() {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      final displayName = user?.displayName?.trim();
+      if (displayName != null && displayName.isNotEmpty) return displayName;
+
+      final email = user?.email?.trim();
+      if (email != null && email.isNotEmpty) {
+        final emailPrefix = email.split('@').first.trim();
+        if (emailPrefix.isNotEmpty) return emailPrefix;
+      }
+    } catch (_) {
+      // Firebase may be unavailable in tests. The fallback remains safe.
+    }
+
+    return 'cherry customer';
+  }
+
+  String? _resolvePaymentIntentId(PaymentIntentResponse paymentResponse) {
+    final explicitPaymentIntentId = paymentResponse.paymentIntentId?.trim();
+    if (explicitPaymentIntentId != null && explicitPaymentIntentId.isNotEmpty) {
+      return explicitPaymentIntentId;
+    }
+
+    return _paymentIntentIdFromClientSecret(paymentResponse.paymentIntent);
+  }
+
+  String? _paymentIntentIdFromClientSecret(String clientSecret) {
+    final trimmed = clientSecret.trim();
+    const secretDelimiter = '_secret_';
+    final secretIndex = trimmed.indexOf(secretDelimiter);
+    if (secretIndex <= 0) return null;
+
+    // TODO: Ask the backend to return paymentIntentId explicitly so the
+    // frontend does not need to derive it from the Stripe client secret.
+    return trimmed.substring(0, secretIndex);
+  }
+
+  CheckoutFlowState _resolveShipmentFlowState(dynamic payload) {
+    final shipmentStatus = _shipmentStatusFromResponse(payload)?.toLowerCase();
+    switch (shipmentStatus) {
+      case 'pending':
+        return CheckoutFlowState.shipmentPending;
+      case 'failed':
+      case 'failure':
+      case 'error':
+        return CheckoutFlowState.shipmentFailure;
+      default:
+        return CheckoutFlowState.shipmentCreated;
+    }
+  }
+
+  String? _shipmentStatusFromResponse(dynamic payload) {
+    final map = _asStringKeyedMap(payload);
+    if (map == null) return null;
+
+    return _firstStringValue([
+      map['shipmentStatus'],
+      map['shipment_status'],
+      _nestedMapValue(map['shipment'], 'status'),
+      _nestedMapValue(map['data'], 'shipmentStatus'),
+      _nestedMapValue(map['data'], 'shipment_status'),
+      map['status'],
+    ]);
+  }
+
+  dynamic _nestedMapValue(dynamic value, String key) {
+    return _asStringKeyedMap(value)?[key];
+  }
+
+  String? _firstStringValue(List<dynamic> values) {
+    for (final value in values) {
+      final stringValue = value?.toString().trim();
+      if (stringValue != null && stringValue.isNotEmpty) {
+        return stringValue;
+      }
+    }
+    return null;
+  }
+
+  Map<String, dynamic>? _asStringKeyedMap(dynamic value) {
+    if (value is Map<String, dynamic>) return value;
+    if (value is Map) {
+      return value.map((key, value) => MapEntry(key.toString(), value));
+    }
+    return null;
   }
 
   int _toMinorUnits(double amount) {

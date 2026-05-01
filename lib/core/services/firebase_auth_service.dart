@@ -12,7 +12,7 @@ class FirebaseAuthService {
 
   FirebaseAuthService({required this.firebaseAuth});
 
-  late GoogleAuthService _googleAuthService = GoogleAuthService();
+  late final GoogleAuthService _googleAuthService = GoogleAuthService();
 
   Future<Result<UserCredentials>> signUp(String email, String password) async {
     try {

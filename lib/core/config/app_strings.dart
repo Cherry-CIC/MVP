@@ -23,14 +23,12 @@ class AppStrings {
   static const continueWithApple = 'Continue with Apple';
   static const continueWithGoogle = 'Continue with Google';
   static const forgotPassword = 'Forgot Password?';
-  static const forgotPasswordInstruction =
-      'Please type your email and we’ll get in touch';
+  static const forgotPasswordInstruction = 'Please type your email and we’ll get in touch';
   static const usernameSetupTitle = 'Who is this?';
   static const usernameSetupSubtitle = 'Enter the name you will like to go by.';
   static const usernameSetupHint = 'Username';
   static const usernameTakenError = 'Username is already taken.';
-  static const usernameSaveFailed =
-      'Could not save username. Please try again.';
+  static const usernameSaveFailed = 'Could not save username. Please try again.';
   static const email = 'Email';
   static const sendEmail = 'Send email';
   static const userCheck = 'Not you';
@@ -72,8 +70,7 @@ class AppStrings {
   static const profileUserActivityTotal = 'Total';
   static const profileUserDonationSummary = 'User Donation Summary';
   static const profileYourDonationImpact = 'Your Donation Impact';
-  static const profileGenerosityChangesLives =
-      'See how your generosity changes lives';
+  static const profileGenerosityChangesLives = 'See how your generosity changes lives';
   static const profileUserDonationTotal = 'Total';
   static const profileUserDonationTotalAmount = 'Total Amount';
   static const profileUserDonationTotalItems = 'Total Items Donated';
@@ -81,14 +78,10 @@ class AppStrings {
   static const profileUserDonationTotalItemsBought = 'Total Items Bought';
   static const profileUserDonationTotalItemsReceived = 'Total Items Received';
   static const profileUserDonationTotalItemsGiven = 'Total Items Given';
-  static const profileUserDonationTotalItemsReceivedFromOthers =
-      'Total Items Received from Others';
-  static const profileUserDonationTotalItemsGivenToOthers =
-      'Total Items Given to Others';
-  static const profileUserDonationTotalItemsSoldToOthers =
-      'Total Items Sold to Others';
-  static const profileUserDonationTotalItemsBoughtFromOthers =
-      'Total Items Bought from Others';
+  static const profileUserDonationTotalItemsReceivedFromOthers = 'Total Items Received from Others';
+  static const profileUserDonationTotalItemsGivenToOthers = 'Total Items Given to Others';
+  static const profileUserDonationTotalItemsSoldToOthers = 'Total Items Sold to Others';
+  static const profileUserDonationTotalItemsBoughtFromOthers = 'Total Items Bought from Others';
 
   // Home
   static const charityOfText = "Charity of";
@@ -135,8 +128,7 @@ class AppStrings {
   static const multipleAngles =
       "Show multiple angles, including front view, back view, tags & labels, close-up details and any flaws.";
   static const noFilters = "No wacky filters or over-editing.";
-  static const showItOff =
-      "If you’re comfortable, get it on & show it off! If not, something for reference is great!";
+  static const showItOff = "If you’re comfortable, get it on & show it off! If not, something for reference is great!";
   static const learnHow = "Learn How";
   static const thoughtsOnUpload = "Thoughts on our upload process?";
   static const giveFeedback = "Give feedback";
@@ -144,14 +136,11 @@ class AppStrings {
   // Donation
   static const donationsText = "Donate";
   static const donationOptionsText = "Donation Options";
-  static const giveYourBuyerText =
-      "Give your buyer the option pick a cause they care about.";
-  static const easyWayText =
-      "Its an easy way to make your listing more impactful.";
+  static const giveYourBuyerText = "Give your buyer the option pick a cause they care about.";
+  static const easyWayText = "Its an easy way to make your listing more impactful.";
   static const openToOtherCharitiesText = "Open to other charities";
   static const openToOffersText = "Open to offers";
-  static const applicableForBuyerDiscountsText =
-      "Applicable for donor discounts";
+  static const applicableForBuyerDiscountsText = "Applicable for donor discounts";
   static const donorDiscountsActiveText = "Donor discounts active";
   static const donorDiscountsInactiveText = "Donor discounts inactive";
 
@@ -159,8 +148,7 @@ class AppStrings {
   static const titleText = "Title";
   static const descriptionText = "Description";
   static const categoryText = "Category";
-  static const charityDescription =
-      'Supporting communities through various charitable initiatives and programs.';
+  static const charityDescription = 'Supporting communities through various charitable initiatives and programs.';
   static const charityText = "Charity";
   static const selectOptionText = 'Tap to choose';
   static const charityError = 'Failed to load charities';
@@ -181,8 +169,7 @@ class AppStrings {
   static const submitDonation = 'Submit Donation';
 
   // Donation Submission
-  static const donationSubmittedSuccessfully =
-      'Donation submitted successfully!';
+  static const donationSubmittedSuccessfully = 'Donation submitted successfully!';
   static const unexpectedErrorOccurred = 'An unexpected error occurred';
   static const userNotAuthenticated = 'User not authenticated';
   static const failedToUploadImages = 'Failed to upload images';
@@ -190,15 +177,13 @@ class AppStrings {
 
   // Donation Success
   static const congratulations = 'Congratulations!';
-  static const itemUploadedSuccessfully =
-      'Your Item has been Successfully Uploaded.';
+  static const itemUploadedSuccessfully = 'Your Item has been Successfully Uploaded.';
 
   // Product Page
   static const productPageDescription = "Description";
   static const productPageBuyerDiscountActive = 'Donor discounts active';
   static const productPageDonorDiscountInactive = 'Donor discounts inactive';
-  static const productPageDonorDiscountInactiveDetail =
-      'Donor Discounts Currently Inactive';
+  static const productPageDonorDiscountInactiveDetail = 'Donor Discounts Currently Inactive';
   static const productPageBuy2Get1HalfPrice = 'Buy 2 get 1 half price';
   static const productPageOpenToOtherCharities = 'Open to other charities';
   static const productPageRequestOtherCharity = 'Request other charity';
@@ -238,10 +223,19 @@ class AppStrings {
   static const checkoutImpactSummary = 'Impact Summary';
   static const checkoutReview = 'Review';
   static const checkoutContinueShopping = 'Continue Shopping';
-  static const checkoutDeliveryOptionRequired =
-      'Please choose a delivery option';
+  static const checkoutDeliveryOptionRequired = 'Please choose a delivery option';
   static const checkoutPickupLockerRequired = 'Please select a pickup locker';
   static const checkoutPaymentMethodRequired = 'Please select a payment method';
+  static const checkoutDeliveryAddressRequired = 'Please confirm your delivery address';
+  static const checkoutPaymentFailed = 'Payment could not be completed. Please try again.';
+  static const checkoutPaymentCancelled = 'Payment was cancelled.';
+  static const checkoutPaymentDetailsUnavailable = 'Payment details could not be confirmed. Please try again.';
+  static const checkoutOrderCreationFailed = 'We could not create your order after payment. Please try again.';
+  static const checkoutShipmentFailed =
+      'Your order was created, but delivery could not be confirmed. Please contact support if this continues.';
+  static const checkoutShipmentPending = 'Payment complete. Your order is placed and delivery is still being arranged.';
+  static const checkoutRetryOrder = 'Retry order';
+  static const checkoutDeliveryPending = 'Delivery pending';
 
   // Card Details
   static const cardDetailsTitle = 'Card Details';
@@ -259,8 +253,7 @@ class AppStrings {
 
   // Payment Methods
   static const paymentMethodsTitle = 'Payment Methods';
-  static const paymentMethodsInfo =
-      'Your payment information will never be shared with the seller';
+  static const paymentMethodsInfo = 'Your payment information will never be shared with the seller';
   static const paymentMethodsChoose = 'Choose a payment method';
   static const paymentMethodsCard = 'Card';
   static const paymentMethodsGooglePay = 'Pay with Google Pay';
@@ -269,14 +262,12 @@ class AppStrings {
 
   // Purchase Security
   static const purchaseSecurityHeading = "Purchase Security";
-  static const purchaseSecuritySubHeading =
-      "Learn how we calculate the Purchase Security fee";
+  static const purchaseSecuritySubHeading = "Learn how we calculate the Purchase Security fee";
   static const purchaseSecurityButtonText = "Got it";
 
   // Refund Policy
   static const refundPolicyHeading = "Refund policy";
-  static const refundPolicyConditionsHeading =
-      "You can receive a refund if your order:";
+  static const refundPolicyConditionsHeading = "You can receive a refund if your order:";
   static const refundPolicyConditionOne = "was never shipped or is lost";
   static const refundPolicyConditionTwo = "arrives damaged";
   static const refundPolicyConditionThree = "is significantly not as described";
@@ -296,20 +287,17 @@ class AppStrings {
       "Failing this, all funds will be held securely in escrow for 7 days, then 100% of the funds will be released to the charity.";
   static const secureTransactionsBodyTwo =
       "Payments are encrypted by our payment partner, so your money is always sent and received safely.";
-  static const secureTransactionsBodyThreeBold =
-      "The seller will never see your payment details.";
+  static const secureTransactionsBodyThreeBold = "The seller will never see your payment details.";
 
   // Support
   static const yourSupportHeading = "Your Support";
   static const yourSupportBody =
       "Reach out to our support at any time with any issues, disputes questions, guidance or anything else- they’re here to help!";
   static const supportMissionHeading = "Support our mission";
-  static const supportMissionBoldTextSpan =
-      "cherry is a CIC (Community Interest Company) limited by guarantee, ";
+  static const supportMissionBoldTextSpan = "cherry is a CIC (Community Interest Company) limited by guarantee, ";
   static const supportMissionNormalTextSpan = "NOT by shares.";
   static const supportMissionPlainText = "Meaning ";
-  static const supportMissionPinkText =
-      "we will NEVER work in the interests of profiteers.";
+  static const supportMissionPinkText = "we will NEVER work in the interests of profiteers.";
   static const supportMissionBodyText =
       "When you buy on cherry, you’re helping in our mission to support charities online, "
       "combat fast fashion, reduce waste, maintain a transparent platform and so much more! Thank you.";
@@ -353,8 +341,7 @@ class AppStrings {
   static const city = 'City';
   static const useAsDefaultAddress = 'Use as my Default address';
   static const wantToShareLocation = 'Do you want to share your location?';
-  static const noPickupPointAvailable =
-      'Pickup points currently unavailable, please try again later';
+  static const noPickupPointAvailable = 'Pickup points currently unavailable, please try again later';
   static const loadingPickupPoint = 'Loading Pickup point...';
   static const failedToLoadPickupPoint = 'Failed to load Pickup point';
 
@@ -397,8 +384,7 @@ class AppStrings {
   static const purchaseSecurityAnswer =
       'Purchase Security is a mandatory fee (typically 3-8% of the item price before postage or kept between 6-8% of the total cost ) paid on each transaction to safeguard your money and ensure information is protected. It provides protection for your purchases, extra measures against fraud, and support from the Cherry team.';
   static const trustAndSafety = 'Trust & Safety';
-  static const transactionSafetyQuestion =
-      'How does cherry keep transactions safe?';
+  static const transactionSafetyQuestion = 'How does cherry keep transactions safe?';
   static const transactionSafetyAnswer =
       'Cherry maintains a high standard of security through proactive tools and policies. Key safety measures include: Purchase Security (mandatory Buyer Protection) , Secure Transactions (all payments are securely held and encrypted) , Anti-Spam Tools , Data Protection , and Risk Scoring (predictive analysis to identify suspicious activities).';
   static const refundPolicyQuestion = 'What’s the refund policy?';

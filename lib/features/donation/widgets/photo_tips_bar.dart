@@ -1,4 +1,3 @@
-import 'package:cherry_mvp/core/config/app_colors.dart';
 import 'package:cherry_mvp/core/config/app_strings.dart';
 import 'package:flutter/material.dart';
 import 'photo_tips_dialog.dart'; // import the new dialog widget

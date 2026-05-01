@@ -1,4 +1,3 @@
-import 'package:cherry_mvp/core/config/app_strings.dart';
 import 'package:flutter/material.dart';
 
 class HiddenPasswordField extends StatefulWidget {

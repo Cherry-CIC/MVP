@@ -11,7 +11,7 @@ import 'package:cherry_mvp/core/router/router.dart';
 import '../auth/auth_view_model.dart';
 
 class ProfilePage extends StatefulWidget {
-  ProfilePage({super.key});
+  const ProfilePage({super.key});
 
   @override
   State<ProfilePage> createState() => _ProfilePageState();

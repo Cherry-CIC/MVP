@@ -14,11 +14,11 @@ class PaymentIntentResponse {
     required this.data,
   });
 
-  factory PaymentIntentResponse.fromJson(Map<String, dynamic> json) =>
-      _$PaymentIntentResponseFromJson(json);
+  factory PaymentIntentResponse.fromJson(Map<String, dynamic> json) => _$PaymentIntentResponseFromJson(json);
 
   Map<String, dynamic> toJson() => _$PaymentIntentResponseToJson(this);
 
+  String? get paymentIntentId => data.paymentIntentId;
   String get paymentIntent => data.paymentIntent;
   String get ephemeralKey => data.ephemeralKey;
   String get customer => data.customer;
@@ -27,20 +27,21 @@ class PaymentIntentResponse {
 
 @JsonSerializable()
 class PaymentIntentData {
+  final String? paymentIntentId;
   final String paymentIntent;
   final String ephemeralKey;
   final String customer;
   final String publishableKey;
 
   PaymentIntentData({
+    this.paymentIntentId,
     required this.paymentIntent,
     required this.ephemeralKey,
     required this.customer,
     required this.publishableKey,
   });
 
-  factory PaymentIntentData.fromJson(Map<String, dynamic> json) =>
-      _$PaymentIntentDataFromJson(json);
+  factory PaymentIntentData.fromJson(Map<String, dynamic> json) => _$PaymentIntentDataFromJson(json);
 
   Map<String, dynamic> toJson() => _$PaymentIntentDataToJson(this);
 }
