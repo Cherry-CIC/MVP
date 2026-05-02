@@ -73,7 +73,7 @@ class DonationDropdownFieldState extends State<DonationDropdownField> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: DropdownButtonFormField<String>(
-        value: selectedDropdownItem,
+        initialValue: selectedDropdownItem,
         items: widget.dropdownList.map((item) {
           return DropdownMenuItem(
             value: item,

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:cherry_mvp/core/config/environment_config.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:cherry_mvp/core/services/error_string.dart';
 import 'package:cherry_mvp/core/utils/result.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -84,15 +85,17 @@ class DioApiService implements ApiService {
       ),
     );
 
-    _dio.interceptors.add(
-      PrettyDioLogger(
-        requestHeader: true,
-        requestBody: true,
-        responseBody: true,
-        error: true,
-        compact: true,
-      ),
-    );
+    if (kDebugMode) {
+      _dio.interceptors.add(
+        PrettyDioLogger(
+          requestHeader: false,
+          requestBody: false,
+          responseBody: false,
+          error: true,
+          compact: true,
+        ),
+      );
+    }
   }
 
   @override
@@ -177,7 +180,7 @@ class DioApiService implements ApiService {
     final statusCode = e.response?.statusCode;
     final data = e.response?.data;
 
-    _log.warning('Bad response: $statusCode - $data');
+    _log.warning('Bad response: $statusCode');
 
     switch (statusCode) {
       case 400:

@@ -1,9 +1,12 @@
 import 'package:cherry_mvp/core/router/nav_provider.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
+import 'package:cherry_mvp/core/models/inpost_model.dart';
+import 'package:cherry_mvp/core/models/product.dart';
 import 'package:cherry_mvp/core/utils/result.dart';
 import 'package:cherry_mvp/core/utils/status.dart';
 import 'package:cherry_mvp/features/checkout/checkout_repository.dart';
+import 'package:cherry_mvp/features/checkout/models/payment_intent.dart';
 import 'package:cherry_mvp/features/checkout/checkout_view_model.dart';
 import 'package:cherry_mvp/features/checkout/widgets/shipping_address_widget.dart';
 
@@ -14,6 +17,10 @@ class FakeCheckoutRepository implements ICheckoutRepository {
   FakeCheckoutRepository({this.fetchNearestResult});
 
   final Result? fetchNearestResult;
+  Map<String, dynamic>? createdOrder;
+  Result<dynamic> createOrderResult = Result.success({
+    'shipment': {'id': 'shipment_123'},
+  });
 
   @override
   Future<Result> fetchNearestInPosts(String postalCode) async {
@@ -24,7 +31,69 @@ class FakeCheckoutRepository implements ICheckoutRepository {
   Future<void> storeOrderInFirestore(Map<String, dynamic> orderData) async {}
 
   @override
+  Future<Result<PaymentIntentResponse>> createPaymentIntent(double amount) async {
+    return Result.failure('Payment intent creation is not used in this test.');
+  }
+
+  @override
+  Future<Result> createOrder(Map<String, dynamic> order) async {
+    createdOrder = order;
+    return createOrderResult;
+  }
+
+  @override
+  Future<void> storeLockerInFirestore(InpostModel data) async {}
+
+  @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+Product _testProduct({double price = 10}) {
+  return Product(
+    id: 'product_123',
+    name: 'Test jumper',
+    description: 'A warm jumper',
+    quality: 'Good',
+    productImages: const [],
+    donation: 0,
+    price: price,
+    likes: 0,
+    number: 1,
+    size: 'M',
+  );
+}
+
+PlaceDetails _validUkAddress() {
+  return PlaceDetails(
+    formattedAddress: '10 Test Street, London, SW1A 1AA, United Kingdom',
+    addressComponents: [
+      AddressComponent(
+        longName: '10',
+        shortName: '10',
+        types: ['street_number'],
+      ),
+      AddressComponent(
+        longName: 'Test Street',
+        shortName: 'Test Street',
+        types: ['route'],
+      ),
+      AddressComponent(
+        longName: 'London',
+        shortName: 'London',
+        types: ['locality'],
+      ),
+      AddressComponent(
+        longName: 'SW1A 1AA',
+        shortName: 'SW1A 1AA',
+        types: ['postal_code'],
+      ),
+      AddressComponent(
+        longName: 'United Kingdom',
+        shortName: 'GB',
+        types: ['country'],
+      ),
+    ],
+  );
 }
 
 void main() {
@@ -174,6 +243,114 @@ void main() {
       expect(viewModel.hasShippingAddress, false);
       expect(viewModel.hasPaymentMethod, false);
       expect(viewModel.canCheckout, false);
+    });
+
+    test('creates home delivery order payload after payment succeeds', () async {
+      final fakeRepository = FakeCheckoutRepository();
+      viewModel = CheckoutViewModel(
+        checkoutRepository: fakeRepository,
+        navigator: mockNavigator,
+      );
+
+      viewModel.addItem(_testProduct());
+      viewModel.setDeliveryChoice('home');
+      viewModel.setShippingAddress(_validUkAddress());
+      viewModel.setAddressConfirmed(true);
+
+      await viewModel.createOrder(paymentIntentId: 'pi_test_123');
+
+      final order = fakeRepository.createdOrder;
+      expect(order, isNotNull);
+      expect(order!['amount'], 1399);
+      expect(order['paymentIntentId'], 'pi_test_123');
+      expect(order['deliveryType'], 'home');
+      expect(order['shippingOptionId'], 'mvp-home-delivery');
+      expect(order['shippingWeight'], 500);
+      expect(order['productId'], 'product_123');
+      expect(order['productName'], 'Test jumper');
+      expect(order['shippingOptionName'], 'MVP home delivery');
+      expect(order['shippingOptionPrice'], 299);
+      expect(order['shippingCarrier'], 'evri');
+
+      final shipping = order['shipping'] as Map<String, dynamic>;
+      final address = shipping['address'] as Map<String, dynamic>;
+      expect(address['line1'], '10 Test Street');
+      expect(address['city'], 'London');
+      expect(address['postal_code'], 'SW1A 1AA');
+      expect(address['country'], 'GB');
+      expect(shipping['name'], isNot('John Doe'));
+      expect((shipping['name'] as String).trim(), isNotEmpty);
+    });
+
+    test('creates pick-up point order payload after payment succeeds', () async {
+      final fakeRepository = FakeCheckoutRepository();
+      viewModel = CheckoutViewModel(
+        checkoutRepository: fakeRepository,
+        navigator: mockNavigator,
+      );
+
+      viewModel.addItem(_testProduct());
+      viewModel.setDeliveryChoice('pickup');
+      viewModel.setSelectedInpost(
+        const InpostModel(
+          id: 'locker_123',
+          name: 'Locker One',
+          address: '1 Pickup Street, London',
+          postcode: 'SW1A 1AA',
+          lat: '51.501',
+          long: '-0.141',
+        ),
+      );
+
+      await viewModel.createOrder(paymentIntentId: 'pi_pickup_123');
+
+      final order = fakeRepository.createdOrder;
+      expect(order, isNotNull);
+      expect(order!['amount'], 1399);
+      expect(order['paymentIntentId'], 'pi_pickup_123');
+      expect(order['deliveryType'], 'pickup_point');
+      expect(order['shippingOptionId'], 'mvp-pickup-point-delivery');
+      expect(order['shippingWeight'], 500);
+      expect(order['shippingOptionName'], 'MVP pick-up point delivery');
+      expect(order['shippingOptionPrice'], 0);
+      expect(order['shippingCarrier'], 'inpost');
+
+      final shipping = order['shipping'] as Map<String, dynamic>;
+      final address = shipping['address'] as Map<String, dynamic>;
+      expect(address['line1'], '1 Pickup Street, London');
+      expect(address['city'], 'London');
+      expect(address['postal_code'], 'SW1A 1AA');
+      expect(address['country'], 'GB');
+      expect(shipping['name'], isNot('John Doe'));
+
+      final pickupPoint = order['pickupPoint'] as Map<String, dynamic>;
+      expect(pickupPoint['id'], 'locker_123');
+      expect(pickupPoint['name'], 'Locker One');
+      expect(pickupPoint['addressLine1'], '1 Pickup Street, London');
+      expect(pickupPoint['city'], 'London');
+      expect(pickupPoint['postalCode'], 'SW1A 1AA');
+      expect(pickupPoint['country'], 'GB');
+      expect(pickupPoint['carrier'], 'inpost');
+    });
+
+    test('pending shipment response records partial checkout success', () async {
+      final fakeRepository = FakeCheckoutRepository()
+        ..createOrderResult = Result.success({'shipmentStatus': 'pending'});
+      viewModel = CheckoutViewModel(
+        checkoutRepository: fakeRepository,
+        navigator: mockNavigator,
+      );
+
+      viewModel.addItem(_testProduct());
+      viewModel.setDeliveryChoice('home');
+      viewModel.setShippingAddress(_validUkAddress());
+      viewModel.setAddressConfirmed(true);
+
+      await viewModel.createOrder(paymentIntentId: 'pi_pending_123');
+
+      expect(viewModel.checkoutFlowState, CheckoutFlowState.shipmentPending);
+      expect(viewModel.hasCompletedCheckout, true);
+      expect(viewModel.createOrderStatus.type, StatusType.success);
     });
 
     test('should extract address components correctly', () {

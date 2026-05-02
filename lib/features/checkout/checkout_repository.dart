@@ -41,8 +41,7 @@ final class CheckoutRepository implements ICheckoutRepository {
         return Result.success(jsonList);
       } else {
         return Result.failure(
-          result.error ??
-              'Pickup points currently unavailable, please try again later',
+          result.error ?? 'Pickup points currently unavailable, please try again later',
         );
       }
     } catch (e) {
@@ -86,7 +85,6 @@ final class CheckoutRepository implements ICheckoutRepository {
       'updated_at': DateTime.now().toIso8601String(),
     };
 
-  
     final result = await _firestoreService.saveDocument(
       FirestoreConstants.orders,
       orderId,
@@ -143,11 +141,7 @@ final class CheckoutRepository implements ICheckoutRepository {
         data: order,
       );
       if (result.isSuccess && result.value != null) {
-        final data = result.value;
-
-        final jsonList = data['data'] ?? data;
-
-        return Result.success(jsonList);
+        return Result.success(result.value);
       } else {
         return Result.failure(
           result.error ?? 'Error creating payment, please try again later',

@@ -88,7 +88,7 @@ class ProductPage extends StatelessWidget {
                       : AppStrings.productPageDonorDiscountInactive;
                   final donorDiscountDetail = isDonorDiscountActive
                       ? AppStrings.productPageBuy2Get1HalfPrice
-                      : AppStrings.productPageDonorDiscountInactiveDetail;
+                      : '';
 
                   return Column(
                     children: [

@@ -3,10 +3,8 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
 import 'package:cherry_mvp/core/config/app_colors.dart';
 import 'package:cherry_mvp/core/config/app_strings.dart';
-import 'package:cherry_mvp/core/router/nav_routes.dart';
 import 'package:cherry_mvp/core/utils/status.dart';
 import 'package:cherry_mvp/features/checkout/checkout_view_model.dart';
-import 'package:cherry_mvp/features/checkout/payment_type.dart';
 import 'package:cherry_mvp/features/checkout/widgets/basket_list_item.dart';
 import 'package:cherry_mvp/features/checkout/widgets/delivery_options.dart';
 import 'package:cherry_mvp/features/checkout/widgets/select_payment_type_bottom_sheet.dart';
@@ -53,7 +51,11 @@ class _CheckoutPageState extends State<CheckoutPage> {
     }
 
     if (status == StatusType.success) {
-      Fluttertoast.showToast(msg: "Payment Successful");
+      Fluttertoast.showToast(
+        msg: vm.checkoutFlowState == CheckoutFlowState.shipmentPending
+            ? AppStrings.checkoutShipmentPending
+            : AppStrings.checkoutOrderPlaced,
+      );
       vm.resetCreateOrderStatus();
       vm.gotoCheckoutComplete();
     }
@@ -162,49 +164,45 @@ class _CheckoutPageState extends State<CheckoutPage> {
         width: double.infinity,
         child: Consumer<CheckoutViewModel>(
           builder: (context, viewModel, _) {
-            final isLoading = viewModel.createOrderStatus.type == StatusType.loading;
+            final isLoading = viewModel.isCheckoutProcessing;
+            final canRetryOrderCreation =
+                viewModel.canRetryOrderCreation && !isLoading && !viewModel.hasCompletedCheckout;
+            final hasSelectedPaymentMethod = viewModel.selectedPaymentType != null;
 
-            final hasDeliveryChoice = (viewModel.deliveryChoice ?? '').isNotEmpty;
-            final isPickup = viewModel.deliveryChoice == 'pickup';
+            final canSubmitCheckout =
+                hasSelectedPaymentMethod &&
+                viewModel.hasValidDeliveryDetails &&
+                viewModel.total > 0 &&
+                !isLoading &&
+                !viewModel.hasCompletedCheckout;
 
-            final hasValidDelivery =
-                hasDeliveryChoice &&
-                (isPickup
-                    ? viewModel.selectedInpost != null
-                    : viewModel.isShippingAddressConfirmed && viewModel.hasShippingAddress);
-
-            final canAttemptPayment = hasValidDelivery && basket.total > 0 && !isLoading;
+            final canAttemptPayment = canRetryOrderCreation || canSubmitCheckout;
 
             return FilledButton(
               onPressed: canAttemptPayment
                   ? () async {
-                      // ✅ require payment method
-                      if (!viewModel.hasPaymentMethod) {
+                      if (canRetryOrderCreation) {
+                        setState(() => _errorMessage = '');
+                        await viewModel.retryOrderCreation();
+                        return;
+                      }
+
+                      if (!viewModel.hasValidDeliveryDetails) {
+                        setState(() {
+                          _errorMessage = AppStrings.checkoutDeliveryAddressRequired;
+                        });
+                        return;
+                      }
+
+                      if (!hasSelectedPaymentMethod) {
                         setState(() {
                           _errorMessage = AppStrings.checkoutPaymentMethodRequired;
                         });
-
-                        await showModalBottomSheet<PaymentType>(
-                          context: context,
-                          isScrollControlled: true,
-                          backgroundColor: Colors.transparent,
-                          builder: (_) => const SelectPaymentTypeBottomSheet(),
-                        );
-
-                        if (!viewModel.hasPaymentMethod) return;
+                        return;
                       }
 
                       setState(() => _errorMessage = '');
-
-                      await viewModel.storeOrderInFirestore();
-
-                      final paid = await viewModel.payWithPaymentSheet(
-                        amount: basket.total,
-                      );
-
-                      if (paid) {
-                        await viewModel.createOrder();
-                      }
+                      await viewModel.submitCheckout();
                     }
                   : null,
               child: isLoading
@@ -216,18 +214,18 @@ class _CheckoutPageState extends State<CheckoutPage> {
                         color: Colors.white,
                       ),
                     )
-                  : Text(AppStrings.checkoutPay),
+                  : Text(
+                      viewModel.checkoutFlowState == CheckoutFlowState.shipmentPending
+                          ? AppStrings.checkoutDeliveryPending
+                          : canRetryOrderCreation
+                          ? AppStrings.checkoutRetryOrder
+                          : AppStrings.checkoutPay,
+                    ),
             );
           },
         ),
       ),
     );
-  }
-
-  Future<void> gotoCheckoutComplete() async {
-    await Future.delayed(const Duration(seconds: 1));
-    if (!mounted) return;
-    Navigator.pushReplacementNamed(context, AppRoutes.checkoutComplete);
   }
 
   @override

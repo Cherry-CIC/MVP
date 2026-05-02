@@ -17,7 +17,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   /// Load environment variables
-  await dotenv.load();
+  await dotenv.load(fileName: "assets/.env");
 
   await Firebase.initializeApp();
   await _configureFirebaseEmulators();
