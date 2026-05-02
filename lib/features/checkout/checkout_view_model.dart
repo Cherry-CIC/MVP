@@ -96,7 +96,7 @@ class CheckoutViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  void setSelectedInpost(var data) {
+  void setSelectedInpost(InpostModel? data) {
     selectedInpost = data;
     notifyListeners();
   }

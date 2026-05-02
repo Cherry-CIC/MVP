@@ -62,4 +62,3 @@ class _HiddenPasswordFieldState extends State<HiddenPasswordField> {
     );
   }
 }
-

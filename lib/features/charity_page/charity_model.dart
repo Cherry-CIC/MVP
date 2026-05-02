@@ -24,8 +24,7 @@ class Charity {
   });
 
   // Use generated methods
-  factory Charity.fromJson(Map<String, dynamic> json) =>
-      _$CharityFromJson(json);
+  factory Charity.fromJson(Map<String, dynamic> json) => _$CharityFromJson(json);
 
   Map<String, dynamic> toJson() => _$CharityToJson(this);
 }
