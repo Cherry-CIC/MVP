@@ -112,17 +112,23 @@ flutter clean (optional)
 flutter pub get
 ```
 
-### Step 4: run the project
+### Step 5: Execute the build_runner command to generate boilerplate
+
+```shell
+flutter pub run build_runner build --delete-conflicting-outputs   
+```
+
+### Step 6: Run the project
 
 ```shell
 flutter run
 ```
 
-### Step 5: Submit a Pull Request
+### Step 7: Submit a Pull Request
 
 - Once you’re done with your changes, submit a pull request from your feature branch to the main branch of the CherryMVP repository
 
-### Step 6: Follow the PR Guidelines
+### Step 8: Follow the PR Guidelines
 
 - Add screenshots or images of any UI changes.
 - Provide a clear description of the changes made.
