@@ -1,4 +1,3 @@
-import 'package:cherry_mvp/core/config/app_strings.dart';
 import 'package:flutter/material.dart';
 
 class HiddenPasswordField extends StatefulWidget {
@@ -63,4 +62,3 @@ class _HiddenPasswordFieldState extends State<HiddenPasswordField> {
     );
   }
 }
-

@@ -12,7 +12,7 @@ class FirebaseAuthService {
 
   FirebaseAuthService({required this.firebaseAuth});
 
-  late GoogleAuthService _googleAuthService = GoogleAuthService();
+  late final GoogleAuthService _googleAuthService = GoogleAuthService();
 
   Future<Result<UserCredentials>> signUp(String email, String password) async {
     try {
@@ -21,9 +21,7 @@ class FirebaseAuthService {
         password: password,
       );
 
-      return Result.success(
-        UserCredentials(uid: user.user?.uid, email: user.user?.email),
-      );
+      return Result.success(UserCredentials.fromAuth(user.user!));
     } on FirebaseAuthException catch (e) {
       return Result.failure(e.message ?? ErrorStrings.registerError);
     } catch (e) {

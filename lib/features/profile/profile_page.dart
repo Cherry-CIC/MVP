@@ -1,17 +1,17 @@
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:cherry_mvp/core/config/config.dart';
 import 'package:cherry_mvp/core/models/user_section.dart';
+import 'package:cherry_mvp/core/router/router.dart';
 import 'package:cherry_mvp/features/profile/widgets/donation_impact_tracker.dart';
 import 'package:cherry_mvp/features/profile/widgets/user_activity_cards.dart';
 import 'package:cherry_mvp/features/profile/widgets/user_information_section.dart';
 import 'package:cherry_mvp/features/profile/widgets/user_order_details.dart';
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:cherry_mvp/core/router/router.dart';
 
 import '../auth/auth_view_model.dart';
 
 class ProfilePage extends StatefulWidget {
-  ProfilePage({super.key});
+  const ProfilePage({super.key});
 
   @override
   State<ProfilePage> createState() => _ProfilePageState();
@@ -48,8 +48,10 @@ class _ProfilePageState extends State<ProfilePage> {
   void initState() {
     super.initState();
 
-    Future.microtask(() {
-      context.read<AuthViewModel>().loadCurrentUser();
+    Future.microtask(() async {
+      if (mounted) {
+        await context.read<AuthViewModel>().loadCurrentUser();
+      }
     });
   }
 

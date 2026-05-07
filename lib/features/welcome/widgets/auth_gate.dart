@@ -1,6 +1,7 @@
-import 'package:provider/provider.dart';
-import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:cherry_mvp/features/register/verify_email_page.dart';
 import 'package:cherry_mvp/features/welcome/welcome_page.dart';
 import 'package:cherry_mvp/features/welcome/widgets/post_auth_username_gate.dart';
 
@@ -12,16 +13,22 @@ class AuthGate extends StatelessWidget {
     final firebaseAuth = context.read<FirebaseAuth>();
 
     return StreamBuilder<User?>(
-      stream: firebaseAuth.authStateChanges(),
+      stream: firebaseAuth.userChanges(),
       builder: (context, snapshot) {
         // Show splash while checking auth status
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold();
         }
 
-        // If user is logged in then go to home page
-        if (snapshot.hasData) {
-          return const PostAuthUsernameGate();
+        final user = snapshot.data;
+        if (user != null) {
+          // If user is logged in and the email has been verified, then go to home page,
+          // else show the check your email page
+          if (user.emailVerified) {
+            return const PostAuthUsernameGate();
+          } else {
+            return const VerifyEmailPage();
+          }
         }
 
         // If user is not logged in then go to the WelcomePage
