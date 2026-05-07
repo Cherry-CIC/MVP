@@ -1,0 +1,22 @@
+{
+  "name": "cherry-help",
+  "version": "1.0.0",
+  "description": "cherry volunteer Q&A Slack bot",
+  "main": "dist/app.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/app.js",
+    "dev": "ts-node src/app.ts"
+  },
+  "dependencies": {
+    "@slack/bolt": "^3.17.1"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3",
+    "@types/node": "^20.11.5",
+    "ts-node": "^10.9.2"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
