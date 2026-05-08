@@ -14,44 +14,35 @@ class ProductInformation extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding:
-          padding ??
-          const EdgeInsets.symmetric(
-            horizontal: 16.0,
-            vertical: 8.0,
-          ),
+      padding: padding ?? const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        spacing: 4,
         children: [
           Text(product.name),
-          const SizedBox(height: 4.0),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              GestureDetector(
-                onTap: () => context.read<ProductViewModel>().showPurchaseSecurity(),
-                child: SizedBox(
-                  width: 110,
+              Expanded(
+                child: GestureDetector(
+                  onTap: context.read<ProductViewModel>().showPurchaseSecurity,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
+                    spacing: 2,
                     children: [
                       Text(
                         '£${product.donation.toStringAsFixed(2)}',
                         style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
                       ),
-                      const SizedBox(height: 2),
                       Row(
+                        spacing: 4,
                         children: [
                           Text(
                             '£${product.price.toStringAsFixed(2)}',
                             style: TextStyle(color: Theme.of(context).colorScheme.primary),
                           ),
-                          const SizedBox(width: 4),
-                          Image.asset(
-                            AppImages.shieldTick,
-                            width: 16,
-                            height: 16,
-                          ),
+                          Image.asset(AppImages.shieldTick, width: 16, height: 16),
                         ],
                       ),
                     ],
@@ -59,17 +50,25 @@ class ProductInformation extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 16),
-              SizedBox(
-                width: 48,
-                child: Text(product.size, style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
-              ),
-              const SizedBox(width: 16),
               Expanded(
-                child: Text(product.quality, style: const TextStyle(color: AppColors.green)),
-              ),
-              Icon(
-                Icons.workspace_premium,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                flex: 2,
+                child: Wrap(
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 4,
+                  runSpacing: 2,
+                  children: [
+                    Text(
+                      product.size,
+                      style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                    ),
+                    const SizedBox(width: 16),
+                    Text(product.quality, style: const TextStyle(color: AppColors.green)),
+                    Icon(
+                      Icons.workspace_premium,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ],
+                ),
               ),
             ],
           ),

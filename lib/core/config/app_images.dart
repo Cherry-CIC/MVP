@@ -91,8 +91,7 @@ class AppImages {
   static const checkoutTrackOrdersIcon = '${_path}track_orders.svg';
   static const checkoutImpactSummaryIcon = '${_path}impact_summary.svg';
   static const checkoutReviewIcon = '${_path}review.svg';
-  static const checkoutPurhaseSecurityShield =
-      '${_path}purchase_security_shield.png';
+  static const checkoutPurchaseSecurityShield = '${_path}purchase_security_shield.png';
   static const shieldTick = '${_path}shield_tick.png';
   static const refundPolicy = '${_path}refund_policy.png';
   static const secureTransactions = '${_path}lock_icon.png';
