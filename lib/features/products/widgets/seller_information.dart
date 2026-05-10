@@ -70,7 +70,7 @@ class SellerInformation extends StatelessWidget {
                               ],
                             ),
                           ),
-                          if (charity.runtimeType == Image)
+                          if (charity is Image)
                             Container(
                               clipBehavior: Clip.antiAlias,
                               decoration: BoxDecoration(
