@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:cherry_mvp/core/config/app_colors.dart';
 import 'package:cherry_mvp/core/config/app_images.dart';
 import 'package:cherry_mvp/core/config/app_strings.dart';
 import 'package:cherry_mvp/core/models/user_section.dart';
 import 'package:cherry_mvp/core/widgets/profile_section_icontextrow.dart';
+import 'package:cherry_mvp/core/widgets/star_rating.dart';
 import 'package:cherry_mvp/features/auth/auth_view_model.dart';
 
 class UserInformationSection extends StatelessWidget {
@@ -67,17 +67,7 @@ class UserInformationSection extends StatelessWidget {
                       spacing: 4,
                       runSpacing: 2,
                       children: [
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            for (var i = 0; i < userInformationSection.rating.floor(); i++)
-                              Icon(Icons.star, color: AppColors.yellow),
-                            if (userInformationSection.rating.ceil() != userInformationSection.rating.floor())
-                              Icon(Icons.star_half, color: AppColors.yellow),
-                            for (var i = 0; i < 5 - userInformationSection.rating.ceil(); i++)
-                              Icon(Icons.star_border, color: AppColors.yellow),
-                          ],
-                        ),
+                        StarRating(userInformation: userInformationSection),
                         Text(
                           ' ${userInformationSection.reviewsCount} ${AppStrings.profileUserInfoSectionBuyerReviews}',
                           style: Theme.of(context).textTheme.labelMedium,

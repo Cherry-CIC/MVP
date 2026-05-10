@@ -3,6 +3,7 @@ import 'package:cherry_mvp/core/config/app_colors.dart';
 import 'package:cherry_mvp/core/config/app_images.dart';
 import 'package:cherry_mvp/core/config/app_strings.dart';
 import 'package:cherry_mvp/core/models/user_section.dart';
+import 'package:cherry_mvp/core/widgets/star_rating.dart';
 
 class SellerInformation extends StatelessWidget {
   final UserInformation user;
@@ -52,17 +53,7 @@ class SellerInformation extends StatelessWidget {
                               spacing: 4,
                               runSpacing: 2,
                               children: [
-                                Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    for (var i = 0; i < user.rating.floor(); i++)
-                                      Icon(Icons.star, color: AppColors.yellow, size: 12),
-                                    if (user.rating.ceil() != user.rating.floor())
-                                      Icon(Icons.star_half, color: AppColors.yellow, size: 12),
-                                    for (var i = 0; i < 5 - user.rating.ceil(); i++)
-                                      Icon(Icons.star_border, color: AppColors.yellow, size: 12),
-                                  ],
-                                ),
+                                StarRating(userInformation: user, starSize: 12),
                                 Text(
                                   '(${user.reviewsCount})',
                                   style: Theme.of(context).textTheme.labelSmall,
