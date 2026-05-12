@@ -1,16 +1,16 @@
-import 'package:cherry_mvp/core/router/nav_provider.dart';
-import 'package:cherry_mvp/core/router/nav_routes.dart';
-import 'package:cherry_mvp/features/categories/category_view_model.dart';
-import 'package:cherry_mvp/features/home/widgets/ad_example.dart';
-import 'package:cherry_mvp/features/products/product_card.dart';
-import 'package:cherry_mvp/features/products/product_viewmodel.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:cherry_mvp/core/router/nav_provider.dart';
+import 'package:cherry_mvp/core/router/nav_routes.dart';
+import 'package:cherry_mvp/core/utils/utils.dart';
+import 'package:cherry_mvp/features/categories/category_view_model.dart';
+import 'package:cherry_mvp/features/home/widgets/ad_example.dart';
 import 'package:cherry_mvp/features/home/home_viewmodel.dart';
 import 'package:cherry_mvp/features/home/widgets/dashboard_loading_widget.dart';
 import 'package:cherry_mvp/features/home/widgets/dashboard_error_widget.dart';
 import 'package:cherry_mvp/features/home/widgets/dashboard_empty_widget.dart';
-import 'package:cherry_mvp/core/utils/utils.dart';
+import 'package:cherry_mvp/features/products/product_card.dart';
+import 'package:cherry_mvp/features/products/product_viewmodel.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -21,6 +21,7 @@ class DashboardPage extends StatefulWidget {
 
 class _DashboardPageState extends State<DashboardPage> {
   bool _hasInitialized = false;
+  late double _dynamicAspectRatio;
 
   @override
   void didChangeDependencies() {
@@ -37,6 +38,7 @@ class _DashboardPageState extends State<DashboardPage> {
         homeVM.fetchProducts();
       });
     }
+    _dynamicAspectRatio = 0.5 / MediaQuery.textScalerOf(context).scale(1.0).clamp(1.0, 1.4);
   }
 
   @override
@@ -88,11 +90,11 @@ class _DashboardPageState extends State<DashboardPage> {
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: productChunk.length,
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2,
                   crossAxisSpacing: 12,
                   mainAxisSpacing: 12,
-                  childAspectRatio: 0.6,
+                  childAspectRatio: _dynamicAspectRatio,
                 ),
                 itemBuilder: (context, index) {
                   final product = productChunk[index];
