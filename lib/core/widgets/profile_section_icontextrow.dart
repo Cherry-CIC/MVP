@@ -13,8 +13,10 @@ class IconTextRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
             Image.asset(
               assetPath,
@@ -28,9 +30,7 @@ class IconTextRow extends StatelessWidget {
             ),
           ],
         ),
-        SizedBox(
-          height: 8,
-        )
+        const SizedBox(height: 8),
       ],
     );
   }

@@ -1,12 +1,11 @@
-import 'package:cherry_mvp/core/config/app_colors.dart';
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:cherry_mvp/core/config/app_images.dart';
 import 'package:cherry_mvp/core/config/app_strings.dart';
 import 'package:cherry_mvp/core/models/user_section.dart';
 import 'package:cherry_mvp/core/widgets/profile_section_icontextrow.dart';
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-
-import '../../auth/auth_view_model.dart';
+import 'package:cherry_mvp/core/widgets/star_rating.dart';
+import 'package:cherry_mvp/features/auth/auth_view_model.dart';
 
 class UserInformationSection extends StatelessWidget {
   final UserInformation userInformationSection;
@@ -25,9 +24,7 @@ class UserInformationSection extends StatelessWidget {
         final username = auth.userCredentials?.username?.trim();
         final firstName = auth.userCredentials?.firstname?.trim();
         final email = auth.userCredentials?.email?.trim();
-        final emailName = (email != null && email.contains('@'))
-            ? email.split('@').first
-            : email;
+        final emailName = (email != null && email.contains('@')) ? email.split('@').first : email;
 
         final name = (username != null && username.isNotEmpty)
             ? username
@@ -38,7 +35,7 @@ class UserInformationSection extends StatelessWidget {
             : 'User';
 
         return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             /// Top Greeting Row
             ListTile(
@@ -64,20 +61,19 @@ class UserInformationSection extends StatelessWidget {
               subtitle: Row(
                 spacing: 16,
                 children: [
-                  Row(
-                    children: List.generate(
-                      5,
-                      (index) => Icon(
-                        index < userInformationSection.rating
-                            ? Icons.star
-                            : Icons.star_border_outlined,
-                        color: AppColors.yellow,
-                      ),
+                  Expanded(
+                    child: Wrap(
+                      crossAxisAlignment: WrapCrossAlignment.start,
+                      spacing: 4,
+                      runSpacing: 2,
+                      children: [
+                        StarRating(userInformation: userInformationSection),
+                        Text(
+                          ' ${userInformationSection.reviewsCount} ${AppStrings.profileUserInfoSectionBuyerReviews}',
+                          style: Theme.of(context).textTheme.labelMedium,
+                        ),
+                      ],
                     ),
-                  ),
-                  Text(
-                    '${userInformationSection.reviewsCount} ${AppStrings.profileUserInfoSectionBuyerReviews}',
-                    style: Theme.of(context).textTheme.labelMedium,
                   ),
                 ],
               ),
@@ -89,18 +85,22 @@ class UserInformationSection extends StatelessWidget {
             const SizedBox(height: 20),
 
             /// Stats Section
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.center,
+            Wrap(
+              alignment: WrapAlignment.spaceBetween,
+              spacing: 24,
+              runSpacing: 16,
+              crossAxisAlignment: WrapCrossAlignment.center,
               children: [
                 /// Info Column
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     IconTextRow(
                       assetPath: AppImages.profileFollowers,
                       text:
-                          '${userInformationSection.followingCount} ${AppStrings.profileUserInfoSectionFollowing}, ${userInformationSection.followersCount} ${AppStrings.profileUserInfoSectionFollowers}',
+                          '${userInformationSection.followingCount} ${AppStrings.profileUserInfoSectionFollowing}, '
+                          '${userInformationSection.followersCount} ${AppStrings.profileUserInfoSectionFollowers}',
                     ),
                     IconTextRow(
                       assetPath: AppImages.profileLocation,
