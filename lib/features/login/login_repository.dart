@@ -38,13 +38,34 @@ class LoginRepository {
       final userCredentials = result.value;
       final uId = userCredentials?.uid ?? "";
 
-      // Fetch existing user and populate prefs
-      await _firestoreService.fetchUser(uId);
+      final existingUserResult = await _firestoreService.getDocument(
+        FirestoreConstants.pathUserCollection,
+        uId,
+      );
+      final existingData = existingUserResult.isSuccess
+          ? ((existingUserResult.value?.data() as Map<String, dynamic>?) ?? const <String, dynamic>{})
+          : const <String, dynamic>{};
 
-      final firstName = _getValue(FirestoreConstants.firstname, userCredentials?.firstname);
-      final email = _getValue(FirestoreConstants.email, userCredentials?.email);
-      final phone = _getValue(FirestoreConstants.phone, userCredentials?.phoneNumber);
-      final photoUrl = _getValue(FirestoreConstants.photoUrl, userCredentials?.photoUrl);
+      final firstName = _getExistingOrCredential(
+        existingData,
+        FirestoreConstants.firstname,
+        userCredentials?.firstname,
+      );
+      final email = _getExistingOrCredential(
+        existingData,
+        FirestoreConstants.email,
+        userCredentials?.email,
+      );
+      final phone = _getExistingOrCredential(
+        existingData,
+        FirestoreConstants.phone,
+        userCredentials?.phoneNumber,
+      );
+      final photoUrl = _getExistingOrCredential(
+        existingData,
+        FirestoreConstants.photoUrl,
+        userCredentials?.photoUrl,
+      );
 
       // If login is successful,save user data into firestore
       // any change in google profile will be updated automatically like pic and name
@@ -70,9 +91,13 @@ class LoginRepository {
     }
   }
 
-  String _getValue(String key, String? credentialValue) {
-    final prefValue = _firestoreService.prefs.getString(key);
-    return (prefValue != null && prefValue.isNotEmpty) ? prefValue : (credentialValue ?? "");
+  String _getExistingOrCredential(
+    Map<String, dynamic> existingData,
+    String key,
+    String? credentialValue,
+  ) {
+    final storedValue = existingData[key];
+    return (storedValue is String && storedValue.isNotEmpty) ? storedValue : (credentialValue ?? "");
   }
 
   Future<Result<void>> logout() async {

@@ -109,27 +109,34 @@ class FirestoreService {
 
     if (result.isSuccess) {
       final document = result.value;
+      final data = (document?.data() as Map<String, dynamic>?) ?? const <String, dynamic>{};
+
+      String readString(String key) {
+        final value = data[key];
+        return value is String ? value : '';
+      }
+
       // Store user data to shared preferences
       await prefs.setString(FirestoreConstants.id, uid);
       await prefs.setString(
         FirestoreConstants.username,
-        document?.get(FirestoreConstants.username),
+        readString(FirestoreConstants.username),
       );
       await prefs.setString(
         FirestoreConstants.firstname,
-        document?.get(FirestoreConstants.firstname),
+        readString(FirestoreConstants.firstname),
       );
       await prefs.setString(
         FirestoreConstants.photoUrl,
-        document?.get(FirestoreConstants.photoUrl) ?? "",
+        readString(FirestoreConstants.photoUrl),
       );
       await prefs.setString(
         FirestoreConstants.phone,
-        document?.get(FirestoreConstants.phone) ?? "",
+        readString(FirestoreConstants.phone),
       );
       await prefs.setString(
         FirestoreConstants.email,
-        document?.get(FirestoreConstants.email) ?? "",
+        readString(FirestoreConstants.email),
       );
 
       return Result.success(null);
