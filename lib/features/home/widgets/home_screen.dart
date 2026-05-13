@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:cherry_mvp/features/home/widgets/dashboard.dart';
 import 'package:cherry_mvp/features/home/widgets/discover_button.dart';
-import 'package:provider/provider.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -26,7 +26,6 @@ class HomeScreenState extends State<HomeScreen> {
               ),
               child: Material(
                 color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                clipBehavior: Clip.antiAlias,
                 elevation: 1,
                 shape: const StadiumBorder(),
                 child: InkWell(
@@ -41,10 +40,13 @@ class HomeScreenState extends State<HomeScreen> {
                           color: Theme.of(context).colorScheme.secondary,
                         ),
                         const SizedBox(width: 8),
-                        Text(
-                          'AI Search: Red Polka Dot Dress',
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.secondary,
+                        Expanded(
+                          child: Text(
+                            'AI Search: Red Polka Dot Dress',
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.secondary,
+                            ),
                           ),
                         ),
                       ],

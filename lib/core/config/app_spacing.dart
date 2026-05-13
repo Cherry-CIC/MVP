@@ -6,5 +6,5 @@ class AppSpacing {
   static const double xl = 40.0;
 
   // Aspect Ratios
-  static const double imageContainerAspectRatio = 196 / 217;
+  static const double imageContainerAspectRatio = 0.90322581; // 196 / 217
 }
