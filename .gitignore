@@ -29,7 +29,6 @@ migrate_working_dir/
 /build/
 
 # Firebase
-/android/app/google-services.json
 /lib/firebase_options.dart
 
 # iOS builds
@@ -37,7 +36,6 @@ migrate_working_dir/
 /ios/build/
 /ios/Podfile.lock
 # Removed /ios/Runner.xcodeproj to unblock iOS contributors
-/ios/Runner/GoogleService-Info.plist
 
 # Flutter generated
 **/Generated.xcconfig
