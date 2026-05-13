@@ -149,23 +149,21 @@ class ProductCard extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
                     if (product.size.isNotEmpty) ...[
-                      Text(
-                        _formatSizeLabel(product.size),
-                        style: Theme.of(
-                          context,
-                        ).textTheme.bodySmall?.copyWith(fontSize: 14),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                      Flexible(
                         child: Text(
-                          "-",
+                          _formatSizeLabel(product.size),
                           style: Theme.of(
                             context,
                           ).textTheme.bodySmall?.copyWith(fontSize: 14),
                         ),
                       ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                        child: Text("-"),
+                      ),
                     ],
-                    Flexible(
+                    Expanded(
+                      flex: 2,
                       child: Text(
                         product.quality,
                         overflow: TextOverflow.ellipsis,
@@ -177,15 +175,14 @@ class ProductCard extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 4),
-                Expanded(
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      GestureDetector(
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: GestureDetector(
                         onTap: viewModel.showPurchaseSecurity,
                         child: Column(
-                          mainAxisSize: MainAxisSize.min,
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
@@ -196,9 +193,10 @@ class ProductCard extends StatelessWidget {
                               ),
                             ),
                             const SizedBox(height: 2),
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            Wrap(
+                              crossAxisAlignment: WrapCrossAlignment.center,
+                              spacing: 4,
+                              runSpacing: 2,
                               children: [
                                 Text(
                                   '£${product.price.toStringAsFixed(2)}',
@@ -207,7 +205,6 @@ class ProductCard extends StatelessWidget {
                                     fontSize: 16,
                                   ),
                                 ),
-                                const SizedBox(width: 4),
                                 Text(
                                   AppStrings.productIncl,
                                   style: Theme.of(context).textTheme.headlineLarge?.copyWith(
@@ -216,25 +213,21 @@ class ProductCard extends StatelessWidget {
                                   ),
                                 ),
                                 const SizedBox(width: 4),
-                                Image.asset(
-                                  AppImages.shieldTick,
-                                  width: 16,
-                                  height: 16,
-                                ),
+                                Image.asset(AppImages.shieldTick, width: 16, height: 16),
                               ],
                             ),
                           ],
                         ),
                       ),
-                      if (product.charityImage.isNotEmpty)
-                        ImageProviderHelper.buildImage(
-                          imagePath: product.charityImage,
-                          height: 35,
-                          width: 35,
-                          fit: BoxFit.cover,
-                        ),
-                    ],
-                  ),
+                    ),
+                    if (product.charityImage.isNotEmpty)
+                      ImageProviderHelper.buildImage(
+                        imagePath: product.charityImage,
+                        height: 35,
+                        width: 35,
+                        fit: BoxFit.cover,
+                      ),
+                  ],
                 ),
               ],
             ),
