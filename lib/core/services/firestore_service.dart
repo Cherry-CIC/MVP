@@ -1,9 +1,9 @@
-import 'package:cherry_mvp/core/config/firestore_constants.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:cherry_mvp/core/utils/result.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'error_string.dart';
+import 'package:cherry_mvp/core/config/firestore_constants.dart';
+import 'package:cherry_mvp/core/services/error_string.dart';
+import 'package:cherry_mvp/core/utils/result.dart';
 
 class FirestoreService {
   final FirebaseFirestore firebaseFirestore;
@@ -97,6 +97,44 @@ class FirestoreService {
       return Result.success(querySnapshot.docs);
     } catch (e) {
       return Result.failure(e.toString());
+    }
+  }
+
+  Future<Result<void>> fetchUser(String uid) async {
+    // Fetch user document from Firestore
+    final result = await getDocument(
+      FirestoreConstants.pathUserCollection,
+      uid,
+    );
+
+    if (result.isSuccess) {
+      final document = result.value;
+      // Store user data to shared preferences
+      await prefs.setString(FirestoreConstants.id, uid);
+      await prefs.setString(
+        FirestoreConstants.username,
+        document?.get(FirestoreConstants.username),
+      );
+      await prefs.setString(
+        FirestoreConstants.firstname,
+        document?.get(FirestoreConstants.firstname),
+      );
+      await prefs.setString(
+        FirestoreConstants.photoUrl,
+        document?.get(FirestoreConstants.photoUrl) ?? "",
+      );
+      await prefs.setString(
+        FirestoreConstants.phone,
+        document?.get(FirestoreConstants.phone) ?? "",
+      );
+      await prefs.setString(
+        FirestoreConstants.email,
+        document?.get(FirestoreConstants.email) ?? "",
+      );
+
+      return Result.success(null);
+    } else {
+      return Result.failure(result.error);
     }
   }
 

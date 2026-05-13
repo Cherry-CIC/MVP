@@ -1,9 +1,11 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cherry_mvp/core/models/model.dart';
 import 'package:cherry_mvp/core/services/services.dart';
 import 'package:cherry_mvp/core/config/config.dart';
 import 'package:cherry_mvp/core/utils/utils.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'login_model.dart';
+import 'package:cherry_mvp/features/login/login_model.dart';
+
+enum SocialLoginType { google, apple }
 
 class LoginRepository {
   final FirebaseAuthService _authService;
@@ -18,66 +20,49 @@ class LoginRepository {
     if (result.isSuccess) {
       // If login is successful, proceed to fetch user details
       final userCredentials = result.value;
-      await fetchUserFromFirestore(userCredentials?.uid ?? "");
+      await _firestoreService.fetchUser(userCredentials?.uid ?? "");
       return result;
     } else {
       return Result.failure(result.error);
     }
   }
 
-  Future<Result<UserCredentials?>> signInWithGoogle() async {
-    // Attempt to login with google using the auth service
-    final result = await _authService.signInWithGoogle();
-    if (result.isSuccess) {
-      final userCredentials = result.value;
-      // If login is successful,save user data into firestore
-      // any change in google profile will be updated automatically like pic and name
-      Map<String, dynamic> data = {
-        FirestoreConstants.firstname: userCredentials?.firstname ?? "",
-        FirestoreConstants.email: userCredentials?.email ?? "",
-        FirestoreConstants.phone: userCredentials?.phoneNumber ?? "",
-        FirestoreConstants.id: userCredentials?.uid ?? "",
-        FirestoreConstants.photoUrl: userCredentials?.photoUrl ?? "",
-      };
-      await _firestoreService.firebaseFirestore
-          .collection(FirestoreConstants.pathUserCollection)
-          .doc(userCredentials?.uid ?? "")
-          .set(data, SetOptions(merge: true));
-
-      //proceed to fetch user details
-
-      await fetchUserFromFirestore(userCredentials?.uid ?? "");
-
-      return result;
-    } else {
-      print(result.error);
-      return Result.failure(result.error);
-    }
-  }
-
-  Future<Result<UserCredentials?>> signInWithApple() async {
-    // Attempt to login with google using the auth service
-    final result = await _authService.signInWithApple();
+  Future<Result<UserCredentials?>> signInWithSocial(SocialLoginType type) async {
+    // Attempt to login using the auth service
+    final result = await switch (type) {
+      SocialLoginType.google => _authService.signInWithGoogle(),
+      SocialLoginType.apple => _authService.signInWithApple(),
+    };
 
     if (result.isSuccess) {
       final userCredentials = result.value;
+      final uId = userCredentials?.uid ?? "";
+
+      // Fetch existing user and populate prefs
+      await _firestoreService.fetchUser(uId);
+
+      final firstName = _getValue(FirestoreConstants.firstname, userCredentials?.firstname);
+      final email = _getValue(FirestoreConstants.email, userCredentials?.email);
+      final phone = _getValue(FirestoreConstants.phone, userCredentials?.phoneNumber);
+      final photoUrl = _getValue(FirestoreConstants.photoUrl, userCredentials?.photoUrl);
+
       // If login is successful,save user data into firestore
       // any change in google profile will be updated automatically like pic and name
+
       Map<String, dynamic> data = {
-        FirestoreConstants.firstname: userCredentials?.firstname ?? "",
-        FirestoreConstants.email: userCredentials?.email ?? "",
-        FirestoreConstants.phone: userCredentials?.phoneNumber ?? "",
-        FirestoreConstants.id: userCredentials?.uid ?? "",
-        FirestoreConstants.photoUrl: userCredentials?.photoUrl ?? "",
+        FirestoreConstants.firstname: firstName,
+        FirestoreConstants.email: email,
+        FirestoreConstants.phone: phone,
+        FirestoreConstants.id: uId,
+        FirestoreConstants.photoUrl: photoUrl,
       };
       await _firestoreService.firebaseFirestore
           .collection(FirestoreConstants.pathUserCollection)
-          .doc(userCredentials?.uid ?? "")
+          .doc(uId)
           .set(data, SetOptions(merge: true));
 
       //proceed to fetch user details
-
-      await fetchUserFromFirestore(userCredentials?.uid ?? "");
+      await _firestoreService.fetchUser(uId);
 
       return result;
     } else {
@@ -85,39 +70,9 @@ class LoginRepository {
     }
   }
 
-  Future<Result<void>> fetchUserFromFirestore(String uid) async {
-    // Fetch user document from Firestore
-    final result = await _firestoreService.getDocument(
-      FirestoreConstants.pathUserCollection,
-      uid,
-    );
-
-    if (result.isSuccess) {
-      final document = result.value;
-      final data = document?.data() as Map<String, dynamic>?;
-      // Store user data to shared preferences
-      await _firestoreService.prefs.setString(FirestoreConstants.id, uid);
-      await _firestoreService.prefs.setString(
-        FirestoreConstants.username,
-        (data?[FirestoreConstants.username] as String?) ?? "",
-      );
-      await _firestoreService.prefs.setString(
-        FirestoreConstants.firstname,
-        (data?[FirestoreConstants.firstname] as String?) ?? "",
-      );
-      await _firestoreService.prefs.setString(
-        FirestoreConstants.photoUrl,
-        (data?[FirestoreConstants.photoUrl] as String?) ?? "",
-      );
-      await _firestoreService.prefs.setString(
-        FirestoreConstants.email,
-        (data?[FirestoreConstants.email] as String?) ?? "",
-      );
-
-      return Result.success(null);
-    } else {
-      return Result.failure(result.error);
-    }
+  String _getValue(String key, String? credentialValue) {
+    final prefValue = _firestoreService.prefs.getString(key);
+    return (prefValue != null && prefValue.isNotEmpty) ? prefValue : (credentialValue ?? "");
   }
 
   Future<Result<void>> logout() async {
