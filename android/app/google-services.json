@@ -7,68 +7,12 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:401854471349:android:cad8afc621be102485f2fc",
+        "mobilesdk_app_id": "1:401854471349:android:8cff1aa597379a8c85f2fc",
         "android_client_info": {
-          "package_name": "com.example.cherry_mvp"
+          "package_name": "uk.org.cherry.app"
         }
       },
       "oauth_client": [
-        {
-          "client_id": "401854471349-203slnble6n0oceoc1kg34c4tq0t1mnm.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.example.cherry_mvp",
-            "certificate_hash": "1395e5719a5f8b9b37ab774767273b2d8df57710"
-          }
-        },
-        {
-          "client_id": "401854471349-5equ9b47s44qkn2oaje1c6enk11n81mb.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.example.cherry_mvp",
-            "certificate_hash": "efd0029e8d28686a6afc209444b32609a1d69660"
-          }
-        },
-        {
-          "client_id": "401854471349-7hge5fqq72tubpt3c9eno1imaqaauk3v.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.example.cherry_mvp",
-            "certificate_hash": "56ab5746cd03aa952cd82945e2aa5ae0abfd070c"
-          }
-        },
-        {
-          "client_id": "401854471349-aaaok4o6r79cn1vrmdv7bh4hk1cgfrrc.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.example.cherry_mvp",
-            "certificate_hash": "8111477239c2c04fb50dc905334925203bea747b"
-          }
-        },
-        {
-          "client_id": "401854471349-j1tki5dfg47h74ffolnobubh04b8ac8n.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.example.cherry_mvp",
-            "certificate_hash": "868940988fb4bad2518beeb191f71174d345fb8f"
-          }
-        },
-        {
-          "client_id": "401854471349-o5iveq9hqbp0pp1s5hgphj0bqi7q703f.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.example.cherry_mvp",
-            "certificate_hash": "9ed8b11b20410a0ee8440a1577071819ec8d08e8"
-          }
-        },
-        {
-          "client_id": "401854471349-ti9nhvacvm7n2vbaj14lcgh56ojgf6b9.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.example.cherry_mvp",
-            "certificate_hash": "6a608df83cf3662da02b18096b4d47170507f03b"
-          }
-        },
         {
           "client_id": "401854471349-803q3o5vmr8m94fuvt50t1ke07h79c87.apps.googleusercontent.com",
           "client_type": 3
@@ -85,13 +29,6 @@
             {
               "client_id": "401854471349-803q3o5vmr8m94fuvt50t1ke07h79c87.apps.googleusercontent.com",
               "client_type": 3
-            },
-            {
-              "client_id": "401854471349-85ukp8gmj5v2n8u7am3cg219dnqqvdsb.apps.googleusercontent.com",
-              "client_type": 2,
-              "ios_info": {
-                "bundle_id": "com.cherrymvp.cherry"
-              }
             }
           ]
         }

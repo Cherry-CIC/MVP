@@ -1,7 +1,7 @@
+import 'package:flutter/material.dart';
 import 'package:cherry_mvp/core/config/app_colors.dart';
 import 'package:cherry_mvp/core/config/app_images.dart';
 import 'package:cherry_mvp/core/config/app_strings.dart';
-import 'package:flutter/material.dart';
 
 class PurchaseSecurity extends StatelessWidget {
   const PurchaseSecurity({super.key});
@@ -20,7 +20,7 @@ class PurchaseSecurity extends StatelessWidget {
                 children: [
                   Center(
                     child: Image.asset(
-                      AppImages.checkoutPurhaseSecurityShield,
+                      AppImages.checkoutPurchaseSecurityShield,
                       width: 114,
                       height: 126,
                     ),
@@ -48,13 +48,13 @@ class PurchaseSecurity extends StatelessWidget {
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.start,
+                    spacing: 20,
                     children: [
                       Image.asset(
                         AppImages.refundPolicy,
                         width: 30,
                         height: 30,
                       ),
-                      SizedBox(width: 20),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -69,66 +69,47 @@ class PurchaseSecurity extends StatelessWidget {
                             Text(AppStrings.refundPolicyConditionsHeading),
                             Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
+                              spacing: 5,
                               children: [
-                                Text(
-                                  "\u2022",
-                                  style: TextStyle(fontSize: 16, height: 1.5),
-                                ),
-                                SizedBox(width: 5),
-                                Text(AppStrings.refundPolicyConditionOne),
+                                Text("\u2022", style: TextStyle(fontSize: 16, height: 1.5)),
+                                Expanded(child: Text(AppStrings.refundPolicyConditionOne)),
                               ],
                             ),
                             Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
+                              spacing: 5,
                               children: [
-                                Text(
-                                  "\u2022",
-                                  style: TextStyle(fontSize: 16, height: 1.5),
-                                ),
-                                SizedBox(width: 5),
-                                Text(AppStrings.refundPolicyConditionTwo),
+                                Text("\u2022", style: TextStyle(fontSize: 16, height: 1.5)),
+                                Expanded(child: Text(AppStrings.refundPolicyConditionTwo)),
                               ],
                             ),
                             Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
+                              spacing: 5,
                               children: [
-                                Text(
-                                  "\u2022",
-                                  style: TextStyle(fontSize: 16, height: 1.5),
-                                ),
-                                SizedBox(width: 5),
-                                Text(AppStrings.refundPolicyConditionThree),
+                                Text("\u2022", style: TextStyle(fontSize: 16, height: 1.5)),
+                                Expanded(child: Text(AppStrings.refundPolicyConditionThree)),
                               ],
                             ),
                             Text.rich(
                               TextSpan(
                                 children: [
-                                  TextSpan(
-                                    text: AppStrings.refundPolicyBodyTextStart,
-                                  ),
+                                  TextSpan(text: AppStrings.refundPolicyBodyTextStart),
                                   TextSpan(
                                     text: AppStrings.refundPolicyBodyTextBold,
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                    ),
+                                    style: TextStyle(fontWeight: FontWeight.bold),
                                   ),
-                                  TextSpan(
-                                    text: AppStrings.refundPolicyBodyTextEnd,
-                                  ),
+                                  TextSpan(text: AppStrings.refundPolicyBodyTextEnd),
                                 ],
                               ),
                             ),
                             Text.rich(
                               TextSpan(
                                 children: [
-                                  TextSpan(
-                                    text: AppStrings.refundPolicyReturns,
-                                  ),
+                                  TextSpan(text: AppStrings.refundPolicyReturns),
                                   TextSpan(
                                     text: AppStrings.refundPolicyLinkText,
-                                    style: TextStyle(
-                                      decoration: TextDecoration.underline,
-                                    ),
+                                    style: TextStyle(decoration: TextDecoration.underline),
                                   ),
                                 ],
                               ),
@@ -229,8 +210,7 @@ class PurchaseSecurity extends StatelessWidget {
                                     ),
                                   ),
                                   TextSpan(
-                                    text:
-                                        AppStrings.supportMissionNormalTextSpan,
+                                    text: AppStrings.supportMissionNormalTextSpan,
                                   ),
                                 ],
                               ),
