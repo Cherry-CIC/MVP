@@ -18,7 +18,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.cherry_mvp"
+    namespace = "uk.org.cherry.app"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = localProperties.getProperty("flutter.ndkVersion")
 
@@ -34,8 +34,7 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.example.cherry_mvp"
+        applicationId = "uk.org.cherry.app"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = 25
