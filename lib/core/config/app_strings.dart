@@ -40,6 +40,7 @@ class AppStrings {
   static const loadingProducts = 'Loading products...';
   static const failedToLoadProducts = 'Failed to load products';
   static const unknownErrorOccurred = 'Unknown error occurred';
+  static const genericError = 'Oops! Something went wrong';
   static const noProductsAvailable = 'No products available';
 
   // Messages
@@ -215,6 +216,7 @@ class AppStrings {
   static const checkoutChoosePayment = 'Choose a payment method';
   static const checkoutSecure = 'This is a secure checkout';
   static const checkoutPay = 'Pay';
+  static const checkoutPaymentSuccessful = 'Payment Successful';
   static const checkoutOrderPlaced = 'Order Placed 🎉';
   static const checkoutThankYou = 'Thank you';
   static const checkoutEscrowInfo =

@@ -38,7 +38,11 @@ class _DashboardPageState extends State<DashboardPage> {
         homeVM.fetchProducts();
       });
     }
-    _dynamicAspectRatio = 0.5 / MediaQuery.textScalerOf(context).scale(1.0).clamp(1.0, 1.4);
+
+    final deviceRatio = MediaQuery.sizeOf(context).aspectRatio;
+    final textScale = MediaQuery.textScalerOf(context).scale(1.0).clamp(1.0, 1.4);
+    double multiplier = deviceRatio > 0.6 ? 1.1 : 1.15;
+    _dynamicAspectRatio = (deviceRatio * multiplier) / textScale;
   }
 
   @override

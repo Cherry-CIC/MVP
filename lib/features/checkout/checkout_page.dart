@@ -20,7 +20,7 @@ class CheckoutPage extends StatefulWidget {
 
 class _CheckoutPageState extends State<CheckoutPage> {
   String _errorMessage = "";
-  CheckoutViewModel? _vm; // ✅ avoid late-init crash
+  CheckoutViewModel? _vm;
 
   @override
   void initState() {
@@ -47,13 +47,13 @@ class _CheckoutPageState extends State<CheckoutPage> {
 
     if (status == StatusType.failure) {
       Fluttertoast.showToast(
-        msg: vm.createOrderStatus.message ?? "oops! Something went wrong",
+        msg: vm.createOrderStatus.message ?? AppStrings.genericError,
       );
       vm.resetCreateOrderStatus();
     }
 
     if (status == StatusType.success) {
-      Fluttertoast.showToast(msg: "Payment Successful");
+      Fluttertoast.showToast(msg: AppStrings.checkoutPaymentSuccessful);
       vm.resetCreateOrderStatus();
       vm.gotoCheckoutComplete();
     }
@@ -232,7 +232,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
 
   @override
   void dispose() {
-    _vm?.removeListener(_handleOrderStatus); // ✅ safe
+    _vm?.removeListener(_handleOrderStatus);
     super.dispose();
   }
 }
