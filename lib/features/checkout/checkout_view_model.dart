@@ -271,8 +271,8 @@ class CheckoutViewModel extends ChangeNotifier {
   /// Processes the checkout order
   /// Returns true if successful, false if validation fails or error occurs
   Future<bool> processCheckout() async {
-    if (!canCheckout) return false;
-    if (!validateShippingAddress()) return false;
+    if (!hasPaymentMethod) return false;
+    if (!hasValidDeliveryDetails) return false;
 
     await submitCheckout();
     return hasCompletedCheckout;

@@ -29,7 +29,13 @@ class DonationDropdownFieldState extends State<DonationDropdownField> {
     selectedDropdownItem = widget.selectedValue;
   }
 
-
+  @override
+  void didUpdateWidget(covariant DonationDropdownField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.selectedValue != widget.selectedValue) {
+      selectedDropdownItem = widget.selectedValue;
+    }
+  }
 
   Widget charityRow(String item) {
     final index = widget.dropdownList.indexOf(item);
@@ -38,7 +44,8 @@ class DonationDropdownFieldState extends State<DonationDropdownField> {
         : null;
 
     return SizedBox(
-      width: 200, /// Set the desired width to match ui
+      // Set the desired width to match the UI.
+      width: 200,
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -48,8 +55,7 @@ class DonationDropdownFieldState extends State<DonationDropdownField> {
               overflow: TextOverflow.ellipsis,
             ),
           ),
-          if (imageUrl != null && imageUrl.isNotEmpty)
-            const SizedBox(width: 74),
+          if (imageUrl != null && imageUrl.isNotEmpty) const SizedBox(width: 74),
           if (imageUrl != null && imageUrl.isNotEmpty)
             ClipRRect(
               borderRadius: BorderRadius.circular(4),
@@ -60,19 +66,17 @@ class DonationDropdownFieldState extends State<DonationDropdownField> {
                 fit: BoxFit.cover,
               ),
             ),
-
-
         ],
       ),
     );
   }
-
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: DropdownButtonFormField<String>(
+        key: ValueKey(selectedDropdownItem),
         initialValue: selectedDropdownItem,
         items: widget.dropdownList.map((item) {
           return DropdownMenuItem(

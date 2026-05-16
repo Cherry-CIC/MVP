@@ -173,6 +173,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 hasSelectedPaymentMethod &&
                 viewModel.hasValidDeliveryDetails &&
                 viewModel.total > 0 &&
+                viewModel.checkoutFlowState != CheckoutFlowState.shipmentFailure &&
                 !isLoading &&
                 !viewModel.hasCompletedCheckout;
 

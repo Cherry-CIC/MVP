@@ -136,8 +136,8 @@ class AppStrings {
   // Donation
   static const donationsText = "Donate";
   static const donationOptionsText = "Donation Options";
-  static const giveYourBuyerText = "Give your buyer the option pick a cause they care about.";
-  static const easyWayText = "Its an easy way to make your listing more impactful.";
+  static const giveYourBuyerText = "Give your buyer the option to pick a cause they care about.";
+  static const easyWayText = "It's an easy way to make your listing more impactful.";
   static const openToOtherCharitiesText = "Open to other charities";
   static const openToOffersText = "Open to offers";
   static const applicableForBuyerDiscountsText = "Applicable for donor discounts";
