@@ -71,15 +71,7 @@ class FirebaseAuthService {
         return Result.failure('No user returned from Google sign-in');
       }
       // Once signed in, return the UserCredential
-      return Result.success(
-        UserCredentials(
-          uid: userCredential.user?.uid,
-          email: userCredential.user?.email,
-          firstname: userCredential.user?.displayName,
-          photoUrl: userCredential.user?.photoURL,
-          phoneNumber: userCredential.user?.phoneNumber,
-        ),
-      );
+      return Result.success(UserCredentials.fromAuth(userCredential.user!));
     } on FirebaseAuthException catch (e) {
       debugPrint('FirebaseAuthException: ${e.code} ${e.message}');
       return Result.failure(e.message ?? 'Firebase Auth error');
@@ -92,25 +84,19 @@ class FirebaseAuthService {
   Future<Result<UserCredentials>> signInWithApple() async {
     try {
       final appleProvider = AppleAuthProvider();
-      final UserCredential user;
+      appleProvider.addScope('email');
+      appleProvider.addScope('name');
+      final UserCredential userCredential;
       if (kIsWeb) {
-        user = await firebaseAuth.signInWithPopup(appleProvider);
+        userCredential = await firebaseAuth.signInWithPopup(appleProvider);
       } else {
-        user = await firebaseAuth.signInWithProvider(appleProvider);
+        userCredential = await firebaseAuth.signInWithProvider(appleProvider);
       }
-      if (user.user == null) {
+      if (userCredential.user == null) {
         return Result.failure('No user returned from Apple sign-in');
       }
       // Once signed in, return the UserCredential
-      return Result.success(
-        UserCredentials(
-          uid: user.user?.uid,
-          email: user.user?.email,
-          firstname: user.user?.displayName,
-          photoUrl: user.user?.photoURL,
-          phoneNumber: user.user?.phoneNumber,
-        ),
-      );
+      return Result.success(UserCredentials.fromAuth(userCredential.user!));
     } on FirebaseAuthException catch (e) {
       debugPrint('FirebaseAuthException: ${e.code} ${e.message}');
       return Result.failure(e.message ?? 'Firebase Auth error');

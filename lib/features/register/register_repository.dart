@@ -1,8 +1,8 @@
+import 'package:cherry_mvp/core/config/config.dart';
 import 'package:cherry_mvp/core/models/model.dart';
 import 'package:cherry_mvp/core/services/services.dart';
-import 'package:cherry_mvp/core/config/config.dart';
 import 'package:cherry_mvp/core/utils/result.dart';
-import 'register_model.dart';
+import 'package:cherry_mvp/features/register/register_model.dart';
 
 class RegisterRepository {
   final FirebaseAuthService _authService;
@@ -32,8 +32,7 @@ class RegisterRepository {
         );
 
         if (imageUploadResult.isSuccess) {
-          photoUrl = imageUploadResult
-              .value; // Get the download URL of the uploaded image
+          photoUrl = imageUploadResult.value; // Get the download URL of the uploaded image
         } else {
           return Result.failure(
             "Error uploading image: ${imageUploadResult.error}",
@@ -56,46 +55,6 @@ class RegisterRepository {
       } else {
         return Result.failure(firestoreResult.error);
       }
-    } else {
-      return Result.failure(result.error);
-    }
-  }
-
-  //Send Verifcation Email
-
-  Future<Result<void>> fetchUserFromFirestore(String uid) async {
-    // Fetch user document from Firestore
-    final result = await _firestoreService.getDocument(
-      FirestoreConstants.pathUserCollection,
-      uid,
-    );
-
-    if (result.isSuccess) {
-      final document = result.value;
-      // Store user data to shared preferences
-      await _firestoreService.prefs.setString(FirestoreConstants.id, uid);
-      await _firestoreService.prefs.setString(
-        FirestoreConstants.username,
-        document?.get(FirestoreConstants.username),
-      );
-      await _firestoreService.prefs.setString(
-        FirestoreConstants.firstname,
-        document?.get(FirestoreConstants.firstname),
-      );
-      await _firestoreService.prefs.setString(
-        FirestoreConstants.photoUrl,
-        document?.get(FirestoreConstants.photoUrl) ?? "",
-      );
-      await _firestoreService.prefs.setString(
-        FirestoreConstants.phone,
-        document?.get(FirestoreConstants.phone) ?? "",
-      );
-      await _firestoreService.prefs.setString(
-        FirestoreConstants.email,
-        document?.get(FirestoreConstants.email) ?? "",
-      );
-
-      return Result.success(null);
     } else {
       return Result.failure(result.error);
     }
@@ -137,7 +96,7 @@ class RegisterRepository {
     );
 
     if (result.isSuccess) {
-      await fetchUserFromFirestore(uid);
+      await _firestoreService.fetchUser(uid);
       await _authService.sendVerificationEmail();
       return Result.success(null);
     } else {
