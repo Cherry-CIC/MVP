@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:cherry_mvp/core/config/app_images.dart';
 import 'package:cherry_mvp/core/config/app_strings.dart';
 import 'package:cherry_mvp/core/models/user_section.dart';
@@ -6,13 +8,11 @@ import 'package:cherry_mvp/core/router/nav_routes.dart';
 import 'package:cherry_mvp/core/services/services.dart';
 import 'package:cherry_mvp/core/utils/donor_discount_state_store.dart';
 import 'package:cherry_mvp/features/checkout/checkout_view_model.dart';
+import 'package:cherry_mvp/features/products/product_viewmodel.dart';
 import 'package:cherry_mvp/features/products/widgets/product_highlight_title.dart';
 import 'package:cherry_mvp/features/products/widgets/product_information.dart';
-import 'package:cherry_mvp/features/products/product_viewmodel.dart';
 import 'package:cherry_mvp/features/products/widgets/seller_information.dart';
 import 'package:cherry_mvp/features/products/widgets/product_header_carousel.dart';
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
 class ProductPage extends StatelessWidget {
   const ProductPage({super.key});
@@ -39,14 +39,14 @@ class ProductPage extends StatelessWidget {
                 future: UsernameService.getUsername(product.userId ?? ''),
                 builder: (context, snapshot) {
                   final resolvedUsername = snapshot.data?.trim();
-                  final sellerUsername =
-                      (resolvedUsername != null && resolvedUsername.isNotEmpty)
+                  final sellerUsername = (resolvedUsername != null && resolvedUsername.isNotEmpty)
                       ? resolvedUsername
                       : 'User';
 
                   return SellerInformation(
                     user: UserInformation(
                       username: sellerUsername,
+                      // TODO remove filler values
                       location: 'New York, USA',
                       reviewsCount: 120,
                       followersCount: 300,
@@ -121,7 +121,7 @@ class ProductPage extends StatelessWidget {
                         height: 56,
                         child: OutlinedButton(
                           onPressed: () {},
-                          child: Text(AppStrings.productPageMakeOffer),
+                          child: Text(AppStrings.productPageMakeOffer, textAlign: TextAlign.center),
                         ),
                       ),
                     ),
@@ -137,7 +137,7 @@ class ProductPage extends StatelessWidget {
                               AppRoutes.checkout,
                             );
                           },
-                          child: Text(AppStrings.productPageBuyNow),
+                          child: Text(AppStrings.productPageBuyNow, textAlign: TextAlign.center),
                         ),
                       ),
                     ),

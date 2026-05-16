@@ -191,6 +191,7 @@ class AppStrings {
   static const productPageBuyNow = 'Buy Now';
   static const giveInStyle = 'Give in style';
   static const productIncl = 'Incl.';
+  static const askSeller = 'Ask seller';
 
   // Checkout
   static const checkoutTitle = 'Checkout';

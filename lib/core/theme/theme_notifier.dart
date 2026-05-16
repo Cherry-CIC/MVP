@@ -18,7 +18,10 @@ class ThemeNotifier extends ChangeNotifier {
 
   ThemeMode get mode => _mode;
 
-  bool get isDark => _mode == ThemeMode.dark;
+  bool get isDark => _mode == ThemeMode.dark ||
+      (_mode == ThemeMode.system &&
+          WidgetsBinding.instance.platformDispatcher.platformBrightness ==
+              Brightness.dark);
 
   void setThemeMode(ThemeMode mode) {
     if (_mode == mode) return;

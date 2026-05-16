@@ -1,12 +1,14 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cherry_mvp/core/config/config.dart';
 import 'package:cherry_mvp/core/services/error_string.dart';
 import 'package:cherry_mvp/core/utils/result.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
+// TODO maybe turn this into a user service, and have username retrieval and caching as part of it.
+// TODO as we need to get other details like user photo etc for other parts of the app.
 class UsernameService {
   static const _usernameCacheByUidKey = 'username_cache_by_uid';
   static const Duration _readTimeout = Duration(seconds: 6);

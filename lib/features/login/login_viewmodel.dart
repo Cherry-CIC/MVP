@@ -48,7 +48,7 @@ class LoginViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final result = await loginRepository.signInWithGoogle();
+      final result = await loginRepository.signInWithSocial(SocialLoginType.google);
       if (result.isSuccess) {
         _status = Status.success;
       } else {
@@ -67,7 +67,7 @@ class LoginViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final result = await loginRepository.signInWithApple();
+      final result = await loginRepository.signInWithSocial(SocialLoginType.apple);
 
       if (result.isSuccess) {
         _status = Status.success;
