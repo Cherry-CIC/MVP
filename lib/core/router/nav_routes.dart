@@ -11,7 +11,10 @@ import 'package:cherry_mvp/features/products/product_page.dart';
 import 'package:cherry_mvp/features/register/register_page.dart';
 import 'package:cherry_mvp/features/search/widgets/category_page/category_page.dart';
 import 'package:cherry_mvp/features/settings/faq_page.dart';
+import 'package:cherry_mvp/features/settings/legal_information_page.dart';
+import 'package:cherry_mvp/features/settings/privacy_policy_page.dart';
 import 'package:cherry_mvp/features/settings/settings_page.dart';
+import 'package:cherry_mvp/features/settings/terms_and_conditions_page.dart';
 import 'package:cherry_mvp/features/welcome/welcome_page.dart';
 import 'package:cherry_mvp/features/welcome/widgets/post_auth_username_gate.dart';
 
@@ -30,6 +33,9 @@ class AppRoutes {
   static const String checkoutComplete = '/checkoutComplete';
   static const String donationSuccess = '/donationSuccess';
   static const String faqsPage = '/faq';
+  static const String legalInformationPage = '/legal-information';
+  static const String privacyPolicyPage = '/privacy-policy';
+  static const String termsAndConditionsPage = '/terms-and-conditions';
   static const String category = '/category';
   static const String charity = '/charity';
 
@@ -53,6 +59,14 @@ class AppRoutes {
         return MaterialPageRoute(builder: (_) => DonationPage());
       case faqsPage:
         return MaterialPageRoute(builder: (_) => FaqPage());
+      case legalInformationPage:
+        return MaterialPageRoute(builder: (_) => const LegalInformationPage());
+      case privacyPolicyPage:
+        return MaterialPageRoute(builder: (_) => const PrivacyPolicyPage());
+      case termsAndConditionsPage:
+        return MaterialPageRoute(
+          builder: (_) => const TermsAndConditionsPage(),
+        );
       case checkout:
         return MaterialPageRoute(
           fullscreenDialog: true,
