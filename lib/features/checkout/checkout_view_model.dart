@@ -3,6 +3,7 @@ import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:logging/logging.dart';
 import 'package:cherry_mvp/core/config/config.dart';
 import 'package:cherry_mvp/core/models/inpost_model.dart';
+import 'package:cherry_mvp/core/models/inpost_shipping_method.dart';
 import 'package:cherry_mvp/core/models/product.dart';
 import 'package:cherry_mvp/core/router/nav_provider.dart';
 import 'package:cherry_mvp/core/router/nav_routes.dart';
@@ -12,6 +13,8 @@ import 'package:cherry_mvp/features/checkout/constants/address_constants.dart';
 import 'package:cherry_mvp/features/checkout/models/payment_intent.dart';
 import 'package:cherry_mvp/features/checkout/payment_type.dart';
 import 'package:cherry_mvp/features/checkout/widgets/shipping_address_widget.dart';
+
+enum DeliveryType { pickup, home, undefined }
 
 /// ViewModel for managing checkout state including basket items, shipping address, and payment method
 class CheckoutViewModel extends ChangeNotifier {
@@ -30,29 +33,39 @@ class CheckoutViewModel extends ChangeNotifier {
 
   final List<Product> _basketItems = [];
 
-  final List<InpostModel> _nearestInpost = [];
-  List<InpostModel> get nearestInpost => _nearestInpost;
+  final List<InpostModel> _nearestInposts = [];
+  List<InpostModel> get nearestInposts => _nearestInposts;
 
-  InpostModel? selectedInpost;
+  final List<InpostShippingMethod> _inpostShippingMethods = [];
+  List<InpostShippingMethod> get inpostShippingMethods => _inpostShippingMethods;
 
-  bool showLocker = false;
+  InpostModel? _selectedInpost;
+  InpostModel? get selectedInpost => _selectedInpost;
 
-  bool hasLocker = false;
+  InpostShippingMethod? _selectedInpostShippingMethod;
+  InpostShippingMethod? get selectedInpostShippingMethod => _selectedInpostShippingMethod;
+  bool _showLocker = false;
+  bool get showLocker => _showLocker;
 
-  String? deliveryChoice;
+  DeliveryType deliveryChoice = DeliveryType.undefined;
 
-  void setDeliveryChoice(String val) {
+  void setDeliveryChoice(DeliveryType val) {
     deliveryChoice = val;
     notifyListeners();
   }
 
   void setShowLocker(bool val) {
-    showLocker = val;
+    _showLocker = val;
     notifyListeners();
   }
 
   void setSelectedInpost(InpostModel? data) {
-    selectedInpost = data;
+    _selectedInpost = data;
+    notifyListeners();
+  }
+
+  void setSelectedInpostShippingMethod(InpostShippingMethod? method) {
+    _selectedInpostShippingMethod = method;
     notifyListeners();
   }
 
@@ -65,8 +78,8 @@ class CheckoutViewModel extends ChangeNotifier {
   /// Security fee calculated as 10% of item total
   double get securityFee => itemTotal * 0.1;
 
-  /// Fixed postage fee
-  double get postage => 2.99;
+  /// postage fee
+  double get postage => _selectedInpostShippingMethod?.price ?? 0.00;
 
   /// Total order amount including all fees
   double get total => itemTotal + securityFee + postage;
@@ -182,9 +195,9 @@ class CheckoutViewModel extends ChangeNotifier {
     selectedPaymentType = null;
     _hasPaymentMethod = false;
     isShippingAddressConfirmed = false;
-    selectedInpost = null;
+    _selectedInpost = null;
     _basketItems.clear();
-    deliveryChoice = null;
+    deliveryChoice = DeliveryType.undefined;
     _createOrderStatus = Status.uninitialized;
     notifyListeners();
   }
@@ -275,31 +288,31 @@ class CheckoutViewModel extends ChangeNotifier {
     }
   }
 
-  Future<void> onConfirmLocation(String postalCode) async {
-    await fetchNearestInPosts(postalCode);
+  Future<void> onConfirmLocation(String postalCode, String country) async {
+    await fetchNearestInposts(postalCode, country);
     navigator.goBack();
   }
 
-  // fetch nearest inPost locker for pickup
-  Future<void> fetchNearestInPosts(String postalCode) async {
+  // fetch nearest InPost locker for pickup
+  Future<void> fetchNearestInposts(String postalCode, String country) async {
     _status = Status.loading;
     notifyListeners();
 
     try {
-      final result = await checkoutRepository.fetchNearestInPosts(postalCode);
+      final result = await checkoutRepository.fetchNearestInposts(postalCode, country);
       final parsedInposts = result.isSuccess && result.value != null
           ? _parseInpostList(result.value)
           : const <InpostModel>[];
 
-      _nearestInpost
+      _nearestInposts
         ..clear()
         ..addAll(parsedInposts);
 
       if (parsedInposts.isNotEmpty) {
-        showLocker = true;
+        _showLocker = true;
         _status = Status.success;
       } else {
-        showLocker = false;
+        _showLocker = false;
         _status = Status.failure(
           result.isSuccess
               ? 'Pickup points currently unavailable, please try again later'
@@ -313,10 +326,49 @@ class CheckoutViewModel extends ChangeNotifier {
         );
       }
     } catch (e) {
-      showLocker = false;
-      _nearestInpost.clear();
+      _showLocker = false;
+      _nearestInposts.clear();
       _status = Status.failure(e.toString());
       _log.severe('Fetch nearest inPost locker error:: $e');
+    }
+
+    notifyListeners();
+  }
+
+  Future<void> fetchShippingMethodsForInpost(String servicePointId, String postalCode, String country) async {
+    _status = Status.loading;
+    notifyListeners();
+
+    try {
+      final result = await checkoutRepository.fetchShippingMethodsForInpost(servicePointId, postalCode, country);
+
+      final parsedShippingMethods = result.isSuccess && result.value != null
+          ? _parseShippingMethodList(result.value)
+          : const <InpostShippingMethod>[];
+
+      _inpostShippingMethods
+        ..clear()
+        ..addAll(parsedShippingMethods);
+
+      if (parsedShippingMethods.isNotEmpty) {
+        _selectedInpostShippingMethod = parsedShippingMethods.first;
+        _status = Status.success;
+      } else {
+        _status = Status.failure(
+          result.isSuccess
+              ? 'InPost shipping methods currently unavailable, please try again later'
+              : (result.error ?? 'InPost shipping methods currently unavailable, please try again later'),
+        );
+        _log.warning(
+          result.isSuccess
+              ? 'Fetch inPost shipping methods returned an empty or invalid payload for service point $servicePointId'
+              : 'Fetch inPost shipping methods failed: ${result.error}',
+        );
+      }
+    } catch (e) {
+      _inpostShippingMethods.clear();
+      _status = Status.failure(e.toString());
+      _log.severe('Fetch inPost shipping methods error:: $e');
     }
 
     notifyListeners();
@@ -340,30 +392,31 @@ class CheckoutViewModel extends ChangeNotifier {
         final name = (data[FirestoreConstants.name] ?? '').toString();
         final address = (data[FirestoreConstants.address] ?? '').toString();
         final postcode = (data[FirestoreConstants.postcode] ?? '').toString();
+        final city = (data[FirestoreConstants.city] ?? '').toString();
+        final country = (data[FirestoreConstants.country] ?? '').toString();
         final lat = (data[FirestoreConstants.lat] ?? '').toString();
         final long = (data[FirestoreConstants.long] ?? '').toString();
 
         if (id.isNotEmpty && name.isNotEmpty && address.isNotEmpty && postcode.isNotEmpty) {
-          selectedInpost = InpostModel(
+          _selectedInpost = InpostModel(
             id: id,
             name: name,
             address: address,
             postcode: postcode,
+            city: city,
+            country: country,
             lat: lat,
             long: long,
           );
-          hasLocker = true;
-          showLocker = true;
+          _showLocker = true;
           _status = Status.success;
         } else {
-          hasLocker = false;
-          showLocker = false;
-          selectedInpost = null;
+          _showLocker = false;
+          _selectedInpost = null;
         }
       } else {
-        hasLocker = false;
-        showLocker = false;
-        selectedInpost = null;
+        _showLocker = false;
+        _selectedInpost = null;
       }
       notifyListeners();
       return Result.success(null);
@@ -476,21 +529,24 @@ class CheckoutViewModel extends ChangeNotifier {
       return;
     }
 
-    final Map<String, dynamic> address = deliveryChoice == "pickup"
-        ? {
-            "line1": selectedInpost?.address ?? '',
-            "city": "London",
-            "state": "London",
-            "postal_code": selectedInpost?.postcode ?? '',
-            "country": AppStrings.unitedKingdomText,
-          }
-        : {
-            'line1': _shippingAddress?.line1 ?? '',
-            "city": shippingAddressComponents[AddressConstants.cityKey] ?? "",
-            "state": shippingAddressComponents[AddressConstants.stateKey] ?? "",
-            'postal_code': shippingAddressComponents[AddressConstants.postalCodeKey] ?? "",
-            "country": shippingAddressComponents[AddressConstants.countryKey] ?? AppStrings.unitedKingdomText,
-          };
+    final Map<String, dynamic> address = switch (deliveryChoice) {
+      DeliveryType.pickup => {
+        "line1": selectedInpost?.address ?? '',
+        "city": "London",
+        "state": "London",
+        "postal_code": selectedInpost?.postcode ?? '',
+        "country": AppStrings.unitedKingdomText,
+      },
+      DeliveryType.home => {
+        'line1': _shippingAddress?.line1 ?? '',
+        "city": shippingAddressComponents[AddressConstants.cityKey] ?? "",
+        "state": shippingAddressComponents[AddressConstants.stateKey] ?? "",
+        'postal_code': shippingAddressComponents[AddressConstants.postalCodeKey] ?? "",
+        "country": shippingAddressComponents[AddressConstants.countryKey] ?? AppStrings.unitedKingdomText,
+      },
+      // TODO: Handle this case.
+      DeliveryType.undefined => throw UnimplementedError(),
+    };
 
     final Map<String, dynamic> orderData = {
       "amount": _toMinorUnits(total),
@@ -556,7 +612,7 @@ class CheckoutViewModel extends ChangeNotifier {
 
   List<InpostModel> _parseInpostList(dynamic payload) {
     final dynamic listData = payload is Map<String, dynamic>
-        ? (payload['data'] ?? payload['lockers'] ?? payload['items'])
+        ? (payload['pickupPoints'] ?? payload['lockers'] ?? payload['items'])
         : payload;
 
     if (listData is! List) return [];
@@ -569,6 +625,16 @@ class CheckoutViewModel extends ChangeNotifier {
       }
     }
     return lockers;
+  }
+
+  List<InpostShippingMethod> _parseShippingMethodList(dynamic payload) {
+    final List<dynamic> jsonList = payload['shippingMethods'] ?? payload;
+
+    final shippingMethods = jsonList
+        .map((json) => InpostShippingMethod.fromJson(json))
+        .where((method) => method.name.startsWith('InPost Locker'))
+        .toList();
+    return shippingMethods;
   }
 
   InpostModel? _parseInpostItem(dynamic item) {
@@ -587,8 +653,10 @@ class CheckoutViewModel extends ChangeNotifier {
 
     final id = readFirst(['id', 'lockerId', 'code']);
     final name = readFirst(['name', 'lockerName']);
-    final address = readFirst(['address', 'line1', 'street']);
+    final address = readFirst(['addressLine1', 'line1', 'street']);
     final postcode = readFirst(['postcode', 'postalCode', 'postCode']);
+    final city = readFirst(['city']);
+    final country = readFirst(['country']);
     final lat = readFirst(['lat', 'latitude']);
     final long = readFirst(['long', 'lng', 'longitude']);
 
@@ -601,6 +669,8 @@ class CheckoutViewModel extends ChangeNotifier {
       name: name,
       address: address,
       postcode: postcode,
+      city: city,
+      country: country,
       lat: lat,
       long: long,
     );
@@ -617,5 +687,15 @@ class CheckoutViewModel extends ChangeNotifier {
 
   Future<void> showPurchaseSecurity() async {
     await navigator.showPurchaseSecurity();
+  }
+
+  Future<bool> showPickupPointSelection() async {
+    final result = await navigator.navigateTo(AppRoutes.pickupPointSelector);
+
+    return result;
+  }
+
+  void goBack(bool pickupPointSelected) {
+    navigator.goBack(pickupPointSelected);
   }
 }

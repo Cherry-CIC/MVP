@@ -229,6 +229,7 @@ class AppStrings {
   static const checkoutDeliveryOptionRequired = 'Please choose a delivery option';
   static const checkoutPickupLockerRequired = 'Please select a pickup locker';
   static const checkoutPaymentMethodRequired = 'Please select a payment method';
+  static const checkoutFindNearestPickupPoints = 'Show Nearest Pickup Points';
 
   // Card Details
   static const cardDetailsTitle = 'Card Details';

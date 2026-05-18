@@ -31,7 +31,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
 
       final vm = context.read<CheckoutViewModel>();
       _vm = vm;
-
+      vm.setDeliveryChoice(DeliveryType.pickup);
       vm.resetCreateOrderStatus();
       vm.fetchUserLocker();
       vm.addListener(_handleOrderStatus);
@@ -104,31 +104,6 @@ class _CheckoutPageState extends State<CheckoutPage> {
               ),
             ),
 
-          SliverToBoxAdapter(
-            child: Consumer<CheckoutViewModel>(
-              builder: (context, vm, _) {
-                return ListTile(
-                  title: const Text(AppStrings.checkoutPayment),
-                  subtitle: Text(
-                    vm.selectedPaymentType != null ? vm.selectedPaymentType!.name : AppStrings.paymentMethodsChoose,
-                  ),
-                  trailing: Icon(
-                    vm.selectedPaymentType != null ? Icons.check : Icons.add,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                  onTap: () {
-                    showModalBottomSheet(
-                      context: context,
-                      isScrollControlled: true,
-                      backgroundColor: Colors.transparent,
-                      builder: (_) => const SelectPaymentTypeBottomSheet(),
-                    );
-                  },
-                );
-              },
-            ),
-          ),
-
           SliverList.list(
             children: [
               const SizedBox(height: 50),
@@ -164,21 +139,17 @@ class _CheckoutPageState extends State<CheckoutPage> {
           builder: (context, viewModel, _) {
             final isLoading = viewModel.createOrderStatus.type == StatusType.loading;
 
-            final hasDeliveryChoice = (viewModel.deliveryChoice ?? '').isNotEmpty;
-            final isPickup = viewModel.deliveryChoice == 'pickup';
+            final isPickup = viewModel.deliveryChoice == DeliveryType.pickup;
 
-            final hasValidDelivery =
-                hasDeliveryChoice &&
-                (isPickup
-                    ? viewModel.selectedInpost != null
-                    : viewModel.isShippingAddressConfirmed && viewModel.hasShippingAddress);
+            final hasValidDelivery = (isPickup
+                ? viewModel.selectedInpost != null
+                : viewModel.isShippingAddressConfirmed && viewModel.hasShippingAddress);
 
             final canAttemptPayment = hasValidDelivery && basket.total > 0 && !isLoading;
 
             return FilledButton(
               onPressed: canAttemptPayment
                   ? () async {
-                      // ✅ require payment method
                       if (!viewModel.hasPaymentMethod) {
                         setState(() {
                           _errorMessage = AppStrings.checkoutPaymentMethodRequired;

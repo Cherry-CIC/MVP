@@ -1,12 +1,13 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cherry_mvp/core/config/firestore_constants.dart';
 import 'package:cherry_mvp/core/models/inpost_model.dart';
-import 'package:cherry_mvp/features/checkout/models/payment_intent.dart';
 import 'package:cherry_mvp/core/services/services.dart';
 import 'package:cherry_mvp/core/utils/result.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cherry_mvp/features/checkout/models/payment_intent.dart';
 
 abstract class ICheckoutRepository {
-  Future<Result> fetchNearestInPosts(String postalCode);
+  Future<Result> fetchNearestInposts(String postalCode, String country);
+  Future<Result> fetchShippingMethodsForInpost(String servicePointId, String postalCode, String country);
 
   Future<void> storeLockerInFirestore(InpostModel data);
 
@@ -25,24 +26,46 @@ final class CheckoutRepository implements ICheckoutRepository {
   CheckoutRepository(this._apiService, this._firestoreService);
 
   @override
-  Future<Result> fetchNearestInPosts(String postalCode) async {
+  Future<Result> fetchNearestInposts(String postalCode, String country) async {
     try {
       final result = await _apiService.get(
-        "${ApiEndpoints.inpostLockers}?postcode=$postalCode&maxDistance=30",
+        "${ApiEndpoints.inpostLockers}?country=$country&address=$postalCode&radius=1000",
       );
       if (result.isSuccess && result.value != null) {
         final data = result.value;
         final jsonList = data is Map<String, dynamic>
             ? (data['data'] ?? data['lockers'] ?? data['items'] ?? data)
             : data;
-        //<List<Locker>>
-        // final categories =
-        //     jsonList.map((json) => Category.fromJson(json)).toList();
         return Result.success(jsonList);
       } else {
         return Result.failure(
-          result.error ??
-              'Pickup points currently unavailable, please try again later',
+          result.error ?? 'Pickup points currently unavailable, please try again later',
+        );
+      }
+    } catch (e) {
+      return Result.failure(e.toString());
+    }
+  }
+
+  @override
+  Future<Result<dynamic>> fetchShippingMethodsForInpost(
+    String servicePointId,
+    String postalCode,
+    String country,
+  ) async {
+    try {
+      final result = await _apiService.get(
+        "${ApiEndpoints.inpostShippingMethods}?servicePointId=$servicePointId&country=$country&postalCode=$postalCode",
+      );
+      if (result.isSuccess && result.value != null) {
+        final data = result.value;
+        final jsonList = data is Map<String, dynamic>
+            ? (data['data'] ?? data['lockers'] ?? data['items'] ?? data)
+            : data;
+        return Result.success(jsonList);
+      } else {
+        return Result.failure(
+          result.error ?? 'Pickup points currently unavailable, please try again later',
         );
       }
     } catch (e) {
@@ -86,7 +109,6 @@ final class CheckoutRepository implements ICheckoutRepository {
       'updated_at': DateTime.now().toIso8601String(),
     };
 
-  
     final result = await _firestoreService.saveDocument(
       FirestoreConstants.orders,
       orderId,
