@@ -1,5 +1,6 @@
 import 'package:cherry_mvp/core/config/firestore_constants.dart';
 import 'package:cherry_mvp/core/models/inpost_model.dart';
+import 'package:cherry_mvp/features/checkout/constants/address_constants.dart';
 import 'package:cherry_mvp/features/checkout/models/payment_intent.dart';
 import 'package:cherry_mvp/core/services/services.dart';
 import 'package:cherry_mvp/core/utils/result.dart';
@@ -7,6 +8,11 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 abstract class ICheckoutRepository {
   Future<Result> fetchNearestInPosts(String postalCode);
+  Future<Result> fetchPickupPoints({
+    required String country,
+    required String address,
+    int radius,
+  });
 
   Future<void> storeLockerInFirestore(InpostModel data);
 
@@ -41,10 +47,36 @@ final class CheckoutRepository implements ICheckoutRepository {
         return Result.success(jsonList);
       } else {
         return Result.failure(
-          result.error ??
-              'Pickup points currently unavailable, please try again later',
+          result.error ?? 'Pickup points currently unavailable, please try again later',
         );
       }
+    } catch (e) {
+      return Result.failure(e.toString());
+    }
+  }
+
+  @override
+  Future<Result> fetchPickupPoints({
+    required String country,
+    required String address,
+    int radius = AddressConstants.pickupPointSearchRadiusMeters,
+  }) async {
+    try {
+      final result = await _apiService.get(
+        ApiEndpoints.pickupPoints,
+        queryParameters: {
+          'country': country,
+          'address': address,
+          'radius': radius,
+        },
+      );
+      if (result.isSuccess && result.value != null) {
+        return Result.success(result.value);
+      }
+
+      return Result.failure(
+        result.error ?? 'Pickup points currently unavailable, please try again later',
+      );
     } catch (e) {
       return Result.failure(e.toString());
     }
@@ -86,7 +118,6 @@ final class CheckoutRepository implements ICheckoutRepository {
       'updated_at': DateTime.now().toIso8601String(),
     };
 
-  
     final result = await _firestoreService.saveDocument(
       FirestoreConstants.orders,
       orderId,

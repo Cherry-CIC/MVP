@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:logging/logging.dart';
 import 'package:cherry_mvp/core/config/config.dart';
-import 'package:cherry_mvp/core/models/inpost_model.dart';
 import 'package:cherry_mvp/core/models/product.dart';
 import 'package:cherry_mvp/core/router/nav_provider.dart';
 import 'package:cherry_mvp/core/router/nav_routes.dart';
@@ -10,11 +9,15 @@ import 'package:cherry_mvp/core/utils/utils.dart';
 import 'package:cherry_mvp/features/checkout/checkout_repository.dart';
 import 'package:cherry_mvp/features/checkout/constants/address_constants.dart';
 import 'package:cherry_mvp/features/checkout/models/payment_intent.dart';
+import 'package:cherry_mvp/features/checkout/models/pickup_point.dart';
 import 'package:cherry_mvp/features/checkout/payment_type.dart';
 import 'package:cherry_mvp/features/checkout/widgets/shipping_address_widget.dart';
 
 /// ViewModel for managing checkout state including basket items, shipping address, and payment method
 class CheckoutViewModel extends ChangeNotifier {
+  static const String pickupPointDeliveryChoice = 'pickup_point';
+  static const String homeDeliveryChoice = 'home';
+
   final ICheckoutRepository checkoutRepository;
   final NavigationProvider navigator;
   final _log = Logger('CheckoutViewModel');
@@ -30,29 +33,31 @@ class CheckoutViewModel extends ChangeNotifier {
 
   final List<Product> _basketItems = [];
 
-  final List<InpostModel> _nearestInpost = [];
-  List<InpostModel> get nearestInpost => _nearestInpost;
+  final List<PickupPoint> _pickupPoints = [];
+  List<PickupPoint> get pickupPoints => List.unmodifiable(_pickupPoints);
 
-  InpostModel? selectedInpost;
-
-  bool showLocker = false;
-
-  bool hasLocker = false;
+  PickupPoint? selectedPickupPoint;
 
   String? deliveryChoice;
 
   void setDeliveryChoice(String val) {
+    if (val != pickupPointDeliveryChoice) {
+      selectedPickupPoint = null;
+      _pickupPoints.clear();
+    }
     deliveryChoice = val;
     notifyListeners();
   }
 
-  void setShowLocker(bool val) {
-    showLocker = val;
+  bool get isPickupPointDelivery => deliveryChoice == pickupPointDeliveryChoice;
+
+  void setSelectedPickupPoint(PickupPoint? data) {
+    selectedPickupPoint = data;
     notifyListeners();
   }
 
-  void setSelectedInpost(InpostModel? data) {
-    selectedInpost = data;
+  void clearSelectedPickupPoint() {
+    selectedPickupPoint = null;
     notifyListeners();
   }
 
@@ -89,8 +94,14 @@ class CheckoutViewModel extends ChangeNotifier {
   /// Whether a payment method has been set
   bool get hasPaymentMethod => selectedPaymentType != null || _hasPaymentMethod;
 
-  /// Whether the order is ready for checkout (has both address and payment method)
-  bool get canCheckout => hasShippingAddress && hasPaymentMethod;
+  bool get hasValidDeliverySelection {
+    if ((deliveryChoice ?? '').isEmpty) return false;
+    if (isPickupPointDelivery) return selectedPickupPoint != null;
+    return deliveryChoice == homeDeliveryChoice && isShippingAddressConfirmed && hasShippingAddress;
+  }
+
+  /// Whether the order is ready for checkout.
+  bool get canCheckout => hasValidDeliverySelection && hasPaymentMethod;
 
   void setAddressConfirmed(bool value) {
     isShippingAddressConfirmed = value;
@@ -119,12 +130,16 @@ class CheckoutViewModel extends ChangeNotifier {
   /// Notifies listeners when address is updated
   void setShippingAddress(PlaceDetails address) {
     _shippingAddress = address;
+    _pickupPoints.clear();
+    selectedPickupPoint = null;
     notifyListeners();
   }
 
   /// Clears the currently selected shipping address
   void clearShippingAddress() {
     _shippingAddress = null;
+    _pickupPoints.clear();
+    selectedPickupPoint = null;
     notifyListeners();
   }
 
@@ -175,6 +190,31 @@ class CheckoutViewModel extends ChangeNotifier {
     };
   }
 
+  String get pickupPointSearchCountry {
+    final address = _shippingAddress;
+    if (address == null) return 'GB';
+
+    for (final component in address.addressComponents) {
+      if (component.types.contains(AddressConstants.countryType)) {
+        final country = component.shortName.isNotEmpty ? component.shortName : component.longName;
+        return _normaliseCountryCode(country);
+      }
+    }
+
+    return _normaliseCountryCode(address.country);
+  }
+
+  String _normaliseCountryCode(String country) {
+    final value = country.trim();
+    if (value.isEmpty) return 'GB';
+    final upperValue = value.toUpperCase();
+    if (upperValue == 'UNITED KINGDOM' || upperValue == 'UK' || upperValue == 'GREAT BRITAIN') {
+      return 'GB';
+    }
+    if (upperValue.length == 2) return upperValue;
+    return value;
+  }
+
   /// Resets checkout state for a new order
   /// Clears shipping address and payment method but preserves basket items
   void resetCheckout() {
@@ -182,7 +222,8 @@ class CheckoutViewModel extends ChangeNotifier {
     selectedPaymentType = null;
     _hasPaymentMethod = false;
     isShippingAddressConfirmed = false;
-    selectedInpost = null;
+    selectedPickupPoint = null;
+    _pickupPoints.clear();
     _basketItems.clear();
     deliveryChoice = null;
     _createOrderStatus = Status.uninitialized;
@@ -224,6 +265,7 @@ class CheckoutViewModel extends ChangeNotifier {
     try {
       // Prepare order data for API call
       final Map<String, dynamic> orderData = {
+        'delivery_method': deliveryChoice,
         'items': basketItems
             .map(
               (item) => {
@@ -250,6 +292,7 @@ class CheckoutViewModel extends ChangeNotifier {
           'postage': postage,
           'total': total,
         },
+        if (selectedPickupPoint != null) 'pickupPoint': selectedPickupPoint!.toJson(),
       };
 
       // Validate order data structure
@@ -275,31 +318,51 @@ class CheckoutViewModel extends ChangeNotifier {
     }
   }
 
-  Future<void> onConfirmLocation(String postalCode) async {
-    await fetchNearestInPosts(postalCode);
-    navigator.goBack();
+  Future<void> fetchPickupPointsForShippingAddress({
+    int radius = AddressConstants.pickupPointSearchRadiusMeters,
+  }) async {
+    final postcode = shippingAddressComponents[AddressConstants.postalCodeKey]?.trim() ?? '';
+    if (postcode.isEmpty) {
+      _pickupPoints.clear();
+      selectedPickupPoint = null;
+      _status = Status.failure(AppStrings.checkoutAddressRequired);
+      notifyListeners();
+      return;
+    }
+
+    await fetchPickupPoints(
+      country: pickupPointSearchCountry,
+      address: postcode,
+      radius: radius,
+    );
   }
 
-  // fetch nearest inPost locker for pickup
-  Future<void> fetchNearestInPosts(String postalCode) async {
+  Future<void> fetchPickupPoints({
+    required String country,
+    required String address,
+    int radius = AddressConstants.pickupPointSearchRadiusMeters,
+  }) async {
     _status = Status.loading;
+    selectedPickupPoint = null;
     notifyListeners();
 
     try {
-      final result = await checkoutRepository.fetchNearestInPosts(postalCode);
-      final parsedInposts = result.isSuccess && result.value != null
-          ? _parseInpostList(result.value)
-          : const <InpostModel>[];
+      final result = await checkoutRepository.fetchPickupPoints(
+        country: country,
+        address: address,
+        radius: radius,
+      );
+      final parsedPickupPoints = result.isSuccess && result.value != null
+          ? _parsePickupPointList(result.value)
+          : const <PickupPoint>[];
 
-      _nearestInpost
+      _pickupPoints
         ..clear()
-        ..addAll(parsedInposts);
+        ..addAll(parsedPickupPoints);
 
-      if (parsedInposts.isNotEmpty) {
-        showLocker = true;
+      if (parsedPickupPoints.isNotEmpty) {
         _status = Status.success;
       } else {
-        showLocker = false;
         _status = Status.failure(
           result.isSuccess
               ? 'Pickup points currently unavailable, please try again later'
@@ -307,76 +370,23 @@ class CheckoutViewModel extends ChangeNotifier {
         );
         _log.warning(
           result.isSuccess
-              ? 'Fetch nearest inPost locker returned an empty or invalid '
-                    'payload for postcode $postalCode'
-              : 'Fetch nearest inPost locker failed: ${result.error}',
+              ? 'Fetch pickup points returned an empty or invalid payload for address $address'
+              : 'Fetch pickup points failed: ${result.error}',
         );
       }
     } catch (e) {
-      showLocker = false;
-      _nearestInpost.clear();
+      _pickupPoints.clear();
       _status = Status.failure(e.toString());
-      _log.severe('Fetch nearest inPost locker error:: $e');
+      _log.severe('Fetch pickup points error:: $e');
     }
 
     notifyListeners();
   }
 
-  Future<void> storeLockerInFirestore() async {
-    try {
-      await checkoutRepository.storeLockerInFirestore(selectedInpost!);
-    } catch (e) {
-      _log.severe('Error storing locker to firestore:: $e');
-    }
-  }
-
-  Future<Result> fetchUserLocker() async {
-    final result = await checkoutRepository.fetchUserLocker();
-    if (result.isSuccess) {
-      final doc = result.value;
-      if (doc != null && doc.exists && doc.data() is Map<String, dynamic>) {
-        final data = doc.data() as Map<String, dynamic>;
-        final id = (data[FirestoreConstants.id] ?? '').toString();
-        final name = (data[FirestoreConstants.name] ?? '').toString();
-        final address = (data[FirestoreConstants.address] ?? '').toString();
-        final postcode = (data[FirestoreConstants.postcode] ?? '').toString();
-        final lat = (data[FirestoreConstants.lat] ?? '').toString();
-        final long = (data[FirestoreConstants.long] ?? '').toString();
-
-        if (id.isNotEmpty && name.isNotEmpty && address.isNotEmpty && postcode.isNotEmpty) {
-          selectedInpost = InpostModel(
-            id: id,
-            name: name,
-            address: address,
-            postcode: postcode,
-            lat: lat,
-            long: long,
-          );
-          hasLocker = true;
-          showLocker = true;
-          _status = Status.success;
-        } else {
-          hasLocker = false;
-          showLocker = false;
-          selectedInpost = null;
-        }
-      } else {
-        hasLocker = false;
-        showLocker = false;
-        selectedInpost = null;
-      }
-      notifyListeners();
-      return Result.success(null);
-    } else {
-      _status = Status.failure(result.error?.toString() ?? 'Unknown error');
-      notifyListeners();
-      return Result.failure(result.error);
-    }
-  }
-
   /// Store a dummy order in Firestore
   Future<void> storeOrderInFirestore() async {
     final Map<String, dynamic> orderData = {
+      'delivery_method': deliveryChoice,
       'items': _basketItems
           .map(
             (item) => {
@@ -399,6 +409,7 @@ class CheckoutViewModel extends ChangeNotifier {
         'postage': postage,
         'total': total,
       },
+      if (selectedPickupPoint != null) 'pickupPoint': selectedPickupPoint!.toJson(),
       'created_at': DateTime.now().toIso8601String(),
     };
     try {
@@ -476,13 +487,14 @@ class CheckoutViewModel extends ChangeNotifier {
       return;
     }
 
-    final Map<String, dynamic> address = deliveryChoice == "pickup"
+    final pickupPoint = selectedPickupPoint;
+    final Map<String, dynamic> address = isPickupPointDelivery && pickupPoint != null
         ? {
-            "line1": selectedInpost?.address ?? '',
-            "city": "London",
-            "state": "London",
-            "postal_code": selectedInpost?.postcode ?? '',
-            "country": AppStrings.unitedKingdomText,
+            "line1": pickupPoint.addressLine1,
+            "city": pickupPoint.city,
+            "state": "",
+            "postal_code": pickupPoint.postalCode,
+            "country": pickupPoint.country,
           }
         : {
             'line1': _shippingAddress?.line1 ?? '',
@@ -496,7 +508,9 @@ class CheckoutViewModel extends ChangeNotifier {
       "amount": _toMinorUnits(total),
       "productId": basketItems[0].id,
       "productName": basketItems[0].name,
+      "deliveryMethod": deliveryChoice,
       "shipping": {"address": address, "name": 'John Doe'},
+      if (pickupPoint != null) "pickupPoint": pickupPoint.toJson(),
     };
     try {
       final result = await checkoutRepository.createOrder(orderData);
@@ -554,56 +568,24 @@ class CheckoutViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  List<InpostModel> _parseInpostList(dynamic payload) {
-    final dynamic listData = payload is Map<String, dynamic>
-        ? (payload['data'] ?? payload['lockers'] ?? payload['items'])
-        : payload;
+  List<PickupPoint> _parsePickupPointList(dynamic payload) {
+    dynamic listData = payload;
+    if (payload is Map<String, dynamic>) {
+      final data = payload['data'] ?? payload;
+      listData = data is Map<String, dynamic> ? (data['pickupPoints'] ?? data['items'] ?? data['lockers']) : data;
+    }
 
     if (listData is! List) return [];
 
-    final lockers = <InpostModel>[];
+    final pickupPoints = <PickupPoint>[];
     for (final item in listData) {
-      final locker = _parseInpostItem(item);
-      if (locker != null) {
-        lockers.add(locker);
+      if (item is! Map) continue;
+      final pickupPoint = PickupPoint.fromJson(Map<String, dynamic>.from(item));
+      if (pickupPoint.isValid) {
+        pickupPoints.add(pickupPoint);
       }
     }
-    return lockers;
-  }
-
-  InpostModel? _parseInpostItem(dynamic item) {
-    if (item is! Map) return null;
-    final map = Map<String, dynamic>.from(item);
-
-    String readFirst(List<String> keys) {
-      for (final key in keys) {
-        final value = map[key];
-        if (value != null && value.toString().trim().isNotEmpty) {
-          return value.toString().trim();
-        }
-      }
-      return '';
-    }
-
-    final id = readFirst(['id', 'lockerId', 'code']);
-    final name = readFirst(['name', 'lockerName']);
-    final address = readFirst(['address', 'line1', 'street']);
-    final postcode = readFirst(['postcode', 'postalCode', 'postCode']);
-    final lat = readFirst(['lat', 'latitude']);
-    final long = readFirst(['long', 'lng', 'longitude']);
-
-    if (id.isEmpty || name.isEmpty || address.isEmpty || postcode.isEmpty) {
-      return null;
-    }
-
-    return InpostModel(
-      id: id,
-      name: name,
-      address: address,
-      postcode: postcode,
-      lat: lat,
-      long: long,
-    );
+    return pickupPoints;
   }
 
   Future<void> goToHome() async {

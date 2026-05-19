@@ -11,8 +11,7 @@ class AddressConstants {
   static const String streetNumberType = 'street_number';
   static const String routeType = 'route';
   static const String localityType = 'locality';
-  static const String administrativeAreaLevel1Type =
-      'administrative_area_level_1';
+  static const String administrativeAreaLevel1Type = 'administrative_area_level_1';
   static const String postalCodeType = 'postal_code';
   static const String countryType = 'country';
 
@@ -20,6 +19,7 @@ class AddressConstants {
   static const String apiKeyEnvVar = 'GOOGLE_API_KEY';
   static const String countryRestriction = 'country:gb'; // UK restriction
   static const String addressTypeFilter = 'address';
+  static const int pickupPointSearchRadiusMeters = 5000;
 
   // UI strings
   static const String addressHintText = 'Enter your shipping address';
@@ -31,7 +31,7 @@ class AddressConstants {
   static const String addressHinText = 'address';
   static const String cityHintText = 'city';
   static const String postCodeHintText = 'postcode';
-  
+
   // Manual entry strings
   static const String toggleSearchMode = 'Use Address Search';
   static const String toggleManualMode = 'Enter Manually';

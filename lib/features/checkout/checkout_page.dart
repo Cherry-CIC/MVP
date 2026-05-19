@@ -33,7 +33,6 @@ class _CheckoutPageState extends State<CheckoutPage> {
       _vm = vm;
 
       vm.resetCreateOrderStatus();
-      vm.fetchUserLocker();
       vm.addListener(_handleOrderStatus);
     });
   }
@@ -164,16 +163,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
           builder: (context, viewModel, _) {
             final isLoading = viewModel.createOrderStatus.type == StatusType.loading;
 
-            final hasDeliveryChoice = (viewModel.deliveryChoice ?? '').isNotEmpty;
-            final isPickup = viewModel.deliveryChoice == 'pickup';
-
-            final hasValidDelivery =
-                hasDeliveryChoice &&
-                (isPickup
-                    ? viewModel.selectedInpost != null
-                    : viewModel.isShippingAddressConfirmed && viewModel.hasShippingAddress);
-
-            final canAttemptPayment = hasValidDelivery && basket.total > 0 && !isLoading;
+            final canAttemptPayment = viewModel.hasValidDeliverySelection && basket.total > 0 && !isLoading;
 
             return FilledButton(
               onPressed: canAttemptPayment

@@ -1,23 +1,39 @@
 import 'package:cherry_mvp/core/router/nav_provider.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mockito/annotations.dart';
 import 'package:cherry_mvp/core/utils/result.dart';
 import 'package:cherry_mvp/core/utils/status.dart';
 import 'package:cherry_mvp/features/checkout/checkout_repository.dart';
 import 'package:cherry_mvp/features/checkout/checkout_view_model.dart';
+import 'package:cherry_mvp/features/checkout/models/pickup_point.dart';
 import 'package:cherry_mvp/features/checkout/widgets/shipping_address_widget.dart';
 
-@GenerateNiceMocks([MockSpec<NavigationProvider>()])
-import 'checkout_view_model_test.mocks.dart';
-
 class FakeCheckoutRepository implements ICheckoutRepository {
-  FakeCheckoutRepository({this.fetchNearestResult});
+  FakeCheckoutRepository({this.fetchPickupPointsResult});
 
-  final Result? fetchNearestResult;
+  final Result? fetchPickupPointsResult;
+  String? lastCountry;
+  String? lastAddress;
+  int? lastRadius;
 
   @override
   Future<Result> fetchNearestInPosts(String postalCode) async {
-    return fetchNearestResult ?? Result.success([]);
+    return Result.success([]);
+  }
+
+  @override
+  Future<Result> fetchPickupPoints({
+    required String country,
+    required String address,
+    int radius = 5000,
+  }) async {
+    lastCountry = country;
+    lastAddress = address;
+    lastRadius = radius;
+    return fetchPickupPointsResult ??
+        Result.success({
+          'data': {'pickupPoints': []},
+        });
   }
 
   @override
@@ -27,16 +43,37 @@ class FakeCheckoutRepository implements ICheckoutRepository {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
+class FakeNavigationProvider extends NavigationProvider {
+  @override
+  Future<dynamic> navigateTo(String routeName, {Object? arguments}) async {}
+
+  @override
+  Future<dynamic> replaceWith(String routeName, {Object? arguments}) async {}
+
+  @override
+  Future<dynamic> navigateToAndRemoveUntil(
+    String routeName,
+    RoutePredicate predicate, {
+    Object? arguments,
+  }) async {}
+
+  @override
+  void goBack([Object? arguments]) {}
+
+  @override
+  Future<void> showPurchaseSecurity() async {}
+}
+
 void main() {
   group('CheckoutViewModel', () {
     late CheckoutViewModel viewModel;
-    late MockNavigationProvider mockNavigator;
+    late FakeNavigationProvider fakeNavigator;
 
     setUp(() {
-      mockNavigator = MockNavigationProvider();
+      fakeNavigator = FakeNavigationProvider();
       viewModel = CheckoutViewModel(
         checkoutRepository: FakeCheckoutRepository(),
-        navigator: mockNavigator,
+        navigator: fakeNavigator,
       );
     });
 
@@ -44,7 +81,7 @@ void main() {
       expect(viewModel.hasShippingAddress, false);
       expect(viewModel.hasPaymentMethod, false);
       expect(viewModel.canCheckout, false);
-      expect(viewModel.nearestInpost, isEmpty);
+      expect(viewModel.pickupPoints, isEmpty);
     });
 
     test('should set shipping address correctly', () {
@@ -152,8 +189,12 @@ void main() {
       viewModel.setShippingAddress(testAddress);
       expect(viewModel.canCheckout, false);
 
-      // Set both payment method and shipping address
+      // Set both payment method and shipping address without a delivery choice
       viewModel.setPaymentMethod(true);
+      expect(viewModel.canCheckout, false);
+
+      viewModel.setDeliveryChoice(CheckoutViewModel.homeDeliveryChoice);
+      viewModel.setAddressConfirmed(true);
       expect(viewModel.canCheckout, true);
     });
 
@@ -221,41 +262,121 @@ void main() {
       'should fail pickup lookup when the response cannot be parsed',
       () async {
         viewModel = CheckoutViewModel(
-          checkoutRepository: FakeCheckoutRepository(fetchNearestResult: Result.success({'unexpected': 'payload'})),
-          navigator: mockNavigator,
+          checkoutRepository: FakeCheckoutRepository(
+            fetchPickupPointsResult: Result.success({'unexpected': 'payload'}),
+          ),
+          navigator: fakeNavigator,
         );
 
-        await viewModel.fetchNearestInPosts('SW1A 1AA');
+        await viewModel.fetchPickupPoints(country: 'GB', address: 'SW1A 1AA');
 
-        expect(viewModel.nearestInpost, isEmpty);
-        expect(viewModel.showLocker, false);
+        expect(viewModel.pickupPoints, isEmpty);
         expect(viewModel.status.type, StatusType.failure);
       },
     );
 
-    test('should populate pickup lockers from a valid response', () async {
+    test('should populate pickup points from the documented response shape', () async {
       viewModel = CheckoutViewModel(
         checkoutRepository: FakeCheckoutRepository(
-          fetchNearestResult: Result.success([
-            {
-              'id': 'locker-1',
-              'name': 'Locker One',
-              'address': '1 Test Street',
-              'postcode': 'SW1A 1AA',
-              'lat': '51.5010',
-              'long': '-0.1416',
+          fetchPickupPointsResult: Result.success({
+            'success': true,
+            'message': 'Pickup points retrieved successfully',
+            'data': {
+              'pickupPoints': [
+                {
+                  'id': 'pickup-1',
+                  'name': 'Pickup Point One',
+                  'addressLine1': '1 Test Street',
+                  'city': 'London',
+                  'postalCode': 'SW1A 1AA',
+                  'country': 'GB',
+                  'carrier': 'inpost_gb',
+                  'distanceMeters': 250,
+                  'latitude': '51.5010',
+                  'longitude': '-0.1416',
+                  'openTomorrow': true,
+                  'openUpcomingWeek': true,
+                },
+              ],
             },
-          ]),
+          }),
         ),
-        navigator: mockNavigator,
+        navigator: fakeNavigator,
       );
 
-      await viewModel.fetchNearestInPosts('SW1A 1AA');
+      await viewModel.fetchPickupPoints(country: 'GB', address: 'SW1A 1AA');
 
       expect(viewModel.status.type, StatusType.success);
-      expect(viewModel.showLocker, true);
-      expect(viewModel.nearestInpost, hasLength(1));
-      expect(viewModel.nearestInpost.first.name, 'Locker One');
+      expect(viewModel.pickupPoints, hasLength(1));
+      expect(viewModel.pickupPoints.first.name, 'Pickup Point One');
+      expect(viewModel.pickupPoints.first.displayAddress, '1 Test Street, London, SW1A 1AA');
+    });
+
+    test('should request pickup points with country, postcode and default radius from the shipping address', () async {
+      final repository = FakeCheckoutRepository(
+        fetchPickupPointsResult: Result.success({
+          'data': {'pickupPoints': []},
+        }),
+      );
+      viewModel = CheckoutViewModel(
+        checkoutRepository: repository,
+        navigator: fakeNavigator,
+      );
+
+      viewModel.setShippingAddress(
+        PlaceDetails(
+          formattedAddress: '12 Bond Street, London, SW1A 1AA',
+          addressComponents: [
+            AddressComponent(
+              longName: 'Bond Street',
+              shortName: 'Bond Street',
+              types: ['route'],
+            ),
+            AddressComponent(
+              longName: 'London',
+              shortName: 'London',
+              types: ['locality'],
+            ),
+            AddressComponent(
+              longName: 'SW1A 1AA',
+              shortName: 'SW1A 1AA',
+              types: ['postal_code'],
+            ),
+            AddressComponent(
+              longName: 'United Kingdom',
+              shortName: 'GB',
+              types: ['country'],
+            ),
+          ],
+        ),
+      );
+
+      await viewModel.fetchPickupPointsForShippingAddress();
+
+      expect(repository.lastCountry, 'GB');
+      expect(repository.lastAddress, 'SW1A 1AA');
+      expect(repository.lastRadius, 5000);
+    });
+
+    test('should clear selected pickup point when delivery changes away from pickup point', () {
+      const pickupPoint = PickupPoint(
+        id: 'pickup-1',
+        name: 'Pickup Point One',
+        addressLine1: '1 Test Street',
+        city: 'London',
+        postalCode: 'SW1A 1AA',
+        country: 'GB',
+        carrier: 'inpost_gb',
+      );
+
+      viewModel.setDeliveryChoice(CheckoutViewModel.pickupPointDeliveryChoice);
+      viewModel.setSelectedPickupPoint(pickupPoint);
+
+      expect(viewModel.selectedPickupPoint, pickupPoint);
+
+      viewModel.setDeliveryChoice(CheckoutViewModel.homeDeliveryChoice);
+
+      expect(viewModel.selectedPickupPoint, isNull);
     });
   });
 }

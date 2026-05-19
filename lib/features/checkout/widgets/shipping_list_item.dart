@@ -6,7 +6,7 @@ class ShippingListItem<T> extends StatelessWidget {
   final String subtitle;
   final IconData icon;
   final T value;
-  final T groupValue;
+  final T? groupValue;
   final ValueChanged<T?>? onChanged;
 
   const ShippingListItem({
@@ -21,16 +21,17 @@ class ShippingListItem<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isSelected = value == groupValue;
+
     return Outlined(
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16),
         leading: Icon(icon),
         title: Text(title),
         subtitle: Text(subtitle),
-        trailing: Radio.adaptive(
-          value: value,
-          groupValue: groupValue,
-          onChanged: onChanged,
+        trailing: Icon(
+          isSelected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+          color: isSelected ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.onSurfaceVariant,
         ),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         onTap: () => onChanged?.call(value),

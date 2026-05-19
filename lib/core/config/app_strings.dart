@@ -205,6 +205,10 @@ class AppStrings {
   static const checkoutShipToHome = 'Ship to home';
   static const checkoutHomeSubtitle = 'From £2.99';
   static const checkoutPickupPoint = 'Pick-up point';
+  static const checkoutPickupPointDetails = 'Delivery details';
+  static const checkoutChoosePickupPoint = 'Choose a pick-up point';
+  static const checkoutChangePickupPoint = 'Change pick-up point';
+  static const checkoutAddressRequired = 'Please confirm your address first';
   static const checkoutPickupPoint1 = 'Pick-up Point 1';
   static const checkoutPickupPoint2 = 'Pick-up Point 2';
   static const checkoutPickupPoint3 = 'Pick-up Point 3';
@@ -225,7 +229,7 @@ class AppStrings {
   static const checkoutReview = 'Review';
   static const checkoutContinueShopping = 'Continue Shopping';
   static const checkoutDeliveryOptionRequired = 'Please choose a delivery option';
-  static const checkoutPickupLockerRequired = 'Please select a pickup locker';
+  static const checkoutPickupLockerRequired = 'Please select a pick-up point';
   static const checkoutPaymentMethodRequired = 'Please select a payment method';
 
   // Card Details
@@ -332,9 +336,9 @@ class AppStrings {
   static const city = 'City';
   static const useAsDefaultAddress = 'Use as my Default address';
   static const wantToShareLocation = 'Do you want to share your location?';
-  static const noPickupPointAvailable = 'Pickup points currently unavailable, please try again later';
-  static const loadingPickupPoint = 'Loading Pickup point...';
-  static const failedToLoadPickupPoint = 'Failed to load Pickup point';
+  static const noPickupPointAvailable = 'Pick-up points are currently unavailable. Please try again later.';
+  static const loadingPickupPoint = 'Loading pick-up points...';
+  static const failedToLoadPickupPoint = 'Failed to load pick-up points';
 
   // Discover
   static const itemsInSupportText = "Items in support";
