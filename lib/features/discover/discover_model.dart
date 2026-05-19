@@ -46,6 +46,7 @@ const dummyProducts = [
         "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
     quality: "8/Great",
     size: "M",
+    postageSize: PostageSize.medium,
     productImages: [
       AppImages.mensTShirt,
       AppImages.mensTShirt,
@@ -63,6 +64,7 @@ const dummyProducts = [
         "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
     quality: "6/Good",
     size: "8",
+    postageSize: PostageSize.small,
     productImages: [
       AppImages.shoes2,
       AppImages.shoes2,
@@ -80,6 +82,7 @@ const dummyProducts = [
         "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
     quality: "6/Good",
     size: "8",
+    postageSize: PostageSize.small,
     productImages: [
       AppImages.shoes2,
     ],
@@ -96,6 +99,7 @@ const dummyProducts = [
         "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
     quality: "6/Good",
     size: "8",
+    postageSize: PostageSize.small,
     productImages: [
       AppImages.shoes2,
     ],
@@ -103,5 +107,5 @@ const dummyProducts = [
     price: 17.00,
     likes: 33,
     number: 9,
-  )
+  ),
 ];

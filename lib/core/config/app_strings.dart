@@ -201,11 +201,13 @@ class AppStrings {
   static const checkoutPostage = 'Postage';
   static const checkoutTotal = 'Total';
   static const checkoutDeliveryOption = 'Delivery option';
+  static const checkoutDeliveryDetails = 'Delivery details';
   static const checkoutShipToPickup = 'Ship to pick-up point';
   static const checkoutPickupSubtitle = 'From FREE';
   static const checkoutShipToHome = 'Ship to home';
   static const checkoutHomeSubtitle = 'From £2.99';
-  static const checkoutPickupPoint = 'Pick-up point';
+  static const checkoutChoosePickupPoint = 'Choose a pick-up point';
+  static const checkoutLocker = 'Locker';
   static const checkoutPickupPoint1 = 'Pick-up Point 1';
   static const checkoutPickupPoint2 = 'Pick-up Point 2';
   static const checkoutPickupPoint3 = 'Pick-up Point 3';

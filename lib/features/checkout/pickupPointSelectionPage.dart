@@ -21,6 +21,8 @@ class _PickupPointSelectionPageState extends State<PickupPointSelectionPage> {
     super.initState();
 
     countryController.text = 'GB';
+    // TODO remove for live
+    postcodeController.text = 'E5 0EN';
   }
 
   @override

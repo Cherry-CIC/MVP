@@ -98,4 +98,5 @@ class AppImages {
   static const yourSupport = '${_path}support_icon.png';
   static const supportOurMission = '${_path}mission_icon.png';
   static const backCharity = '${_path}back_charity.png';
+  static const inpostLogo = '${_path}inpost_logo.svg';
 }

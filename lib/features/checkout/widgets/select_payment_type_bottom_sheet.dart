@@ -1,19 +1,17 @@
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:cherry_mvp/core/config/config.dart';
 import 'package:cherry_mvp/features/checkout/checkout_view_model.dart';
 import 'package:cherry_mvp/features/checkout/payment_type.dart';
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
 class SelectPaymentTypeBottomSheet extends StatefulWidget {
   const SelectPaymentTypeBottomSheet({super.key});
 
   @override
-  State<SelectPaymentTypeBottomSheet> createState() =>
-      _SelectPaymentTypeBottomSheetState();
+  State<SelectPaymentTypeBottomSheet> createState() => _SelectPaymentTypeBottomSheetState();
 }
 
-class _SelectPaymentTypeBottomSheetState
-    extends State<SelectPaymentTypeBottomSheet> {
+class _SelectPaymentTypeBottomSheetState extends State<SelectPaymentTypeBottomSheet> {
   @override
   Widget build(BuildContext context) {
     return Consumer<CheckoutViewModel>(
@@ -30,8 +28,7 @@ class _SelectPaymentTypeBottomSheetState
             children: [
               Container(
                 decoration: BoxDecoration(
-                  color:
-                      Theme.of(context).colorScheme.secondaryContainer,
+                  color: Theme.of(context).colorScheme.secondaryContainer,
                 ),
                 padding: const EdgeInsets.symmetric(
                   horizontal: 16,
@@ -45,13 +42,10 @@ class _SelectPaymentTypeBottomSheetState
               ),
 
               ListTile(
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 20),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 20),
                 title: Text(AppStrings.paymentMethodsInfo),
-                titleTextStyle:
-                    Theme.of(context).textTheme.labelSmall,
-                textColor:
-                    Theme.of(context).colorScheme.onSurfaceVariant,
+                titleTextStyle: Theme.of(context).textTheme.labelSmall,
+                textColor: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
 
               Divider(height: 1, color: AppColors.grey),
@@ -61,14 +55,12 @@ class _SelectPaymentTypeBottomSheetState
               ListTile(
                 leading: const Icon(Icons.credit_card),
                 title: Text(AppStrings.paymentMethodsCard),
-                trailing: Radio<PaymentType>(
-                  value: PaymentType.card,
+                trailing: RadioGroup<PaymentType>(
                   groupValue: selected,
-                  onChanged: (value) =>
-                      vm.setPaymentType(value!),
+                  onChanged: (value) => vm.setPaymentType(value!),
+                  child: Radio.adaptive(value: PaymentType.card),
                 ),
-                onTap: () =>
-                    vm.setPaymentType(PaymentType.card),
+                onTap: () => vm.setPaymentType(PaymentType.card),
               ),
 
               Divider(height: 1, color: AppColors.grey),
@@ -81,14 +73,12 @@ class _SelectPaymentTypeBottomSheetState
                   height: 24,
                 ),
                 title: Text(AppStrings.paymentMethodsGooglePay),
-                trailing: Radio<PaymentType>(
-                  value: PaymentType.google,
+                trailing: RadioGroup<PaymentType>(
                   groupValue: selected,
-                  onChanged: (value) =>
-                      vm.setPaymentType(value!),
+                  onChanged: (value) => vm.setPaymentType(value!),
+                  child: Radio.adaptive(value: PaymentType.google),
                 ),
-                onTap: () =>
-                    vm.setPaymentType(PaymentType.google),
+                onTap: () => vm.setPaymentType(PaymentType.google),
               ),
 
               Divider(height: 1, color: AppColors.grey),
@@ -101,14 +91,12 @@ class _SelectPaymentTypeBottomSheetState
                   height: 24,
                 ),
                 title: Text(AppStrings.paymentMethodsApplePay),
-                trailing: Radio<PaymentType>(
-                  value: PaymentType.apple,
+                trailing: RadioGroup<PaymentType>(
                   groupValue: selected,
-                  onChanged: (value) =>
-                      vm.setPaymentType(value!),
+                  onChanged: (value) => vm.setPaymentType(value!),
+                  child: Radio.adaptive(value: PaymentType.apple),
                 ),
-                onTap: () =>
-                    vm.setPaymentType(PaymentType.apple),
+                onTap: () => vm.setPaymentType(PaymentType.apple),
               ),
 
               Divider(height: 1, color: AppColors.grey),
@@ -117,26 +105,19 @@ class _SelectPaymentTypeBottomSheetState
               Container(
                 height: 48,
                 width: double.infinity,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: FilledButton(
                   style: FilledButton.styleFrom(
-                    foregroundColor:
-                        Theme.of(context).colorScheme.surface,
-                    backgroundColor:
-                        Theme.of(context).colorScheme.onSurface,
+                    foregroundColor: Theme.of(context).colorScheme.surface,
+                    backgroundColor: Theme.of(context).colorScheme.onSurface,
                   ),
-                  onPressed: selected != null
-                      ? () =>
-                          Navigator.pop(context, selected)
-                      : null,
+                  onPressed: selected != null ? () => Navigator.pop(context, selected) : null,
                   child: Text(AppStrings.continueText),
                 ),
               ),
 
               SizedBox(
-                height:
-                    MediaQuery.of(context).padding.bottom + 16,
+                height: MediaQuery.of(context).padding.bottom + 16,
               ),
             ],
           ),

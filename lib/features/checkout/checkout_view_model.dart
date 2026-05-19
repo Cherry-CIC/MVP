@@ -47,10 +47,10 @@ class CheckoutViewModel extends ChangeNotifier {
   bool _showLocker = false;
   bool get showLocker => _showLocker;
 
-  DeliveryType deliveryChoice = DeliveryType.undefined;
-
+  DeliveryType _deliveryChoice = DeliveryType.undefined;
+  DeliveryType get deliveryChoice => _deliveryChoice;
   void setDeliveryChoice(DeliveryType val) {
-    deliveryChoice = val;
+    _deliveryChoice = val;
     notifyListeners();
   }
 
@@ -100,7 +100,7 @@ class CheckoutViewModel extends ChangeNotifier {
   bool _hasPaymentMethod = false;
 
   /// Whether a payment method has been set
-  bool get hasPaymentMethod => selectedPaymentType != null || _hasPaymentMethod;
+  bool get hasPaymentMethod => _selectedPaymentType != null || _hasPaymentMethod;
 
   /// Whether the order is ready for checkout (has both address and payment method)
   bool get canCheckout => hasShippingAddress && hasPaymentMethod;
@@ -141,10 +141,12 @@ class CheckoutViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  PaymentType? selectedPaymentType;
+  PaymentType? _selectedPaymentType;
+
+  PaymentType? get selectedPaymentType => _selectedPaymentType;
   // Payment method methods
   void setPaymentType(PaymentType type) {
-    selectedPaymentType = type;
+    _selectedPaymentType = type;
     _hasPaymentMethod = true;
     notifyListeners();
   }
@@ -157,14 +159,14 @@ class CheckoutViewModel extends ChangeNotifier {
   void setPaymentMethod(bool hasPayment) {
     _hasPaymentMethod = hasPayment;
     if (!hasPayment) {
-      selectedPaymentType = null;
+      _selectedPaymentType = null;
     }
     notifyListeners();
   }
 
   /// Clears any selected payment method.
   void clearPaymentMethod() {
-    selectedPaymentType = null;
+    _selectedPaymentType = null;
     _hasPaymentMethod = false;
     notifyListeners();
   }
@@ -192,12 +194,13 @@ class CheckoutViewModel extends ChangeNotifier {
   /// Clears shipping address and payment method but preserves basket items
   void resetCheckout() {
     _shippingAddress = null;
-    selectedPaymentType = null;
+    _selectedPaymentType = null;
     _hasPaymentMethod = false;
     isShippingAddressConfirmed = false;
     _selectedInpost = null;
+    _selectedInpostShippingMethod = null;
     _basketItems.clear();
-    deliveryChoice = DeliveryType.undefined;
+    _deliveryChoice = DeliveryType.undefined;
     _createOrderStatus = Status.uninitialized;
     notifyListeners();
   }
@@ -351,7 +354,6 @@ class CheckoutViewModel extends ChangeNotifier {
         ..addAll(parsedShippingMethods);
 
       if (parsedShippingMethods.isNotEmpty) {
-        _selectedInpostShippingMethod = parsedShippingMethods.first;
         _status = Status.success;
       } else {
         _status = Status.failure(
@@ -463,7 +465,7 @@ class CheckoutViewModel extends ChangeNotifier {
   }
 
   Future<bool> payWithPaymentSheet({required double amount}) async {
-    if (selectedPaymentType == null) {
+    if (_selectedPaymentType == null) {
       _createOrderStatus = Status.failure(
         AppStrings.checkoutPaymentMethodRequired,
       );
@@ -486,7 +488,7 @@ class CheckoutViewModel extends ChangeNotifier {
 
         final setupParams = _buildPaymentSheetParameters(
           paymentResponse,
-          selectedPaymentType!,
+          _selectedPaymentType!,
         );
 
         await Stripe.instance.initPaymentSheet(
@@ -529,7 +531,7 @@ class CheckoutViewModel extends ChangeNotifier {
       return;
     }
 
-    final Map<String, dynamic> address = switch (deliveryChoice) {
+    final Map<String, dynamic> address = switch (_deliveryChoice) {
       DeliveryType.pickup => {
         "line1": selectedInpost?.address ?? '',
         "city": "London",

@@ -20,6 +20,7 @@ Product _$ProductFromJson(Map<String, dynamic> json) => Product(
   likes: Product._parseInt(json['likes']),
   number: Product._parseInt(json['number']),
   size: json['size'] as String,
+  postageSize: $enumDecode(_$PostageSizeEnumMap, json['postage_size']),
   categoryId: json['categoryId'] as String?,
   charityId: json['charityId'] as String?,
   createdAt: json['createdAt'] as String?,
@@ -44,10 +45,17 @@ Map<String, dynamic> _$ProductToJson(Product instance) => <String, dynamic>{
   'likes': instance.likes,
   'number': instance.number,
   'size': instance.size,
+  'postage_size': _$PostageSizeEnumMap[instance.postageSize]!,
   'categoryId': instance.categoryId,
   'charityId': instance.charityId,
   'createdAt': instance.createdAt,
   'updatedAt': instance.updatedAt,
   'category': instance.category,
   'charity': instance.charity,
+};
+
+const _$PostageSizeEnumMap = {
+  PostageSize.small: 'small',
+  PostageSize.medium: 'medium',
+  PostageSize.large: 'large',
 };

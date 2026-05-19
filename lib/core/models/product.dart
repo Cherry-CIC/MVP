@@ -4,6 +4,8 @@ import 'package:cherry_mvp/features/charity_page/charity_model.dart';
 
 part 'product.g.dart';
 
+enum PostageSize { small, medium, large }
+
 @JsonSerializable()
 class Product {
   final String? userId;
@@ -22,6 +24,8 @@ class Product {
   @JsonKey(fromJson: _parseInt)
   final int number;
   final String size;
+  @JsonKey(name: 'postage_size')
+  final PostageSize postageSize;
   final String? categoryId;
   final String? charityId;
   final String? createdAt;
@@ -41,6 +45,7 @@ class Product {
     required this.likes,
     required this.number,
     required this.size,
+    required this.postageSize,
     this.categoryId,
     this.charityId,
     this.createdAt,
