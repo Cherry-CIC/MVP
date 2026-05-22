@@ -1,11 +1,9 @@
-import 'package:cherry_mvp/core/models/product.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:provider/provider.dart';
 import 'package:cherry_mvp/core/config/config.dart';
 import 'package:cherry_mvp/core/models/inpost_model.dart';
 import 'package:cherry_mvp/core/models/inpost_shipping_method.dart';
-import 'package:cherry_mvp/core/utils/utils.dart';
 import 'package:cherry_mvp/features/checkout/checkout_view_model.dart';
 import 'package:cherry_mvp/features/checkout/constants/address_constants.dart';
 import 'package:cherry_mvp/features/checkout/payment_type.dart';
@@ -14,7 +12,7 @@ import 'package:cherry_mvp/features/checkout/widgets/price_list_item.dart';
 import 'package:cherry_mvp/features/checkout/widgets/select_payment_type_bottom_sheet.dart';
 import 'package:cherry_mvp/features/checkout/widgets/shipping_address_widget.dart';
 import 'package:cherry_mvp/features/checkout/widgets/shipping_list_item.dart';
-import 'package:cherry_mvp/features/checkout/widgets/shipping_method_dropdown.dart';
+import 'package:cherry_mvp/features/donation/models/postage_size_info.dart';
 
 class DeliveryOptions extends StatefulWidget {
   const DeliveryOptions({super.key});

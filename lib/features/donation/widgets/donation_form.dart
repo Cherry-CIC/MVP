@@ -7,14 +7,15 @@ import 'package:cherry_mvp/core/config/app_colors.dart';
 import 'package:cherry_mvp/core/config/app_strings.dart';
 import 'package:cherry_mvp/core/utils/donor_discount_state_store.dart';
 import 'package:cherry_mvp/core/utils/utils.dart';
-import 'package:cherry_mvp/core/router/router.dart';
 import 'package:cherry_mvp/core/models/category.dart';
+import 'package:cherry_mvp/core/router/router.dart';
 import 'package:cherry_mvp/features/categories/category_view_model.dart';
 import 'package:cherry_mvp/features/charity_page/charity_model.dart';
 import 'package:cherry_mvp/features/charity_page/charity_viewmodel.dart';
 import 'package:cherry_mvp/features/donation/donation_view_model.dart';
 import 'package:cherry_mvp/features/donation/models/donation_form_model.dart';
 import 'package:cherry_mvp/features/donation/models/donation_model.dart';
+import 'package:cherry_mvp/features/donation/models/postage_size_info.dart';
 import 'package:cherry_mvp/features/donation/widgets/donation_options.dart';
 import 'package:cherry_mvp/features/donation/widgets/donation_form_field.dart';
 import 'package:cherry_mvp/features/donation/widgets/donation_dropdown_field.dart';
@@ -34,8 +35,7 @@ class DonationFormState extends State<DonationForm> {
 
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
-  final TextEditingController _addToCollectionController =
-      TextEditingController();
+  final TextEditingController _addToCollectionController = TextEditingController();
   final TextEditingController _priceController = TextEditingController();
 
   String selectedCategory = '';
@@ -43,6 +43,7 @@ class DonationFormState extends State<DonationForm> {
   String selectedCondition = '';
   String selectedQuality = '';
   String selectedSize = '';
+  PostageSize? selectedPostageSize;
 
   bool isSwitchedOpenToOtherCharity = false;
   bool isSwitchedOpenToOffer = false;
@@ -91,6 +92,7 @@ class DonationFormState extends State<DonationForm> {
       charityId: selectedCharity?.id ?? '',
       quality: selectedQuality,
       size: selectedSize,
+      postageSize: selectedPostageSize!,
       donation: _parseEnteredPrice(),
       price: _parseEnteredPrice(),
       localImages: widget.selectedImages,
@@ -108,6 +110,7 @@ class DonationFormState extends State<DonationForm> {
       selectedCondition = '';
       selectedQuality = '';
       selectedSize = '';
+      selectedPostageSize = null;
       selectedCharity = null;
       isSwitchedOpenToOtherCharity = false;
       isSwitchedOpenToOffer = false;
@@ -130,8 +133,7 @@ class DonationFormState extends State<DonationForm> {
     return Consumer<DonationViewModel>(
       builder: (context, donationViewModel, child) {
         WidgetsBinding.instance.addPostFrameCallback((_) async {
-          if (donationViewModel.status.type == StatusType.success &&
-              donationViewModel.lastSubmission != null) {
+          if (donationViewModel.status.type == StatusType.success && donationViewModel.lastSubmission != null) {
             final navigator = Navigator.of(context);
             final navigationProvider = Provider.of<NavigationProvider>(
               context,
@@ -147,9 +149,7 @@ class DonationFormState extends State<DonationForm> {
             navigator.pop();
             navigationProvider.navigateTo(AppRoutes.donationSuccess);
           } else if (donationViewModel.status.type == StatusType.failure) {
-            final errorMessage =
-                donationViewModel.submissionMessage ??
-                AppStrings.unexpectedErrorOccurred;
+            final errorMessage = donationViewModel.submissionMessage ?? AppStrings.unexpectedErrorOccurred;
             Fluttertoast.showToast(
               msg: errorMessage,
               backgroundColor: Colors.red,
@@ -218,7 +218,6 @@ class DonationFormState extends State<DonationForm> {
                       formFieldsHintText: categoryHintText,
                       dropdownList: categoryDropdownList,
                       onChanged: (val) => setState(() => selectedCategory = val!),
-                      charityImages: const [],
                     );
                   } else {
                     return _SelectionField(
@@ -304,11 +303,15 @@ class DonationFormState extends State<DonationForm> {
                 ),
                 child: TextFormField(
                   controller: _priceController,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: AppStrings.priceText,
                     hintText: '0.00',
                     prefixText: '£',
-                    border: OutlineInputBorder(),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Theme.of(context).colorScheme.outline),
+                    ),
                   ),
                   keyboardType: const TextInputType.numberWithOptions(decimal: true),
                   inputFormatters: [
@@ -336,7 +339,6 @@ class DonationFormState extends State<DonationForm> {
                 formFieldsHintText: qualityHintText,
                 dropdownList: qualityDropdownList,
                 onChanged: (val) => setState(() => selectedQuality = val!),
-                charityImages: const [],
                 selectedValue: selectedQuality.isNotEmpty ? selectedQuality : null,
               ),
 
@@ -344,8 +346,19 @@ class DonationFormState extends State<DonationForm> {
                 formFieldsHintText: sizeHintText,
                 dropdownList: sizeDropdownList,
                 onChanged: (val) => setState(() => selectedSize = val!),
-                charityImages: const [],
                 selectedValue: selectedSize.isNotEmpty ? selectedSize : null,
+              ),
+
+              _SelectionField(
+                label: postageSizeHintText,
+                value: selectedPostageSize?.label,
+                onTap: () async {
+                  final PostageSize? result = await donationViewModel.navigateToPostageSizePage(selectedPostageSize);
+
+                  if (result != null) {
+                    setState(() => selectedPostageSize = result);
+                  }
+                },
               ),
 
               DonationFormField(
@@ -415,6 +428,12 @@ class DonationFormState extends State<DonationForm> {
                               if (selectedCharity == null) {
                                 Fluttertoast.showToast(
                                   msg: AppStrings.pleaseSelectCharity,
+                                );
+                                return;
+                              }
+                              if (selectedPostageSize == null) {
+                                Fluttertoast.showToast(
+                                  msg: AppStrings.pleaseChoosePostageSize,
                                 );
                                 return;
                               }

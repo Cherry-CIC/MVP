@@ -99,6 +99,7 @@ class AppStrings {
   // Categories
   static const categoriesText = "Categories";
   static const charitiesText = "Charities";
+  static const postageSizesText = "Postage Sizes";
   static const exploreText = "Explore Charities";
   static const accessoriesText = "Accessories";
   static const booksText = "Books";
@@ -153,8 +154,10 @@ class AppStrings {
   static const charityText = "Charity";
   static const selectOptionText = 'Tap to choose';
   static const charityError = 'Failed to load charities';
+  static const postageSizeInfoError = 'Failed to load postage sizes';
   static const loadCharities = 'Loading charities...';
   static const noCharitiesAvailable = 'No charities available';
+  static const noPostageSizeInfosAvailable = 'No postage sizes available';
   static const searchCharities = 'Search charities';
   static const seeMore = 'See More';
   static const priceText = "Price";
@@ -166,6 +169,7 @@ class AppStrings {
   // Donation Validation
   static const pleaseSelectAllDropdowns = 'Please select all dropdowns';
   static const pleaseSelectCharity = 'Please select a charity';
+  static const pleaseChoosePostageSize = 'Please choose a size for postage';
   static const pleaseAddPhoto = 'Please add at least one photo';
   static const submitDonation = 'Submit Donation';
 

@@ -4,6 +4,7 @@ import 'package:cherry_mvp/features/checkout/checkout_complete_page.dart';
 import 'package:cherry_mvp/features/checkout/checkout_page.dart';
 import 'package:cherry_mvp/features/checkout/pickupPointSelectionPage.dart';
 import 'package:cherry_mvp/features/donation/donation_page.dart';
+import 'package:cherry_mvp/features/donation/postage_size_page.dart';
 import 'package:cherry_mvp/features/donation/successful_upload_page.dart';
 import 'package:cherry_mvp/features/discover/discover_page.dart';
 import 'package:cherry_mvp/features/login/login_page.dart';
@@ -32,6 +33,7 @@ class AppRoutes {
   static const String faqsPage = '/faq';
   static const String category = '/category';
   static const String charity = '/charity';
+  static const String postageSize = '/postageSize';
   static const String pickupPointSelector = '/pickupPointSelector';
 
   static Route<dynamic> generateRoute(RouteSettings settings) {
@@ -81,6 +83,11 @@ class AppRoutes {
             selectionMode: args?['selectionMode'] ?? false,
             initialCharityId: args?['initialCharityId'],
           ),
+        );
+      case postageSize:
+        final args = settings.arguments as Map<String, dynamic>?;
+        return MaterialPageRoute(
+          builder: (_) => PostageSizePage(initialPostageSize: args?['initialPostageSize']),
         );
       case pickupPointSelector:
         return MaterialPageRoute(builder: (_) => const PickupPointSelectionPage());

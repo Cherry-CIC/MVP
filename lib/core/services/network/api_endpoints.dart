@@ -15,6 +15,8 @@ class ApiEndpoints {
   static const String inpostLockers = '$_apiPrefix/shipping/pickup-points';
   static const String inpostShippingMethods = '$_apiPrefix/shipping/shipping-methods';
   static const String charities = '$_apiPrefix/charities';
+  // TODO create postage-sizes endpoint
+  static const String postageSizes = '$_apiPrefix/postage-sizes';
   static const String paymentIntent = '$_apiPrefix/payment/create-payment-intent';
   static const String createOrder = '$_apiPrefix/order/create';
 

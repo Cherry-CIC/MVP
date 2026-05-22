@@ -1,6 +1,7 @@
 import 'package:cherry_mvp/core/config/app_images.dart';
 import 'package:cherry_mvp/core/config/config.dart';
 import 'package:cherry_mvp/core/models/model.dart';
+import 'package:cherry_mvp/features/donation/models/postage_size_info.dart';
 
 final List<Charity> dummyCharities = [
   Charity(

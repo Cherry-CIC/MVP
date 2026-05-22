@@ -1,5 +1,6 @@
 import 'package:cherry_mvp/core/config/config.dart';
 import 'package:cherry_mvp/core/models/model.dart';
+import 'package:cherry_mvp/features/donation/models/postage_size_info.dart';
 
 const dummyProducts = [
   Product(

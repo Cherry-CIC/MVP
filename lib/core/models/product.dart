@@ -1,10 +1,9 @@
 import 'package:json_annotation/json_annotation.dart';
 import 'package:cherry_mvp/core/models/category.dart';
 import 'package:cherry_mvp/features/charity_page/charity_model.dart';
+import 'package:cherry_mvp/features/donation/models/postage_size_info.dart';
 
 part 'product.g.dart';
-
-enum PostageSize { small, medium, large }
 
 @JsonSerializable()
 class Product {
