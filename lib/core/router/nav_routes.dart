@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cherry_mvp/features/charity_page/charity_page.dart';
 import 'package:cherry_mvp/features/checkout/checkout_complete_page.dart';
 import 'package:cherry_mvp/features/checkout/checkout_page.dart';
-import 'package:cherry_mvp/features/checkout/pickupPointSelectionPage.dart';
+import 'package:cherry_mvp/features/checkout/pickup_point_selection_page.dart';
 import 'package:cherry_mvp/features/donation/donation_page.dart';
 import 'package:cherry_mvp/features/donation/postage_size_page.dart';
 import 'package:cherry_mvp/features/donation/successful_upload_page.dart';

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:provider/provider.dart';
 import 'package:cherry_mvp/core/config/config.dart';
-import 'package:cherry_mvp/core/models/inpost_model.dart';
+import 'package:cherry_mvp/core/models/inpost.dart';
 import 'package:cherry_mvp/core/models/inpost_shipping_method.dart';
 import 'package:cherry_mvp/features/checkout/checkout_view_model.dart';
 import 'package:cherry_mvp/features/checkout/constants/address_constants.dart';
@@ -400,7 +400,7 @@ class _DeliveryOptionsState extends State<DeliveryOptions> {
     );
   }
 
-  void _populatePickupAddressDetails(InpostModel selectedInpost) {
+  void _populatePickupAddressDetails(Inpost selectedInpost) {
     final inpostAddress = selectedInpost.address;
     final inpostAddressSeparator = '; building: ';
 

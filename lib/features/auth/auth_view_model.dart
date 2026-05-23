@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:logging/logging.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cherry_mvp/core/models/user.dart';
 import 'package:cherry_mvp/core/router/router.dart';
@@ -20,6 +21,7 @@ class AuthViewModel extends ChangeNotifier {
     required this.firestore,
   });
 
+  final _log = Logger('AuthViewModel');
   Status _status = Status.uninitialized;
   Status get status => _status;
   User? get currentUser => firebaseAuth.currentUser;
@@ -45,7 +47,7 @@ class AuthViewModel extends ChangeNotifier {
     }
 
     isLoadingUser = false;
-    print(userCredentials?.firstname);
+    _log.info(userCredentials?.firstname);
     notifyListeners();
   }
 

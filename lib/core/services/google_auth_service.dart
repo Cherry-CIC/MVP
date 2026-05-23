@@ -1,8 +1,10 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:logging/logging.dart';
 
 class GoogleAuthService {
   final _googleSignIn = GoogleSignIn.instance;
+  final _log = Logger('GoogleAuthService');
   bool _isGoogleSignInInitialized = false;
 
   GoogleSignInAccount? _currentUser;
@@ -20,7 +22,7 @@ class GoogleAuthService {
       );
       _isGoogleSignInInitialized = true;
     } catch (e) {
-      print('Failed to initialize Google Sign-In: $e');
+      _log.severe('Failed to initialize Google Sign-In: $e');
       rethrow;
     }
   }

@@ -51,18 +51,6 @@ class AppImages {
 
   static const discoverImage1 = '${_path}discover_image1.png';
   static const discoverImage2 = '${_path}discover_image2.png';
-
-  static const womanIcon = '${_path}woman_icon.png';
-  static const menIcon = '${_path}men_icon.png';
-  static const childrenIcon = '${_path}children_icon.png';
-  static const unisexIcon = '${_path}unisex_icon.png';
-  static const designIcon = '${_path}design_icon.png';
-  static const profileIcon = '${_path}profile_icon.png';
-  static const accessoriesIcon = '${_path}accessories_icon.png';
-  static const booksIcon = '${_path}books_icon.png';
-  static const toysIcon = '${_path}toys_icon.png';
-  static const dvdIcon = '${_path}dvd_icon.png';
-
   static const profilesettings = '${_path}profile_setting.png';
   static const profileProfileIcon = '${_path}profile_profile_icon.png';
   static const profileFollowers = '${_path}profile_followers.png';
@@ -99,4 +87,9 @@ class AppImages {
   static const supportOurMission = '${_path}mission_icon.png';
   static const backCharity = '${_path}back_charity.png';
   static const inpostLogo = '${_path}inpost_logo.svg';
+
+  static String getCategoryIcon(String text) {
+    final fileName = text.toLowerCase().replaceAll(' ', '_').replaceAll('&', 'and');
+    return '$_path${fileName}_icon.png';
+  }
 }

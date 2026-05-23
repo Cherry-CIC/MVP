@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:logging/logging.dart';
 import 'package:cherry_mvp/core/config/config.dart';
-import 'package:cherry_mvp/core/models/inpost_model.dart';
+import 'package:cherry_mvp/core/models/inpost.dart';
 import 'package:cherry_mvp/core/models/inpost_shipping_method.dart';
 import 'package:cherry_mvp/core/models/product.dart';
 import 'package:cherry_mvp/core/router/nav_provider.dart';
@@ -33,14 +33,14 @@ class CheckoutViewModel extends ChangeNotifier {
 
   final List<Product> _basketItems = [];
 
-  final List<InpostModel> _nearestInposts = [];
-  List<InpostModel> get nearestInposts => _nearestInposts;
+  final List<Inpost> _nearestInposts = [];
+  List<Inpost> get nearestInposts => _nearestInposts;
 
   final List<InpostShippingMethod> _inpostShippingMethods = [];
   List<InpostShippingMethod> get inpostShippingMethods => _inpostShippingMethods;
 
-  InpostModel? _selectedInpost;
-  InpostModel? get selectedInpost => _selectedInpost;
+  Inpost? _selectedInpost;
+  Inpost? get selectedInpost => _selectedInpost;
 
   InpostShippingMethod? _selectedInpostShippingMethod;
   InpostShippingMethod? get selectedInpostShippingMethod => _selectedInpostShippingMethod;
@@ -59,7 +59,7 @@ class CheckoutViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  void setSelectedInpost(InpostModel? data) {
+  void setSelectedInpost(Inpost? data) {
     _selectedInpost = data;
     notifyListeners();
   }
@@ -305,7 +305,7 @@ class CheckoutViewModel extends ChangeNotifier {
       final result = await checkoutRepository.fetchNearestInposts(postalCode, country);
       final parsedInposts = result.isSuccess && result.value != null
           ? _parseInpostList(result.value)
-          : const <InpostModel>[];
+          : const <Inpost>[];
 
       _nearestInposts
         ..clear()
@@ -400,7 +400,7 @@ class CheckoutViewModel extends ChangeNotifier {
         final long = (data[FirestoreConstants.long] ?? '').toString();
 
         if (id.isNotEmpty && name.isNotEmpty && address.isNotEmpty && postcode.isNotEmpty) {
-          _selectedInpost = InpostModel(
+          _selectedInpost = Inpost(
             id: id,
             name: name,
             address: address,
@@ -612,14 +612,14 @@ class CheckoutViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  List<InpostModel> _parseInpostList(dynamic payload) {
+  List<Inpost> _parseInpostList(dynamic payload) {
     final dynamic listData = payload is Map<String, dynamic>
         ? (payload['pickupPoints'] ?? payload['lockers'] ?? payload['items'])
         : payload;
 
     if (listData is! List) return [];
 
-    final lockers = <InpostModel>[];
+    final lockers = <Inpost>[];
     for (final item in listData) {
       final locker = _parseInpostItem(item);
       if (locker != null) {
@@ -639,7 +639,7 @@ class CheckoutViewModel extends ChangeNotifier {
     return shippingMethods;
   }
 
-  InpostModel? _parseInpostItem(dynamic item) {
+  Inpost? _parseInpostItem(dynamic item) {
     if (item is! Map) return null;
     final map = Map<String, dynamic>.from(item);
 
@@ -666,7 +666,7 @@ class CheckoutViewModel extends ChangeNotifier {
       return null;
     }
 
-    return InpostModel(
+    return Inpost(
       id: id,
       name: name,
       address: address,

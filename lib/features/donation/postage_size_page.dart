@@ -1,10 +1,10 @@
-import 'package:cherry_mvp/features/donation/donation_view_model.dart';
-import 'package:cherry_mvp/features/donation/models/postage_size_info.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cherry_mvp/core/config/config.dart';
 import 'package:cherry_mvp/core/utils/image_provider_helper.dart';
 import 'package:cherry_mvp/core/utils/utils.dart';
+import 'package:cherry_mvp/features/donation/donation_view_model.dart';
+import 'package:cherry_mvp/features/donation/models/postage_size_info.dart';
 
 // TODO needs styled
 class PostageSizePage extends StatefulWidget {

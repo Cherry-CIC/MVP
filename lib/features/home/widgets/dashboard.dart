@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import 'package:cherry_mvp/core/router/nav_provider.dart';
 import 'package:cherry_mvp/core/router/nav_routes.dart';
 import 'package:cherry_mvp/core/utils/utils.dart';
-import 'package:cherry_mvp/features/categories/category_view_model.dart';
 import 'package:cherry_mvp/features/home/widgets/ad_example.dart';
 import 'package:cherry_mvp/features/home/home_viewmodel.dart';
 import 'package:cherry_mvp/features/home/widgets/dashboard_loading_widget.dart';
@@ -31,11 +30,7 @@ class _DashboardPageState extends State<DashboardPage> {
       _hasInitialized = true;
 
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        final categoryVM = context.read<CategoryViewModel>();
-        final homeVM = context.read<HomeViewModel>();
-
-        categoryVM.fetchCategories();
-        homeVM.fetchProducts();
+        context.read<HomeViewModel>().fetchProducts();
       });
     }
 

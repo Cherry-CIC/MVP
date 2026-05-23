@@ -1,4 +1,4 @@
-class InpostModel {
+class Inpost {
   final String id;
   final String name;
   final String address;
@@ -8,7 +8,7 @@ class InpostModel {
   final String lat;
   final String long;
 
-  const InpostModel({
+  const Inpost({
     required this.id,
     required this.name,
     required this.address,

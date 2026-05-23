@@ -1,10 +1,10 @@
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:cherry_mvp/features/donation/donation_page.dart';
 import 'package:cherry_mvp/features/home/widgets/bottom_nav_bar.dart';
 import 'package:cherry_mvp/features/home/widgets/home_screen.dart';
 import 'package:cherry_mvp/features/messages/message_page.dart';
 import 'package:cherry_mvp/features/profile/profile_page.dart';
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -17,11 +17,7 @@ class _HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
   final PageController _pageController = PageController();
 
-  static final List<Widget> _pages = <Widget>[
-    HomeScreen(),
-    MessagePage(),
-    ProfilePage()
-  ];
+  static final List<Widget> _pages = <Widget>[HomeScreen(), MessagePage(), ProfilePage()];
 
   void _onItemTapped(int index) {
     switch (index) {

@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cherry_mvp/core/config/firestore_constants.dart';
-import 'package:cherry_mvp/core/models/inpost_model.dart';
+import 'package:cherry_mvp/core/models/inpost.dart';
 import 'package:cherry_mvp/core/services/services.dart';
 import 'package:cherry_mvp/core/utils/result.dart';
 import 'package:cherry_mvp/features/checkout/models/payment_intent.dart';
@@ -9,7 +9,7 @@ abstract class ICheckoutRepository {
   Future<Result> fetchNearestInposts(String postalCode, String country);
   Future<Result> fetchShippingMethodsForInpost(String servicePointId, String postalCode, String country);
 
-  Future<void> storeLockerInFirestore(InpostModel data);
+  Future<void> storeLockerInFirestore(Inpost data);
 
   /// Store a dummy order in Firestore
   Future<void> storeOrderInFirestore(Map<String, dynamic> orderData);
@@ -74,7 +74,7 @@ final class CheckoutRepository implements ICheckoutRepository {
   }
 
   @override
-  Future<void> storeLockerInFirestore(InpostModel data) async {
+  Future<void> storeLockerInFirestore(Inpost data) async {
     Map<String, dynamic> lockerData = {
       FirestoreConstants.id: data.id,
       FirestoreConstants.name: data.name,

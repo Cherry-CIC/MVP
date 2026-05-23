@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
-import 'package:cherry_mvp/core/config/app_images.dart';
 import 'package:cherry_mvp/core/models/model.dart';
 import 'package:cherry_mvp/core/router/nav_provider.dart';
 import 'package:cherry_mvp/core/utils/status.dart';
@@ -29,9 +28,9 @@ class CategoryViewModel extends ChangeNotifier {
     'Unisex',
     'Designer',
     'Books',
-    'Toys & Board Game',
-    'CD’s & Vinyl',
-    'DVD’s & Video Games',
+    'Board Games',
+    'Vinyl & Disk',
+    'Electronics',
   ];
 
   void _sortCategories() {
@@ -49,20 +48,6 @@ class CategoryViewModel extends ChangeNotifier {
         return a.name.compareTo(b.name);
       }
     });
-  }
-
-  IconData? getCategoryIcon(String categoryName) {
-    if ('DVD’s & Video Games'.contains(categoryName)) {
-      return Icons.videogame_asset;
-    }
-    return null;
-  }
-
-  String? getCategoryAssetIcon(String categoryName) {
-    if (categoryName.contains("Board Game")) {
-      return AppImages.toysIcon;
-    }
-    return null;
   }
 
   Future<void> fetchCategories() async {
