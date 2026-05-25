@@ -41,8 +41,8 @@ dev_dependencies:
   flutter_launcher_icons: ^0.14.4
   flutter_native_splash: ^2.4.7
 
-dependency_overrides:
-  meta: ^1.18.2
+#dependency_overrides:
+#  meta: ^1.18.2
 
 flutter:
   uses-material-design: true
@@ -50,6 +50,8 @@ flutter:
     - assets/images/
     - assets/fonts/
     - .env
+  config:
+    enable-swift-package-manager: false
 
   # To add custom fonts to your application, add a fonts section here,
   # in this "flutter" section. Each entry in this list should have a

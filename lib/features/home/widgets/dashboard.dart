@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:cherry_mvp/core/config/app_spacing.dart';
+import 'package:cherry_mvp/core/models/product.dart';
 import 'package:cherry_mvp/core/router/nav_provider.dart';
 import 'package:cherry_mvp/core/router/nav_routes.dart';
 import 'package:cherry_mvp/core/utils/utils.dart';
@@ -20,7 +22,6 @@ class DashboardPage extends StatefulWidget {
 
 class _DashboardPageState extends State<DashboardPage> {
   bool _hasInitialized = false;
-  late double _dynamicAspectRatio;
 
   @override
   void didChangeDependencies() {
@@ -33,11 +34,6 @@ class _DashboardPageState extends State<DashboardPage> {
         context.read<HomeViewModel>().fetchProducts();
       });
     }
-
-    final deviceRatio = MediaQuery.sizeOf(context).aspectRatio;
-    final textScale = MediaQuery.textScalerOf(context).scale(1.0).clamp(1.0, 1.4);
-    double multiplier = deviceRatio > 0.6 ? 1.1 : 1.15;
-    _dynamicAspectRatio = (deviceRatio * multiplier) / textScale;
   }
 
   @override
@@ -50,80 +46,118 @@ class _DashboardPageState extends State<DashboardPage> {
         final status = homeViewModel.status;
 
         if (status.type == StatusType.loading) {
-          return const Padding(
+          return const SliverPadding(
             padding: EdgeInsets.all(12),
-            child: DashboardLoadingWidget(),
+            sliver: SliverToBoxAdapter(child: DashboardLoadingWidget()),
           );
         }
 
         if (status.type == StatusType.failure) {
-          return Padding(
+          return SliverPadding(
             padding: const EdgeInsets.all(12),
-            child: DashboardErrorWidget(
-              errorMessage: status.message,
-              onRetry: () => homeViewModel.fetchProducts(),
+            sliver: SliverToBoxAdapter(
+              child: DashboardErrorWidget(
+                errorMessage: status.message,
+                onRetry: () => homeViewModel.fetchProducts(),
+              ),
             ),
           );
         }
 
         if (products.isEmpty) {
-          return const Padding(
+          return const SliverPadding(
             padding: EdgeInsets.all(12),
-            child: DashboardEmptyWidget(),
+            sliver: SliverToBoxAdapter(child: DashboardEmptyWidget()),
           );
         }
 
-        const int chunkSize = 6;
-        List<Widget> children = [];
+        final size = MediaQuery.sizeOf(context);
+        final textScale = MediaQuery.textScalerOf(context).scale(1.0).clamp(1.0, 1.4);
 
-        for (var i = 0; i < products.length; i += chunkSize) {
-          final end = (i + chunkSize < products.length) ? i + chunkSize : products.length;
-          final productChunk = products.sublist(i, end);
+        final cardWidth = (size.width - 24 - 12) / 2;
+        const imageAspectRatio = AppSpacing.imageContainerAspectRatio;
+        final imageHeight = cardWidth / imageAspectRatio;
 
-          children.add(
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: GridView.builder(
-                // RESET: Set padding to zero to prevent unintended vertical gaps between chunks
-                padding: EdgeInsets.zero,
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: productChunk.length,
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 12,
-                  mainAxisSpacing: 12,
-                  childAspectRatio: _dynamicAspectRatio,
-                ),
-                itemBuilder: (context, index) {
-                  final product = productChunk[index];
-                  return GestureDetector(
-                    onTap: () {
-                      productViewModel.setProduct(product);
-                      navigator.navigateTo(AppRoutes.product);
-                    },
-                    child: ProductCard(
-                      key: ValueKey(product.id),
-                      product: product,
-                    ),
+        final textHeight = 120.0 * textScale;
+        final totalCardHeight = imageHeight + textHeight;
+
+        final numProductRows = (products.length / 2).ceil();
+        final numAds = (products.length / 6).floor();
+        final totalCount = numProductRows + numAds;
+
+        return SliverPadding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          sliver: SliverList(
+            delegate: SliverChildBuilderDelegate(
+              (context, index) {
+                // Insert Ad every 4th list item (after every 3 product rows / 6 products)
+                if ((index + 1) % 4 == 0) {
+                  return const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 24),
+                    child: AdExample(),
                   );
-                },
-              ),
+                }
+
+                final productRowIndex = index - (index ~/ 4);
+                final p1Index = productRowIndex * 2;
+                final p2Index = p1Index + 1;
+
+                if (p1Index >= products.length) return null;
+
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: SizedBox(
+                    height: totalCardHeight,
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Expanded(
+                          child: _buildProductItem(
+                            context,
+                            products[p1Index],
+                            productViewModel,
+                            navigator,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: p2Index < products.length
+                              ? _buildProductItem(
+                                  context,
+                                  products[p2Index],
+                                  productViewModel,
+                                  navigator,
+                                )
+                              : const SizedBox.shrink(),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+              childCount: totalCount,
             ),
-          );
-
-          if (productChunk.length == chunkSize) {
-            children.add(
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 24),
-                child: AdExample(),
-              ),
-            );
-          }
-        }
-
-        return Column(children: children);
+          ),
+        );
       },
+    );
+  }
+
+  Widget _buildProductItem(
+    BuildContext context,
+    Product product,
+    ProductViewModel productViewModel,
+    NavigationProvider navigator,
+  ) {
+    return GestureDetector(
+      onTap: () {
+        productViewModel.setProduct(product);
+        navigator.navigateTo(AppRoutes.product);
+      },
+      child: ProductCard(
+        key: ValueKey(product.id),
+        product: product,
+      ),
     );
   }
 }

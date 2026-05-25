@@ -60,11 +60,7 @@ class HomeScreenState extends State<HomeScreen> {
             padding: EdgeInsets.all(16),
             sliver: SliverToBoxAdapter(child: DiscoverButton()),
           ),
-          // Removed the standalone AdExample() that was appearing at the top
-          const SliverPadding(
-            padding: EdgeInsets.zero,
-            sliver: SliverToBoxAdapter(child: DashboardPage()),
-          ),
+          const DashboardPage(),
         ],
       ),
     );

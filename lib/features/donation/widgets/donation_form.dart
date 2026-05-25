@@ -382,10 +382,13 @@ class DonationFormState extends State<DonationForm> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      AppStrings.thoughtsOnUpload,
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    Expanded(
+                      child: Text(
+                        AppStrings.thoughtsOnUpload,
+                        softWrap: true,
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
                       ),
                     ),
                     OutlinedButton(

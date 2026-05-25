@@ -124,7 +124,7 @@ class AppStrings {
       'Upload clear, high-quality images to help your items shine. The more angles the better.';
   static const errorPickingImage = 'Error picking image';
   static const tapToAddPhotos = 'Tap to add photos (multiple allowed)';
-  static const catchEyesText = "Catch eyes by using \nquality photos!";
+  static const catchEyesText = "Catch eyes by using quality photos!";
   static const photosTipPopupHeading = "Your photos should...";
   static const clearWellLit = "Be clear and well lit.";
   static const multipleAngles =
