@@ -447,7 +447,7 @@ class CheckoutViewModel extends ChangeNotifier {
           postcode: doc.get(FirestoreConstants.postcode),
           lat: doc.get(FirestoreConstants.lat),
           long: doc.get(FirestoreConstants.long),
-          courierId: doc.data().toString().contains(FirestoreConstants.courierId)
+          courierId: doc.data()?.containsKey(FirestoreConstants.courierId) == true
               ? doc.get(FirestoreConstants.courierId)
               : 'inpost',
         );
