@@ -59,6 +59,7 @@ final class CheckoutRepository implements ICheckoutRepository {
       FirestoreConstants.postcode: data.postcode,
       FirestoreConstants.lat: data.lat,
       FirestoreConstants.long: data.long,
+      FirestoreConstants.courierId: 'inpost',
     };
 
     final result = await _firestoreService.saveDocument(

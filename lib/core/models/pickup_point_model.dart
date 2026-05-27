@@ -19,13 +19,13 @@ class PickupPointModel {
 
   factory PickupPointModel.fromJson(Map<String, dynamic> json) {
     return PickupPointModel(
-      id: json['id'] as String,
-      name: json['name'] as String,
-      address: json['address'] as String,
-      postcode: json['postcode'] as String,
-      lat: json['lat'] as String,
-      long: json['long'] as String,
-      courierId: json['courierId'] as String,
+      id: json['id']?.toString() ?? '',
+      name: json['name']?.toString() ?? '',
+      address: json['address']?.toString() ?? '',
+      postcode: json['postcode']?.toString() ?? '',
+      lat: json['lat']?.toString() ?? '',
+      long: json['long']?.toString() ?? '',
+      courierId: json['courierId']?.toString() ?? '',
     );
   }
 

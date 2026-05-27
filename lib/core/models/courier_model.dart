@@ -9,8 +9,8 @@ class CourierModel {
 
   factory CourierModel.fromJson(Map<String, dynamic> json) {
     return CourierModel(
-      id: json['id'] as String,
-      name: json['name'] as String,
+      id: json['id']?.toString() ?? '',
+      name: json['name']?.toString() ?? '',
     );
   }
 

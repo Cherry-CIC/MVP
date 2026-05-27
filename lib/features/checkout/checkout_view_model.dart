@@ -447,7 +447,9 @@ class CheckoutViewModel extends ChangeNotifier {
           postcode: doc.get(FirestoreConstants.postcode),
           lat: doc.get(FirestoreConstants.lat),
           long: doc.get(FirestoreConstants.long),
-          courierId: 'inpost',
+          courierId: doc.data().toString().contains(FirestoreConstants.courierId)
+              ? doc.get(FirestoreConstants.courierId)
+              : 'inpost',
         );
         
         hasLocker = true;
@@ -582,12 +584,18 @@ class CheckoutViewModel extends ChangeNotifier {
             "country": shippingAddressComponents[AddressConstants.countryKey] ?? AppStrings.unitedKingdomText,
           };
 
+    if (deliveryChoice == 'pickup' && selectedPickupPoint == null) {
+      _createOrderStatus = Status.failure('Please select a pickup point');
+      notifyListeners();
+      return;
+    }
+
     final Map<String, dynamic> deliveryDetails = deliveryChoice == 'pickup'
         ? {
             "deliveryMethod": "pickup_point",
-            "courier": selectedPickupPoint?.courierId ?? 'unknown',
-            "pickupPointId": selectedPickupPoint?.id ?? 'unknown',
-            "pickupPointName": selectedPickupPoint?.name ?? 'unknown',
+            "courier": selectedPickupPoint!.courierId,
+            "pickupPointId": selectedPickupPoint!.id,
+            "pickupPointName": selectedPickupPoint!.name,
           }
         : {
             "deliveryMethod": "ship_to_home",

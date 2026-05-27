@@ -295,9 +295,21 @@ class _DeliveryOptionsState extends State<DeliveryOptions> {
                           postcodeController.text.trim(),
                         ),
                       );
-                    } else if (status.type == StatusType.success || status.type == StatusType.uninitialized) {
+                                    } else if (status.type == StatusType.uninitialized) {
+                      // Show prompt to search for pickup points
+                      return Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Text(
+                          'Enter your postcode and select a courier to find nearby pickup points.',
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      );
+                    } else if (status.type == StatusType.success) {
 
                       if (_deliverExpanded) {
+
                         if (model.selectedPickupPoint != null) {
                           // case: locker already selected
                           return Outlined(
