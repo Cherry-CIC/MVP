@@ -1,12 +1,5 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import java.util.Properties
-import java.io.FileInputStream
 
-val localProperties = Properties()
-val localPropertiesFile = rootDir.resolve("local.properties")
-if (localPropertiesFile.exists()) {
-    localProperties.load(FileInputStream(localPropertiesFile))
-}
 plugins {
     id("com.android.application")
     // START: FlutterFire Configuration
@@ -20,7 +13,7 @@ plugins {
 android {
     namespace = "uk.org.cherry.app"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = localProperties.getProperty("flutter.ndkVersion")
+    ndkVersion = flutter.ndkVersion
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17

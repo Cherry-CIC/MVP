@@ -34,7 +34,7 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  mockito: ^5.6.5
+  mockito: ^5.5.0
   flutter_lints: ^6.0.0
   json_serializable: ^6.13.2
   build_runner: ^2.15.0
