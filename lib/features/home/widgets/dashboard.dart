@@ -99,10 +99,10 @@ class _DashboardPageState extends State<DashboardPage> {
                 }
 
                 final productRowIndex = index - (index ~/ 4);
-                final p1Index = productRowIndex * 2;
-                final p2Index = p1Index + 1;
+                final firstProductInRowIndex = productRowIndex * 2;
+                final secondProductInRowIndex = firstProductInRowIndex + 1;
 
-                if (p1Index >= products.length) return null;
+                if (firstProductInRowIndex >= products.length) return null;
 
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 12),
@@ -114,17 +114,17 @@ class _DashboardPageState extends State<DashboardPage> {
                         Expanded(
                           child: _buildProductItem(
                             context,
-                            products[p1Index],
+                            products[firstProductInRowIndex],
                             productViewModel,
                             navigator,
                           ),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
-                          child: p2Index < products.length
+                          child: secondProductInRowIndex < products.length
                               ? _buildProductItem(
                                   context,
-                                  products[p2Index],
+                                  products[secondProductInRowIndex],
                                   productViewModel,
                                   navigator,
                                 )

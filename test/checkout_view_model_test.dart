@@ -238,12 +238,18 @@ void main() {
         checkoutRepository: FakeCheckoutRepository(
           fetchNearestResult: Result.success([
             {
-              'id': 'locker-1',
-              'name': 'Locker One',
-              'address': '1 Test Street',
-              'postcode': 'SW1A 1AA',
-              'lat': '51.5010',
-              'long': '-0.1416',
+              "id": "13127548",
+              "name": "InPost",
+              "addressLine1": "The Village; building: Co op Group Charlton Village 19-23",
+              "city": "New Charlton",
+              "postalCode": "SE7 8UG",
+              "country": "GB",
+              "carrier": "inpost_gb",
+              "distanceMeters": 968,
+              "latitude": "51.482010",
+              "longitude": "0.037010",
+              "openTomorrow": true,
+              "openUpcomingWeek": true,
             },
           ]),
         ),
@@ -255,7 +261,7 @@ void main() {
       expect(viewModel.status.type, StatusType.success);
       expect(viewModel.showLocker, true);
       expect(viewModel.nearestInposts, hasLength(1));
-      expect(viewModel.nearestInposts.first.name, 'Locker One');
+      expect(viewModel.nearestInposts.first.name, 'InPost');
     });
   });
 }
