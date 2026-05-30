@@ -231,6 +231,7 @@ class AppStrings {
   static const checkoutDeliveryOptionRequired = 'Please choose a delivery option';
   static const checkoutPickupLockerRequired = 'Please select a pick-up point';
   static const checkoutPaymentMethodRequired = 'Please select a payment method';
+  static const checkoutPaymentIntentRequired = 'Payment confirmation is missing. Please try again.';
 
   // Card Details
   static const cardDetailsTitle = 'Card Details';

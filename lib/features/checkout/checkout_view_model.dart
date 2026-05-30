@@ -90,6 +90,9 @@ class CheckoutViewModel extends ChangeNotifier {
 
   // Payment properties
   bool _hasPaymentMethod = false;
+  String? _lastPaymentIntentId;
+
+  String? get lastPaymentIntentId => _lastPaymentIntentId;
 
   /// Whether a payment method has been set
   bool get hasPaymentMethod => selectedPaymentType != null || _hasPaymentMethod;
@@ -224,6 +227,7 @@ class CheckoutViewModel extends ChangeNotifier {
     isShippingAddressConfirmed = false;
     selectedPickupPoint = null;
     _pickupPoints.clear();
+    _lastPaymentIntentId = null;
     _basketItems.clear();
     deliveryChoice = null;
     _createOrderStatus = Status.uninitialized;
@@ -430,6 +434,7 @@ class CheckoutViewModel extends ChangeNotifier {
     }
 
     _createOrderStatus = Status.loading;
+    _lastPaymentIntentId = null;
     notifyListeners();
 
     try {
@@ -453,9 +458,11 @@ class CheckoutViewModel extends ChangeNotifier {
 
         // Present the native PaymentSheet (it will show ApplePay/GooglePay if available)
         await Stripe.instance.presentPaymentSheet();
+        _lastPaymentIntentId = paymentResponse.paymentIntentId;
         return true;
       } else {
         _createOrderStatus = Status.failure(response.error.toString());
+        _lastPaymentIntentId = null;
         _log.severe('Create Payment intent Error :: ${response.error}');
         notifyListeners();
         return false;
@@ -467,11 +474,13 @@ class CheckoutViewModel extends ChangeNotifier {
       _log.severe(
         'Stripe Payment Error :: ${e.error.localizedMessage ?? e.toString()}',
       );
+      _lastPaymentIntentId = null;
       notifyListeners();
       return false;
     } catch (e) {
       _createOrderStatus = Status.failure(e.toString());
       _log.severe('Error making payment::: $e');
+      _lastPaymentIntentId = null;
       notifyListeners();
       return false;
     }
@@ -487,6 +496,25 @@ class CheckoutViewModel extends ChangeNotifier {
       return;
     }
 
+    final paymentIntentId = _lastPaymentIntentId?.trim() ?? '';
+    if (paymentIntentId.isEmpty) {
+      _createOrderStatus = Status.failure(AppStrings.checkoutPaymentIntentRequired);
+      notifyListeners();
+      return;
+    }
+
+    if ((deliveryChoice ?? '').isEmpty) {
+      _createOrderStatus = Status.failure(AppStrings.checkoutDeliveryOptionRequired);
+      notifyListeners();
+      return;
+    }
+
+    if (isPickupPointDelivery && selectedPickupPoint == null) {
+      _createOrderStatus = Status.failure(AppStrings.checkoutPickupLockerRequired);
+      notifyListeners();
+      return;
+    }
+
     final pickupPoint = selectedPickupPoint;
     final Map<String, dynamic> address = isPickupPointDelivery && pickupPoint != null
         ? {
@@ -494,22 +522,25 @@ class CheckoutViewModel extends ChangeNotifier {
             "city": pickupPoint.city,
             "state": "",
             "postal_code": pickupPoint.postalCode,
-            "country": pickupPoint.country,
+            "country": _normaliseCountryCode(pickupPoint.country),
           }
         : {
             'line1': _shippingAddress?.line1 ?? '',
             "city": shippingAddressComponents[AddressConstants.cityKey] ?? "",
             "state": shippingAddressComponents[AddressConstants.stateKey] ?? "",
             'postal_code': shippingAddressComponents[AddressConstants.postalCodeKey] ?? "",
-            "country": shippingAddressComponents[AddressConstants.countryKey] ?? AppStrings.unitedKingdomText,
+            "country": _normaliseCountryCode(
+              shippingAddressComponents[AddressConstants.countryKey] ?? AppStrings.unitedKingdomText,
+            ),
           };
 
     final Map<String, dynamic> orderData = {
       "amount": _toMinorUnits(total),
       "productId": basketItems[0].id,
       "productName": basketItems[0].name,
+      "paymentIntentId": paymentIntentId,
       "deliveryMethod": deliveryChoice,
-      "shipping": {"address": address, "name": 'John Doe'},
+      "shipping": {"address": address, "name": 'Customer'},
       if (pickupPoint != null) "pickupPoint": pickupPoint.toJson(),
     };
     try {

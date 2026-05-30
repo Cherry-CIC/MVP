@@ -186,8 +186,6 @@ class _CheckoutPageState extends State<CheckoutPage> {
 
                       setState(() => _errorMessage = '');
 
-                      await viewModel.storeOrderInFirestore();
-
                       final paid = await viewModel.payWithPaymentSheet(
                         amount: basket.total,
                       );
