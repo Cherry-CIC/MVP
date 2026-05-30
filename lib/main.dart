@@ -8,6 +8,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'core/utils/utils.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:cherry_mvp/l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'core/router/router.dart';
@@ -62,6 +64,13 @@ class MyApp extends StatelessWidget {
       builder: (context, navigatorService, themeNotifier, child) {
         return MaterialApp(
           debugShowCheckedModeBanner: false,
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: AppLocalizations.supportedLocales,
           navigatorKey: navigatorService.navigatorKey,
           onGenerateRoute: AppRoutes.generateRoute,
           theme: buildTheme(),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:cherry_mvp/l10n/app_localizations.dart';
 
 import 'package:cherry_mvp/features/discover/discover_viewmodel.dart';
 import 'package:cherry_mvp/features/discover/widgets/discover_charity_list.dart';
@@ -21,7 +22,7 @@ class DiscoverPage extends StatelessWidget {
             child: CustomScrollView(
               slivers: [
                 SliverAppBar(
-                  title: Text('Discover'),
+                  title: Text(AppLocalizations.of(context)!.navDiscoverTitle),
                   floating: true,
                   primary: false,
                   snap: true,

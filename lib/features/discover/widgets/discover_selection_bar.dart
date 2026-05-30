@@ -1,3 +1,4 @@
+import 'package:cherry_mvp/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 
 class DiscoverSelectionBar extends StatefulWidget {
@@ -10,6 +11,7 @@ class DiscoverSelectionBar extends StatefulWidget {
 class _DiscoverSelectionBarState extends State<DiscoverSelectionBar> {
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surfaceContainerHighest,
@@ -27,7 +29,7 @@ class _DiscoverSelectionBarState extends State<DiscoverSelectionBar> {
                 child: Padding(
                   padding: EdgeInsets.symmetric(horizontal: 4, vertical: 8),
                   child: Text(
-                    "Popular",
+                    l10n.navPopularSegment,
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
                           color: Theme.of(context).colorScheme.primary,
                         ),
@@ -40,7 +42,7 @@ class _DiscoverSelectionBarState extends State<DiscoverSelectionBar> {
               child: Padding(
                 padding: EdgeInsets.symmetric(horizontal: 4, vertical: 8),
                 child: Text(
-                  "Smaller Charities",
+                  l10n.navSmallerCharitiesSegment,
                   style: Theme.of(context).textTheme.titleSmall?.copyWith(
                         color: Theme.of(context).colorScheme.secondary,
                       ),
@@ -52,7 +54,7 @@ class _DiscoverSelectionBarState extends State<DiscoverSelectionBar> {
               child: Padding(
                 padding: EdgeInsets.symmetric(horizontal: 4, vertical: 8),
                 child: Text(
-                  "Local to you",
+                  l10n.navLocalToYouSegment,
                   style: Theme.of(context).textTheme.titleSmall?.copyWith(
                         color: Theme.of(context).colorScheme.secondary,
                       ),

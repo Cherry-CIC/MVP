@@ -5,6 +5,7 @@ import 'package:cherry_mvp/core/router/router.dart';
 import 'package:cherry_mvp/core/utils/status.dart';
 import 'package:cherry_mvp/features/login/login_viewmodel.dart';
 import 'package:cherry_mvp/features/welcome/welcome_page.dart';
+import 'package:cherry_mvp/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'dart:io';
@@ -16,6 +17,7 @@ class AuthCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final navigator = Provider.of<NavigationProvider>(context, listen: false);
     final loginViewModel = Provider.of<LoginViewModel>(context, listen: false);
 
@@ -41,7 +43,7 @@ class AuthCard extends StatelessWidget {
                   children: [
                     Expanded(
                       child: Text(
-                        isLogin ? AppStrings.login : AppStrings.register,
+                        isLogin ? l10n.authLoginButton : l10n.authRegisterButton,
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
                     ),
@@ -56,14 +58,14 @@ class AuthCard extends StatelessWidget {
                     : [
                         if (Platform.isIOS) ...[
                           SocialLoginButton(
-                            label: AppStrings.continueWithApple,
+                            label: l10n.authContinueWithApple,
                             iconAsset: AppImages.authAppleIcon,
                             onPressed: () => loginViewModel.signInWithApple(),
                           ),
                           const SizedBox(height: 10),
                         ],
                         SocialLoginButton(
-                          label: AppStrings.continueWithGoogle,
+                          label: l10n.authContinueWithGoogle,
                           iconAsset: AppImages.authGoogleIcon,
                           onPressed: () => loginViewModel.signInWithGoogle(),
                         ),
@@ -80,7 +82,7 @@ class AuthCard extends StatelessWidget {
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 8),
                       child: Text(
-                        AppStrings.or,
+                        l10n.commonOr,
                         style: TextStyle(
                           color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
@@ -104,7 +106,7 @@ class AuthCard extends StatelessWidget {
                       : () {
                           isLogin ? navigator.navigateTo(AppRoutes.login) : navigator.navigateTo(AppRoutes.register);
                         },
-                  child: const Text(AppStrings.continueWithEmail),
+                  child: Text(l10n.authContinueWithEmail),
                 ),
               ],
             ),

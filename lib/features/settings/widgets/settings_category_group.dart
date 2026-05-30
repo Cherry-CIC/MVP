@@ -8,6 +8,7 @@ import 'package:cherry_mvp/core/config/app_colors.dart';
 import 'package:cherry_mvp/core/config/app_strings.dart';
 import 'package:cherry_mvp/features/auth/auth_view_model.dart';
 import 'package:cherry_mvp/features/login/login_viewmodel.dart';
+import 'package:cherry_mvp/l10n/app_localizations.dart';
 
 class SettingsCategoryGroup extends StatelessWidget {
   const SettingsCategoryGroup({
@@ -40,16 +41,17 @@ class SettingsCategoryGroup extends StatelessWidget {
             title: item.title,
             trailing: item.trailing,
             onTap: () async {
+              final l10n = AppLocalizations.of(context)!;
               final shouldLogout = await showDialog<bool>(
                 context: context,
                 builder: (ctx) => AlertDialog(
-                  title: const Text('Confirm Sign out'),
-                  content: const Text('Are you sure you want to sign out?'),
+                  title: Text(l10n.authConfirmSignOutTitle),
+                  content: Text(l10n.authConfirmSignOutBody),
                   actions: [
                     TextButton(
                       onPressed: () => Navigator.pop(ctx, false),
                       child: Text(
-                        'Cancel',
+                        l10n.commonCancel,
                         style: Theme.of(context).textTheme.labelLarge?.copyWith(
                           color: AppColors.black,
                         ),
@@ -59,7 +61,7 @@ class SettingsCategoryGroup extends StatelessWidget {
                     TextButton(
                       onPressed: () => Navigator.pop(ctx, true),
                       child: Text(
-                        'Sign out',
+                        l10n.authSignOutButton,
                         style: Theme.of(context).textTheme.labelLarge?.copyWith(
                           color: AppColors.red,
                           fontWeight: FontWeight.bold,

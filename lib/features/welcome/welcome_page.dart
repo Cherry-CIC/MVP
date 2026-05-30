@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:cherry_mvp/features/welcome/widgets/signup_card.dart';
 import 'package:flutter/material.dart';
 import 'package:cherry_mvp/core/config/config.dart';
+import 'package:cherry_mvp/l10n/app_localizations.dart';
 
 enum AuthMode { login, signup }
 
@@ -43,6 +44,7 @@ class _WelcomePageState extends State<WelcomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final double cardHeight = 400;
     return Scaffold(
       body: Stack(
@@ -70,7 +72,7 @@ class _WelcomePageState extends State<WelcomePage> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    AppStrings.giveInStyle,
+                    l10n.authGiveInStyleTagline,
                     style: Theme.of(context).textTheme.headlineLarge?.copyWith(
                           color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
@@ -119,7 +121,7 @@ class _WelcomePageState extends State<WelcomePage> {
                     onPressed: () {
                       toggleCard(AuthMode.login);
                     },
-                    child: Text(AppStrings.login),
+                    child: Text(l10n.authLoginButton),
                   ),
                 ),
 
@@ -134,7 +136,7 @@ class _WelcomePageState extends State<WelcomePage> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        AppStrings.createAccount,
+                        l10n.authCreateAccountButton,
                         style: Theme.of(context)
                             .textTheme
                             .labelSmall

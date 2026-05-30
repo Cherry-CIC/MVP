@@ -1,5 +1,6 @@
 import 'package:cherry_mvp/core/config/app_images.dart';
 import 'package:cherry_mvp/features/search/widgets/search.dart';
+import 'package:cherry_mvp/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 
 /// A reusable navigation bar widget that be use across the app.
@@ -19,6 +20,7 @@ class CherryBottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final selectedColor =
         this.selectedColor ?? Theme.of(context).colorScheme.primary;
     final unselectedColor =
@@ -53,7 +55,7 @@ class CherryBottomNavBar extends StatelessWidget {
               height: 24,
               color: selectedIndex == 0 ? selectedColor : unselectedColor,
             ),
-            label: 'Home',
+            label: l10n.navHome,
           ),
           BottomNavigationBarItem(
             icon: Image.asset(
@@ -62,7 +64,7 @@ class CherryBottomNavBar extends StatelessWidget {
               height: 24,
               color: selectedIndex == 1 ? selectedColor : unselectedColor,
             ),
-            label: 'Inbox',
+            label: l10n.navInbox,
           ),
           BottomNavigationBarItem(
             icon: Image.asset(
@@ -71,11 +73,11 @@ class CherryBottomNavBar extends StatelessWidget {
               height: 24,
               color: selectedIndex == 2 ? selectedColor : unselectedColor,
             ),
-            label: 'Give',
+            label: l10n.navGive,
           ),
           BottomNavigationBarItem(
             icon: Search(),
-            label: 'Search',
+            label: l10n.navSearch,
           ),
           BottomNavigationBarItem(
             icon: Image.asset(
@@ -84,7 +86,7 @@ class CherryBottomNavBar extends StatelessWidget {
               height: 24,
               color: selectedIndex == 4 ? selectedColor : unselectedColor,
             ),
-            label: 'Profile',
+            label: l10n.navProfile,
           ),
         ],
       ),

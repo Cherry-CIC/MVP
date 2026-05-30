@@ -1,6 +1,6 @@
 import 'package:cherry_mvp/core/config/app_images.dart';
 import 'package:cherry_mvp/core/config/app_spacing.dart';
-import 'package:cherry_mvp/core/config/app_strings.dart';
+import 'package:cherry_mvp/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 
 class NotYouPage extends StatelessWidget {
@@ -8,6 +8,7 @@ class NotYouPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       resizeToAvoidBottomInset: true,
       body: LayoutBuilder(
@@ -52,18 +53,18 @@ class NotYouPage extends StatelessWidget {
                       // First Text
                       Align(
                         alignment: Alignment.centerLeft,
-                        child: Text(AppStrings.userCheck,
+                        child: Text(l10n.authNotYouLink,
                             style: Theme.of(context).textTheme.headlineMedium),
                       ),
                       SizedBox(height: AppSpacing.medium),
                       Align(
                         alignment: Alignment.centerLeft,
-                        child: Text(AppStrings.forgotPasswordInstruction),
+                        child: Text(l10n.authForgotPasswordInstruction),
                       ),
                       SizedBox(height: AppSpacing.large),
                       TextField(
                         decoration: InputDecoration(
-                          hintText: AppStrings.email,
+                          hintText: l10n.authEmailLabel,
                         ),
                       ),
                       SizedBox(height: AppSpacing.large),
@@ -72,7 +73,7 @@ class NotYouPage extends StatelessWidget {
                         height: 60,
                         child: OutlinedButton(
                           onPressed: () {},
-                          child: const Text(AppStrings.sendEmail),
+                          child: Text(l10n.authSendEmailButton),
                         ),
                       ),
                       SizedBox(height: AppSpacing.large),

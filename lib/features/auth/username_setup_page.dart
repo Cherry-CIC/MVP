@@ -2,6 +2,7 @@ import 'package:cherry_mvp/core/config/config.dart';
 import 'package:cherry_mvp/core/router/router.dart';
 import 'package:cherry_mvp/core/services/services.dart';
 import 'package:cherry_mvp/core/utils/utils.dart';
+import 'package:cherry_mvp/l10n/app_localizations.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -70,7 +71,7 @@ class _UsernameSetupPageState extends State<UsernameSetupPage> {
     if (!isTakenResult.isSuccess) {
       setState(() {
         _isSubmitting = false;
-        _errorText = isTakenResult.error ?? AppStrings.usernameSaveFailed;
+        _errorText = isTakenResult.error ?? AppLocalizations.of(context)!.authUsernameSaveFailed;
       });
       return;
     }
@@ -78,7 +79,7 @@ class _UsernameSetupPageState extends State<UsernameSetupPage> {
     if (isTakenResult.value == true) {
       setState(() {
         _isSubmitting = false;
-        _errorText = AppStrings.usernameTakenError;
+        _errorText = AppLocalizations.of(context)!.authUsernameTakenError;
       });
       return;
     }
@@ -90,7 +91,7 @@ class _UsernameSetupPageState extends State<UsernameSetupPage> {
     if (!saveResult.isSuccess) {
       setState(() {
         _isSubmitting = false;
-        _errorText = saveResult.error ?? AppStrings.usernameSaveFailed;
+        _errorText = saveResult.error ?? AppLocalizations.of(context)!.authUsernameSaveFailed;
       });
       return;
     }
@@ -101,6 +102,7 @@ class _UsernameSetupPageState extends State<UsernameSetupPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return WillPopScope(
       onWillPop: () async {
         await _handleBack();
@@ -129,14 +131,14 @@ class _UsernameSetupPageState extends State<UsernameSetupPage> {
                 ),
                 const SizedBox(height: 22),
                 Text(
-                  AppStrings.usernameSetupTitle,
+                  l10n.authUsernameSetupTitle,
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                     fontWeight: FontWeight.w700,
                   ),
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  AppStrings.usernameSetupSubtitle,
+                  l10n.authUsernameSetupSubtitle,
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
@@ -151,7 +153,7 @@ class _UsernameSetupPageState extends State<UsernameSetupPage> {
                     });
                   },
                   decoration: InputDecoration(
-                    hintText: AppStrings.usernameSetupHint,
+                    hintText: l10n.authUsernameSetupHint,
                     prefixIcon: const Icon(Icons.person_outline),
                     errorText: _errorText,
                   ),
@@ -164,7 +166,7 @@ class _UsernameSetupPageState extends State<UsernameSetupPage> {
                       ? const Center(child: CircularProgressIndicator())
                       : FilledButton(
                           onPressed: _isValid ? _saveUsername : null,
-                          child: const Text(AppStrings.nextButton),
+                          child: Text(l10n.commonNext),
                         ),
                 ),
               ],

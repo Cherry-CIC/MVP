@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:provider/provider.dart';
-import 'package:cherry_mvp/core/config/config.dart';
 import 'package:cherry_mvp/core/router/router.dart';
 import 'package:cherry_mvp/features/login/login_repository.dart';
 import 'package:cherry_mvp/features/login/login_viewmodel.dart';
 import 'package:cherry_mvp/features/welcome/welcome_page.dart';
 import 'package:cherry_mvp/features/welcome/widgets/signup_card.dart';
+import 'package:cherry_mvp/l10n/app_localizations.dart';
 
 @GenerateNiceMocks([MockSpec<LoginRepository>(), MockSpec<NavigationProvider>()])
 import 'auth_ui_test.mocks.dart';
@@ -29,8 +30,15 @@ void main() {
         ChangeNotifierProvider<LoginViewModel>.value(value: viewModel),
         Provider<NavigationProvider>.value(value: mockNavigator),
       ],
-      child: const MaterialApp(
-        home: Scaffold(
+      child: MaterialApp(
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: const Scaffold(
           body: AuthCard(
             onClose: _dummyOnClose,
             mode: AuthMode.login,
@@ -44,8 +52,8 @@ void main() {
     await tester.pumpWidget(createTestWidget());
 
     // Check for allowed providers
-    expect(find.text(AppStrings.continueWithEmail), findsOneWidget);
-    expect(find.text(AppStrings.continueWithGoogle), findsOneWidget);
+    expect(find.text('Continue with email'), findsOneWidget);
+    expect(find.text('Continue with Google'), findsOneWidget);
 
     // Note: Apple only shows on iOS, so in a standard test environment (likely linux/mac),
     // it may or may not show depending on the Platform override.
