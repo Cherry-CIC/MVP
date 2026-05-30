@@ -80,6 +80,8 @@ final class CheckoutRepository implements ICheckoutRepository {
       FirestoreConstants.name: data.name,
       FirestoreConstants.address: data.address,
       FirestoreConstants.postcode: data.postcode,
+      FirestoreConstants.city: data.city,
+      FirestoreConstants.country: data.country,
       FirestoreConstants.lat: data.lat,
       FirestoreConstants.long: data.long,
     };

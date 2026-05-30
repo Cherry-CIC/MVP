@@ -274,6 +274,8 @@ class _DeliveryOptionsState extends State<DeliveryOptions> {
                         final selectedInpost = viewModel.selectedInpost;
                         if (pickupPointSelected && selectedInpost != null) {
                           _populatePickupAddressDetails(selectedInpost);
+                          setState(() => _shippingMethod = null);
+                          viewModel.setSelectedInpostShippingMethod(null);
                           await viewModel.fetchShippingMethodsForInpost(
                             selectedInpost.id,
                             selectedInpost.postcode,
@@ -307,8 +309,12 @@ class _DeliveryOptionsState extends State<DeliveryOptions> {
                                     height: 25,
                                   ),
                                 ),
-                                Text(
-                                  '${selectedInpost.name} ${AppStrings.checkoutLocker}  |',
+                                Expanded(
+                                  child: Text(
+                                    '${selectedInpost.name} ${AppStrings.checkoutLocker}',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
                                 ),
                                 Text(
                                   '${AppStrings.currencySymbol}${_shippingMethod?.price ?? 0.00}',
@@ -326,11 +332,29 @@ class _DeliveryOptionsState extends State<DeliveryOptions> {
                         ),
                         title: Row(
                           spacing: 8,
-                          children: [Icon(Icons.store_outlined, size: 20), Text(_pickupBuilding)],
+                          children: [
+                            Icon(Icons.store_outlined, size: 20),
+                            Expanded(
+                              child: Text(
+                                _pickupBuilding,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
                         ),
                         subtitle: Row(
                           spacing: 8,
-                          children: [Icon(Icons.location_on_outlined, size: 20), Text(_pickupAddress)],
+                          children: [
+                            Icon(Icons.location_on_outlined, size: 20),
+                            Expanded(
+                              child: Text(
+                                _pickupAddress,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
@@ -403,16 +427,23 @@ class _DeliveryOptionsState extends State<DeliveryOptions> {
   void _populatePickupAddressDetails(Inpost selectedInpost) {
     final inpostAddress = selectedInpost.address;
     final inpostAddressSeparator = '; building: ';
+    final separatorIndex = inpostAddress.indexOf(inpostAddressSeparator);
 
-    _pickupBuilding = inpostAddress.substring(
-      inpostAddress.indexOf(inpostAddressSeparator) + inpostAddressSeparator.length,
-    );
-    _pickupAddress =
-        '${inpostAddress.substring(0, inpostAddress.indexOf(inpostAddressSeparator))}, '
-        '${selectedInpost.postcode}';
+    if (separatorIndex >= 0) {
+      _pickupBuilding = inpostAddress.substring(separatorIndex + inpostAddressSeparator.length).trim();
+      _pickupAddress = inpostAddress.substring(0, separatorIndex).trim();
+    } else {
+      _pickupBuilding = selectedInpost.name;
+      _pickupAddress = inpostAddress.trim();
+    }
+
+    _pickupAddress = [_pickupAddress, selectedInpost.postcode].where((part) => part.trim().isNotEmpty).join(', ');
   }
 
   InpostShippingMethod? _getShippingMethod(List<InpostShippingMethod> shippingMethods, PostageSize postageSize) {
-    return shippingMethods.where((method) => method.name.toLowerCase().contains(postageSize.name)).firstOrNull;
+    final matchingMethod = shippingMethods
+        .where((method) => method.name.toLowerCase().contains(postageSize.name))
+        .firstOrNull;
+    return matchingMethod ?? shippingMethods.firstOrNull;
   }
 }

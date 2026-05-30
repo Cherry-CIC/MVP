@@ -155,6 +155,13 @@ class _CheckoutPageState extends State<CheckoutPage> {
               return FilledButton(
                 onPressed: canAttemptPayment
                     ? () async {
+                        if (isPickup && viewModel.selectedInpostShippingMethod == null) {
+                          setState(() {
+                            _errorMessage = AppStrings.checkoutShippingMethodRequired;
+                          });
+                          return;
+                        }
+
                         if (!viewModel.hasPaymentMethod) {
                           setState(() {
                             _errorMessage = AppStrings.checkoutPaymentMethodRequired;
@@ -170,8 +177,6 @@ class _CheckoutPageState extends State<CheckoutPage> {
                         }
 
                         setState(() => _errorMessage = '');
-
-                        await viewModel.storeOrderInFirestore();
 
                         final paid = await viewModel.payWithPaymentSheet(amount: basket.total);
 

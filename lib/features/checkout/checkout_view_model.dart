@@ -98,6 +98,9 @@ class CheckoutViewModel extends ChangeNotifier {
 
   // Payment properties
   bool _hasPaymentMethod = false;
+  String? _lastPaymentIntentId;
+
+  String? get lastPaymentIntentId => _lastPaymentIntentId;
 
   /// Whether a payment method has been set
   bool get hasPaymentMethod => _selectedPaymentType != null || _hasPaymentMethod;
@@ -199,6 +202,7 @@ class CheckoutViewModel extends ChangeNotifier {
     isShippingAddressConfirmed = false;
     _selectedInpost = null;
     _selectedInpostShippingMethod = null;
+    _lastPaymentIntentId = null;
     _basketItems.clear();
     _deliveryChoice = DeliveryType.undefined;
     _createOrderStatus = Status.uninitialized;
@@ -474,6 +478,7 @@ class CheckoutViewModel extends ChangeNotifier {
     }
 
     _createOrderStatus = Status.loading;
+    _lastPaymentIntentId = null;
     notifyListeners();
 
     try {
@@ -497,9 +502,11 @@ class CheckoutViewModel extends ChangeNotifier {
 
         // Present the native PaymentSheet (it will show ApplePay/GooglePay if available)
         await Stripe.instance.presentPaymentSheet();
+        _lastPaymentIntentId = paymentResponse.paymentIntentId;
         return true;
       } else {
         _createOrderStatus = Status.failure(response.error.toString());
+        _lastPaymentIntentId = null;
         _log.severe('Create Payment intent Error :: ${response.error}');
         notifyListeners();
         return false;
@@ -511,11 +518,13 @@ class CheckoutViewModel extends ChangeNotifier {
       _log.severe(
         'Stripe Payment Error :: ${e.error.localizedMessage ?? e.toString()}',
       );
+      _lastPaymentIntentId = null;
       notifyListeners();
       return false;
     } catch (e) {
       _createOrderStatus = Status.failure(e.toString());
       _log.severe('Error making payment::: $e');
+      _lastPaymentIntentId = null;
       notifyListeners();
       return false;
     }
@@ -531,30 +540,45 @@ class CheckoutViewModel extends ChangeNotifier {
       return;
     }
 
-    final Map<String, dynamic> address = switch (_deliveryChoice) {
-      DeliveryType.pickup => {
-        "line1": selectedInpost?.address ?? '',
-        "city": "London",
-        "state": "London",
-        "postal_code": selectedInpost?.postcode ?? '',
-        "country": AppStrings.unitedKingdomText,
-      },
-      DeliveryType.home => {
-        'line1': _shippingAddress?.line1 ?? '',
-        "city": shippingAddressComponents[AddressConstants.cityKey] ?? "",
-        "state": shippingAddressComponents[AddressConstants.stateKey] ?? "",
-        'postal_code': shippingAddressComponents[AddressConstants.postalCodeKey] ?? "",
-        "country": shippingAddressComponents[AddressConstants.countryKey] ?? AppStrings.unitedKingdomText,
-      },
-      // TODO: Handle this case.
-      DeliveryType.undefined => throw UnimplementedError(),
-    };
+    final paymentIntentId = _lastPaymentIntentId?.trim() ?? '';
+    if (paymentIntentId.isEmpty) {
+      _createOrderStatus = Status.failure('Payment intent is missing');
+      notifyListeners();
+      return;
+    }
+
+    if (_deliveryChoice == DeliveryType.undefined) {
+      _createOrderStatus = Status.failure(AppStrings.checkoutDeliveryOptionRequired);
+      notifyListeners();
+      return;
+    }
+
+    if (_deliveryChoice == DeliveryType.pickup && selectedInpost == null) {
+      _createOrderStatus = Status.failure(AppStrings.checkoutPickupLockerRequired);
+      notifyListeners();
+      return;
+    }
+
+    if (_deliveryChoice == DeliveryType.pickup && !_hasCompletePickupPoint(selectedInpost!)) {
+      _createOrderStatus = Status.failure(AppStrings.checkoutPickupDetailsIncomplete);
+      notifyListeners();
+      return;
+    }
+
+    final address = _buildShippingAddress();
+    final selectedShippingMethod = _selectedInpostShippingMethod;
 
     final Map<String, dynamic> orderData = {
       "amount": _toMinorUnits(total),
       "productId": basketItems[0].id,
       "productName": basketItems[0].name,
-      "shipping": {"address": address, "name": 'John Doe'},
+      "paymentIntentId": paymentIntentId,
+      "deliveryMethod": _deliveryChoice == DeliveryType.pickup ? "pickup_point" : "home",
+      if (selectedShippingMethod != null) "shippingMethodId": selectedShippingMethod.id,
+      if (selectedShippingMethod?.carrierCode?.trim().isNotEmpty ?? false)
+        "shippingCarrier": selectedShippingMethod!.carrierCode,
+      "shipping": {"address": address, "name": 'Customer'},
+      if (_deliveryChoice == DeliveryType.pickup) "pickupPoint": _buildPickupPointPayload(selectedInpost!),
     };
     try {
       final result = await checkoutRepository.createOrder(orderData);
@@ -573,6 +597,70 @@ class CheckoutViewModel extends ChangeNotifier {
 
   int _toMinorUnits(double amount) {
     return (amount * 100).round();
+  }
+
+  Map<String, dynamic> _buildShippingAddress() {
+    return switch (_deliveryChoice) {
+      DeliveryType.pickup => {
+        "line1": _pickupAddressLine(selectedInpost!.address),
+        "city": selectedInpost!.city.trim(),
+        "state": "",
+        "postal_code": selectedInpost!.postcode.trim(),
+        "country": _countryCode(selectedInpost!.country),
+      },
+      DeliveryType.home => {
+        "line1": _shippingAddress?.line1 ?? '',
+        "city": shippingAddressComponents[AddressConstants.cityKey] ?? "",
+        "state": shippingAddressComponents[AddressConstants.stateKey] ?? "",
+        "postal_code": shippingAddressComponents[AddressConstants.postalCodeKey] ?? "",
+        "country": _countryCode(
+          shippingAddressComponents[AddressConstants.countryKey] ?? AppStrings.unitedKingdomText,
+        ),
+      },
+      DeliveryType.undefined => {},
+    };
+  }
+
+  Map<String, dynamic> _buildPickupPointPayload(Inpost pickupPoint) {
+    return {
+      "id": pickupPoint.id,
+      "name": pickupPoint.name,
+      "addressLine1": _pickupAddressLine(pickupPoint.address),
+      "city": pickupPoint.city.trim(),
+      "postalCode": pickupPoint.postcode.trim(),
+      "country": _countryCode(pickupPoint.country),
+      if (pickupPoint.lat.trim().isNotEmpty) "latitude": pickupPoint.lat.trim(),
+      if (pickupPoint.long.trim().isNotEmpty) "longitude": pickupPoint.long.trim(),
+    };
+  }
+
+  bool _hasCompletePickupPoint(Inpost pickupPoint) {
+    return pickupPoint.id.trim().isNotEmpty &&
+        pickupPoint.name.trim().isNotEmpty &&
+        _pickupAddressLine(pickupPoint.address).isNotEmpty &&
+        pickupPoint.city.trim().isNotEmpty &&
+        pickupPoint.postcode.trim().isNotEmpty &&
+        _countryCode(pickupPoint.country).length == 2;
+  }
+
+  String _pickupAddressLine(String address) {
+    const inpostBuildingSeparator = '; building: ';
+    final separatorIndex = address.indexOf(inpostBuildingSeparator);
+    if (separatorIndex > 0) {
+      return address.substring(0, separatorIndex).trim();
+    }
+    return address.trim();
+  }
+
+  String _countryCode(String country) {
+    final normalised = country.trim().toUpperCase();
+    if (normalised.length == 2) {
+      return normalised;
+    }
+    if (normalised == AppStrings.unitedKingdomText.toUpperCase()) {
+      return 'GB';
+    }
+    return normalised;
   }
 
   SetupPaymentSheetParameters _buildPaymentSheetParameters(
@@ -694,7 +782,7 @@ class CheckoutViewModel extends ChangeNotifier {
   Future<bool> showPickupPointSelection() async {
     final result = await navigator.navigateTo(AppRoutes.pickupPointSelector);
 
-    return result;
+    return result == true;
   }
 
   void goBack(bool pickupPointSelected) {

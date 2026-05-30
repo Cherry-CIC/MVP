@@ -85,39 +85,14 @@ class DonationRepository implements IDonationRepository {
   @override
   Future<Result<List<PostageSizeInfo>>> fetchPostageSizes() async {
     try {
-      // TODO implement endpoint
-      // final result = await _apiService.get(ApiEndpoints.postageSizes);
-
-      final result = Result<dynamic>.success({
-        "data": [
-          {
-            "id": "rcjK7AppkzE00YyyozcT",
-            "type": "inpost",
-            "size": "small",
-            "description":
-                "Small (Up to 500g): Max dimensions (30cm x 23cm x 10cm). Best for lightweight clothing, single books, or small accessories.",
-          },
-          {
-            "id": "rcjK7AppkzE00YyyozcS",
-            "type": "inpost",
-            "size": "medium",
-            "description":
-                "Medium (Up to 1kg): Max dimensions (40cm x 30cm x 15cm). Suitable for heavier tops, single jeans, or standard shoe boxes.",
-          },
-          {
-            "id": "rcjK7AppkzE00YyyozcU",
-            "type": "inpost",
-            "size": "large",
-            "description":
-                "Large (Up to 2kg): Max dimensions (60cm x 50cm x 50cm). Perfect for thick coats, chunky boots, or bundles of items.",
-          },
-        ],
-      });
+      final result = await _apiService.get<dynamic>(ApiEndpoints.postageSizes);
 
       if (result.isSuccess && result.value != null) {
-        final data = result.value;
-        final List<dynamic> jsonList = data['data'] ?? data;
-        final postageSizes = jsonList.map((json) => PostageSizeInfo.fromJson(json)).toList();
+        final jsonList = _extractPostageSizeList(result.value);
+        final postageSizes = jsonList
+            .whereType<Map>()
+            .map((json) => PostageSizeInfo.fromJson(Map<String, dynamic>.from(json)))
+            .toList();
         return Result.success(postageSizes);
       } else {
         return Result.failure(result.error ?? 'Failed to fetch postage sizes');
@@ -198,7 +173,41 @@ class MockDonationRepository implements IDonationRepository {
 
   @override
   Future<Result<List<PostageSizeInfo>>> fetchPostageSizes() {
-    // TODO: implement fetchPostageSizes
-    throw UnimplementedError();
+    return Future.value(Result.success(_mockPostageSizes()));
   }
+}
+
+List<dynamic> _extractPostageSizeList(dynamic payload) {
+  if (payload is Map<String, dynamic>) {
+    final data = payload['data'];
+    return data is List ? data : const [];
+  }
+
+  return payload is List ? payload : const [];
+}
+
+List<PostageSizeInfo> _mockPostageSizes() {
+  return [
+    PostageSizeInfo(
+      id: 'small',
+      type: 'inpost',
+      size: PostageSize.small,
+      description:
+          'Small (up to 500g): max dimensions 30cm x 23cm x 10cm. Best for lightweight clothing, single books or small accessories.',
+    ),
+    PostageSizeInfo(
+      id: 'medium',
+      type: 'inpost',
+      size: PostageSize.medium,
+      description:
+          'Medium (up to 1kg): max dimensions 40cm x 30cm x 15cm. Good for heavier tops, single jeans or standard shoe boxes.',
+    ),
+    PostageSizeInfo(
+      id: 'large',
+      type: 'inpost',
+      size: PostageSize.large,
+      description:
+          'Large (up to 2kg): max dimensions 60cm x 50cm x 50cm. Useful for coats, chunky boots or small bundles.',
+    ),
+  ];
 }
