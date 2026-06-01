@@ -28,6 +28,7 @@ class PaymentIntentResponse {
 @JsonSerializable()
 class PaymentIntentData {
   final String? paymentIntentId;
+  @JsonKey(name: 'clientSecret')
   final String paymentIntent;
   final String ephemeralKey;
   final String customer;
