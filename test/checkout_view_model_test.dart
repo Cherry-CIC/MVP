@@ -261,7 +261,7 @@ void main() {
       expect(viewModel.status.type, StatusType.success);
       expect(viewModel.showLocker, true);
       expect(viewModel.nearestInposts, hasLength(1));
-      expect(viewModel.nearestInposts.first.name, 'InPost');
+      expect(viewModel.nearestInposts.first.inpost.name, 'InPost');
     });
   });
 }

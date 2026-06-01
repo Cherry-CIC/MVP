@@ -176,7 +176,7 @@ class _PickupPointSelectionPageState extends State<PickupPointSelectionPage> {
         _PickupPointCard(
           pickupPoint: pickupPoint,
           onTap: () {
-            viewModel.setSelectedInpost(pickupPoint);
+            viewModel.setSelectedInpost(pickupPoint.inpost);
             viewModel.goBack(true);
           },
         ),
@@ -232,17 +232,17 @@ class _PickupPointCard extends StatelessWidget {
     required this.onTap,
   });
 
-  final Inpost pickupPoint;
+  final InpostSearchResult pickupPoint;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final addressParts = [
-      pickupPoint.address,
-      pickupPoint.city,
-      pickupPoint.postcode,
-    ].where((part) => part.trim().isNotEmpty).join(', ');
+    final inpost = pickupPoint.inpost;
+    final formattedAddress = pickupPoint.concatenatedAddress;
+
+    final distanceMetres = pickupPoint.distanceMetres;
+    final displayDistance = pickupPoint.displayDistance;
 
     return Material(
       color: theme.colorScheme.surface,
@@ -266,35 +266,34 @@ class _PickupPointCard extends StatelessWidget {
                   color: theme.colorScheme.primaryContainer,
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(
-                  Icons.store_mall_directory_outlined,
-                  color: theme.colorScheme.primary,
-                ),
+                child: Icon(Icons.store_mall_directory_outlined, color: theme.colorScheme.primary),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      pickupPoint.name,
-                      style: theme.textTheme.titleSmall,
-                    ),
+                    Text(inpost.name, style: theme.textTheme.titleSmall),
                     const SizedBox(height: 4),
                     Text(
-                      addressParts,
+                      formattedAddress,
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
                     ),
+
+                    if (distanceMetres != 0)
+                      Text(
+                        'Distance: $displayDistance',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
                   ],
                 ),
               ),
               const SizedBox(width: 8),
-              Icon(
-                Icons.chevron_right,
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
+              Icon(Icons.chevron_right, color: theme.colorScheme.onSurfaceVariant),
             ],
           ),
         ),

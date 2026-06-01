@@ -19,3 +19,27 @@ class Inpost {
     required this.long,
   });
 }
+
+class InpostSearchResult {
+  final Inpost inpost;
+  final int distanceMetres;
+
+  InpostSearchResult({
+    required this.inpost,
+    required this.distanceMetres,
+  });
+
+  String get displayDistance {
+    if (distanceMetres < 1000) return '$distanceMetres m';
+    final km = distanceMetres / 1000;
+    return '${km.toStringAsFixed(km % 1 == 0 ? 0 : 1)} km';
+  }
+
+  String get concatenatedAddress {
+    return [
+      inpost.address,
+      inpost.city,
+      inpost.postcode,
+    ].where((part) => part.trim().isNotEmpty).join(', ');
+  }
+}

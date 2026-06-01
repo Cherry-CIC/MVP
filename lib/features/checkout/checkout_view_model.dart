@@ -33,8 +33,8 @@ class CheckoutViewModel extends ChangeNotifier {
 
   final List<Product> _basketItems = [];
 
-  final List<Inpost> _nearestInposts = [];
-  List<Inpost> get nearestInposts => _nearestInposts;
+  final List<InpostSearchResult> _nearestInposts = [];
+  List<InpostSearchResult> get nearestInposts => _nearestInposts;
 
   final List<InpostShippingMethod> _inpostShippingMethods = [];
   List<InpostShippingMethod> get inpostShippingMethods => _inpostShippingMethods;
@@ -309,7 +309,7 @@ class CheckoutViewModel extends ChangeNotifier {
       final result = await checkoutRepository.fetchNearestInposts(postalCode, country);
       final parsedInposts = result.isSuccess && result.value != null
           ? _parseInpostList(result.value)
-          : const <Inpost>[];
+          : const <InpostSearchResult>[];
 
       _nearestInposts
         ..clear()
@@ -700,14 +700,14 @@ class CheckoutViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  List<Inpost> _parseInpostList(dynamic payload) {
+  List<InpostSearchResult> _parseInpostList(dynamic payload) {
     final dynamic listData = payload is Map<String, dynamic>
         ? (payload['pickupPoints'] ?? payload['lockers'] ?? payload['items'])
         : payload;
 
     if (listData is! List) return [];
 
-    final lockers = <Inpost>[];
+    final lockers = <InpostSearchResult>[];
     for (final item in listData) {
       final locker = _parseInpostItem(item);
       if (locker != null) {
@@ -727,7 +727,7 @@ class CheckoutViewModel extends ChangeNotifier {
     return shippingMethods;
   }
 
-  Inpost? _parseInpostItem(dynamic item) {
+  InpostSearchResult? _parseInpostItem(dynamic item) {
     if (item is! Map) return null;
     final map = Map<String, dynamic>.from(item);
 
@@ -745,24 +745,26 @@ class CheckoutViewModel extends ChangeNotifier {
     final name = readFirst(['name', 'lockerName']);
     final address = readFirst(['addressLine1', 'line1', 'street']);
     final postcode = readFirst(['postcode', 'postalCode', 'postCode']);
-    final city = readFirst(['city']);
-    final country = readFirst(['country']);
+    final city = map['city'].toString();
+    final country = map['country'].toString();
     final lat = readFirst(['lat', 'latitude']);
     final long = readFirst(['long', 'lng', 'longitude']);
-
     if (id.isEmpty || name.isEmpty || address.isEmpty || postcode.isEmpty) {
       return null;
     }
 
-    return Inpost(
-      id: id,
-      name: name,
-      address: address,
-      postcode: postcode,
-      city: city,
-      country: country,
-      lat: lat,
-      long: long,
+    return InpostSearchResult(
+      inpost: Inpost(
+        id: id,
+        name: name,
+        address: address,
+        postcode: postcode,
+        city: city,
+        country: country,
+        lat: lat,
+        long: long,
+      ),
+      distanceMetres: map['distanceMeters'],
     );
   }
 
