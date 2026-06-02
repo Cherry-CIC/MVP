@@ -30,9 +30,9 @@ class InpostSearchResult {
   });
 
   String get displayDistance {
-    if (distanceMetres < 1000) return '$distanceMetres m';
-    final km = distanceMetres / 1000;
-    return '${km.toStringAsFixed(km % 1 == 0 ? 0 : 1)} km';
+    // if (distanceMetres < 1000) return '$distanceMetres m';
+    final miles = distanceMetres * 0.000621371;
+    return '${miles.toStringAsFixed(miles % 1 == 0 ? 0 : 2)} mi';
   }
 
   String get concatenatedAddress {
