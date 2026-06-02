@@ -178,7 +178,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
 
                         setState(() => _errorMessage = '');
 
-                        final paid = await viewModel.payWithPaymentSheet(amount: basket.total);
+                        final paid = await viewModel.payWithPaymentSheet(
+                          amountMinusSecurityFee: basket.totalWithoutSecurityFee,
+                        );
 
                         if (paid) {
                           await viewModel.createOrder();

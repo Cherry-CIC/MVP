@@ -18,6 +18,8 @@ class Product {
   final double donation;
   @JsonKey(fromJson: _parseDouble)
   final double price;
+  @JsonKey(fromJson: _parseDouble)
+  final double? securityFee;
   @JsonKey(fromJson: _parseInt)
   final int likes;
   @JsonKey(fromJson: _parseInt)
@@ -41,6 +43,7 @@ class Product {
     required this.productImages,
     required this.donation,
     required this.price,
+    required this.securityFee,
     required this.likes,
     required this.number,
     required this.size,

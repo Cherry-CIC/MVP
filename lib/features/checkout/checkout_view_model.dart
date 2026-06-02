@@ -75,14 +75,17 @@ class CheckoutViewModel extends ChangeNotifier {
   /// Total price of all items in the basket
   double get itemTotal => _basketItems.fold(0, (sum, item) => sum + item.price);
 
-  /// Security fee calculated as 10% of item total
-  double get securityFee => itemTotal * 0.1;
+  /// Security fee retrieved from product from backend
+  double get securityFee => _basketItems.fold(0, (sum, item) => sum + (item.securityFee ?? 0));
 
   /// postage fee
   double get postage => _selectedInpostShippingMethod?.price ?? 0.00;
 
   /// Total order amount including all fees
   double get total => itemTotal + securityFee + postage;
+
+  /// TOTAL order amount without security fee (see https://github.com/Cherry-CIC/MVP/issues/423)
+  double get totalWithoutSecurityFee => itemTotal + postage;
 
   // Shipping Address properties
   PlaceDetails? _shippingAddress;
@@ -468,7 +471,7 @@ class CheckoutViewModel extends ChangeNotifier {
     }
   }
 
-  Future<bool> payWithPaymentSheet({required double amount}) async {
+  Future<bool> payWithPaymentSheet({required double amountMinusSecurityFee}) async {
     if (_selectedPaymentType == null) {
       _createOrderStatus = Status.failure(
         AppStrings.checkoutPaymentMethodRequired,
@@ -483,7 +486,7 @@ class CheckoutViewModel extends ChangeNotifier {
 
     try {
       // To create a PaymentIntent and return the client_secret
-      final response = await checkoutRepository.createPaymentIntent(amount);
+      final response = await checkoutRepository.createPaymentIntent(amountMinusSecurityFee);
 
       if (response.isSuccess && response.value != null) {
         final paymentResponse = response.value!;

@@ -171,6 +171,7 @@ class MockDonationRepository implements IDonationRepository {
       productImages: request.productImages ?? [],
       donation: request.donation,
       price: request.price,
+      securityFee: 7.00,
       likes: request.likes,
       number: request.number,
       userId: 'mock_user_id',
