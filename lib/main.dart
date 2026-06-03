@@ -63,6 +63,7 @@ class MyApp extends StatelessWidget {
     return Consumer2<NavigationProvider, ThemeNotifier>(
       builder: (context, navigatorService, themeNotifier, child) {
         return MaterialApp(
+
           debugShowCheckedModeBanner: false,
           localizationsDelegates: const [
             AppLocalizations.delegate,
