@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cherry_mvp/core/services/firebase_auth_service.dart';
+import 'package:cherry_mvp/l10n/app_localizations.dart';
 
 class VerifyEmailPage extends StatefulWidget {
   const VerifyEmailPage({super.key});
@@ -30,16 +31,17 @@ class _VerifyEmailPageState extends State<VerifyEmailPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       body: Center(
         child: Column(
           spacing: 50,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text('Check your email inbox for a Verification email'),
+            Text(l10n.authVerifyEmailBody),
             ElevatedButton(
               onPressed: () async => await _firebaseAuthService.sendVerificationEmail(),
-              child: Text('Resend Verification Email'),
+              child: Text(l10n.authResendVerificationEmail),
             ),
           ],
         ),

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:cherry_mvp/core/config/config.dart';
 import 'package:cherry_mvp/features/register/register_viewmodel.dart';
 import 'package:cherry_mvp/features/register/widgets/register_form.dart';
+import 'package:cherry_mvp/l10n/app_localizations.dart';
 
 class RegisterPage extends StatelessWidget {
   const RegisterPage({super.key});
@@ -19,7 +20,7 @@ class RegisterPage extends StatelessWidget {
           ),
           onPressed: () => context.read<RegisterViewModel>().goBack(),
         ),
-        title: const Text('Register'),
+        title: Text(AppLocalizations.of(context)!.authRegisterTitle),
       ),
       body: const RegisterForm(),
     );

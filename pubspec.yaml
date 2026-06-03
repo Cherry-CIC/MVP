@@ -8,6 +8,9 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  intl: any
   firebase_core: ^4.7.0
   firebase_auth: ^6.4.0
   firebase_storage: ^13.3.0
@@ -34,7 +37,7 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  mockito: ^5.6.5
+  mockito: ^5.5.0
   flutter_lints: ^6.0.0
   json_serializable: ^6.13.2
   build_runner: ^2.15.0
@@ -45,6 +48,7 @@ dependency_overrides:
   meta: ^1.18.2
 
 flutter:
+  generate: true
   uses-material-design: true
   assets:
     - assets/images/

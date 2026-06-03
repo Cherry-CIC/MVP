@@ -17,6 +17,7 @@ import 'package:cherry_mvp/features/checkout/widgets/select_payment_type_bottom_
 import 'package:cherry_mvp/features/checkout/widgets/share_location_dialog.dart';
 import 'package:cherry_mvp/features/checkout/widgets/shipping_address_widget.dart';
 import 'package:cherry_mvp/features/checkout/widgets/shipping_list_item.dart';
+import 'package:cherry_mvp/l10n/app_localizations.dart';
 
 class DeliveryOptions extends StatefulWidget {
   const DeliveryOptions({super.key});
@@ -62,6 +63,7 @@ class _DeliveryOptionsState extends State<DeliveryOptions> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final basket = context.read<CheckoutViewModel>();
     return SliverPadding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -232,7 +234,7 @@ class _DeliveryOptionsState extends State<DeliveryOptions> {
             onChanged: (value) {
               if (postcodeController.text.isEmpty && context.read<CheckoutViewModel>().selectedInpost == null) {
                 Fluttertoast.showToast(
-                  msg: "Postcode required",
+                  msg: l10n.checkoutPostcodeRequiredToast,
                   backgroundColor: AppColors.red,
                   textColor: AppColors.white,
                 );
@@ -343,7 +345,7 @@ class _DeliveryOptionsState extends State<DeliveryOptions> {
                                         _delivery = null;
                                       });
                                     },
-                                    child: Text("Change pickup point"),
+                                    child: Text(l10n.checkoutChangePickupPoint),
                                   ),
                                 ),
                                 CheckboxListTile(

@@ -13,19 +13,21 @@ import 'package:cherry_mvp/features/products/widgets/product_highlight_title.dar
 import 'package:cherry_mvp/features/products/widgets/product_information.dart';
 import 'package:cherry_mvp/features/products/widgets/seller_information.dart';
 import 'package:cherry_mvp/features/products/widgets/product_header_carousel.dart';
+import 'package:cherry_mvp/l10n/app_localizations.dart';
 
 class ProductPage extends StatelessWidget {
   const ProductPage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final viewModel = Provider.of<ProductViewModel>(context);
     final product = viewModel.product;
 
     if (product == null) {
       return Scaffold(
         appBar: AppBar(),
-        body: const Center(child: Text('No product selected')),
+        body: Center(child: Text(l10n.productNoProductSelected)),
       );
     }
 
@@ -69,7 +71,7 @@ class ProductPage extends StatelessWidget {
               ),
               const Divider(thickness: 8),
               ListTile(
-                title: Text(AppStrings.productPageDescription),
+                title: Text(l10n.productDescriptionHeading),
                 titleTextStyle: Theme.of(context).textTheme.titleSmall,
                 subtitle: Text(product.description),
                 subtitleTextStyle: TextStyle(
@@ -121,7 +123,7 @@ class ProductPage extends StatelessWidget {
                         height: 56,
                         child: OutlinedButton(
                           onPressed: () {},
-                          child: Text(AppStrings.productPageMakeOffer, textAlign: TextAlign.center),
+                          child: Text(l10n.productMakeOfferButton, textAlign: TextAlign.center),
                         ),
                       ),
                     ),
@@ -137,7 +139,7 @@ class ProductPage extends StatelessWidget {
                               AppRoutes.checkout,
                             );
                           },
-                          child: Text(AppStrings.productPageBuyNow, textAlign: TextAlign.center),
+                          child: Text(l10n.productBuyNowButton, textAlign: TextAlign.center),
                         ),
                       ),
                     ),

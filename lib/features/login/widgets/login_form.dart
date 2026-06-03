@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
 import 'package:cherry_mvp/features/login/login_viewmodel.dart';
-import 'package:cherry_mvp/core/config/config.dart';
 import 'package:cherry_mvp/core/utils/utils.dart';
 import 'package:cherry_mvp/core/router/router.dart';
 import 'package:cherry_mvp/features/welcome/widgets/auth_form_shell.dart';
 import 'package:cherry_mvp/features/shared_widgets/labeled_input_field.dart';
+import 'package:cherry_mvp/l10n/app_localizations.dart';
 
 class LoginForm extends StatefulWidget {
   const LoginForm({super.key});
@@ -63,6 +63,7 @@ class LoginFormState extends State<LoginForm> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final navigator = Provider.of<NavigationProvider>(context, listen: false);
 
     return AuthFormShell(
@@ -78,8 +79,8 @@ class LoginFormState extends State<LoginForm> {
 
               // Email Field
               LabeledInputField(
-                label: 'Email',
-                hint: 'Enter your email',
+                label: l10n.authEmailLabel,
+                hint: l10n.authEmailHint,
                 controller: _emailController,
                 validator: validateEmail,
                 prefixIcon: Icons.email,
@@ -90,8 +91,8 @@ class LoginFormState extends State<LoginForm> {
 
               // Password Field
               LabeledInputField(
-                label: 'Password',
-                hint: 'Enter your password',
+                label: l10n.authPasswordLabel,
+                hint: l10n.authPasswordHint,
                 controller: _passwordController,
                 validator: validatePassword,
                 prefixIcon: Icons.lock,
@@ -124,13 +125,13 @@ class LoginFormState extends State<LoginForm> {
                                       _passwordController.text,
                                     );
                                     if (viewModel.status.type == StatusType.success) {
-                                      Fluttertoast.showToast(msg: "Login Successful");
+                                      Fluttertoast.showToast(msg: l10n.authLoginSuccessToast);
                                     } else {
                                       Fluttertoast.showToast(msg: viewModel.status.message ?? "");
                                     }
                                   }
                                 },
-                                child: const Text("Submit"),
+                                child: Text(l10n.commonSubmit),
                               ),
                             ),
                     ],
@@ -144,7 +145,7 @@ class LoginFormState extends State<LoginForm> {
                 width: double.infinity,
                 child: TextButton(
                   onPressed: () => navigator.replaceWith(AppRoutes.register),
-                  child: Text(AppStrings.createAccount),
+                  child: Text(l10n.authCreateAccountButton),
                 ),
               ),
 
@@ -154,7 +155,7 @@ class LoginFormState extends State<LoginForm> {
                   onPressed: () {},
                   child: Center(
                     child: Text(
-                      AppStrings.forgotPassword,
+                      l10n.authForgotPassword,
                       style: Theme.of(context).textTheme.labelSmall,
                     ),
                   ),

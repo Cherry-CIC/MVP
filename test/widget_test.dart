@@ -1,6 +1,8 @@
 import 'package:cherry_mvp/core/config/config.dart';
 import 'package:cherry_mvp/features/categories/widget/category_error_widget.dart';
+import 'package:cherry_mvp/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -10,6 +12,13 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: AppLocalizations.supportedLocales,
         home: CategoryErrorWidget(
           errorMessage: 'Network timeout',
           onRetry: () {

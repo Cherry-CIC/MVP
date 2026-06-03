@@ -9,6 +9,7 @@ import 'package:cherry_mvp/core/utils/utils.dart';
 import 'package:cherry_mvp/features/register/register_viewmodel.dart';
 import 'package:cherry_mvp/features/shared_widgets/labeled_input_field.dart';
 import 'package:cherry_mvp/features/welcome/widgets/auth_form_shell.dart';
+import 'package:cherry_mvp/l10n/app_localizations.dart';
 
 class RegisterForm extends StatefulWidget {
   const RegisterForm({super.key});
@@ -112,6 +113,7 @@ class _RegisterFormState extends State<RegisterForm> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final navigator = Provider.of<NavigationProvider>(context, listen: false);
 
     return AuthFormShell(
@@ -151,8 +153,8 @@ class _RegisterFormState extends State<RegisterForm> {
 
               // Username Field
               LabeledInputField(
-                label: 'Username',
-                hint: 'Enter your username',
+                label: l10n.authUsernameLabel,
+                hint: l10n.authUsernameHint,
                 controller: _userNameController,
                 validator: validateUsername,
                 prefixIcon: Icons.person,
@@ -161,8 +163,8 @@ class _RegisterFormState extends State<RegisterForm> {
 
               // FirstName Field
               LabeledInputField(
-                label: 'First Name',
-                hint: 'Enter your first name',
+                label: l10n.authFirstNameLabel,
+                hint: l10n.authFirstNameHint,
                 controller: _firstNameController,
                 validator: validateFirstName,
                 prefixIcon: Icons.person,
@@ -171,8 +173,8 @@ class _RegisterFormState extends State<RegisterForm> {
 
               // Email Field
               LabeledInputField(
-                label: 'Email',
-                hint: 'Enter your email',
+                label: l10n.authEmailLabel,
+                hint: l10n.authEmailHint,
                 controller: _emailController,
                 validator: validateEmail,
                 prefixIcon: Icons.email,
@@ -182,8 +184,8 @@ class _RegisterFormState extends State<RegisterForm> {
 
               // Phone Number
               LabeledInputField(
-                label: 'Phone Number',
-                hint: 'Enter your phone number',
+                label: l10n.authPhoneLabel,
+                hint: l10n.authPhoneHint,
                 controller: _phoneNumberController,
                 validator: validatePhoneNumber,
                 prefixIcon: Icons.phone,
@@ -193,8 +195,8 @@ class _RegisterFormState extends State<RegisterForm> {
 
               // Password Field
               LabeledInputField(
-                label: 'Password',
-                hint: 'Enter your password',
+                label: l10n.authPasswordLabel,
+                hint: l10n.authPasswordHint,
                 controller: _passwordController,
                 validator: validatePassword,
                 prefixIcon: Icons.lock,
@@ -204,8 +206,8 @@ class _RegisterFormState extends State<RegisterForm> {
 
               // Confirm Password Field
               LabeledInputField(
-                label: 'Confirm Password',
-                hint: 'Confirm your password',
+                label: l10n.authConfirmPasswordLabel,
+                hint: l10n.authConfirmPasswordHint,
                 controller: _confirmPasswordController,
                 validator: (value) => validateConfirmPassword(value, _passwordController.text),
                 prefixIcon: Icons.lock,
@@ -236,11 +238,11 @@ class _RegisterFormState extends State<RegisterForm> {
                                     if (viewModel.status.type == StatusType.failure) {
                                       Fluttertoast.showToast(msg: viewModel.status.message ?? "");
                                     } else if (viewModel.status.type == StatusType.success) {
-                                      Fluttertoast.showToast(msg: "Registration Successful");
+                                      Fluttertoast.showToast(msg: l10n.authRegisterSuccessToast);
                                     }
                                   }
                                 },
-                                child: const Text("Submit"),
+                                child: Text(l10n.commonSubmit),
                               ),
                             ),
                     ],
@@ -256,9 +258,9 @@ class _RegisterFormState extends State<RegisterForm> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Text("Already have an account? "),
+                    Text(l10n.authAlreadyHaveAccountPrompt),
                     Text(
-                      "Login",
+                      l10n.authLoginButton,
                       style: TextStyle(
                         color: Theme.of(context).colorScheme.primary,
                       ),

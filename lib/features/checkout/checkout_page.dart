@@ -10,6 +10,7 @@ import 'package:cherry_mvp/features/checkout/payment_type.dart';
 import 'package:cherry_mvp/features/checkout/widgets/basket_list_item.dart';
 import 'package:cherry_mvp/features/checkout/widgets/delivery_options.dart';
 import 'package:cherry_mvp/features/checkout/widgets/select_payment_type_bottom_sheet.dart';
+import 'package:cherry_mvp/l10n/app_localizations.dart';
 
 class CheckoutPage extends StatefulWidget {
   const CheckoutPage({super.key});
@@ -46,14 +47,15 @@ class _CheckoutPageState extends State<CheckoutPage> {
     final status = vm.createOrderStatus.type;
 
     if (status == StatusType.failure) {
+      final l10n = AppLocalizations.of(context)!;
       Fluttertoast.showToast(
-        msg: vm.createOrderStatus.message ?? "oops! Something went wrong",
+        msg: vm.createOrderStatus.message ?? l10n.checkoutSomethingWentWrongToast,
       );
       vm.resetCreateOrderStatus();
     }
 
     if (status == StatusType.success) {
-      Fluttertoast.showToast(msg: "Payment Successful");
+      Fluttertoast.showToast(msg: AppLocalizations.of(context)!.checkoutPaymentSuccessfulToast);
       vm.resetCreateOrderStatus();
       vm.gotoCheckoutComplete();
     }
@@ -61,6 +63,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final basket = context.read<CheckoutViewModel>();
 
     return Scaffold(
@@ -216,7 +219,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                         color: Colors.white,
                       ),
                     )
-                  : Text(AppStrings.checkoutPay),
+                  : Text(l10n.checkoutPayButton),
             );
           },
         ),

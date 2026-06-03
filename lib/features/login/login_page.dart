@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:cherry_mvp/core/config/config.dart';
 import 'package:cherry_mvp/features/login/login_viewmodel.dart';
 import 'package:cherry_mvp/features/login/widgets/login_form.dart';
+import 'package:cherry_mvp/l10n/app_localizations.dart';
 
 class LoginPage extends StatelessWidget {
   const LoginPage({super.key});
@@ -19,7 +20,7 @@ class LoginPage extends StatelessWidget {
           ),
           onPressed: () => context.read<LoginViewModel>().goBack(),
         ),
-        title: const Text('Login'),
+        title: Text(AppLocalizations.of(context)!.authLoginButton),
       ),
       body: const LoginForm(),
     );
