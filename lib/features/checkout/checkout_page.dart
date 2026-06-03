@@ -161,6 +161,10 @@ class _CheckoutPageState extends State<CheckoutPage> {
                           });
                           return;
                         }
+                        if (isPickup && viewModel.mobilePhoneNumber.isEmpty) {
+                          setState(() => _errorMessage = AppStrings.checkoutMobilePhoneRequired);
+                          return;
+                        }
 
                         if (!viewModel.hasPaymentMethod) {
                           setState(() {

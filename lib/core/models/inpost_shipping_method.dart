@@ -11,8 +11,6 @@ class InpostShippingMethod {
   @JsonKey(fromJson: _parseDouble)
   final double price;
   final String? currency;
-  final String? carrierCode;
-  final String? carrierName;
   final String checkoutIdentifier;
   const InpostShippingMethod({
     required this.id,
@@ -21,8 +19,6 @@ class InpostShippingMethod {
     required this.deliveryMethodType,
     required this.price,
     required this.currency,
-    required this.carrierCode,
-    required this.carrierName,
     required this.checkoutIdentifier,
   });
 
@@ -41,6 +37,6 @@ class InpostShippingMethod {
 
   @override
   String toString() {
-    return 'InpostShippingMethod{id: $id, name: $name, deliveryType: $deliveryType, deliveryMethodType: $deliveryMethodType, price: $price, currency: $currency, carrierCode: $carrierCode, carrierName: $carrierName, checkoutIdentifier: $checkoutIdentifier}';
+    return 'InpostShippingMethod{id: $id, name: $name, deliveryType: $deliveryType, deliveryMethodType: $deliveryMethodType, price: $price, currency: $currency, checkoutIdentifier: $checkoutIdentifier}';
   }
 }

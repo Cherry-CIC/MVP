@@ -239,6 +239,7 @@ class AppStrings {
   static const checkoutPickupDetailsIncomplete = 'Selected pick-up point is missing address details';
   static const checkoutFindNearestPickupPoints = 'Find pick-up points';
   static const checkoutNearestPickupPoints = 'Nearest pick-up points';
+  static const checkoutMobilePhoneRequired = 'A mobile phone number is required for InPost pickup';
   static const checkoutPickupPostcodeRequired = 'Please enter a postcode';
   static const checkoutPickupPostcodeInvalid = 'Please enter a valid UK postcode';
 
@@ -344,6 +345,7 @@ class AppStrings {
   static const address = 'Address';
   static const postCode = 'Postcode';
   static const city = 'City';
+  static const mobilePhoneNumber = 'Mobile phone number';
   static const useAsDefaultAddress = 'Use as my Default address';
   static const wantToShareLocation = 'Do you want to share your location?';
   static const noPickupPointAvailable = 'Pick-up points are currently unavailable. Please try again later.';

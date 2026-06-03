@@ -30,12 +30,13 @@ class _DeliveryOptionsState extends State<DeliveryOptions> {
   // final TextEditingController addressController = TextEditingController();
   // final TextEditingController postcodeController = TextEditingController();
   // final TextEditingController cityController = TextEditingController();
+  final TextEditingController _mobilePhoneController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       final vm = context.read<CheckoutViewModel>();
 
       if (vm.deliveryChoice != DeliveryType.undefined) {
@@ -43,6 +44,10 @@ class _DeliveryOptionsState extends State<DeliveryOptions> {
           _delivery = vm.deliveryChoice;
         });
       }
+      final profile = await vm.fetchUserProfile();
+      final mobilePhone = profile?.phoneNumber ?? '';
+      _mobilePhoneController.text = mobilePhone;
+      vm.mobilePhoneNumber = mobilePhone;
     });
   }
 
@@ -364,7 +369,32 @@ class _DeliveryOptionsState extends State<DeliveryOptions> {
               ),
             ],
           ),
-
+          const Divider(height: 32),
+          Text(
+            AppStrings.mobilePhoneNumber,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 8),
+          TextField(
+            controller: _mobilePhoneController,
+            keyboardType: TextInputType.phone,
+            decoration: InputDecoration(
+              hintText: AddressConstants.mobilePhoneHintText,
+              border: OutlineInputBorder(
+                borderSide: BorderSide(
+                  color: Theme.of(context).colorScheme.outline,
+                ),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderSide: BorderSide(
+                  color: Theme.of(context).colorScheme.outline,
+                ),
+              ),
+            ),
+            onSubmitted: (value) => viewModel.mobilePhoneNumber = value,
+          ),
           // Show address input field when home delivery is selected
           if (_delivery == DeliveryType.home) ...[
             const SizedBox(height: 16),
@@ -426,7 +456,7 @@ class _DeliveryOptionsState extends State<DeliveryOptions> {
 
   void _populatePickupAddressDetails(Inpost selectedInpost) {
     final inpostAddress = selectedInpost.address;
-    final inpostAddressSeparator = '; building: ';
+    final inpostAddressSeparator = AddressConstants.inpostAddressSeparator;
     final separatorIndex = inpostAddress.indexOf(inpostAddressSeparator);
 
     if (separatorIndex >= 0) {

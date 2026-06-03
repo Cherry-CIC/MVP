@@ -1,3 +1,4 @@
+import 'package:cherry_mvp/core/models/model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cherry_mvp/core/config/firestore_constants.dart';
 import 'package:cherry_mvp/core/models/inpost.dart';
@@ -18,6 +19,7 @@ abstract class ICheckoutRepository {
 
   Future<Result<PaymentIntentResponse>> createPaymentIntent(double amount);
   Future<Result> createOrder(Map<String, dynamic> order);
+  Future<Result<UserCredentials>> fetchUserProfile();
 }
 
 final class CheckoutRepository implements ICheckoutRepository {
@@ -175,6 +177,25 @@ final class CheckoutRepository implements ICheckoutRepository {
       } else {
         return Result.failure(
           result.error ?? 'Error creating payment, please try again later',
+        );
+      }
+    } catch (e) {
+      return Result.failure(e.toString());
+    }
+  }
+
+  @override
+  Future<Result<UserCredentials>> fetchUserProfile() async {
+    try {
+      final result = await _apiService.get(ApiEndpoints.profile);
+
+      if (result.isSuccess && result.value != null) {
+        final data = result.value['data'];
+        final userProfile = UserCredentials.fromFirestore(data, data['id']);
+        return Result.success(userProfile);
+      } else {
+        return Result.failure(
+          result.error ?? 'Error fetching profile, please try again later',
         );
       }
     } catch (e) {

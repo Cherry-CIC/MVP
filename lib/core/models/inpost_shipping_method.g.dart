@@ -15,8 +15,6 @@ InpostShippingMethod _$InpostShippingMethodFromJson(
   deliveryMethodType: json['deliveryMethodType'] as String,
   price: InpostShippingMethod._parseDouble(json['price']),
   currency: json['currency'] as String?,
-  carrierCode: json['carrierCode'] as String?,
-  carrierName: json['carrierName'] as String?,
   checkoutIdentifier: json['checkoutIdentifier'] as String,
 );
 
@@ -29,7 +27,5 @@ Map<String, dynamic> _$InpostShippingMethodToJson(
   'deliveryMethodType': instance.deliveryMethodType,
   'price': instance.price,
   'currency': instance.currency,
-  'carrierCode': instance.carrierCode,
-  'carrierName': instance.carrierName,
   'checkoutIdentifier': instance.checkoutIdentifier,
 };

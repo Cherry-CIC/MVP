@@ -22,4 +22,5 @@ class ApiEndpoints {
 
   // Auth related
   static const String deleteAccount = '$_apiPrefix/auth/account';
+  static const String profile = '$_apiPrefix/auth/profile';
 }

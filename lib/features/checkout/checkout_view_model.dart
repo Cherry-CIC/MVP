@@ -1,10 +1,10 @@
+import 'package:cherry_mvp/core/models/model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:logging/logging.dart';
 import 'package:cherry_mvp/core/config/config.dart';
 import 'package:cherry_mvp/core/models/inpost.dart';
 import 'package:cherry_mvp/core/models/inpost_shipping_method.dart';
-import 'package:cherry_mvp/core/models/product.dart';
 import 'package:cherry_mvp/core/router/nav_provider.dart';
 import 'package:cherry_mvp/core/router/nav_routes.dart';
 import 'package:cherry_mvp/core/utils/utils.dart';
@@ -41,6 +41,8 @@ class CheckoutViewModel extends ChangeNotifier {
 
   Inpost? _selectedInpost;
   Inpost? get selectedInpost => _selectedInpost;
+
+  String mobilePhoneNumber = '';
 
   InpostShippingMethod? _selectedInpostShippingMethod;
   InpostShippingMethod? get selectedInpostShippingMethod => _selectedInpostShippingMethod;
@@ -238,65 +240,66 @@ class CheckoutViewModel extends ChangeNotifier {
     return postcodePattern.hasMatch(postalCode.trim());
   }
 
-  /// Processes the checkout order
-  /// Returns true if successful, false if validation fails or error occurs
-  Future<bool> processCheckout() async {
-    if (!canCheckout) return false;
-    if (!validateShippingAddress()) return false;
-
-    try {
-      // Prepare order data for API call
-      final Map<String, dynamic> orderData = {
-        'items': basketItems
-            .map(
-              (item) => {
-                'id': item.id,
-                'name': item.name,
-                'price': item.price,
-                // Add other product fields as needed
-              },
-            )
-            .toList(),
-        'shipping_address': {
-          'formatted_address': formattedShippingAddress,
-          AddressConstants.streetKey: shippingAddressComponents[AddressConstants.streetKey],
-          AddressConstants.cityKey: shippingAddressComponents[AddressConstants.cityKey],
-          AddressConstants.stateKey: shippingAddressComponents[AddressConstants.stateKey],
-          'postal_code': shippingAddressComponents[AddressConstants.postalCodeKey],
-          AddressConstants.countryKey: shippingAddressComponents[AddressConstants.countryKey],
-          'latitude': _shippingAddress?.latitude,
-          'longitude': _shippingAddress?.longitude,
-        },
-        'totals': {
-          'item_total': itemTotal,
-          'security_fee': securityFee,
-          'postage': postage,
-          'total': total,
-        },
-      };
-
-      // Validate order data structure
-      if (orderData['items'] == null || (orderData['items'] as List).isEmpty) {
-        return false;
-      }
-
-      // Call the repository to create the order via API
-      final result = await checkoutRepository.createOrder(orderData);
-
-      if (result.isSuccess) {
-        _log.info('Checkout processed successfully');
-        return true;
-      } else {
-        _log.warning('Checkout failed: ${result.error}');
-        return false;
-      }
-    } catch (e) {
-      // Log error for debugging purposes
-      _log.severe('Checkout error: $e');
-      debugPrint('${AddressConstants.checkoutError}: $e');
-      return false;
-    }
-  }
+  // TODO this seems extraneous and incorrect. the same behaviour occurs in createOrder() below. Commenting out for the moment.
+  // /// Processes the checkout order
+  // /// Returns true if successful, false if validation fails or error occurs
+  // Future<bool> processCheckout() async {
+  //   if (!canCheckout) return false;
+  //   if (!validateShippingAddress()) return false;
+  //
+  //   try {
+  //     // Prepare order data for API call
+  //     final Map<String, dynamic> orderData = {
+  //       'items': basketItems
+  //           .map(
+  //             (item) => {
+  //               'id': item.id,
+  //               'name': item.name,
+  //               'price': item.price,
+  //               // Add other product fields as needed
+  //             },
+  //           )
+  //           .toList(),
+  //       'shipping_address': {
+  //         'formatted_address': formattedShippingAddress,
+  //         AddressConstants.streetKey: shippingAddressComponents[AddressConstants.streetKey],
+  //         AddressConstants.cityKey: shippingAddressComponents[AddressConstants.cityKey],
+  //         AddressConstants.stateKey: shippingAddressComponents[AddressConstants.stateKey],
+  //         'postal_code': shippingAddressComponents[AddressConstants.postalCodeKey],
+  //         AddressConstants.countryKey: shippingAddressComponents[AddressConstants.countryKey],
+  //         'latitude': _shippingAddress?.latitude,
+  //         'longitude': _shippingAddress?.longitude,
+  //       },
+  //       'totals': {
+  //         'item_total': itemTotal,
+  //         'security_fee': securityFee,
+  //         'postage': postage,
+  //         'total': total,
+  //       },
+  //     };
+  //
+  //     // Validate order data structure
+  //     if (orderData['items'] == null || (orderData['items'] as List).isEmpty) {
+  //       return false;
+  //     }
+  //
+  //     // Call the repository to create the order via API
+  //     final result = await checkoutRepository.createOrder(orderData);
+  //
+  //     if (result.isSuccess) {
+  //       _log.info('Checkout processed successfully');
+  //       return true;
+  //     } else {
+  //       _log.warning('Checkout failed: ${result.error}');
+  //       return false;
+  //     }
+  //   } catch (e) {
+  //     // Log error for debugging purposes
+  //     _log.severe('Checkout error: $e');
+  //     debugPrint('${AddressConstants.checkoutError}: $e');
+  //     return false;
+  //   }
+  // }
 
   Future<void> onConfirmLocation(String postalCode, String country) async {
     await fetchNearestInposts(postalCode, country);
@@ -399,6 +402,7 @@ class CheckoutViewModel extends ChangeNotifier {
         final data = doc.data() as Map<String, dynamic>;
         final id = (data[FirestoreConstants.id] ?? '').toString();
         final name = (data[FirestoreConstants.name] ?? '').toString();
+        final carrier = (data[FirestoreConstants.carrier] ?? '').toString();
         final address = (data[FirestoreConstants.address] ?? '').toString();
         final postcode = (data[FirestoreConstants.postcode] ?? '').toString();
         final city = (data[FirestoreConstants.city] ?? '').toString();
@@ -410,9 +414,11 @@ class CheckoutViewModel extends ChangeNotifier {
           _selectedInpost = Inpost(
             id: id,
             name: name,
+            carrier: carrier,
             address: address,
             postcode: postcode,
             city: city,
+            state: city,
             country: country,
             lat: lat,
             long: long,
@@ -570,6 +576,7 @@ class CheckoutViewModel extends ChangeNotifier {
 
     final address = _buildShippingAddress();
     final selectedShippingMethod = _selectedInpostShippingMethod;
+    final inpost = selectedInpost;
 
     final Map<String, dynamic> orderData = {
       "amount": _toMinorUnits(total),
@@ -578,10 +585,10 @@ class CheckoutViewModel extends ChangeNotifier {
       "paymentIntentId": paymentIntentId,
       "deliveryMethod": _deliveryChoice == DeliveryType.pickup ? "pickup_point" : "home",
       if (selectedShippingMethod != null) "shippingMethodId": selectedShippingMethod.id,
-      if (selectedShippingMethod?.carrierCode?.trim().isNotEmpty ?? false)
-        "shippingCarrier": selectedShippingMethod!.carrierCode,
-      "shipping": {"address": address, "name": 'Customer'},
-      if (_deliveryChoice == DeliveryType.pickup) "pickupPoint": _buildPickupPointPayload(selectedInpost!),
+      if (inpost != null) "shippingCarrier": inpost.carrier,
+      "shipping": {"address": address, "name": 'Customer', "telephone": mobilePhoneNumber},
+      "shippingWeight": basketItems[0].postageSize.weight,
+      if (_deliveryChoice == DeliveryType.pickup) "pickupPoint": _buildPickupPointPayload(inpost!),
     };
     try {
       final result = await checkoutRepository.createOrder(orderData);
@@ -598,6 +605,20 @@ class CheckoutViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<UserCredentials?> fetchUserProfile() async {
+    try {
+      final result = await checkoutRepository.fetchUserProfile();
+      if (result.isSuccess) {
+        return result.value;
+      } else {
+        return null;
+      }
+    } catch (e) {
+      _log.severe('fetch profile failed! ${e.toString()}');
+      return null;
+    }
+  }
+
   int _toMinorUnits(double amount) {
     return (amount * 100).round();
   }
@@ -606,10 +627,10 @@ class CheckoutViewModel extends ChangeNotifier {
     return switch (_deliveryChoice) {
       DeliveryType.pickup => {
         "line1": _pickupAddressLine(selectedInpost!.address),
-        "city": selectedInpost!.city.trim(),
-        "state": "",
-        "postal_code": selectedInpost!.postcode.trim(),
-        "country": _countryCode(selectedInpost!.country),
+        "city": selectedInpost?.city.trim() ?? '',
+        "state": selectedInpost?.state.trim() ?? '',
+        "postal_code": selectedInpost?.postcode.trim() ?? '',
+        "country": _countryCode(selectedInpost?.country ?? 'GB'),
       },
       DeliveryType.home => {
         "line1": _shippingAddress?.line1 ?? '',
@@ -632,8 +653,7 @@ class CheckoutViewModel extends ChangeNotifier {
       "city": pickupPoint.city.trim(),
       "postalCode": pickupPoint.postcode.trim(),
       "country": _countryCode(pickupPoint.country),
-      if (pickupPoint.lat.trim().isNotEmpty) "latitude": pickupPoint.lat.trim(),
-      if (pickupPoint.long.trim().isNotEmpty) "longitude": pickupPoint.long.trim(),
+      "carrier": pickupPoint.carrier,
     };
   }
 
@@ -647,12 +667,7 @@ class CheckoutViewModel extends ChangeNotifier {
   }
 
   String _pickupAddressLine(String address) {
-    const inpostBuildingSeparator = '; building: ';
-    final separatorIndex = address.indexOf(inpostBuildingSeparator);
-    if (separatorIndex > 0) {
-      return address.substring(0, separatorIndex).trim();
-    }
-    return address.trim();
+    return address.replaceAll(AddressConstants.inpostAddressSeparator, ', ').trim();
   }
 
   String _countryCode(String country) {
@@ -746,6 +761,7 @@ class CheckoutViewModel extends ChangeNotifier {
 
     final id = readFirst(['id', 'lockerId', 'code']);
     final name = readFirst(['name', 'lockerName']);
+    final carrier = map['carrier'].toString();
     final address = readFirst(['addressLine1', 'line1', 'street']);
     final postcode = readFirst(['postcode', 'postalCode', 'postCode']);
     final city = map['city'].toString();
@@ -760,9 +776,11 @@ class CheckoutViewModel extends ChangeNotifier {
       inpost: Inpost(
         id: id,
         name: name,
+        carrier: carrier,
         address: address,
         postcode: postcode,
         city: city,
+        state: city,
         country: country,
         lat: lat,
         long: long,

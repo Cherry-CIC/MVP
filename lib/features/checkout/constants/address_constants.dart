@@ -11,8 +11,7 @@ class AddressConstants {
   static const String streetNumberType = 'street_number';
   static const String routeType = 'route';
   static const String localityType = 'locality';
-  static const String administrativeAreaLevel1Type =
-      'administrative_area_level_1';
+  static const String administrativeAreaLevel1Type = 'administrative_area_level_1';
   static const String postalCodeType = 'postal_code';
   static const String countryType = 'country';
 
@@ -31,7 +30,8 @@ class AddressConstants {
   static const String addressHinText = 'address';
   static const String cityHintText = 'city';
   static const String postCodeHintText = 'postcode';
-  
+  static const String mobilePhoneHintText = 'Mobile phone number required';
+
   // Manual entry strings
   static const String toggleSearchMode = 'Use Address Search';
   static const String toggleManualMode = 'Enter Manually';
@@ -49,6 +49,8 @@ class AddressConstants {
   static const String streetAddressError = 'Please enter your street address';
   static const String countryError = 'Please enter your country';
   static const String invalidPostcodeError = 'Invalid UK postcode';
+
+  static const String inpostAddressSeparator = '; building: ';
 
   // Error messages
   static const String addressSearchError = 'Error searching places';

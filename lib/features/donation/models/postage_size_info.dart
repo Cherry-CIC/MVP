@@ -9,6 +9,12 @@ enum PostageSize {
 
   final String label;
   const PostageSize(this.label);
+
+  int get weight => switch (this) {
+    PostageSize.small => 500,
+    PostageSize.medium => 1000,
+    PostageSize.large => 2000,
+  };
 }
 
 @JsonSerializable()
