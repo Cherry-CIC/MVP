@@ -418,7 +418,6 @@ class CheckoutViewModel extends ChangeNotifier {
             address: address,
             postcode: postcode,
             city: city,
-            state: city,
             country: country,
             lat: lat,
             long: long,
@@ -628,7 +627,6 @@ class CheckoutViewModel extends ChangeNotifier {
       DeliveryType.pickup => {
         "line1": _pickupAddressLine(selectedInpost!.address),
         "city": selectedInpost?.city.trim() ?? '',
-        "state": selectedInpost?.state.trim() ?? '',
         "postal_code": selectedInpost?.postcode.trim() ?? '',
         "country": _countryCode(selectedInpost?.country ?? 'GB'),
       },
@@ -780,7 +778,6 @@ class CheckoutViewModel extends ChangeNotifier {
         address: address,
         postcode: postcode,
         city: city,
-        state: city,
         country: country,
         lat: lat,
         long: long,

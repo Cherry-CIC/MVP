@@ -5,7 +5,6 @@ class Inpost {
   final String address;
   final String postcode;
   final String city;
-  final String state;
   final String country;
   final String lat;
   final String long;
@@ -17,7 +16,6 @@ class Inpost {
     required this.address,
     required this.postcode,
     required this.city,
-    required this.state,
     required this.country,
     required this.lat,
     required this.long,
