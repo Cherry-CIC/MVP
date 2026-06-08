@@ -63,6 +63,7 @@ class DonationFormField extends StatelessWidget {
                     : null,
                 suffixIcon: suffixIcon != null ? Icon(suffixIcon) : null,
               ),
+              onTapUpOutside: (_) => FocusManager.instance.primaryFocus?.unfocus(),
             ),
           ),
         ],

@@ -393,6 +393,10 @@ class _DeliveryOptionsState extends State<DeliveryOptions> {
                 ),
               ),
             ),
+            onTapUpOutside: (_) {
+              viewModel.mobilePhoneNumber = _mobilePhoneController.text;
+              FocusManager.instance.primaryFocus?.unfocus();
+            },
             onSubmitted: (value) => viewModel.mobilePhoneNumber = value,
           ),
           // Show address input field when home delivery is selected

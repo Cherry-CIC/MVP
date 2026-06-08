@@ -51,6 +51,7 @@ class DonationFormState extends State<DonationForm> {
 
   Charity? selectedCharity;
   bool _hasInitialized = false;
+  final _hideUnimplementedFeatures = true;
 
   @override
   void didChangeDependencies() {
@@ -333,6 +334,7 @@ class DonationFormState extends State<DonationForm> {
                     }
                     return null;
                   },
+                  onTapUpOutside: (_) => FocusManager.instance.primaryFocus?.unfocus(),
                 ),
               ),
               DonationDropdownField(
@@ -360,23 +362,23 @@ class DonationFormState extends State<DonationForm> {
                   }
                 },
               ),
-
-              DonationFormField(
-                controller: _addToCollectionController,
-                hintText: addToCollectionHintText,
-                title: addToCollectionText,
-                suffixIcon: Icons.add,
-                validator: validateOptionalDonationFormFields,
-              ),
-
-              DonationOptions(
-                isSwitchedOpenToOtherCharity: isSwitchedOpenToOtherCharity,
-                toggleSwitchOpenToOtherCharity: toggleSwitchOpenToOtherCharity,
-                isSwitchedOpenToOffer: isSwitchedOpenToOffer,
-                toggleSwitchOpenToOffer: toggleSwitchOpenToOffer,
-                isSwitchedApplicableBuyerDiscounts: isSwitchedApplicableBuyerDiscounts,
-                toggleSwitchApplicableBuyerDiscounts: toggleSwitchApplicableBuyerDiscounts,
-              ),
+              if (!_hideUnimplementedFeatures) ...[
+                DonationFormField(
+                  controller: _addToCollectionController,
+                  hintText: addToCollectionHintText,
+                  title: addToCollectionText,
+                  suffixIcon: Icons.add,
+                  validator: validateOptionalDonationFormFields,
+                ),
+                DonationOptions(
+                  isSwitchedOpenToOtherCharity: isSwitchedOpenToOtherCharity,
+                  toggleSwitchOpenToOtherCharity: toggleSwitchOpenToOtherCharity,
+                  isSwitchedOpenToOffer: isSwitchedOpenToOffer,
+                  toggleSwitchOpenToOffer: toggleSwitchOpenToOffer,
+                  isSwitchedApplicableBuyerDiscounts: isSwitchedApplicableBuyerDiscounts,
+                  toggleSwitchApplicableBuyerDiscounts: toggleSwitchApplicableBuyerDiscounts,
+                ),
+              ],
               Padding(
                 padding: const EdgeInsets.all(16),
                 child: Row(
