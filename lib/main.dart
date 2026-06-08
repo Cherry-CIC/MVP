@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cherry_mvp/core/config/app_theme.dart';
@@ -15,7 +16,8 @@ import 'package:cherry_mvp/features/welcome/widgets/auth_gate.dart';
 import 'package:cherry_mvp/core/theme/theme_notifier.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
+  FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
 
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
@@ -64,18 +66,21 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer2<NavigationProvider, ThemeNotifier>(
-      builder: (context, navigatorService, themeNotifier, child) {
+    final navigatorKey = context.read<NavigationProvider>().navigatorKey;
+
+    return Consumer<ThemeNotifier>(
+      builder: (context, themeNotifier, child) {
         return MaterialApp(
           debugShowCheckedModeBanner: false,
-          navigatorKey: navigatorService.navigatorKey,
+          navigatorKey: navigatorKey,
           onGenerateRoute: AppRoutes.generateRoute,
           theme: buildTheme(),
           darkTheme: buildTheme(Brightness.dark),
           themeMode: themeNotifier.mode,
-          home: AuthGate(),
+          home: child,
         );
       },
+      child: AuthGate(),
     );
   }
 }
