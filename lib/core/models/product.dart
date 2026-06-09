@@ -18,7 +18,7 @@ class Product {
   final double donation;
   @JsonKey(fromJson: _parseDouble)
   final double price;
-  @JsonKey(fromJson: _parseDouble)
+  @JsonKey(fromJson: _parseRequiredDouble)
   final double? securityFee;
   @JsonKey(fromJson: _parseInt)
   final int likes;
@@ -79,6 +79,16 @@ class Product {
     if (value is int) return value.toDouble();
     if (value is String) return double.tryParse(value) ?? 0.0;
     return 0.0;
+  }
+
+  static double _parseRequiredDouble(dynamic value) {
+    if (value is double) return value;
+    if (value is int) return value.toDouble();
+    if (value is String) {
+      final parsed = double.tryParse(value);
+      if (parsed != null) return parsed;
+    }
+    throw FormatException('Invalid required double value: $value');
   }
 
   static int _parseInt(dynamic value) {

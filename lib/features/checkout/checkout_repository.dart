@@ -30,9 +30,15 @@ final class CheckoutRepository implements ICheckoutRepository {
   @override
   Future<Result> fetchNearestInposts(String postalCode, String country) async {
     try {
-      final result = await _apiService.get(
-        "${ApiEndpoints.inpostLockers}?country=$country&address=$postalCode&radius=1000",
+      final uri = Uri(
+        path: ApiEndpoints.inpostLockers,
+        queryParameters: {
+          'country': country,
+          'address': postalCode,
+          'radius': '1000',
+        },
       );
+      final result = await _apiService.get(uri.toString());
       if (result.isSuccess && result.value != null) {
         final data = result.value;
         final jsonList = data is Map<String, dynamic>
@@ -56,9 +62,15 @@ final class CheckoutRepository implements ICheckoutRepository {
     String country,
   ) async {
     try {
-      final result = await _apiService.get(
-        "${ApiEndpoints.inpostShippingMethods}?servicePointId=$servicePointId&country=$country&postalCode=$postalCode",
+      final uri = Uri(
+        path: ApiEndpoints.inpostShippingMethods,
+        queryParameters: {
+          'servicePointId': servicePointId,
+          'country': country,
+          'postalCode': postalCode,
+        },
       );
+      final result = await _apiService.get(uri.toString());
       if (result.isSuccess && result.value != null) {
         final data = result.value;
         final jsonList = data is Map<String, dynamic>
@@ -80,6 +92,7 @@ final class CheckoutRepository implements ICheckoutRepository {
     Map<String, dynamic> lockerData = {
       FirestoreConstants.id: data.id,
       FirestoreConstants.name: data.name,
+      FirestoreConstants.carrier: data.carrier,
       FirestoreConstants.address: data.address,
       FirestoreConstants.postcode: data.postcode,
       FirestoreConstants.city: data.city,

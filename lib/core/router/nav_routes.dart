@@ -85,9 +85,10 @@ class AppRoutes {
           ),
         );
       case postageSize:
-        final args = settings.arguments as Map<String, dynamic>?;
+        final args = settings.arguments;
+        final mapArgs = args is Map<String, dynamic> ? args : null;
         return MaterialPageRoute(
-          builder: (_) => PostageSizePage(initialPostageSize: args?['initialPostageSize']),
+          builder: (_) => PostageSizePage(initialPostageSize: mapArgs?['initialPostageSize']),
         );
       case pickupPointSelector:
         return MaterialPageRoute(builder: (_) => const PickupPointSelectionPage());

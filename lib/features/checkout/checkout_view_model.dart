@@ -744,7 +744,11 @@ class CheckoutViewModel extends ChangeNotifier {
   }
 
   List<InpostShippingMethod> _parseShippingMethodList(dynamic payload) {
-    final List<dynamic> jsonList = payload['shippingMethods'] ?? payload;
+    final dynamic rawList = payload is Map<String, dynamic>
+        ? (payload['shippingMethods'] ?? payload['data'] ?? payload['items'])
+        : payload;
+    if (rawList is! List) return [];
+    final List<dynamic> jsonList = rawList;
 
     final shippingMethods = jsonList
         .map((json) => InpostShippingMethod.fromJson(json))
@@ -772,8 +776,8 @@ class CheckoutViewModel extends ChangeNotifier {
     final carrier = (map['carrier'] ?? '').toString();
     final address = readFirst(['addressLine1', 'line1', 'street']);
     final postcode = readFirst(['postcode', 'postalCode', 'postCode']);
-    final city = map['city'].toString();
-    final country = map['country'].toString();
+    final city = readFirst(['city']);
+    final country = readFirst(['country']);
     final lat = readFirst(['lat', 'latitude']);
     final long = readFirst(['long', 'lng', 'longitude']);
     if (id.isEmpty || name.isEmpty || address.isEmpty || postcode.isEmpty) {

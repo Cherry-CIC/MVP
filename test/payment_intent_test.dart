@@ -8,7 +8,7 @@ void main() {
       'message': 'Created',
       'data': {
         'paymentIntentId': 'pi_123',
-        'paymentIntent': 'pi_123_secret_abc',
+        'clientSecret': 'pi_123_secret_abc',
         'ephemeralKey': 'ek_test_123',
         'customer': 'cus_123',
         'publishableKey': 'pk_test_123',
@@ -24,7 +24,7 @@ void main() {
       'success': true,
       'message': 'Created',
       'data': {
-        'paymentIntent': 'pi_456_secret_def',
+        'clientSecret': 'pi_456_secret_def',
         'ephemeralKey': '',
         'customer': '',
         'publishableKey': 'pk_test_456',

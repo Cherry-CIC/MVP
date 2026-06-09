@@ -17,7 +17,7 @@ Product _$ProductFromJson(Map<String, dynamic> json) => Product(
       .toList(),
   donation: Product._parseDouble(json['donation']),
   price: Product._parseDouble(json['price']),
-  securityFee: Product._parseDouble(json['securityFee']),
+  securityFee: Product._parseRequiredDouble(json['securityFee']),
   likes: Product._parseInt(json['likes']),
   number: Product._parseInt(json['number']),
   size: json['size'] as String,

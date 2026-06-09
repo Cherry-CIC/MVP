@@ -45,6 +45,7 @@ class _DeliveryOptionsState extends State<DeliveryOptions> {
         });
       }
       final profile = await vm.fetchUserProfile();
+      if (!mounted) return;
       final mobilePhone = profile?.phoneNumber ?? '';
       _mobilePhoneController.text = mobilePhone;
       vm.setMobilePhoneNumber(mobilePhone);
@@ -276,6 +277,7 @@ class _DeliveryOptionsState extends State<DeliveryOptions> {
                     ListTile(
                       onTap: () async {
                         final pickupPointSelected = await viewModel.showPickupPointSelection();
+                        if (!mounted) return;
                         final selectedInpost = viewModel.selectedInpost;
                         if (pickupPointSelected && selectedInpost != null) {
                           _populatePickupAddressDetails(selectedInpost);
@@ -286,6 +288,7 @@ class _DeliveryOptionsState extends State<DeliveryOptions> {
                             selectedInpost.postcode,
                             selectedInpost.country,
                           );
+                          if (!mounted) return;
                           if (viewModel.inpostShippingMethods.isNotEmpty && viewModel.basketItems.isNotEmpty) {
                             setState(() {
                               _shippingMethod = _getShippingMethod(

@@ -40,6 +40,6 @@ class UserCredentials {
 
   @override
   String toString() {
-    return 'UserCredentials{uid: $uid, email: $email, username: $username, firstname: $firstname, photoUrl: $photoUrl, phoneNumber: $phoneNumber}';
+    return 'UserCredentials{uid: $uid, username: $username, firstname: $firstname, photoUrl: $photoUrl}';
   }
 }
