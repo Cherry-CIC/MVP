@@ -86,6 +86,9 @@ class DonationFormState extends State<DonationForm> {
   }
 
   DonationRequest buildDonationRequest() {
+    if (selectedPostageSize == null) {
+      throw ArgumentError('Postage size must be selected');
+    }
     return DonationRequest(
       name: _titleController.text,
       description: _descriptionController.text,
