@@ -26,7 +26,7 @@ class PostageSizePageState extends State<PostageSizePage> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!_hasInitialized) {
+      if (!_hasInitialized && mounted) {
         _hasInitialized = true;
         context.read<DonationViewModel>().fetchPostageSizes();
       }

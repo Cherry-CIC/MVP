@@ -47,7 +47,7 @@ class _DeliveryOptionsState extends State<DeliveryOptions> {
       final profile = await vm.fetchUserProfile();
       final mobilePhone = profile?.phoneNumber ?? '';
       _mobilePhoneController.text = mobilePhone;
-      vm.mobilePhoneNumber = mobilePhone;
+      vm.setMobilePhoneNumber(mobilePhone);
     });
   }
 
@@ -286,7 +286,7 @@ class _DeliveryOptionsState extends State<DeliveryOptions> {
                             selectedInpost.postcode,
                             selectedInpost.country,
                           );
-                          if (viewModel.inpostShippingMethods.isNotEmpty) {
+                          if (viewModel.inpostShippingMethods.isNotEmpty && viewModel.basketItems.isNotEmpty) {
                             setState(() {
                               _shippingMethod = _getShippingMethod(
                                 viewModel.inpostShippingMethods,
@@ -394,10 +394,10 @@ class _DeliveryOptionsState extends State<DeliveryOptions> {
               ),
             ),
             onTapUpOutside: (_) {
-              viewModel.mobilePhoneNumber = _mobilePhoneController.text;
+              viewModel.setMobilePhoneNumber(_mobilePhoneController.text);
               FocusManager.instance.primaryFocus?.unfocus();
             },
-            onSubmitted: (value) => viewModel.mobilePhoneNumber = value,
+            onSubmitted: (value) => viewModel.setMobilePhoneNumber(value),
           ),
           // Show address input field when home delivery is selected
           if (_delivery == DeliveryType.home) ...[

@@ -191,6 +191,9 @@ final class CheckoutRepository implements ICheckoutRepository {
 
       if (result.isSuccess && result.value != null) {
         final data = result.value['data'];
+        if (data == null || data['id'] == null) {
+          return Result.failure('Invalid profile data received');
+        }
         final userProfile = UserCredentials.fromFirestore(data, data['id']);
         return Result.success(userProfile);
       } else {

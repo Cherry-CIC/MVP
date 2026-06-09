@@ -42,7 +42,13 @@ class CheckoutViewModel extends ChangeNotifier {
   Inpost? _selectedInpost;
   Inpost? get selectedInpost => _selectedInpost;
 
-  String mobilePhoneNumber = '';
+  String _mobilePhoneNumber = '';
+  String get mobilePhoneNumber => _mobilePhoneNumber;
+
+  void setMobilePhoneNumber(String value) {
+    _mobilePhoneNumber = value;
+    notifyListeners();
+  }
 
   InpostShippingMethod? _selectedInpostShippingMethod;
   InpostShippingMethod? get selectedInpostShippingMethod => _selectedInpostShippingMethod;
@@ -608,6 +614,10 @@ class CheckoutViewModel extends ChangeNotifier {
     try {
       final result = await checkoutRepository.fetchUserProfile();
       if (result.isSuccess) {
+        if (result.value == null) {
+          _log.warning('fetchUserProfile returned null value');
+          return null;
+        }
         return result.value;
       } else {
         return null;
@@ -759,7 +769,7 @@ class CheckoutViewModel extends ChangeNotifier {
 
     final id = readFirst(['id', 'lockerId', 'code']);
     final name = readFirst(['name', 'lockerName']);
-    final carrier = map['carrier'].toString();
+    final carrier = (map['carrier'] ?? '').toString();
     final address = readFirst(['addressLine1', 'line1', 'street']);
     final postcode = readFirst(['postcode', 'postalCode', 'postCode']);
     final city = map['city'].toString();

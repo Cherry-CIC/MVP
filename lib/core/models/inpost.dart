@@ -34,7 +34,8 @@ class InpostSearchResult {
   String get displayDistance {
     // if (distanceMetres < 1000) return '$distanceMetres m';
     final miles = distanceMetres * 0.000621371;
-    return '${miles.toStringAsFixed(miles % 1 == 0 ? 0 : 2)} mi';
+    final decimals = (miles - miles.truncate()).abs() < 0.01 ? 0 : 2;
+    return '${miles.toStringAsFixed(decimals)} mi';
   }
 
   String get concatenatedAddress {
