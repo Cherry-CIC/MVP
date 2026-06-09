@@ -179,4 +179,4 @@ import '../../core/utils/result.dart';
 import 'package:cherry_mvp/core/config/config.dart';
 ```
 
-- If the **FirebaseFirestore** dependency is upgraded (`cloud_firestore`), remember to change the tag version in the `ios/Podfile` file. Detailed instructions [here](https://firebase.google.com/docs/firestore/quickstart#dart) at **Step 4. Improve iOS & macOS build times by including the pre-compiled framework.**
+- If the **FirebaseFirestore** dependency is upgraded (`cloud_firestore`), remember to change the tag version in the `ios/Podfile` file. Detailed instructions in the [Firebase Firestore documentation](https://firebase.google.com/docs/firestore/quickstart#dart) at **Step 4. Improve iOS & macOS build times by including the pre-compiled framework.**
