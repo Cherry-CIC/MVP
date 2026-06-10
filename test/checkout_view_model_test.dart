@@ -16,7 +16,7 @@ class FakeCheckoutRepository implements ICheckoutRepository {
   final Result? fetchNearestResult;
 
   @override
-  Future<Result> fetchNearestInPosts(String postalCode) async {
+  Future<Result> fetchNearestInposts(String postalCode, String country) async {
     return fetchNearestResult ?? Result.success([]);
   }
 
@@ -44,7 +44,7 @@ void main() {
       expect(viewModel.hasShippingAddress, false);
       expect(viewModel.hasPaymentMethod, false);
       expect(viewModel.canCheckout, false);
-      expect(viewModel.nearestInpost, isEmpty);
+      expect(viewModel.nearestInposts, isEmpty);
     });
 
     test('should set shipping address correctly', () {
@@ -225,9 +225,9 @@ void main() {
           navigator: mockNavigator,
         );
 
-        await viewModel.fetchNearestInPosts('SW1A 1AA');
+        await viewModel.fetchNearestInposts('SW1A 1AA', 'GB');
 
-        expect(viewModel.nearestInpost, isEmpty);
+        expect(viewModel.nearestInposts, isEmpty);
         expect(viewModel.showLocker, false);
         expect(viewModel.status.type, StatusType.failure);
       },
@@ -238,24 +238,30 @@ void main() {
         checkoutRepository: FakeCheckoutRepository(
           fetchNearestResult: Result.success([
             {
-              'id': 'locker-1',
-              'name': 'Locker One',
-              'address': '1 Test Street',
-              'postcode': 'SW1A 1AA',
-              'lat': '51.5010',
-              'long': '-0.1416',
+              "id": "13127548",
+              "name": "InPost",
+              "addressLine1": "The Village; building: Co op Group Charlton Village 19-23",
+              "city": "New Charlton",
+              "postalCode": "SE7 8UG",
+              "country": "GB",
+              "carrier": "inpost_gb",
+              "distanceMeters": 968,
+              "latitude": "51.482010",
+              "longitude": "0.037010",
+              "openTomorrow": true,
+              "openUpcomingWeek": true,
             },
           ]),
         ),
         navigator: mockNavigator,
       );
 
-      await viewModel.fetchNearestInPosts('SW1A 1AA');
+      await viewModel.fetchNearestInposts('SW1A 1AA', 'GB');
 
       expect(viewModel.status.type, StatusType.success);
       expect(viewModel.showLocker, true);
-      expect(viewModel.nearestInpost, hasLength(1));
-      expect(viewModel.nearestInpost.first.name, 'Locker One');
+      expect(viewModel.nearestInposts, hasLength(1));
+      expect(viewModel.nearestInposts.first.inpost.name, 'InPost');
     });
   });
 }

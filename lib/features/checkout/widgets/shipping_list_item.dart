@@ -7,7 +7,7 @@ class ShippingListItem<T> extends StatelessWidget {
   final IconData icon;
   final T value;
   final T groupValue;
-  final ValueChanged<T?>? onChanged;
+  final ValueChanged<T?> onChanged;
 
   const ShippingListItem({
     super.key,
@@ -27,13 +27,13 @@ class ShippingListItem<T> extends StatelessWidget {
         leading: Icon(icon),
         title: Text(title),
         subtitle: Text(subtitle),
-        trailing: Radio.adaptive(
-          value: value,
+        trailing: RadioGroup(
           groupValue: groupValue,
           onChanged: onChanged,
+          child: Radio.adaptive(value: value),
         ),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        onTap: () => onChanged?.call(value),
+        onTap: () => onChanged(value),
       ),
     );
   }

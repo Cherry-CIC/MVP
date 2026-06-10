@@ -12,11 +12,14 @@ class ApiEndpoints {
   static String versioned(String endpoint) => '/$apiVersion$endpoint';
 
   static const String categories = '$_apiPrefix/categories';
-  static const String inpostLockers = '$_apiPrefix/shipping/inpost/lockers';
+  static const String inpostLockers = '$_apiPrefix/shipping/pickup-points';
+  static const String inpostShippingMethods = '$_apiPrefix/shipping/shipping-methods';
   static const String charities = '$_apiPrefix/charities';
+  static const String postageSizes = '$_apiPrefix/postage-sizes';
   static const String paymentIntent = '$_apiPrefix/payment/create-payment-intent';
   static const String createOrder = '$_apiPrefix/order/create';
-  
+
   // Auth related
   static const String deleteAccount = '$_apiPrefix/auth/account';
+  static const String profile = '$_apiPrefix/auth/profile';
 }

@@ -56,4 +56,4 @@ app.*.map.json
 .metadata
 
 # Ignore generated JSON files
-lib/core/models/category.g.dart
+#lib/core/models/category.g.dart

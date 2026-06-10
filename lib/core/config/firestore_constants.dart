@@ -13,8 +13,11 @@ class FirestoreConstants {
   static const pickup = "pickup";
   static const updatedAt = "updatedAt";
   static const name = "name";
+  static const carrier = "carrier";
   static const address = "address";
   static const postcode = "postcode";
+  static const city = "city";
+  static const country = "country";
   static const lat = "lat";
   static const long = "long";
   static const lockers = "lockers";

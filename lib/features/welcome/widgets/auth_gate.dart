@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:provider/provider.dart';
 import 'package:cherry_mvp/features/register/verify_email_page.dart';
 import 'package:cherry_mvp/features/welcome/welcome_page.dart';
@@ -19,6 +20,7 @@ class AuthGate extends StatelessWidget {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold();
         }
+        FlutterNativeSplash.remove();
 
         final user = snapshot.data;
         if (user != null) {

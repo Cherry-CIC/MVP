@@ -1,5 +1,6 @@
 import 'package:cherry_mvp/core/config/config.dart';
 import 'package:cherry_mvp/core/models/model.dart';
+import 'package:cherry_mvp/features/donation/models/postage_size_info.dart';
 
 const dummyProducts = [
   Product(
@@ -10,12 +11,14 @@ const dummyProducts = [
         "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
     quality: "8/Great",
     size: "M",
+    postageSize: PostageSize.medium,
     productImages: [
       AppImages.mensTShirt,
       AppImages.mensTShirt,
     ],
     donation: 6.40,
     price: 7.00,
+    securityFee: 7.00,
     likes: 8,
     number: 8,
   ),
@@ -27,12 +30,14 @@ const dummyProducts = [
         "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
     quality: "6/Good",
     size: "8",
+    postageSize: PostageSize.small,
     productImages: [
       AppImages.shoes2,
       AppImages.shoes2,
     ],
     donation: 16.00,
     price: 17.00,
+    securityFee: 7.00,
     likes: 33,
     number: 8,
   ),
@@ -44,11 +49,13 @@ const dummyProducts = [
         "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
     quality: "6/Good",
     size: "8",
+    postageSize: PostageSize.small,
     productImages: [
       AppImages.shoes2,
     ],
     donation: 17.00,
     price: 17.00,
+    securityFee: 7.00,
     likes: 33,
     number: 9,
   ),
@@ -60,12 +67,14 @@ const dummyProducts = [
         "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
     quality: "6/Good",
     size: "8",
+    postageSize: PostageSize.small,
     productImages: [
       AppImages.shoes2,
     ],
     donation: 17.00,
     price: 17.00,
+    securityFee: 7.00,
     likes: 33,
     number: 9,
-  )
+  ),
 ];

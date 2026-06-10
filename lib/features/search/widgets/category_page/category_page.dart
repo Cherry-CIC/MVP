@@ -96,10 +96,6 @@ class CategoryPageState extends State<CategoryPage> {
                     onTap: () => _handleCategoryTap(category),
                     image: category.imageUrl,
                     text: category.name,
-                    icon: categoryViewModel.getCategoryIcon(category.name),
-                    assetIcon: categoryViewModel.getCategoryAssetIcon(
-                      category.name,
-                    ),
                     trailing: widget.selectionMode && isSelected
                         ? Icon(
                             Icons.check_circle,

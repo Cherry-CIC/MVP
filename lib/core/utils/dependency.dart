@@ -98,6 +98,7 @@ List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
               listen: false,
             ),
             firebaseAuth: Provider.of<FirebaseAuth>(context, listen: false),
+            firestore: Provider.of<FirebaseFirestore>(context, listen: false),
           );
         }
       },
