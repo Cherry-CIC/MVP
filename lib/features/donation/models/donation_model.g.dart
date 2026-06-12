@@ -14,7 +14,7 @@ DonationRequest _$DonationRequestFromJson(Map<String, dynamic> json) =>
       charityId: json['charityId'] as String,
       quality: json['quality'] as String,
       size: json['size'] as String,
-      postageSizeId: json['postageSizeId'] as String,
+      postageSizeId: json['postageSize'] as String,
       donation: (json['donation'] as num).toDouble(),
       price: (json['price'] as num).toDouble(),
       productImages: (json['product_images'] as List<dynamic>?)
@@ -32,7 +32,7 @@ Map<String, dynamic> _$DonationRequestToJson(DonationRequest instance) =>
       'charityId': instance.charityId,
       'quality': instance.quality,
       'size': instance.size,
-      'postageSizeId': instance.postageSizeId,
+      'postageSize': instance.postageSizeId,
       'product_images': instance.productImages,
       'donation': instance.donation,
       'price': instance.price,

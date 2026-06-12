@@ -13,6 +13,7 @@ class DonationRequest {
   final String charityId;
   final String quality;
   final String size;
+  @JsonKey(name: 'postageSize')
   final String postageSizeId;
   @JsonKey(name: 'product_images')
   final List<String>? productImages;

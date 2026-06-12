@@ -24,6 +24,7 @@ class Product {
   @JsonKey(fromJson: _parseInt)
   final int number;
   final String size;
+  @JsonKey(name: 'postageSize')
   final String postageSizeId;
   final String? categoryId;
   final String? charityId;
