@@ -1,4 +1,5 @@
 import 'package:cherry_mvp/core/router/nav_provider.dart';
+import 'package:cherry_mvp/features/donation/donation_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:cherry_mvp/core/utils/result.dart';
@@ -20,8 +21,17 @@ class FakeCheckoutRepository implements ICheckoutRepository {
     return fetchNearestResult ?? Result.success([]);
   }
 
+  // @override
+  // Future<void> storeOrderInFirestore(Map<String, dynamic> orderData) async {}
+
   @override
-  Future<void> storeOrderInFirestore(Map<String, dynamic> orderData) async {}
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class FakeDonationRepository implements IDonationRepository {
+  FakeDonationRepository({this.fetchNearestResult});
+
+  final Result? fetchNearestResult;
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -37,6 +47,7 @@ void main() {
       viewModel = CheckoutViewModel(
         checkoutRepository: FakeCheckoutRepository(),
         navigator: mockNavigator,
+        donationRepository: FakeDonationRepository(),
       );
     });
 
@@ -223,6 +234,7 @@ void main() {
         viewModel = CheckoutViewModel(
           checkoutRepository: FakeCheckoutRepository(fetchNearestResult: Result.success({'unexpected': 'payload'})),
           navigator: mockNavigator,
+          donationRepository: FakeDonationRepository(),
         );
 
         await viewModel.fetchNearestInposts('SW1A 1AA', 'GB');
@@ -254,6 +266,7 @@ void main() {
           ]),
         ),
         navigator: mockNavigator,
+        donationRepository: FakeDonationRepository(),
       );
 
       await viewModel.fetchNearestInposts('SW1A 1AA', 'GB');

@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:logging/logging.dart';
 import 'package:cherry_mvp/core/models/product.dart';
@@ -19,18 +18,9 @@ class DonationRepository implements IDonationRepository {
   final ApiService _apiService;
   final StorageProvider _storageProvider;
   final FirebaseAuth _firebaseAuth;
-  final FirebaseFirestore _firestore;
   final _log = Logger('DonationRepository');
 
-  DonationRepository({
-    required ApiService apiService,
-    required StorageProvider storageProvider,
-    required FirebaseAuth firebaseAuth,
-    required FirebaseFirestore firestore,
-  }) : _apiService = apiService,
-       _storageProvider = storageProvider,
-       _firebaseAuth = firebaseAuth,
-       _firestore = firestore;
+  DonationRepository({required this._apiService, required this._storageProvider, required this._firebaseAuth});
 
   @override
   Future<Result<DonationResponse>> submitDonation(DonationRequest request) async {
@@ -89,33 +79,31 @@ class DonationRepository implements IDonationRepository {
   @override
   Future<Result<List<PostageSizeInfo>>> fetchPostageSizes() async {
     try {
-      final result = await _firestore.collection("postage_sizes").where("type", isEqualTo: "inpost").get();
+      final result = await _apiService.get<dynamic>(ApiEndpoints.postageSizes);
 
-      final postageSizes = result.docs.map((doc) {
-        final data = doc.data();
-        return PostageSizeInfo.fromJson({...data, 'id': doc.id});
-      }).toList();
-
-      postageSizes.sort((a, b) => a.size.index.compareTo(b.size.index));
-
-      return Result.success(postageSizes);
-
-      // TODO commenting out for current fetch. Reinstate if the backend api is created for api/postage-sizes
-      // final result = await _apiService.get<dynamic>(ApiEndpoints.postageSizes);
-
-      // if (result.isSuccess && result.value != null) {
-      //   final jsonList = _extractPostageSizeList(result.value);
-      //   final postageSizes = jsonList
-      //       .whereType<Map>()
-      //       .map((json) => PostageSizeInfo.fromJson(Map<String, dynamic>.from(json)))
-      //       .toList();
-      //   return Result.success(postageSizes);
-      // } else {
-      //   return Result.failure(result.error ?? 'Failed to fetch postage sizes');
-      // }
+      if (result.isSuccess && result.value != null) {
+        final jsonList = _extractPostageSizeList(result.value);
+        final postageSizes = jsonList
+            .whereType<Map>()
+            .map((json) => PostageSizeInfo.fromJson(Map<String, dynamic>.from(json)))
+            .toList();
+        postageSizes.sort((a, b) => a.size.index.compareTo(b.size.index));
+        return Result.success(postageSizes);
+      } else {
+        return Result.failure(result.error ?? 'Failed to fetch postage sizes');
+      }
     } catch (e) {
       return Result.failure(e.toString());
     }
+  }
+
+  List<dynamic> _extractPostageSizeList(dynamic payload) {
+    if (payload is Map<String, dynamic>) {
+      final data = payload['data'];
+      return data is List ? data : const [];
+    }
+
+    return payload is List ? payload : const [];
   }
 
   Future<Result<List<String>>> _uploadMultipleImages(List<File> imageFiles, String userId) async {
@@ -167,7 +155,7 @@ class MockDonationRepository implements IDonationRepository {
       charityId: request.charityId,
       quality: request.quality,
       size: request.size,
-      postageSize: request.postageSize,
+      postageSizeId: request.postageSizeId,
       productImages: request.productImages ?? [],
       donation: request.donation,
       price: request.price,
@@ -182,7 +170,7 @@ class MockDonationRepository implements IDonationRepository {
     final response = DonationResponse(
       success: true,
       message: AppStrings.donationSubmittedSuccessfully,
-      productData: mockData,
+      data: mockData,
     );
 
     return Result.success(response);
@@ -194,16 +182,6 @@ class MockDonationRepository implements IDonationRepository {
   }
 }
 
-// TODO commenting out for current fetch. Reinstate if the backend api is created for api/postage-sizes
-// List<dynamic> _extractPostageSizeList(dynamic payload) {
-//   if (payload is Map<String, dynamic>) {
-//     final data = payload['data'];
-//     return data is List ? data : const [];
-//   }
-//
-//   return payload is List ? payload : const [];
-// }
-
 List<PostageSizeInfo> _mockPostageSizes() {
   return [
     PostageSizeInfo(
@@ -212,6 +190,7 @@ List<PostageSizeInfo> _mockPostageSizes() {
       size: PostageSize.small,
       description:
           'Small (up to 500g): max dimensions 30cm x 23cm x 10cm. Best for lightweight clothing, single books or small accessories.',
+      weight: 500,
     ),
     PostageSizeInfo(
       id: 'medium',
@@ -219,6 +198,7 @@ List<PostageSizeInfo> _mockPostageSizes() {
       size: PostageSize.medium,
       description:
           'Medium (up to 1kg): max dimensions 40cm x 30cm x 15cm. Good for heavier tops, single jeans or standard shoe boxes.',
+      weight: 1000,
     ),
     PostageSizeInfo(
       id: 'large',
@@ -226,6 +206,7 @@ List<PostageSizeInfo> _mockPostageSizes() {
       size: PostageSize.large,
       description:
           'Large (up to 2kg): max dimensions 60cm x 50cm x 50cm. Useful for coats, chunky boots or small bundles.',
+      weight: 2000,
     ),
   ];
 }

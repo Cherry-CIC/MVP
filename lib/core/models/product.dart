@@ -1,7 +1,6 @@
 import 'package:json_annotation/json_annotation.dart';
 import 'package:cherry_mvp/core/models/category.dart';
 import 'package:cherry_mvp/features/charity_page/charity_model.dart';
-import 'package:cherry_mvp/features/donation/models/postage_size_info.dart';
 
 part 'product.g.dart';
 
@@ -18,15 +17,14 @@ class Product {
   final double donation;
   @JsonKey(fromJson: _parseDouble)
   final double price;
-  @JsonKey(fromJson: _parseRequiredDouble)
+  @JsonKey(fromJson: _parseOptionalDouble)
   final double? securityFee;
   @JsonKey(fromJson: _parseInt)
   final int likes;
   @JsonKey(fromJson: _parseInt)
   final int number;
   final String size;
-  @JsonKey(name: 'postage_size')
-  final PostageSize postageSize;
+  final String postageSizeId;
   final String? categoryId;
   final String? charityId;
   final String? createdAt;
@@ -47,7 +45,7 @@ class Product {
     required this.likes,
     required this.number,
     required this.size,
-    required this.postageSize,
+    required this.postageSizeId,
     this.categoryId,
     this.charityId,
     this.createdAt,
@@ -81,14 +79,12 @@ class Product {
     return 0.0;
   }
 
-  static double _parseRequiredDouble(dynamic value) {
+  static double? _parseOptionalDouble(dynamic value) {
+    if (value == null) return null;
     if (value is double) return value;
     if (value is int) return value.toDouble();
-    if (value is String) {
-      final parsed = double.tryParse(value);
-      if (parsed != null) return parsed;
-    }
-    throw FormatException('Invalid required double value: $value');
+    if (value is String) return double.tryParse(value);
+    return null;
   }
 
   static int _parseInt(dynamic value) {

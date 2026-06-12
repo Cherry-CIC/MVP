@@ -9,12 +9,6 @@ enum PostageSize {
 
   final String label;
   const PostageSize(this.label);
-
-  int get weight => switch (this) {
-    PostageSize.small => 500,
-    PostageSize.medium => 1000,
-    PostageSize.large => 2000,
-  };
 }
 
 @JsonSerializable()
@@ -23,8 +17,15 @@ class PostageSizeInfo {
   final String type;
   final PostageSize size;
   final String description;
+  final int weight;
 
-  PostageSizeInfo({required this.id, required this.type, required this.size, required this.description});
+  PostageSizeInfo({
+    required this.id,
+    required this.type,
+    required this.size,
+    required this.description,
+    required this.weight,
+  });
 
   factory PostageSizeInfo.fromJson(Map<String, dynamic> json) => _$PostageSizeInfoFromJson(json);
 
