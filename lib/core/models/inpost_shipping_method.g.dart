@@ -13,7 +13,7 @@ InpostShippingMethod _$InpostShippingMethodFromJson(
   name: json['name'] as String,
   deliveryType: json['deliveryType'] as String,
   deliveryMethodType: json['deliveryMethodType'] as String,
-  pricePence: (json['pricePence'] as num).toInt(),
+  pricePence: InpostShippingMethod._parsePricePence(json['pricePence']),
   currency: json['currency'] as String?,
   checkoutIdentifier: json['checkoutIdentifier'] as String,
 );

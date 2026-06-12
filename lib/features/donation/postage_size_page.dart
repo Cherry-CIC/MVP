@@ -112,7 +112,7 @@ class PostageSizePageState extends State<PostageSizePage> {
         separatorBuilder: (_, _) => const SizedBox(height: 12),
         itemBuilder: (context, index) {
           final postageSizeInfo = postageSizeInfos[index];
-          final isSelected = postageSizeInfo == _initialPostageSize;
+          final isSelected = postageSizeInfo.id == _initialPostageSize?.id;
           return _PostageSizeCard(
             postageSizeInfo: postageSizeInfo,
             isSelected: isSelected,

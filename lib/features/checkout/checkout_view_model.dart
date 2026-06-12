@@ -367,6 +367,10 @@ class CheckoutViewModel extends ChangeNotifier {
 
     if (_postageSizeInfos.isEmpty) {
       await fetchPostageSizes();
+      if (_postageSizeInfos.isEmpty) {
+        setSelectedInpostShippingMethod(_inpostShippingMethods.firstOrNull);
+        return;
+      }
     }
 
     final postageSizeId = _basketItems.first.postageSizeId;

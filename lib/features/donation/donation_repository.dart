@@ -83,6 +83,9 @@ class DonationRepository implements IDonationRepository {
 
       if (result.isSuccess && result.value != null) {
         final jsonList = _extractPostageSizeList(result.value);
+        if (jsonList == null) {
+          return Result.failure('Unexpected postage sizes response format');
+        }
         final postageSizes = jsonList
             .whereType<Map>()
             .map((json) => PostageSizeInfo.fromJson(Map<String, dynamic>.from(json)))
@@ -97,13 +100,13 @@ class DonationRepository implements IDonationRepository {
     }
   }
 
-  List<dynamic> _extractPostageSizeList(dynamic payload) {
+  List<dynamic>? _extractPostageSizeList(dynamic payload) {
     if (payload is Map<String, dynamic>) {
       final data = payload['data'];
-      return data is List ? data : const [];
+      return data is List ? data : null;
     }
 
-    return payload is List ? payload : const [];
+    return payload is List ? payload : null;
   }
 
   Future<Result<List<String>>> _uploadMultipleImages(List<File> imageFiles, String userId) async {

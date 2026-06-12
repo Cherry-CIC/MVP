@@ -8,6 +8,7 @@ class InpostShippingMethod {
   final String name;
   final String deliveryType;
   final String deliveryMethodType;
+  @JsonKey(fromJson: _parsePricePence)
   final int pricePence;
   final String? currency;
   final String checkoutIdentifier;
@@ -25,6 +26,16 @@ class InpostShippingMethod {
 
   // To JSON
   Map<String, dynamic> toJson() => _$InpostShippingMethodToJson(this);
+
+  static int _parsePricePence(dynamic value) {
+    if (value is int) return value;
+    if (value is double && value == value.truncateToDouble()) return value.toInt();
+    if (value is String) {
+      final parsed = int.tryParse(value);
+      if (parsed != null) return parsed;
+    }
+    throw FormatException('Invalid pricePence value: $value');
+  }
 
   @override
   String toString() {
