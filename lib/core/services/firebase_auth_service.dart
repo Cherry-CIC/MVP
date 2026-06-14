@@ -7,7 +7,10 @@ import 'package:cherry_mvp/core/services/error_string.dart';
 import 'package:cherry_mvp/core/services/google_auth_service.dart';
 import 'package:cherry_mvp/core/utils/result.dart';
 
+import 'package:logging/logging.dart';
+
 class FirebaseAuthService {
+  final _log = Logger('FirebaseAuthService');
   final FirebaseAuth firebaseAuth;
 
   FirebaseAuthService({required this.firebaseAuth});
@@ -50,9 +53,14 @@ class FirebaseAuthService {
       await firebaseAuth.sendPasswordResetEmail(email: email);
       return Result.success(null);
     } on FirebaseAuthException catch (e) {
-      return Result.failure(e.message ?? 'Failed to send password reset email');
+      _log.warning('FirebaseAuthException in sendPasswordResetEmail: ${e.code} - ${e.message}');
+      if (e.code == 'invalid-email') {
+        return Result.failure('Please enter a valid email address.');
+      }
+      return Result.failure('If an account exists for that email, a reset link has been sent.');
     } catch (e) {
-      return Result.failure(e.toString());
+      _log.severe('Generic exception in sendPasswordResetEmail: $e');
+      return Result.failure('Unable to send reset email right now. Please try again.');
     }
   }
 

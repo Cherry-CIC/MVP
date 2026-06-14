@@ -26,7 +26,7 @@ class ForgotPasswordViewModel extends ChangeNotifier {
       if (result.isSuccess) {
         _status = Status.success;
       } else {
-        _status = Status.failure(result.error ?? "");
+        _status = Status.failure(result.error ?? "Failed to send reset email");
       }
       notifyListeners();
       return result;

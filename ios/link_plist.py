@@ -1,6 +1,9 @@
+import os
 import sys
 
-pbxproj_path = '/Users/user/Documents/Treea/Volunteer/MVP/ios/Runner.xcodeproj/project.pbxproj'
+# Get the directory of the current script and resolve relative path
+script_dir = os.path.dirname(os.path.abspath(__file__))
+pbxproj_path = os.path.join(script_dir, 'Runner.xcodeproj', 'project.pbxproj')
 
 with open(pbxproj_path, 'r') as f:
     content = f.read()
@@ -39,8 +42,8 @@ if inserted:
     print("Inserted PBXFileReference entry.")
 
 # 3. Insert in Runner group children
-# The Runner group can have different formatting, let's find the group and insert under its children list
-runner_group_idx = content.find('97C146F01CF9000F007C117D /* Runner */')
+# Find the exact definition of the Runner group block (using " = {") to avoid matching group references
+runner_group_idx = content.find('97C146F01CF9000F007C117D /* Runner */ = {')
 if runner_group_idx != -1:
     children_idx = content.find('children = (', runner_group_idx)
     if children_idx != -1:
@@ -52,7 +55,8 @@ if runner_group_idx != -1:
                 print("Inserted GoogleService-Info.plist in Runner group.")
 
 # 4. Insert in Resources build phase files
-resources_phase_idx = content.find('97C146EC1CF9000F007C117D /* Resources */')
+# Find the exact definition of the Runner's Resources phase block (using " = {") to avoid matching buildPhases references
+resources_phase_idx = content.find('97C146EC1CF9000F007C117D /* Resources */ = {')
 if resources_phase_idx != -1:
     files_idx = content.find('files = (', resources_phase_idx)
     if files_idx != -1:
