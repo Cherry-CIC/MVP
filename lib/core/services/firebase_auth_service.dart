@@ -45,6 +45,17 @@ class FirebaseAuthService {
     }
   }
 
+  Future<Result<void>> sendPasswordResetEmail(String email) async {
+    try {
+      await firebaseAuth.sendPasswordResetEmail(email: email);
+      return Result.success(null);
+    } on FirebaseAuthException catch (e) {
+      return Result.failure(e.message ?? 'Failed to send password reset email');
+    } catch (e) {
+      return Result.failure(e.toString());
+    }
+  }
+
   Future<Result<void>> sendVerificationEmail() async {
     try {
       final user = firebaseAuth.currentUser;

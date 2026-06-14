@@ -151,7 +151,7 @@ class LoginFormState extends State<LoginForm> {
               SizedBox(
                 width: double.infinity,
                 child: TextButton(
-                  onPressed: () {},
+                  onPressed: () => navigator.navigateTo(AppRoutes.forgotPassword),
                   child: Center(
                     child: Text(
                       AppStrings.forgotPassword,
