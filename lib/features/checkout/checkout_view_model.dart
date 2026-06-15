@@ -1,4 +1,6 @@
 import 'package:cherry_mvp/core/models/model.dart';
+import 'package:cherry_mvp/features/donation/donation_repository.dart';
+import 'package:cherry_mvp/features/donation/models/postage_size_info.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:logging/logging.dart';
@@ -19,10 +21,11 @@ enum DeliveryType { pickup, home, undefined }
 /// ViewModel for managing checkout state including basket items, shipping address, and payment method
 class CheckoutViewModel extends ChangeNotifier {
   final ICheckoutRepository checkoutRepository;
+  final IDonationRepository _donationRepository;
   final NavigationProvider navigator;
   final _log = Logger('CheckoutViewModel');
 
-  CheckoutViewModel({required this.checkoutRepository, required this.navigator});
+  CheckoutViewModel({required this._donationRepository, required this.checkoutRepository, required this.navigator});
 
   Status _status = Status.uninitialized;
 
@@ -41,6 +44,31 @@ class CheckoutViewModel extends ChangeNotifier {
 
   Inpost? _selectedInpost;
   Inpost? get selectedInpost => _selectedInpost;
+
+  String get pickupBuilding {
+    if (_selectedInpost == null) return '';
+    final address = _selectedInpost!.address;
+    final separator = AddressConstants.inpostAddressSeparator;
+    final index = address.indexOf(separator);
+
+    // If separator exists, building is the second part; otherwise use the name
+    return index >= 0 ? address.substring(index + separator.length).trim() : _selectedInpost!.name;
+  }
+
+  String get pickupAddress {
+    if (_selectedInpost == null) return '';
+    final address = _selectedInpost!.address;
+    final separator = AddressConstants.inpostAddressSeparator;
+    final index = address.indexOf(separator);
+
+    // Get the street part
+    String street = index >= 0 ? address.substring(0, index).trim() : address.trim();
+    // Combine with postcode
+    return [street, _selectedInpost!.postcode].where((s) => s.isNotEmpty).join(', ');
+  }
+
+  List<PostageSizeInfo> _postageSizeInfos = [];
+  List<PostageSizeInfo> get postageSizeInfos => _postageSizeInfos;
 
   String _mobilePhoneNumber = '';
   String get mobilePhoneNumber => _mobilePhoneNumber;
@@ -87,13 +115,10 @@ class CheckoutViewModel extends ChangeNotifier {
   double get securityFee => _basketItems.fold(0, (sum, item) => sum + (item.securityFee ?? 0));
 
   /// postage fee
-  double get postage => _selectedInpostShippingMethod?.price ?? 0.00;
+  double get postage => (_selectedInpostShippingMethod?.pricePence.toDouble() ?? 0) / 100;
 
   /// Total order amount including all fees
   double get total => itemTotal + securityFee + postage;
-
-  /// TOTAL order amount without security fee (see https://github.com/Cherry-CIC/MVP/issues/423)
-  double get totalWithoutSecurityFee => itemTotal + postage;
 
   // Shipping Address properties
   PlaceDetails? _shippingAddress;
@@ -246,67 +271,6 @@ class CheckoutViewModel extends ChangeNotifier {
     return postcodePattern.hasMatch(postalCode.trim());
   }
 
-  // TODO this seems extraneous and incorrect. the same behaviour occurs in createOrder() below. Commenting out for the moment.
-  // /// Processes the checkout order
-  // /// Returns true if successful, false if validation fails or error occurs
-  // Future<bool> processCheckout() async {
-  //   if (!canCheckout) return false;
-  //   if (!validateShippingAddress()) return false;
-  //
-  //   try {
-  //     // Prepare order data for API call
-  //     final Map<String, dynamic> orderData = {
-  //       'items': basketItems
-  //           .map(
-  //             (item) => {
-  //               'id': item.id,
-  //               'name': item.name,
-  //               'price': item.price,
-  //               // Add other product fields as needed
-  //             },
-  //           )
-  //           .toList(),
-  //       'shipping_address': {
-  //         'formatted_address': formattedShippingAddress,
-  //         AddressConstants.streetKey: shippingAddressComponents[AddressConstants.streetKey],
-  //         AddressConstants.cityKey: shippingAddressComponents[AddressConstants.cityKey],
-  //         AddressConstants.stateKey: shippingAddressComponents[AddressConstants.stateKey],
-  //         'postal_code': shippingAddressComponents[AddressConstants.postalCodeKey],
-  //         AddressConstants.countryKey: shippingAddressComponents[AddressConstants.countryKey],
-  //         'latitude': _shippingAddress?.latitude,
-  //         'longitude': _shippingAddress?.longitude,
-  //       },
-  //       'totals': {
-  //         'item_total': itemTotal,
-  //         'security_fee': securityFee,
-  //         'postage': postage,
-  //         'total': total,
-  //       },
-  //     };
-  //
-  //     // Validate order data structure
-  //     if (orderData['items'] == null || (orderData['items'] as List).isEmpty) {
-  //       return false;
-  //     }
-  //
-  //     // Call the repository to create the order via API
-  //     final result = await checkoutRepository.createOrder(orderData);
-  //
-  //     if (result.isSuccess) {
-  //       _log.info('Checkout processed successfully');
-  //       return true;
-  //     } else {
-  //       _log.warning('Checkout failed: ${result.error}');
-  //       return false;
-  //     }
-  //   } catch (e) {
-  //     // Log error for debugging purposes
-  //     _log.severe('Checkout error: $e');
-  //     debugPrint('${AddressConstants.checkoutError}: $e');
-  //     return false;
-  //   }
-  // }
-
   Future<void> onConfirmLocation(String postalCode, String country) async {
     await fetchNearestInposts(postalCode, country);
     navigator.goBack();
@@ -354,12 +318,17 @@ class CheckoutViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> fetchShippingMethodsForInpost(String servicePointId, String postalCode, String country) async {
+  Future<void> fetchShippingMethodsForInpost() async {
     _status = Status.loading;
     notifyListeners();
 
     try {
-      final result = await checkoutRepository.fetchShippingMethodsForInpost(servicePointId, postalCode, country);
+      final result = await checkoutRepository.fetchShippingMethodsForInpost(
+        basketItems.first.id,
+        selectedInpost!.id,
+        selectedInpost!.postcode,
+        selectedInpost!.country,
+      );
 
       final parsedShippingMethods = result.isSuccess && result.value != null
           ? _parseShippingMethodList(result.value)
@@ -371,6 +340,7 @@ class CheckoutViewModel extends ChangeNotifier {
 
       if (parsedShippingMethods.isNotEmpty) {
         _status = Status.success;
+        await _autoSelectShippingMethod();
       } else {
         _status = Status.failure(
           result.isSuccess
@@ -379,7 +349,7 @@ class CheckoutViewModel extends ChangeNotifier {
         );
         _log.warning(
           result.isSuccess
-              ? 'Fetch inPost shipping methods returned an empty or invalid payload for service point $servicePointId'
+              ? 'Fetch inPost shipping methods returned an empty or invalid payload for service point ${selectedInpost!.id}'
               : 'Fetch inPost shipping methods failed: ${result.error}',
         );
       }
@@ -392,97 +362,140 @@ class CheckoutViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> storeLockerInFirestore() async {
-    try {
-      await checkoutRepository.storeLockerInFirestore(selectedInpost!);
-    } catch (e) {
-      _log.severe('Error storing locker to firestore:: $e');
-    }
-  }
+  Future<void> _autoSelectShippingMethod() async {
+    if (_basketItems.isEmpty || _inpostShippingMethods.isEmpty) return;
 
-  Future<Result> fetchUserLocker() async {
-    final result = await checkoutRepository.fetchUserLocker();
-    if (result.isSuccess) {
-      final doc = result.value;
-      if (doc != null && doc.exists && doc.data() is Map<String, dynamic>) {
-        final data = doc.data() as Map<String, dynamic>;
-        final id = (data[FirestoreConstants.id] ?? '').toString();
-        final name = (data[FirestoreConstants.name] ?? '').toString();
-        final carrier = (data[FirestoreConstants.carrier] ?? '').toString();
-        final address = (data[FirestoreConstants.address] ?? '').toString();
-        final postcode = (data[FirestoreConstants.postcode] ?? '').toString();
-        final city = (data[FirestoreConstants.city] ?? '').toString();
-        final country = (data[FirestoreConstants.country] ?? '').toString();
-        final lat = (data[FirestoreConstants.lat] ?? '').toString();
-        final long = (data[FirestoreConstants.long] ?? '').toString();
-
-        if (id.isNotEmpty && name.isNotEmpty && address.isNotEmpty && postcode.isNotEmpty) {
-          _selectedInpost = Inpost(
-            id: id,
-            name: name,
-            carrier: carrier,
-            address: address,
-            postcode: postcode,
-            city: city,
-            country: country,
-            lat: lat,
-            long: long,
-          );
-          _showLocker = true;
-          _status = Status.success;
-        } else {
-          _showLocker = false;
-          _selectedInpost = null;
-        }
-      } else {
-        _showLocker = false;
-        _selectedInpost = null;
+    if (_postageSizeInfos.isEmpty) {
+      await fetchPostageSizes();
+      if (_postageSizeInfos.isEmpty) {
+        setSelectedInpostShippingMethod(_inpostShippingMethods.firstOrNull);
+        return;
       }
-      notifyListeners();
-      return Result.success(null);
-    } else {
-      _status = Status.failure(result.error?.toString() ?? 'Unknown error');
-      notifyListeners();
-      return Result.failure(result.error);
     }
+
+    final postageSizeId = _basketItems.first.postageSizeId;
+    final info = _postageSizeInfos.firstWhere(
+      (info) => info.id == postageSizeId,
+      orElse: () => _postageSizeInfos.first,
+    );
+
+    final label = info.size.label; // e.g., "Small"
+    final matchingMethod = _inpostShippingMethods.where((method) => method.name.contains(label)).firstOrNull;
+
+    setSelectedInpostShippingMethod(matchingMethod ?? _inpostShippingMethods.firstOrNull);
   }
 
-  /// Store a dummy order in Firestore
-  Future<void> storeOrderInFirestore() async {
-    final Map<String, dynamic> orderData = {
-      'items': _basketItems
-          .map(
-            (item) => {
-              'id': item.id,
-              'name': item.name,
-              'price': item.price,
-              'image': item.productImages.isNotEmpty ? item.productImages.first : null,
-            },
-          )
-          .toList(),
-      'shipping_address': {
-        'formatted_address': formattedShippingAddress,
-        ...shippingAddressComponents,
-        'latitude': _shippingAddress?.latitude,
-        'longitude': _shippingAddress?.longitude,
-      },
-      'totals': {
-        'item_total': itemTotal,
-        'security_fee': securityFee,
-        'postage': postage,
-        'total': total,
-      },
-      'created_at': DateTime.now().toIso8601String(),
-    };
+  Future<void> fetchPostageSizes({bool forceRefresh = false}) async {
+    if (!forceRefresh && _postageSizeInfos.isNotEmpty) return;
+
+    _status = Status.loading;
+    notifyListeners();
+
     try {
-      await checkoutRepository.storeOrderInFirestore(orderData);
+      final result = await _donationRepository.fetchPostageSizes();
+
+      if (result.isSuccess && result.value != null) {
+        _postageSizeInfos = result.value!;
+        _status = Status.success;
+      }
     } catch (e) {
-      _log.severe('Error storing order to firestore:: $e');
-      rethrow;
+      _status = Status.failure(e.toString());
     }
+
+    notifyListeners();
   }
 
-  Future<bool> payWithPaymentSheet({required double amountMinusSecurityFee}) async {
+  // Future<void> storeLockerInFirestore() async {
+  //   try {
+  //     await checkoutRepository.storeLockerInFirestore(selectedInpost!);
+  //   } catch (e) {
+  //     _log.severe('Error storing locker to firestore:: $e');
+  //   }
+  // }
+
+  // Future<Result> fetchUserLocker() async {
+  //   final result = await checkoutRepository.fetchUserLocker();
+  //   if (result.isSuccess) {
+  //     final doc = result.value;
+  //     if (doc != null && doc.exists && doc.data() is Map<String, dynamic>) {
+  //       final data = doc.data() as Map<String, dynamic>;
+  //       final id = (data[FirestoreConstants.id] ?? '').toString();
+  //       final name = (data[FirestoreConstants.name] ?? '').toString();
+  //       final carrier = (data[FirestoreConstants.carrier] ?? '').toString();
+  //       final address = (data[FirestoreConstants.address] ?? '').toString();
+  //       final postcode = (data[FirestoreConstants.postcode] ?? '').toString();
+  //       final city = (data[FirestoreConstants.city] ?? '').toString();
+  //       final country = (data[FirestoreConstants.country] ?? '').toString();
+  //       final lat = (data[FirestoreConstants.lat] ?? '').toString();
+  //       final long = (data[FirestoreConstants.long] ?? '').toString();
+  //
+  //       if (id.isNotEmpty && name.isNotEmpty && address.isNotEmpty && postcode.isNotEmpty) {
+  //         _selectedInpost = Inpost(
+  //           id: id,
+  //           name: name,
+  //           carrier: carrier,
+  //           address: address,
+  //           postcode: postcode,
+  //           city: city,
+  //           country: country,
+  //           lat: lat,
+  //           long: long,
+  //         );
+  //         _showLocker = true;
+  //         _status = Status.success;
+  //       } else {
+  //         _showLocker = false;
+  //         _selectedInpost = null;
+  //       }
+  //     } else {
+  //       _showLocker = false;
+  //       _selectedInpost = null;
+  //     }
+  //     notifyListeners();
+  //     return Result.success(null);
+  //   } else {
+  //     _status = Status.failure(result.error?.toString() ?? 'Unknown error');
+  //     notifyListeners();
+  //     return Result.failure(result.error);
+  //   }
+  // }
+  //
+  // /// Store a dummy order in Firestore
+  // Future<void> storeOrderInFirestore() async {
+  //   final Map<String, dynamic> orderData = {
+  //     'items': _basketItems
+  //         .map(
+  //           (item) => {
+  //             'id': item.id,
+  //             'name': item.name,
+  //             'price': item.price,
+  //             'image': item.productImages.isNotEmpty ? item.productImages.first : null,
+  //           },
+  //         )
+  //         .toList(),
+  //     'shipping_address': {
+  //       'formatted_address': formattedShippingAddress,
+  //       ...shippingAddressComponents,
+  //       'latitude': _shippingAddress?.latitude,
+  //       'longitude': _shippingAddress?.longitude,
+  //     },
+  //     'totals': {
+  //       'item_total': itemTotal,
+  //       'security_fee': securityFee,
+  //       'postage': postage,
+  //       'total': total,
+  //     },
+  //     'created_at': DateTime.now().toIso8601String(),
+  //   };
+  //   try {
+  //     await checkoutRepository.storeOrderInFirestore(orderData);
+  //   } catch (e) {
+  //     _log.severe('Error storing order to firestore:: $e');
+  //     rethrow;
+  //   }
+  // }
+
+  Future<bool> payWithPaymentSheet() async {
     if (_selectedPaymentType == null) {
       _createOrderStatus = Status.failure(
         AppStrings.checkoutPaymentMethodRequired,
@@ -495,9 +508,33 @@ class CheckoutViewModel extends ChangeNotifier {
     _lastPaymentIntentId = null;
     notifyListeners();
 
+    if (selectedInpostShippingMethod == null) {
+      _createOrderStatus = Status.failure(
+        AppStrings.checkoutShippingMethodRequired,
+      );
+      notifyListeners();
+      return false;
+    }
+
+    if (selectedInpost == null) {
+      _createOrderStatus = Status.failure(
+        AppStrings.checkoutPickupLockerRequired,
+      );
+      notifyListeners();
+      return false;
+    }
+
+    final selectedShippingMethod = selectedInpostShippingMethod!;
+
     try {
       // To create a PaymentIntent and return the client_secret
-      final response = await checkoutRepository.createPaymentIntent(amountMinusSecurityFee);
+      final response = await checkoutRepository.createPaymentIntent(
+        productId: basketItems.first.id,
+        shippingMethodId: selectedShippingMethod.id,
+        pickupPointId: selectedInpost!.id,
+        country: selectedInpost!.country,
+        postalCode: selectedInpost!.postcode,
+      );
 
       if (response.isSuccess && response.value != null) {
         final paymentResponse = response.value!;
@@ -580,19 +617,12 @@ class CheckoutViewModel extends ChangeNotifier {
     }
 
     final address = _buildShippingAddress();
-    final selectedShippingMethod = _selectedInpostShippingMethod;
     final inpost = selectedInpost;
 
     final Map<String, dynamic> orderData = {
-      "amount": _toMinorUnits(total),
-      "productId": basketItems[0].id,
-      "productName": basketItems[0].name,
+      "productId": basketItems.first.id,
       "paymentIntentId": paymentIntentId,
-      "deliveryMethod": _deliveryChoice == DeliveryType.pickup ? "pickup_point" : "home",
-      if (selectedShippingMethod != null) "shippingMethodId": selectedShippingMethod.id,
-      if (inpost != null) "shippingCarrier": inpost.carrier,
       "shipping": {"address": address, "name": 'Customer', "telephone": mobilePhoneNumber},
-      "shippingWeight": basketItems[0].postageSize.weight,
       if (_deliveryChoice == DeliveryType.pickup) "pickupPoint": _buildPickupPointPayload(inpost!),
     };
     try {
@@ -626,10 +656,6 @@ class CheckoutViewModel extends ChangeNotifier {
       _log.severe('fetch profile failed! ${e.toString()}');
       return null;
     }
-  }
-
-  int _toMinorUnits(double amount) {
-    return (amount * 100).round();
   }
 
   Map<String, dynamic> _buildShippingAddress() {

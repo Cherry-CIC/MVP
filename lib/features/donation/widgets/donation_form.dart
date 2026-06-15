@@ -43,8 +43,7 @@ class DonationFormState extends State<DonationForm> {
   String selectedCondition = '';
   String selectedQuality = '';
   String selectedSize = '';
-  PostageSize? selectedPostageSize;
-
+  PostageSizeInfo? selectedPostageSize;
   bool isSwitchedOpenToOtherCharity = false;
   bool isSwitchedOpenToOffer = false;
   bool isSwitchedApplicableBuyerDiscounts = false;
@@ -85,7 +84,7 @@ class DonationFormState extends State<DonationForm> {
     return double.tryParse(rawInput.replaceAll('£', '')) ?? 0.0;
   }
 
-  DonationRequest buildDonationRequest() {
+  DonationRequest _buildDonationRequest() {
     if (selectedPostageSize == null) {
       throw ArgumentError('Postage size must be selected');
     }
@@ -96,7 +95,7 @@ class DonationFormState extends State<DonationForm> {
       charityId: selectedCharity?.id ?? '',
       quality: selectedQuality,
       size: selectedSize,
-      postageSize: selectedPostageSize!,
+      postageSizeId: selectedPostageSize!.id,
       donation: _parseEnteredPrice(),
       price: _parseEnteredPrice(),
       localImages: widget.selectedImages,
@@ -356,9 +355,11 @@ class DonationFormState extends State<DonationForm> {
 
               _SelectionField(
                 label: postageSizeHintText,
-                value: selectedPostageSize?.label,
+                value: selectedPostageSize?.size.label,
                 onTap: () async {
-                  final PostageSize? result = await donationViewModel.navigateToPostageSizePage(selectedPostageSize);
+                  final PostageSizeInfo? result = await donationViewModel.navigateToPostageSizePage(
+                    selectedPostageSize,
+                  );
 
                   if (result != null) {
                     setState(() => selectedPostageSize = result);
@@ -449,7 +450,7 @@ class DonationFormState extends State<DonationForm> {
                                 Fluttertoast.showToast(msg: AppStrings.pleaseAddPhoto);
                                 return;
                               }
-                              final request = buildDonationRequest();
+                              final request = _buildDonationRequest();
                               await donationViewModel.submitDonation(request);
 
                               if (donationViewModel.status.type == StatusType.success &&

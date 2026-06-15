@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:cherry_mvp/features/donation/models/donation_model.dart';
-import 'package:cherry_mvp/features/donation/models/postage_size_info.dart';
 
 void main() {
   test('DonationRequest sends postage_size as the backend enum value', () {
@@ -11,7 +10,7 @@ void main() {
       charityId: 'charity-id',
       quality: 'Good',
       size: 'M',
-      postageSize: PostageSize.medium,
+      postageSizeId: 'HnGf34ED',
       donation: 12,
       price: 12,
     );

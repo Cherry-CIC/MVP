@@ -1,31 +1,39 @@
 import 'package:cherry_mvp/core/models/model.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:cherry_mvp/core/config/firestore_constants.dart';
-import 'package:cherry_mvp/core/models/inpost.dart';
 import 'package:cherry_mvp/core/services/services.dart';
 import 'package:cherry_mvp/core/utils/result.dart';
 import 'package:cherry_mvp/features/checkout/models/payment_intent.dart';
 
 abstract class ICheckoutRepository {
   Future<Result> fetchNearestInposts(String postalCode, String country);
-  Future<Result> fetchShippingMethodsForInpost(String servicePointId, String postalCode, String country);
+  Future<Result> fetchShippingMethodsForInpost(
+    String productId,
+    String servicePointId,
+    String postalCode,
+    String country,
+  );
 
-  Future<void> storeLockerInFirestore(Inpost data);
+  // TODO determine if these are needed. They're massively out of sync.
+  // Future<void> storeLockerInFirestore(Inpost data);
+  //
+  // /// Store a dummy order in Firestore
+  // Future<void> storeOrderInFirestore(Map<String, dynamic> orderData);
+  //
+  // Future<Result<DocumentSnapshot>> fetchUserLocker();
 
-  /// Store a dummy order in Firestore
-  Future<void> storeOrderInFirestore(Map<String, dynamic> orderData);
-
-  Future<Result<DocumentSnapshot>> fetchUserLocker();
-
-  Future<Result<PaymentIntentResponse>> createPaymentIntent(double amount);
+  Future<Result<PaymentIntentResponse>> createPaymentIntent({
+    required String productId,
+    required String shippingMethodId,
+    required String pickupPointId,
+    required String country,
+    required String postalCode,
+  });
   Future<Result> createOrder(Map<String, dynamic> order);
   Future<Result<UserCredentials>> fetchUserProfile();
 }
 
 final class CheckoutRepository implements ICheckoutRepository {
   final ApiService _apiService;
-  final FirestoreService _firestoreService;
-  CheckoutRepository(this._apiService, this._firestoreService);
+  CheckoutRepository(this._apiService);
 
   @override
   Future<Result> fetchNearestInposts(String postalCode, String country) async {
@@ -57,6 +65,7 @@ final class CheckoutRepository implements ICheckoutRepository {
 
   @override
   Future<Result<dynamic>> fetchShippingMethodsForInpost(
+    String productId,
     String servicePointId,
     String postalCode,
     String country,
@@ -65,6 +74,7 @@ final class CheckoutRepository implements ICheckoutRepository {
       final uri = Uri(
         path: ApiEndpoints.inpostShippingMethods,
         queryParameters: {
+          'productId': productId,
           'servicePointId': servicePointId,
           'country': country,
           'postalCode': postalCode,
@@ -87,74 +97,83 @@ final class CheckoutRepository implements ICheckoutRepository {
     }
   }
 
+  // @override
+  // Future<void> storeLockerInFirestore(Inpost data) async {
+  //   Map<String, dynamic> lockerData = {
+  //     FirestoreConstants.id: data.id,
+  //     FirestoreConstants.name: data.name,
+  //     FirestoreConstants.carrier: data.carrier,
+  //     FirestoreConstants.address: data.address,
+  //     FirestoreConstants.postcode: data.postcode,
+  //     FirestoreConstants.city: data.city,
+  //     FirestoreConstants.country: data.country,
+  //     FirestoreConstants.lat: data.lat,
+  //     FirestoreConstants.long: data.long,
+  //   };
+  //
+  //   final result = await _firestoreService.saveDocument(
+  //     FirestoreConstants.orders,
+  //     FirestoreConstants.pickup,
+  //     lockerData,
+  //     isOrder: true,
+  //   );
+  //
+  //   if (!result.isSuccess) {
+  //     throw StateError(
+  //       result.error ?? 'Unable to store pickup locker in Firestore.',
+  //     );
+  //   }
+  // }
+
+  // @override
+  // Future<void> storeOrderInFirestore(Map<String, dynamic> orderData) async {
+  //   // Use a generated order ID (timestamp-based)
+  //   final orderId = DateTime.now().millisecondsSinceEpoch.toString();
+  //   final uid = _firestoreService.currentUserId;
+  //   final payload = {
+  //     ...orderData,
+  //     'user_id': uid ?? '',
+  //     'updated_at': DateTime.now().toIso8601String(),
+  //   };
+  //
+  //   final result = await _firestoreService.saveDocument(
+  //     FirestoreConstants.orders,
+  //     orderId,
+  //     payload,
+  //     isOrder: false,
+  //   );
+  //
+  //   if (!result.isSuccess) {
+  //     throw StateError(result.error ?? 'Unable to store order in Firestore.');
+  //   }
+  // }
+
+  // @override
+  // Future<Result<DocumentSnapshot>> fetchUserLocker() async {
+  //   final result = await _firestoreService.getDocument(
+  //     FirestoreConstants.orders,
+  //     FirestoreConstants.pickup,
+  //     isOrder: true,
+  //   );
+  //   return result;
+  // }
+
   @override
-  Future<void> storeLockerInFirestore(Inpost data) async {
-    Map<String, dynamic> lockerData = {
-      FirestoreConstants.id: data.id,
-      FirestoreConstants.name: data.name,
-      FirestoreConstants.carrier: data.carrier,
-      FirestoreConstants.address: data.address,
-      FirestoreConstants.postcode: data.postcode,
-      FirestoreConstants.city: data.city,
-      FirestoreConstants.country: data.country,
-      FirestoreConstants.lat: data.lat,
-      FirestoreConstants.long: data.long,
-    };
-
-    final result = await _firestoreService.saveDocument(
-      FirestoreConstants.orders,
-      FirestoreConstants.pickup,
-      lockerData,
-      isOrder: true,
-    );
-
-    if (!result.isSuccess) {
-      throw StateError(
-        result.error ?? 'Unable to store pickup locker in Firestore.',
-      );
-    }
-  }
-
-  @override
-  Future<void> storeOrderInFirestore(Map<String, dynamic> orderData) async {
-    // Use a generated order ID (timestamp-based)
-    final orderId = DateTime.now().millisecondsSinceEpoch.toString();
-    final uid = _firestoreService.currentUserId;
-    final payload = {
-      ...orderData,
-      'user_id': uid ?? '',
-      'updated_at': DateTime.now().toIso8601String(),
-    };
-
-    final result = await _firestoreService.saveDocument(
-      FirestoreConstants.orders,
-      orderId,
-      payload,
-      isOrder: false,
-    );
-
-    if (!result.isSuccess) {
-      throw StateError(result.error ?? 'Unable to store order in Firestore.');
-    }
-  }
-
-  @override
-  Future<Result<DocumentSnapshot>> fetchUserLocker() async {
-    final result = await _firestoreService.getDocument(
-      FirestoreConstants.orders,
-      FirestoreConstants.pickup,
-      isOrder: true,
-    );
-    return result;
-  }
-
-  @override
-  Future<Result<PaymentIntentResponse>> createPaymentIntent(
-    double amount,
-  ) async {
+  Future<Result<PaymentIntentResponse>> createPaymentIntent({
+    required String productId,
+    required String shippingMethodId,
+    required String pickupPointId,
+    required String country,
+    required String postalCode,
+  }) async {
     //  call backend API which returns client_secret
-    final int amountInMinorUnits = (amount * 100).round();
-    var data = {"amount": amountInMinorUnits};
+    var data = {
+      "productId": productId,
+      "shippingMethodId": shippingMethodId,
+      "pickupPointId": pickupPointId,
+      "country": country,
+      "postalCode": postalCode,
+    };
 
     try {
       final result = await _apiService.post(

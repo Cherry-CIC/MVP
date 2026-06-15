@@ -12,6 +12,7 @@ PostageSizeInfo _$PostageSizeInfoFromJson(Map<String, dynamic> json) =>
       type: json['type'] as String,
       size: $enumDecode(_$PostageSizeEnumMap, json['size']),
       description: json['description'] as String,
+      weight: (json['weight'] as num).toInt(),
     );
 
 Map<String, dynamic> _$PostageSizeInfoToJson(PostageSizeInfo instance) =>
@@ -20,6 +21,7 @@ Map<String, dynamic> _$PostageSizeInfoToJson(PostageSizeInfo instance) =>
       'type': instance.type,
       'size': _$PostageSizeEnumMap[instance.size]!,
       'description': instance.description,
+      'weight': instance.weight,
     };
 
 const _$PostageSizeEnumMap = {

@@ -105,7 +105,6 @@ List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
               listen: false,
             ),
             firebaseAuth: Provider.of<FirebaseAuth>(context, listen: false),
-            firestore: Provider.of<FirebaseFirestore>(context, listen: false),
           );
         }
       },
@@ -121,7 +120,6 @@ List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
       create: (context) {
         return CheckoutRepository(
           Provider.of<ApiService>(context, listen: false),
-          Provider.of<FirestoreService>(context, listen: false),
         );
       },
     ),
@@ -196,6 +194,7 @@ List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
       create: (context) => CheckoutViewModel(
         checkoutRepository: Provider.of<ICheckoutRepository>(context, listen: false),
         navigator: Provider.of<NavigationProvider>(context, listen: false),
+        donationRepository: Provider.of<IDonationRepository>(context, listen: false),
       ),
     ),
     ChangeNotifierProvider<CharityViewModel>(

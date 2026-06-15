@@ -16,8 +16,7 @@ class DonationViewModel extends ChangeNotifier {
   final NavigationProvider navigator;
   final _log = Logger('DonationViewModel');
 
-  DonationViewModel({required IDonationRepository donationRepository, required this.navigator})
-    : _donationRepository = donationRepository;
+  DonationViewModel({required this._donationRepository, required this.navigator});
 
   Status _status = Status.uninitialized;
   DonationResponse? _lastSubmission;
@@ -99,13 +98,11 @@ class DonationViewModel extends ChangeNotifier {
     return result;
   }
 
-  Future<PostageSize?> navigateToPostageSizePage(PostageSize? selectedPostageSize) async {
-    final PostageSize? result = await navigator.navigateTo(
+  Future<PostageSizeInfo?> navigateToPostageSizePage(PostageSizeInfo? selectedPostageSize) async {
+    return await navigator.navigateTo(
       AppRoutes.postageSize,
       arguments: {'initialPostageSize': selectedPostageSize},
     );
-
-    return result;
   }
 
   Future<void> fetchPostageSizes() async {
@@ -130,7 +127,7 @@ class DonationViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  void goBack([PostageSize? postageSize]) {
+  void goBack([PostageSizeInfo? postageSize]) {
     navigator.goBack(postageSize);
   }
 }

@@ -8,8 +8,8 @@ class InpostShippingMethod {
   final String name;
   final String deliveryType;
   final String deliveryMethodType;
-  @JsonKey(fromJson: _parseDouble)
-  final double price;
+  @JsonKey(fromJson: _parsePricePence)
+  final int pricePence;
   final String? currency;
   final String checkoutIdentifier;
   const InpostShippingMethod({
@@ -17,7 +17,7 @@ class InpostShippingMethod {
     required this.name,
     required this.deliveryType,
     required this.deliveryMethodType,
-    required this.price,
+    required this.pricePence,
     required this.currency,
     required this.checkoutIdentifier,
   });
@@ -27,21 +27,18 @@ class InpostShippingMethod {
   // To JSON
   Map<String, dynamic> toJson() => _$InpostShippingMethodToJson(this);
 
-  static double _parseDouble(dynamic value) {
-    if (value == null) {
-      throw const FormatException('Missing shipping price');
-    }
-    if (value is double) return value;
-    if (value is int) return value.toDouble();
+  static int _parsePricePence(dynamic value) {
+    if (value is int) return value;
+    if (value is double && value == value.truncateToDouble()) return value.toInt();
     if (value is String) {
-      final parsed = double.tryParse(value);
+      final parsed = int.tryParse(value);
       if (parsed != null) return parsed;
     }
-    throw FormatException('Invalid shipping price type/value: $value');
+    throw FormatException('Invalid pricePence value: $value');
   }
 
   @override
   String toString() {
-    return 'InpostShippingMethod{id: $id, name: $name, deliveryType: $deliveryType, deliveryMethodType: $deliveryMethodType, price: $price, currency: $currency, checkoutIdentifier: $checkoutIdentifier}';
+    return 'InpostShippingMethod{id: $id, name: $name, deliveryType: $deliveryType, deliveryMethodType: $deliveryMethodType, pricePence: $pricePence, currency: $currency, checkoutIdentifier: $checkoutIdentifier}';
   }
 }
