@@ -1,7 +1,6 @@
 import 'package:json_annotation/json_annotation.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:cherry_mvp/core/models/product.dart';
-import 'package:cherry_mvp/features/donation/models/postage_size_info.dart';
 
 part 'donation_model.g.dart';
 
@@ -10,14 +9,12 @@ part 'donation_model.g.dart';
 class DonationRequest {
   final String name;
   final String description;
-  @JsonKey(name: 'categoryId')
   final String categoryId;
-  @JsonKey(name: 'charityId')
   final String charityId;
   final String quality;
   final String size;
-  @JsonKey(name: 'postage_size')
-  final PostageSize postageSize;
+  @JsonKey(name: 'postageSize')
+  final String postageSizeId;
   @JsonKey(name: 'product_images')
   final List<String>? productImages;
   final double donation;
@@ -35,7 +32,7 @@ class DonationRequest {
     required this.charityId,
     required this.quality,
     required this.size,
-    required this.postageSize,
+    required this.postageSizeId,
     required this.donation,
     required this.price,
     this.productImages,
@@ -55,7 +52,7 @@ class DonationRequest {
     String? charityId,
     String? quality,
     String? size,
-    PostageSize? postageSize,
+    String? postageSizeId,
     double? donation,
     double? price,
     List<String>? productImages,
@@ -70,7 +67,7 @@ class DonationRequest {
       charityId: charityId ?? this.charityId,
       quality: quality ?? this.quality,
       size: size ?? this.size,
-      postageSize: postageSize ?? this.postageSize,
+      postageSizeId: postageSizeId ?? this.postageSizeId,
       donation: donation ?? this.donation,
       price: price ?? this.price,
       productImages: productImages ?? this.productImages,
@@ -85,18 +82,18 @@ class DonationRequest {
 class DonationResponse {
   final bool success;
   final String message;
-  final Product productData;
+  final Product data;
 
   DonationResponse({
     required this.success,
     required this.message,
-    required this.productData,
+    required this.data,
   });
 
   factory DonationResponse.fromJson(Map<String, dynamic> json) => _$DonationResponseFromJson(json);
 
   Map<String, dynamic> toJson() => _$DonationResponseToJson(this);
 
-  String get id => productData.id;
-  String? get createdAt => productData.createdAt;
+  String get id => data.id;
+  String? get createdAt => data.createdAt;
 }

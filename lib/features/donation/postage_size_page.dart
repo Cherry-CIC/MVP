@@ -12,7 +12,7 @@ class PostageSizePage extends StatefulWidget {
     this.initialPostageSize,
   });
 
-  final PostageSize? initialPostageSize;
+  final PostageSizeInfo? initialPostageSize;
 
   @override
   PostageSizePageState createState() => PostageSizePageState();
@@ -20,7 +20,7 @@ class PostageSizePage extends StatefulWidget {
 
 class PostageSizePageState extends State<PostageSizePage> {
   bool _hasInitialized = false;
-  PostageSize? get _initialPostageSize => widget.initialPostageSize;
+  PostageSizeInfo? get _initialPostageSize => widget.initialPostageSize;
 
   @override
   void didChangeDependencies() {
@@ -112,11 +112,11 @@ class PostageSizePageState extends State<PostageSizePage> {
         separatorBuilder: (_, _) => const SizedBox(height: 12),
         itemBuilder: (context, index) {
           final postageSizeInfo = postageSizeInfos[index];
-          final isSelected = postageSizeInfo.size == _initialPostageSize;
+          final isSelected = postageSizeInfo.id == _initialPostageSize?.id;
           return _PostageSizeCard(
             postageSizeInfo: postageSizeInfo,
             isSelected: isSelected,
-            onTap: () => context.read<DonationViewModel>().goBack(postageSizeInfo.size),
+            onTap: () => context.read<DonationViewModel>().goBack(postageSizeInfo),
           );
         },
       );

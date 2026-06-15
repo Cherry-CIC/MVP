@@ -33,7 +33,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
       _vm = vm;
       vm.setDeliveryChoice(DeliveryType.pickup);
       vm.resetCreateOrderStatus();
-      vm.fetchUserLocker();
+      // vm.fetchUserLocker();
       vm.addListener(_handleOrderStatus);
     });
   }
@@ -182,9 +182,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
 
                         setState(() => _errorMessage = '');
 
-                        final paid = await viewModel.payWithPaymentSheet(
-                          amountMinusSecurityFee: basket.totalWithoutSecurityFee,
-                        );
+                        final paid = await viewModel.payWithPaymentSheet();
 
                         if (paid) {
                           await viewModel.createOrder();

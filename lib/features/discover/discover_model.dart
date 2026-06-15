@@ -1,7 +1,6 @@
 import 'package:cherry_mvp/core/config/app_images.dart';
 import 'package:cherry_mvp/core/config/config.dart';
 import 'package:cherry_mvp/core/models/model.dart';
-import 'package:cherry_mvp/features/donation/models/postage_size_info.dart';
 
 final List<DummyCharity> dummyCharities = [
   DummyCharity(
@@ -47,7 +46,7 @@ const dummyProducts = [
         "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
     quality: "8/Great",
     size: "M",
-    postageSize: PostageSize.medium,
+    postageSizeId: "testid",
     productImages: [
       AppImages.mensTShirt,
       AppImages.mensTShirt,
@@ -66,7 +65,7 @@ const dummyProducts = [
         "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
     quality: "6/Good",
     size: "8",
-    postageSize: PostageSize.small,
+    postageSizeId: "testid2",
     productImages: [
       AppImages.shoes2,
       AppImages.shoes2,
@@ -85,7 +84,7 @@ const dummyProducts = [
         "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
     quality: "6/Good",
     size: "8",
-    postageSize: PostageSize.small,
+    postageSizeId: "testid3",
     productImages: [
       AppImages.shoes2,
     ],
@@ -103,7 +102,7 @@ const dummyProducts = [
         "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
     quality: "6/Good",
     size: "8",
-    postageSize: PostageSize.small,
+    postageSizeId: "testid4",
     productImages: [
       AppImages.shoes2,
     ],
