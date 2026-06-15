@@ -97,7 +97,7 @@ class RegisterRepository {
 
     if (result.isSuccess) {
       await _firestoreService.fetchUser(uid);
-      await _authService.sendVerificationEmail();
+      // await _authService.sendVerificationEmail();
       return Result.success(null);
     } else {
       return Result.failure(result.error);
