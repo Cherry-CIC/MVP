@@ -63,7 +63,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
           ),
           onPressed: () {
             context.read<ForgotPasswordViewModel>().clearStatus();
-            Navigator.of(context).pop();
+            context.read<ForgotPasswordViewModel>().goBack();
           },
         ),
         title: const Text('Reset Password'),
@@ -126,7 +126,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                                         );
                                         viewModel.clearStatus();
                                         if (context.mounted) {
-                                          Navigator.of(context).pop();
+                                          viewModel.goBack();
                                         }
                                       } else {
                                         Fluttertoast.showToast(
