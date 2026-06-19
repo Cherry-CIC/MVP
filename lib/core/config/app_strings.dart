@@ -168,6 +168,7 @@ class AppStrings {
 
   // Donation Validation
   static const pleaseSelectAllDropdowns = 'Please select all dropdowns';
+  static const pleaseSelectCategory = 'Please select a category';
   static const pleaseSelectCharity = 'Please select a charity';
   static const pleaseChoosePostageSize = 'Please choose a size for postage';
   static const pleaseAddPhoto = 'Please add at least one photo';

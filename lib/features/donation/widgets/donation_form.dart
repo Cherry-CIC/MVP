@@ -434,6 +434,12 @@ class DonationFormState extends State<DonationForm> {
                                 );
                                 return;
                               }
+                              if (selectedCategoryId.trim().isEmpty) {
+                                Fluttertoast.showToast(
+                                  msg: AppStrings.pleaseSelectCategory,
+                                );
+                                return;
+                              }
                               if (selectedCharity == null) {
                                 Fluttertoast.showToast(
                                   msg: AppStrings.pleaseSelectCharity,
