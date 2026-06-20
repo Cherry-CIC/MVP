@@ -57,7 +57,7 @@ class FirebaseAuthService {
       if (e.code == 'invalid-email') {
         return Result.failure('Please enter a valid email address.');
       }
-      return Result.failure('If an account exists for that email, a reset link has been sent.');
+      return Result.success(null);
     } catch (e) {
       _log.severe('Generic exception in sendPasswordResetEmail: $e');
       return Result.failure('Unable to send reset email right now. Please try again.');
