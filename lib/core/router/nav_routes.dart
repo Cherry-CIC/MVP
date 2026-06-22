@@ -8,6 +8,7 @@ import 'package:cherry_mvp/features/donation/postage_size_page.dart';
 import 'package:cherry_mvp/features/donation/successful_upload_page.dart';
 import 'package:cherry_mvp/features/discover/discover_page.dart';
 import 'package:cherry_mvp/features/login/login_page.dart';
+import 'package:cherry_mvp/features/forgot_password/forgot_password_page.dart';
 import 'package:cherry_mvp/features/products/product_page.dart';
 import 'package:cherry_mvp/features/register/register_page.dart';
 import 'package:cherry_mvp/features/search/widgets/category_page/category_page.dart';
@@ -42,6 +43,8 @@ class AppRoutes {
         return MaterialPageRoute(builder: (_) => const WelcomePage());
       case login:
         return MaterialPageRoute(builder: (_) => const LoginPage());
+      case forgotPassword:
+        return MaterialPageRoute(builder: (_) => const ForgotPasswordPage());
       case register:
         return MaterialPageRoute(builder: (_) => RegisterPage());
       case product:

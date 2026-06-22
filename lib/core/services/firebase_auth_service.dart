@@ -7,7 +7,10 @@ import 'package:cherry_mvp/core/services/error_string.dart';
 import 'package:cherry_mvp/core/services/google_auth_service.dart';
 import 'package:cherry_mvp/core/utils/result.dart';
 
+import 'package:logging/logging.dart';
+
 class FirebaseAuthService {
+  final _log = Logger('FirebaseAuthService');
   final FirebaseAuth firebaseAuth;
 
   FirebaseAuthService({required this.firebaseAuth});
@@ -42,6 +45,22 @@ class FirebaseAuthService {
       return Result.failure(e.message ?? ErrorStrings.loginError);
     } catch (e) {
       return Result.failure(e.toString());
+    }
+  }
+
+  Future<Result<void>> sendPasswordResetEmail(String email) async {
+    try {
+      await firebaseAuth.sendPasswordResetEmail(email: email);
+      return Result.success(null);
+    } on FirebaseAuthException catch (e) {
+      _log.warning('FirebaseAuthException in sendPasswordResetEmail: ${e.code} - ${e.message}');
+      if (e.code == 'invalid-email') {
+        return Result.failure('Please enter a valid email address.');
+      }
+      return Result.success(null);
+    } catch (e) {
+      _log.severe('Generic exception in sendPasswordResetEmail: $e');
+      return Result.failure('Unable to send reset email right now. Please try again.');
     }
   }
 
