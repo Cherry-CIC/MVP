@@ -1,12 +1,12 @@
 Privacy Policy
 
-Date last updated: 2024-13-11
+Date last updated: 05.07.2026
 
 When it comes to your personal data, safety and transparency are our top priorities at cherry. To help you understand what information we collect about you, how we use it, and what rights you have, we have prepared this detailed Privacy Policy.
 
 1. General
 This Privacy Policy applies to the online platform cherry (the "Website") and the associated app (the "App") (collectively referred to as the "Platform").
-The data controller for your personal data is cherry, Ltd., headquartered at [insert registered address]. The data controller is referred to as "we," "us," or "cherry." More details about how to contact us can be found at the end of this Privacy Policy.
+The data controller for your personal data is cherry, Ltd., headquartered at 8 Ashbee Close, Snodland, ME6 5HQ. The data controller is referred to as "we," "us," or "cherry." More details about how to contact us can be found at the end of this Privacy Policy.
 
 We take your privacy extremely seriously. All personal data is collected, stored, and used in accordance with the General Data Protection Regulation (GDPR) and other applicable statutory regulations.
 
@@ -71,7 +71,7 @@ Data collection and use are based on your consent (Art. 6 (1) (a) GDPR).
 
 2.1.3 To enable you to set up your profile information.
 
-If you choose to add profile details to your cherry account, we collect and use the following data:
+If you choose to add profile details to your cherry account, we may collect and use the following data:
 Full name;
 Gender;
 Date of birth;
@@ -83,7 +83,7 @@ Data collection and use are based on your consent (Art. 6 (1) (a) GDPR).
 
 2.1.4 To show relevant information about your activity on the Platform
 
-We collect, use, and display the following data to other members:
+We may collect, use, and display the following data to other members:
 Last login date;
 Verification status;
 Number of followers and followed members;
@@ -103,7 +103,7 @@ This data is required to create, publish, and manage your listings. Data collect
 
 2.1.6. To enable notifications on the Platform for you
 
-When you are a registered member on the Platform, we provide you with notifications regarding your new followers, favourited items, activity on the forum, and other important messages.
+When you are a registered member on the Platform, we may provide you with notifications regarding your new followers, favourited items, activity on the forum, and other important messages.
 
 The legal basis for the collection and use of data for the purposes of sending notifications via the Platform's messaging system is the performance of a contract (GTC) to which you are party (Art. 6(1)(b) of the GDPR). The legal basis for sending push notifications is our legitimate interest to facilitate activity and engagement on the Platform (Art. 6(1)(f) of the GDPR).
 
@@ -195,7 +195,7 @@ The legal basis for this collection and use of data is the performance of a cont
 
 We collect and use your personal data for this purpose until your cherry account is deactivated or after five years of inactivity on your account.
 
-2.2.13. To improve our Platform
+2.2.1. To improve our Platform
 
 cherry is committed to the best performance of the Platform. When the Platform is being used, cherry gathers information about actions performed on the Platform (button clicks, visiting time, notifications read, other information depending on a particular business case) and other data described under 2.1, 2.2, 2.5, 2.6, and 4 of this Privacy Policy in order to help us make decisions on how to improve the Platform and make it a better experience for our members.
 
@@ -203,7 +203,7 @@ Legal basis for such collection and use is our legitimate interest to maintain p
 
 We collect and use your personal data for this purpose until the deactivation of your cherry account or for 5 years of inactivity on your account.
 
-2.2.14. To conduct surveys
+2.2.2. To conduct surveys
 We always look for ways to improve your experience when using cherry. That is why we might invite you to participate in a survey and use your feedback. For this reason, we collect and use the following data:
 
 - User ID;
@@ -222,7 +222,7 @@ For our surveys, we use a service provider Widgix Limited (United Kingdom, which
 
 We will anonymise your responses after 1 year - this means that the responses will no longer be associated with you.
 
-2.2.15. To conduct interviews
+2.2.3. To conduct interviews
 In order to understand our users' needs and improve your experience on the Platform, we may conduct voluntary on-site or online interviews with you. For this reason, we collect and use the following data:
 
 - User ID;
@@ -240,7 +240,7 @@ If you wish to participate in the interview, the information above will be colle
 
 We will anonymise your responses after 3 years - this means that the responses will no longer be associated with you.
 
-2.2.16. To enable you to share your user journey
+2.2.4. To enable you to share your user journey
 
 We constantly improve our Platform and look for ways to improve your experience when using cherry. In case you consent, we enable you to share your user journey through our Platform. We will collect and use the following data:
 
@@ -260,7 +260,7 @@ If you wish to participate in the survey, the information above will be collecte
 
 We will anonymise your responses after 3 months - this means that the responses will no longer be associated with you.
 
-2.2.17. To enable automatic content translation
+2.2.5. To enable automatic content translation
 
 To make the content available in any language preferred by our members, we have integrated an automatic translation solution into the Platform.
 
@@ -406,7 +406,7 @@ If you choose to report inappropriate messages, forum activity, members, items, 
 
 Legal basis for such collection and use of your personal data is our legitimate interest to protect the Platform and ensure its security and the legitimate interest of our members to ensure the safety of their accounts on the Platform (Art. 6 (1) (f) of the GDPR).
 
-We collect and use your personal data for this purpose for 14 months from the receipt of your report.
+We may collect and use your personal data for this purpose for 14 months from the receipt of your report.
 
 2.3.10. To report suicidal posts
 In exceptional cases, where we notice suicidal posts on our platform, we may report them to the police. In such cases, we will collect, use and disclose the following data for the purpose of reporting suicidal posts:
@@ -420,7 +420,7 @@ In exceptional cases, where we notice suicidal posts on our platform, we may rep
 
 Legal basis for such collection and use is the protection of your vital interests (Art. 6 (1)(d) of the GDPR).
 
-We collect and use your personal data for this purpose for 7 months after we inform you about our decision regarding the removal of the reported content.
+We may collect and use your personal data for this purpose for 7 months after we inform you about our decision regarding the removal of the reported content.
 
 2.4. To supervise compliance with and enforce GTC
 
@@ -436,11 +436,11 @@ When evaluation of the member reaches certain thresholds, cherry can trigger a v
 
 Legal basis for such collection and use is our legitimate interest to protect the Platform and its users and ensure its security and the legitimate interest of our members to ensure their safety on the Platform (Art. 6 (1) (f) of the GDPR).
 
-We collect and use your personal data for this purpose until the deactivation of your cherry account or for 5 years of inactivity on your account.
+We may collect and use your personal data for this purpose until the deactivation of your cherry account or for 5 years of inactivity on your account.
 
 2.4.2. To identify and prevent malicious accounts and activities
 
-In order to ensure the security of the Platform and its members, cherry collects and maintains a database of keywords indicating malicious accounts and activities. This database may contain emails, certain words or phrases found in messages, and other relevant data. By matching members' activity against the keywords in the database, we can identify and prevent bad actors more effectively.
+In order to ensure the security of the Platform and its members, cherry may collect and maintains a database of keywords indicating malicious accounts and activities. This database may contain emails, certain words or phrases found in messages, and other relevant data. By matching members' activity against the keywords in the database, we can identify and prevent bad actors more effectively.
 
 Legal basis for such collection and use is our legitimate interest to protect the Platform and its users and ensure its security and the legitimate interest of our members to ensure their safety on the Platform (Art. 6 (1) (f) of the GDPR).
 
@@ -475,14 +475,6 @@ If you as a member violate our GTC or take other actions that result in a warnin
 Legal basis for such collection and use is our legitimate interest to protect the Platform and its users and ensure its security and the legitimate interest of our members to ensure their safety on the Platform (Art. 6 (1) (f) of the GDPR).
 
 We collect and use your personal data for this purpose until the deactivation of your cherry account or for 5 years of inactivity on your account.
-
-2.4.6. To delete or hide content that is illegal or violates our GTC
-
-If you upload content (listed items, profile description, messages, etc.) on our Platform that is illegal or violates our GTC, we will remove or hide the same. However, we will retain the deleted content as proof of the violation.
-
-Legal basis for such collection and use is the performance of a contract (GTC) to which you are a party (Art. 6 (1) (b) of the GDPR); or if this is necessary in order to comply with the legal obligations to which cherry is subject (Art. 6 (1) (c) of the GDPR).
-
-Deleted content is kept for 7 months from the decision regarding the removal.
 
 2.4.6. To delete or hide content that is illegal or violates our GTC
 
