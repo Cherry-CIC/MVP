@@ -1,4 +1,5 @@
 import 'package:cherry_mvp/core/config/app_images.dart';
+import 'package:cherry_mvp/core/config/feature_flags.dart';
 import 'package:cherry_mvp/features/search/widgets/search.dart';
 import 'package:flutter/material.dart';
 
@@ -19,6 +20,8 @@ class CherryBottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const giveIndex = FeatureFlags.showInbox ? 2 : 1;
+    const profileIndex = giveIndex + (FeatureFlags.showSearch ? 2 : 1);
     final selectedColor =
         this.selectedColor ?? Theme.of(context).colorScheme.primary;
     final unselectedColor =
@@ -55,34 +58,37 @@ class CherryBottomNavBar extends StatelessWidget {
             ),
             label: 'Home',
           ),
-          BottomNavigationBarItem(
-            icon: Image.asset(
-              AppImages.icMessage,
-              width: 24,
-              height: 24,
-              color: selectedIndex == 1 ? selectedColor : unselectedColor,
+          if (FeatureFlags.showInbox)
+            BottomNavigationBarItem(
+              icon: Image.asset(
+                AppImages.icMessage,
+                width: 24,
+                height: 24,
+                color: selectedIndex == 1 ? selectedColor : unselectedColor,
+              ),
+              label: 'Inbox',
             ),
-            label: 'Inbox',
-          ),
           BottomNavigationBarItem(
             icon: Image.asset(
               AppImages.icAdd,
               width: 24,
               height: 24,
-              color: selectedIndex == 2 ? selectedColor : unselectedColor,
+              color: selectedIndex == giveIndex
+                  ? selectedColor
+                  : unselectedColor,
             ),
             label: 'Give',
           ),
-          BottomNavigationBarItem(
-            icon: Search(),
-            label: 'Search',
-          ),
+          if (FeatureFlags.showSearch)
+            BottomNavigationBarItem(icon: Search(), label: 'Search'),
           BottomNavigationBarItem(
             icon: Image.asset(
               AppImages.icProfile,
               width: 24,
               height: 24,
-              color: selectedIndex == 4 ? selectedColor : unselectedColor,
+              color: selectedIndex == profileIndex
+                  ? selectedColor
+                  : unselectedColor,
             ),
             label: 'Profile',
           ),

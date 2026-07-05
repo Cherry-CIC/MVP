@@ -17,35 +17,42 @@ void _navigateToLegalInformation(BuildContext context) {
 }
 
 final dummyAccountSection = [
-  SectionSettingsItem(
-    title: AppStrings.languageText,
-    trailing: AppStrings.englishText,
-  ),
-  SectionSettingsItem(title: AppStrings.securityText, trailing: ''),
-  SectionSettingsItem(title: AppStrings.aboutUsText, trailing: ''),
+  if (FeatureFlags.showDeferredControls) ...[
+    SectionSettingsItem(
+      title: AppStrings.languageText,
+      trailing: AppStrings.englishText,
+    ),
+    SectionSettingsItem(title: AppStrings.securityText, trailing: ''),
+    SectionSettingsItem(title: AppStrings.aboutUsText, trailing: ''),
+    SectionSettingsItem(title: AppStrings.cookieSettingsText, trailing: ''),
+  ],
   SectionSettingsItem(
     title: AppStrings.legalInformationText,
     trailing: '',
     onTap: _navigateToLegalInformation,
   ),
-  SectionSettingsItem(title: AppStrings.cookieSettingsText, trailing: ''),
   SectionSettingsItem(title: AppStrings.logOutText, trailing: ''),
 ];
 
 final dummyShopSection = [
-  SectionSettingsItem(
-    title: AppStrings.countryText,
-    trailing: AppStrings.unitedKingdomText,
-  ),
-  SectionSettingsItem(
-    title: AppStrings.currencyText,
-    trailing: AppStrings.poundText,
-  ),
-  SectionSettingsItem(title: AppStrings.sizesText, trailing: AppStrings.ukText),
+  if (FeatureFlags.showDeferredControls) ...[
+    SectionSettingsItem(
+      title: AppStrings.countryText,
+      trailing: AppStrings.unitedKingdomText,
+    ),
+    SectionSettingsItem(
+      title: AppStrings.currencyText,
+      trailing: AppStrings.poundText,
+    ),
+    SectionSettingsItem(
+      title: AppStrings.sizesText,
+      trailing: AppStrings.ukText,
+    ),
+  ],
 ];
 
 final dummySupportSection = [
-  SectionSettingsItem(title: AppStrings.chatWithUsText, trailing: ''),
+  if (FeatureFlags.showDeferredControls) SectionSettingsItem(title: AppStrings.chatWithUsText, trailing: ''),
   SectionSettingsItem(
     title: AppStrings.faqText,
     trailing: '',
@@ -54,8 +61,10 @@ final dummySupportSection = [
 ];
 
 final dummyPersonalSection = [
-  SectionSettingsItem(title: AppStrings.profilesText, trailing: ''),
-  SectionSettingsItem(title: AppStrings.shippingAddressText, trailing: ''),
-  SectionSettingsItem(title: AppStrings.paymentMethodsText, trailing: ''),
-  SectionSettingsItem(title: AppStrings.postageText, trailing: ''),
+  if (FeatureFlags.showDeferredControls) ...[
+    SectionSettingsItem(title: AppStrings.profilesText, trailing: ''),
+    SectionSettingsItem(title: AppStrings.shippingAddressText, trailing: ''),
+    SectionSettingsItem(title: AppStrings.paymentMethodsText, trailing: ''),
+    SectionSettingsItem(title: AppStrings.postageText, trailing: ''),
+  ],
 ];

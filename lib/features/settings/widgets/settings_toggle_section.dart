@@ -27,13 +27,15 @@ class SettingsToggleSection extends StatelessWidget {
           onChanged: toggleSwitchDark,
           inactiveThumbColor: Theme.of(context).colorScheme.onSurfaceVariant,
         ),
-        Divider(height: 1),
-        SwitchListTile.adaptive(
-          title: Text(AppStrings.listListingsText),
-          value: isSwitchedHide,
-          onChanged: toggleSwitchHide,
-          inactiveThumbColor: Theme.of(context).colorScheme.onSurfaceVariant,
-        ),
+        if (FeatureFlags.showDeferredControls) ...[
+          Divider(height: 1),
+          SwitchListTile.adaptive(
+            title: Text(AppStrings.listListingsText),
+            value: isSwitchedHide,
+            onChanged: toggleSwitchHide,
+            inactiveThumbColor: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+        ],
       ],
     );
   }

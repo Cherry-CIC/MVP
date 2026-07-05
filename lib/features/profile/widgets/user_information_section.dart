@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:cherry_mvp/core/config/feature_flags.dart';
 import 'package:cherry_mvp/core/config/app_images.dart';
 import 'package:cherry_mvp/core/config/app_strings.dart';
 import 'package:cherry_mvp/core/models/user_section.dart';
@@ -58,25 +59,27 @@ class UserInformationSection extends StatelessWidget {
               ),
               title: Text(name),
               titleTextStyle: Theme.of(context).textTheme.titleSmall,
-              subtitle: Row(
-                spacing: 16,
-                children: [
-                  Expanded(
-                    child: Wrap(
-                      crossAxisAlignment: WrapCrossAlignment.start,
-                      spacing: 4,
-                      runSpacing: 2,
+              subtitle: FeatureFlags.showRatings
+                  ? Row(
+                      spacing: 16,
                       children: [
-                        StarRating(userInformation: userInformationSection),
-                        Text(
-                          ' ${userInformationSection.reviewsCount} ${AppStrings.profileUserInfoSectionBuyerReviews}',
-                          style: Theme.of(context).textTheme.labelMedium,
+                        Expanded(
+                          child: Wrap(
+                            crossAxisAlignment: WrapCrossAlignment.start,
+                            spacing: 4,
+                            runSpacing: 2,
+                            children: [
+                              StarRating(userInformation: userInformationSection),
+                              Text(
+                                ' ${userInformationSection.reviewsCount} ${AppStrings.profileUserInfoSectionBuyerReviews}',
+                                style: Theme.of(context).textTheme.labelMedium,
+                              ),
+                            ],
+                          ),
                         ),
                       ],
-                    ),
-                  ),
-                ],
-              ),
+                    )
+                  : null,
               trailing: Icon(
                 Icons.chevron_right,
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -84,55 +87,65 @@ class UserInformationSection extends StatelessWidget {
             ),
             const SizedBox(height: 20),
 
-            /// Stats Section
-            Wrap(
-              alignment: WrapAlignment.spaceBetween,
-              spacing: 24,
-              runSpacing: 16,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              children: [
-                /// Info Column
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    IconTextRow(
-                      assetPath: AppImages.profileFollowers,
-                      text:
-                          '${userInformationSection.followingCount} ${AppStrings.profileUserInfoSectionFollowing}, '
-                          '${userInformationSection.followersCount} ${AppStrings.profileUserInfoSectionFollowers}',
-                    ),
-                    IconTextRow(
-                      assetPath: AppImages.profileLocation,
-                      text: userInformationSection.location,
-                    ),
-                    IconTextRow(
-                      assetPath: AppImages.profileemail,
-                      text: AppStrings.email,
-                    ),
-                    if (userInformationSection.hasBuyerDiscounts)
-                      IconTextRow(
-                        assetPath: AppImages.profileDiscount,
-                        text: AppStrings.profileUserInfoSectionBuyerDiscount,
-                      ),
-                  ],
-                ),
+            if (FeatureFlags.showProfileStats ||
+                (FeatureFlags.showDonorDiscounts && userInformationSection.hasBuyerDiscounts)) ...[
+              /// Stats Section
+              Wrap(
+                alignment: WrapAlignment.spaceBetween,
+                spacing: 24,
+                runSpacing: 16,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  /// Info Column
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (FeatureFlags.showProfileStats) ...[
+                        IconTextRow(
+                          assetPath: AppImages.profileFollowers,
+                          text:
+                              '${userInformationSection.followingCount} ${AppStrings.profileUserInfoSectionFollowing}, '
+                              '${userInformationSection.followersCount} ${AppStrings.profileUserInfoSectionFollowers}',
+                        ),
+                        IconTextRow(
+                          assetPath: AppImages.profileLocation,
+                          text: userInformationSection.location,
+                        ),
+                        IconTextRow(
+                          assetPath: AppImages.profileemail,
+                          text: AppStrings.email,
+                        ),
+                      ],
+                      if (FeatureFlags.showDonorDiscounts && userInformationSection.hasBuyerDiscounts)
+                        IconTextRow(
+                          assetPath: AppImages.profileDiscount,
+                          text: AppStrings.profileUserInfoSectionBuyerDiscount,
+                        ),
+                    ],
+                  ),
 
-                /// Awards Column
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Image.asset(AppImages.profileAwards, height: 32, width: 32),
-                    const SizedBox(height: 4),
-                    Text(
-                      "${userInformationSection.awards} ${AppStrings.profileUserInfoSectionBuyerAwards}",
-                      style: Theme.of(context).textTheme.titleSmall,
+                  /// Awards Column
+                  if (FeatureFlags.showProfileStats)
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Image.asset(
+                          AppImages.profileAwards,
+                          height: 32,
+                          width: 32,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          "${userInformationSection.awards} ${AppStrings.profileUserInfoSectionBuyerAwards}",
+                          style: Theme.of(context).textTheme.titleSmall,
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
+                ],
+              ),
+              const SizedBox(height: 16),
+            ],
           ],
         );
       },

@@ -42,7 +42,7 @@ class _ProfilePageState extends State<ProfilePage> {
     'followingCount': 0,
     'rating': 0.0,
     'awards': 0,
-    'hasBuyerDiscounts': true,
+    'hasBuyerDiscounts': FeatureFlags.showDonorDiscounts,
   };
   @override
   void initState() {
@@ -81,60 +81,65 @@ class _ProfilePageState extends State<ProfilePage> {
                   navigateToSettings();
                 },
               ),
-              UserOrderDetails(),
-              SizedBox(height: 16),
-              DonationChart(
-                totalAmount: 365.00,
-                donations: {
-                  'BHF': 183,
-                  'Samaritans': 92,
-                  'Cancer Research': 47,
-                  'RNLI': 43,
-                },
-                colors: {
-                  'BHF': AppColors.red,
-                  'Samaritans': AppColors.pink,
-                  'Cancer Research': AppColors.green, //pink
-                  'RNLI': AppColors.purple, //blue
-                },
-              ),
-              SizedBox(height: 24),
-              SizedBox(
-                height: 96,
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: UserActivityCards(
-                        title: AppStrings.profileUserActivityBought,
-                        value: '0',
-                      ),
-                    ),
-                    SizedBox(width: 8),
-                    Expanded(
-                      child: UserActivityCards(
-                        title: AppStrings.profileUserActivitySold,
-                        value: '0',
-                      ),
-                    ),
-                    SizedBox(width: 8),
-                    Expanded(
-                      child: UserActivityCards(
-                        title: AppStrings.profileUserActivityTotal,
-                        value: '0',
-                      ),
-                    ),
-                  ],
+              if (FeatureFlags.showProfileStats || FeatureFlags.showDonorDiscounts) UserOrderDetails(),
+              if (FeatureFlags.showImpactSummaries) ...[
+                SizedBox(height: 16),
+                DonationChart(
+                  totalAmount: 365.00,
+                  donations: {
+                    'BHF': 183,
+                    'Samaritans': 92,
+                    'Cancer Research': 47,
+                    'RNLI': 43,
+                  },
+                  colors: {
+                    'BHF': AppColors.red,
+                    'Samaritans': AppColors.pink,
+                    'Cancer Research': AppColors.green, //pink
+                    'RNLI': AppColors.purple, //blue
+                  },
                 ),
-              ),
-              const SizedBox(height: 24),
-              SizedBox(
-                height: 56,
-                width: double.infinity,
-                child: FilledButton(
-                  onPressed: () {},
-                  child: Text(AppStrings.share),
+                SizedBox(height: 24),
+              ],
+              if (FeatureFlags.showProfileStats) ...[
+                SizedBox(
+                  height: 96,
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: UserActivityCards(
+                          title: AppStrings.profileUserActivityBought,
+                          value: '0',
+                        ),
+                      ),
+                      SizedBox(width: 8),
+                      Expanded(
+                        child: UserActivityCards(
+                          title: AppStrings.profileUserActivitySold,
+                          value: '0',
+                        ),
+                      ),
+                      SizedBox(width: 8),
+                      Expanded(
+                        child: UserActivityCards(
+                          title: AppStrings.profileUserActivityTotal,
+                          value: '0',
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
+                const SizedBox(height: 24),
+              ],
+              if (FeatureFlags.showDeferredControls)
+                SizedBox(
+                  height: 56,
+                  width: double.infinity,
+                  child: FilledButton(
+                    onPressed: () {},
+                    child: Text(AppStrings.share),
+                  ),
+                ),
               SizedBox(height: MediaQuery.of(context).padding.bottom + 16),
             ],
           ),
