@@ -24,6 +24,8 @@ import 'package:cherry_mvp/features/home/home_repository.dart';
 import 'package:cherry_mvp/features/home/home_viewmodel.dart';
 import 'package:cherry_mvp/features/login/login_repository.dart';
 import 'package:cherry_mvp/features/login/login_viewmodel.dart';
+import 'package:cherry_mvp/features/forgot_password/forgot_password_repository.dart';
+import 'package:cherry_mvp/features/forgot_password/forgot_password_viewmodel.dart';
 import 'package:cherry_mvp/features/products/product_repository.dart';
 import 'package:cherry_mvp/features/products/product_viewmodel.dart';
 import 'package:cherry_mvp/features/register/register_repository.dart';
@@ -62,6 +64,11 @@ List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
       create: (context) => LoginRepository(
         Provider.of<FirebaseAuthService>(context, listen: false),
         Provider.of<FirestoreService>(context, listen: false),
+      ),
+    ),
+    Provider<ForgotPasswordRepository>(
+      create: (context) => ForgotPasswordRepository(
+        Provider.of<FirebaseAuthService>(context, listen: false),
       ),
     ),
     Provider<RegisterRepository>(
@@ -113,7 +120,6 @@ List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
       create: (context) {
         return CheckoutRepository(
           Provider.of<ApiService>(context, listen: false),
-          Provider.of<FirestoreService>(context, listen: false),
         );
       },
     ),
@@ -131,6 +137,12 @@ List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
     ChangeNotifierProvider<LoginViewModel>(
       create: (context) => LoginViewModel(
         loginRepository: Provider.of<LoginRepository>(context, listen: false),
+        navigator: Provider.of<NavigationProvider>(context, listen: false),
+      ),
+    ),
+    ChangeNotifierProvider<ForgotPasswordViewModel>(
+      create: (context) => ForgotPasswordViewModel(
+        forgotPasswordRepository: Provider.of<ForgotPasswordRepository>(context, listen: false),
         navigator: Provider.of<NavigationProvider>(context, listen: false),
       ),
     ),
@@ -182,6 +194,7 @@ List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
       create: (context) => CheckoutViewModel(
         checkoutRepository: Provider.of<ICheckoutRepository>(context, listen: false),
         navigator: Provider.of<NavigationProvider>(context, listen: false),
+        donationRepository: Provider.of<IDonationRepository>(context, listen: false),
       ),
     ),
     ChangeNotifierProvider<CharityViewModel>(

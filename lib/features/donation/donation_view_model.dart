@@ -7,16 +7,16 @@ import 'package:cherry_mvp/core/router/nav_provider.dart';
 import 'package:cherry_mvp/core/router/nav_routes.dart';
 import 'package:cherry_mvp/core/utils/utils.dart';
 import 'package:cherry_mvp/features/charity_page/charity_model.dart';
-import 'package:cherry_mvp/features/donation/models/donation_model.dart';
 import 'package:cherry_mvp/features/donation/donation_repository.dart';
+import 'package:cherry_mvp/features/donation/models/donation_model.dart';
+import 'package:cherry_mvp/features/donation/models/postage_size_info.dart';
 
 class DonationViewModel extends ChangeNotifier {
   final IDonationRepository _donationRepository;
   final NavigationProvider navigator;
   final _log = Logger('DonationViewModel');
 
-  DonationViewModel({required IDonationRepository donationRepository, required this.navigator})
-    : _donationRepository = donationRepository;
+  DonationViewModel({required this._donationRepository, required this.navigator});
 
   Status _status = Status.uninitialized;
   DonationResponse? _lastSubmission;
@@ -25,6 +25,9 @@ class DonationViewModel extends ChangeNotifier {
   Status get status => _status;
   DonationResponse? get lastSubmission => _lastSubmission;
   String? get submissionMessage => _submissionMessage;
+
+  List<PostageSizeInfo> _postageSizeInfos = [];
+  List<PostageSizeInfo> get postageSizeInfos => _postageSizeInfos;
 
   Future<void> submitDonation(DonationRequest request) async {
     _log.info('Starting donation submission for: ${request.name}');
@@ -93,5 +96,38 @@ class DonationViewModel extends ChangeNotifier {
     );
 
     return result;
+  }
+
+  Future<PostageSizeInfo?> navigateToPostageSizePage(PostageSizeInfo? selectedPostageSize) async {
+    return await navigator.navigateTo(
+      AppRoutes.postageSize,
+      arguments: {'initialPostageSize': selectedPostageSize},
+    );
+  }
+
+  Future<void> fetchPostageSizes() async {
+    _status = Status.loading;
+    notifyListeners();
+
+    try {
+      final result = await _donationRepository.fetchPostageSizes();
+
+      if (result.isSuccess && result.value != null) {
+        _postageSizeInfos = result.value!;
+        _status = Status.success;
+      } else {
+        _status = Status.failure(result.error ?? 'Failed to fetch postage sizes');
+        _log.warning('Fetch postage sizes failed! ${result.error}');
+      }
+    } catch (e) {
+      _status = Status.failure(e.toString());
+      _log.severe('Fetch postage sizes error: $e');
+    }
+
+    notifyListeners();
+  }
+
+  void goBack([PostageSizeInfo? postageSize]) {
+    navigator.goBack(postageSize);
   }
 }

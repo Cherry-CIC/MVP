@@ -24,6 +24,7 @@ class UserCredentials {
       username: data['username'],
       firstname: data['firstname'],
       photoUrl: data['photoUrl'],
+      phoneNumber: data['phone'],
     );
   }
 
@@ -33,6 +34,12 @@ class UserCredentials {
       email: user.email,
       firstname: user.displayName,
       photoUrl: user.photoURL,
+      phoneNumber: user.phoneNumber,
     );
+  }
+
+  @override
+  String toString() {
+    return 'UserCredentials{uid: $uid, username: $username, firstname: $firstname, photoUrl: $photoUrl}';
   }
 }

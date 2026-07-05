@@ -20,9 +20,7 @@ final class CharityRepository implements ICharityRepository {
       if (result.isSuccess && result.value != null) {
         final data = result.value;
         final List<dynamic> jsonList = data['data'] ?? data;
-        final charities = jsonList
-            .map((json) => Charity.fromJson(json))
-            .toList();
+        final charities = jsonList.map((json) => Charity.fromJson(json)).toList();
         return Result.success(charities);
       } else {
         return Result.failure(result.error ?? 'Failed to fetch charities');

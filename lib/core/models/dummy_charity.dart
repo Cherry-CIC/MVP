@@ -1,11 +1,11 @@
-class Charity {
+class DummyCharity {
   final String charityName;
   final String charityImage;
   final String description;
   final String charityLogo;
   final int likes;
 
-  const Charity({
+  const DummyCharity({
     required this.charityName,
     required this.charityImage,
     required this.description,

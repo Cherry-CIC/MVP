@@ -5,7 +5,8 @@ import 'package:cherry_mvp/features/checkout/checkout_view_model.dart';
 
 class ShareLocationDialog extends StatelessWidget {
   final String postcode;
-  const ShareLocationDialog({required this.postcode, super.key});
+  final String country;
+  const ShareLocationDialog({super.key, required this.postcode, required this.country});
 
   @override
   Widget build(BuildContext context) {
@@ -30,7 +31,7 @@ class ShareLocationDialog extends StatelessWidget {
           ),
         ),
         FilledButton(
-          onPressed: () => context.read<CheckoutViewModel>().onConfirmLocation(postcode),
+          onPressed: () => context.read<CheckoutViewModel>().onConfirmLocation(postcode, country),
           child: Text("Ok"),
         ),
       ],

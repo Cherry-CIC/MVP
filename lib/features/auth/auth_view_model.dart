@@ -45,7 +45,6 @@ class AuthViewModel extends ChangeNotifier {
     }
 
     isLoadingUser = false;
-    print(userCredentials?.firstname);
     notifyListeners();
   }
 

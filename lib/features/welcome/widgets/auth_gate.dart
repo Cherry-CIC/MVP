@@ -1,7 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:provider/provider.dart';
-import 'package:cherry_mvp/features/register/verify_email_page.dart';
 import 'package:cherry_mvp/features/welcome/welcome_page.dart';
 import 'package:cherry_mvp/features/welcome/widgets/post_auth_username_gate.dart';
 
@@ -19,16 +19,18 @@ class AuthGate extends StatelessWidget {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold();
         }
+        FlutterNativeSplash.remove();
 
         final user = snapshot.data;
         if (user != null) {
+          // email verification removed. See https://github.com/Cherry-CIC/MVP/issues/428
           // If user is logged in and the email has been verified, then go to home page,
           // else show the check your email page
-          if (user.emailVerified) {
-            return const PostAuthUsernameGate();
-          } else {
-            return const VerifyEmailPage();
-          }
+          // if (user.emailVerified) {
+          return const PostAuthUsernameGate();
+          // } else {
+          //   return const VerifyEmailPage();
+          // }
         }
 
         // If user is not logged in then go to the WelcomePage

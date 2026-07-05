@@ -1,12 +1,14 @@
-// feature/118-product-details-page
 import 'package:flutter/material.dart';
 import 'package:cherry_mvp/features/charity_page/charity_page.dart';
 import 'package:cherry_mvp/features/checkout/checkout_complete_page.dart';
 import 'package:cherry_mvp/features/checkout/checkout_page.dart';
+import 'package:cherry_mvp/features/checkout/pickup_point_selection_page.dart';
 import 'package:cherry_mvp/features/donation/donation_page.dart';
+import 'package:cherry_mvp/features/donation/postage_size_page.dart';
 import 'package:cherry_mvp/features/donation/successful_upload_page.dart';
 import 'package:cherry_mvp/features/discover/discover_page.dart';
 import 'package:cherry_mvp/features/login/login_page.dart';
+import 'package:cherry_mvp/features/forgot_password/forgot_password_page.dart';
 import 'package:cherry_mvp/features/products/product_page.dart';
 import 'package:cherry_mvp/features/register/register_page.dart';
 import 'package:cherry_mvp/features/search/widgets/category_page/category_page.dart';
@@ -38,6 +40,8 @@ class AppRoutes {
   static const String termsAndConditionsPage = '/terms-and-conditions';
   static const String category = '/category';
   static const String charity = '/charity';
+  static const String postageSize = '/postageSize';
+  static const String pickupPointSelector = '/pickupPointSelector';
 
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
@@ -45,6 +49,8 @@ class AppRoutes {
         return MaterialPageRoute(builder: (_) => const WelcomePage());
       case login:
         return MaterialPageRoute(builder: (_) => const LoginPage());
+      case forgotPassword:
+        return MaterialPageRoute(builder: (_) => const ForgotPasswordPage());
       case register:
         return MaterialPageRoute(builder: (_) => RegisterPage());
       case product:
@@ -95,6 +101,14 @@ class AppRoutes {
             initialCharityId: args?['initialCharityId'],
           ),
         );
+      case postageSize:
+        final args = settings.arguments;
+        final mapArgs = args is Map<String, dynamic> ? args : null;
+        return MaterialPageRoute(
+          builder: (_) => PostageSizePage(initialPostageSize: mapArgs?['initialPostageSize']),
+        );
+      case pickupPointSelector:
+        return MaterialPageRoute(builder: (_) => const PickupPointSelectionPage());
       default:
         return MaterialPageRoute(
           builder: (_) => Scaffold(

@@ -1,10 +1,10 @@
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cherry_mvp/core/config/config.dart';
 import 'package:cherry_mvp/core/router/router.dart';
 import 'package:cherry_mvp/core/services/services.dart';
 import 'package:cherry_mvp/core/utils/utils.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
 class UsernameSetupPage extends StatefulWidget {
   const UsernameSetupPage({super.key});
@@ -101,10 +101,11 @@ class _UsernameSetupPageState extends State<UsernameSetupPage> {
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () async {
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
         await _handleBack();
-        return false;
       },
       child: Scaffold(
         body: SafeArea(

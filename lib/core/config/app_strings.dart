@@ -40,6 +40,7 @@ class AppStrings {
   static const loadingProducts = 'Loading products...';
   static const failedToLoadProducts = 'Failed to load products';
   static const unknownErrorOccurred = 'Unknown error occurred';
+  static const genericError = 'Oops! Something went wrong';
   static const noProductsAvailable = 'No products available';
 
   // Messages
@@ -98,6 +99,7 @@ class AppStrings {
   // Categories
   static const categoriesText = "Categories";
   static const charitiesText = "Charities";
+  static const postageSizesText = "Postage Sizes";
   static const exploreText = "Explore Charities";
   static const accessoriesText = "Accessories";
   static const booksText = "Books";
@@ -122,7 +124,7 @@ class AppStrings {
       'Upload clear, high-quality images to help your items shine. The more angles the better.';
   static const errorPickingImage = 'Error picking image';
   static const tapToAddPhotos = 'Tap to add photos (multiple allowed)';
-  static const catchEyesText = "Catch eyes by using \nquality photos!";
+  static const catchEyesText = "Catch eyes by using quality photos!";
   static const photosTipPopupHeading = "Your photos should...";
   static const clearWellLit = "Be clear and well lit.";
   static const multipleAngles =
@@ -152,8 +154,10 @@ class AppStrings {
   static const charityText = "Charity";
   static const selectOptionText = 'Tap to choose';
   static const charityError = 'Failed to load charities';
+  static const postageSizeInfoError = 'Failed to load postage sizes';
   static const loadCharities = 'Loading charities...';
   static const noCharitiesAvailable = 'No charities available';
+  static const noPostageSizeInfosAvailable = 'No postage sizes available';
   static const searchCharities = 'Search charities';
   static const seeMore = 'See More';
   static const priceText = "Price";
@@ -164,7 +168,9 @@ class AppStrings {
 
   // Donation Validation
   static const pleaseSelectAllDropdowns = 'Please select all dropdowns';
+  static const pleaseSelectCategory = 'Please select a category';
   static const pleaseSelectCharity = 'Please select a charity';
+  static const pleaseChoosePostageSize = 'Please choose a size for postage';
   static const pleaseAddPhoto = 'Please add at least one photo';
   static const submitDonation = 'Submit Donation';
 
@@ -200,11 +206,13 @@ class AppStrings {
   static const checkoutPostage = 'Postage';
   static const checkoutTotal = 'Total';
   static const checkoutDeliveryOption = 'Delivery option';
+  static const checkoutDeliveryDetails = 'Delivery details';
   static const checkoutShipToPickup = 'Ship to pick-up point';
   static const checkoutPickupSubtitle = 'From FREE';
   static const checkoutShipToHome = 'Ship to home';
   static const checkoutHomeSubtitle = 'From £2.99';
-  static const checkoutPickupPoint = 'Pick-up point';
+  static const checkoutChoosePickupPoint = 'Choose a pick-up point';
+  static const checkoutLocker = 'Locker';
   static const checkoutPickupPoint1 = 'Pick-up Point 1';
   static const checkoutPickupPoint2 = 'Pick-up Point 2';
   static const checkoutPickupPoint3 = 'Pick-up Point 3';
@@ -215,6 +223,7 @@ class AppStrings {
   static const checkoutChoosePayment = 'Choose a payment method';
   static const checkoutSecure = 'This is a secure checkout';
   static const checkoutPay = 'Pay';
+  static const checkoutPaymentSuccessful = 'Payment Successful';
   static const checkoutOrderPlaced = 'Order Placed 🎉';
   static const checkoutThankYou = 'Thank you';
   static const checkoutEscrowInfo =
@@ -225,8 +234,15 @@ class AppStrings {
   static const checkoutReview = 'Review';
   static const checkoutContinueShopping = 'Continue Shopping';
   static const checkoutDeliveryOptionRequired = 'Please choose a delivery option';
-  static const checkoutPickupLockerRequired = 'Please select a pickup locker';
+  static const checkoutPickupLockerRequired = 'Please select a pick-up locker';
   static const checkoutPaymentMethodRequired = 'Please select a payment method';
+  static const checkoutShippingMethodRequired = 'Please choose a valid shipping method';
+  static const checkoutPickupDetailsIncomplete = 'Selected pick-up point is missing address details';
+  static const checkoutFindNearestPickupPoints = 'Find pick-up points';
+  static const checkoutNearestPickupPoints = 'Nearest pick-up points';
+  static const checkoutMobilePhoneRequired = 'A mobile phone number is required for InPost pickup';
+  static const checkoutPickupPostcodeRequired = 'Please enter a postcode';
+  static const checkoutPickupPostcodeInvalid = 'Please enter a valid UK postcode';
 
   // Card Details
   static const cardDetailsTitle = 'Card Details';
@@ -333,11 +349,12 @@ class AppStrings {
   static const address = 'Address';
   static const postCode = 'Postcode';
   static const city = 'City';
+  static const mobilePhoneNumber = 'Mobile phone number';
   static const useAsDefaultAddress = 'Use as my Default address';
   static const wantToShareLocation = 'Do you want to share your location?';
-  static const noPickupPointAvailable = 'Pickup points currently unavailable, please try again later';
-  static const loadingPickupPoint = 'Loading Pickup point...';
-  static const failedToLoadPickupPoint = 'Failed to load Pickup point';
+  static const noPickupPointAvailable = 'Pick-up points are currently unavailable. Please try again later.';
+  static const loadingPickupPoint = 'Loading pick-up points...';
+  static const failedToLoadPickupPoint = 'Failed to load pick-up points';
 
   // Discover
   static const itemsInSupportText = "Items in support";

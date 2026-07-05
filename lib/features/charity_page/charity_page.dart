@@ -47,7 +47,7 @@ class CharityPageState extends State<CharityPage> {
           appBar: AppBar(
             leading: IconButton(
               icon: ImageProviderHelper.buildImage(
-                imagePath: AppImages.backCharity,
+                imagePath: AppImages.backIcon,
               ),
               onPressed: () => viewModel.goBack(),
             ),

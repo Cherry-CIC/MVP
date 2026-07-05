@@ -17,11 +17,15 @@ class Product {
   final double donation;
   @JsonKey(fromJson: _parseDouble)
   final double price;
+  @JsonKey(fromJson: _parseOptionalDouble)
+  final double? securityFee;
   @JsonKey(fromJson: _parseInt)
   final int likes;
   @JsonKey(fromJson: _parseInt)
   final int number;
   final String size;
+  @JsonKey(name: 'postageSize')
+  final String postageSizeId;
   final String? categoryId;
   final String? charityId;
   final String? createdAt;
@@ -38,9 +42,11 @@ class Product {
     required this.productImages,
     required this.donation,
     required this.price,
+    required this.securityFee,
     required this.likes,
     required this.number,
     required this.size,
+    required this.postageSizeId,
     this.categoryId,
     this.charityId,
     this.createdAt,
@@ -72,6 +78,14 @@ class Product {
     if (value is int) return value.toDouble();
     if (value is String) return double.tryParse(value) ?? 0.0;
     return 0.0;
+  }
+
+  static double? _parseOptionalDouble(dynamic value) {
+    if (value == null) return null;
+    if (value is double) return value;
+    if (value is int) return value.toDouble();
+    if (value is String) return double.tryParse(value);
+    return null;
   }
 
   static int _parseInt(dynamic value) {

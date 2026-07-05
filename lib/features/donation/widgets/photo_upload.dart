@@ -412,9 +412,7 @@ class _PhotoUploadState extends State<PhotoUpload> {
                 Icon(
                   Icons.image_outlined,
                   size: 48,
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.onSurfaceVariant.withOpacity(0.5),
+                  color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
                 ),
                 const SizedBox(height: 8),
                 Text(
@@ -508,9 +506,7 @@ class _PhotoViewerPageState extends State<_PhotoViewerPage> {
 
   void _handleVerticalDragEnd(DragEndDetails details) {
     final velocity = details.primaryVelocity ?? 0;
-    final shouldDismiss =
-        _verticalDragOffset >= _dismissDragThreshold ||
-        velocity >= _dismissVelocityThreshold;
+    final shouldDismiss = _verticalDragOffset >= _dismissDragThreshold || velocity >= _dismissVelocityThreshold;
 
     if (shouldDismiss) {
       Navigator.of(context).maybePop();
@@ -529,7 +525,7 @@ class _PhotoViewerPageState extends State<_PhotoViewerPage> {
     final backgroundOpacity = 1 - (dragProgress * 0.35);
 
     return Scaffold(
-      backgroundColor: Colors.black.withOpacity(backgroundOpacity),
+      backgroundColor: Colors.black.withValues(alpha: backgroundOpacity),
       appBar: AppBar(
         backgroundColor: Colors.black,
         foregroundColor: Colors.white,

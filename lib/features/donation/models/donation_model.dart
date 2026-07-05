@@ -1,19 +1,20 @@
-
 import 'package:json_annotation/json_annotation.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:cherry_mvp/core/models/product.dart';
 
 part 'donation_model.g.dart';
 
+// TODO why do we have this model and the Product model as well? One seems redundant
 @JsonSerializable()
 class DonationRequest {
   final String name;
   final String description;
-  @JsonKey(name: 'categoryId')
   final String categoryId;
-  @JsonKey(name: 'charityId')
   final String charityId;
   final String quality;
   final String size;
+  @JsonKey(name: 'postageSize')
+  final String postageSizeId;
   @JsonKey(name: 'product_images')
   final List<String>? productImages;
   final double donation;
@@ -31,6 +32,7 @@ class DonationRequest {
     required this.charityId,
     required this.quality,
     required this.size,
+    required this.postageSizeId,
     required this.donation,
     required this.price,
     this.productImages,
@@ -39,8 +41,7 @@ class DonationRequest {
     this.localImages,
   });
 
-  factory DonationRequest.fromJson(Map<String, dynamic> json) =>
-      _$DonationRequestFromJson(json);
+  factory DonationRequest.fromJson(Map<String, dynamic> json) => _$DonationRequestFromJson(json);
 
   Map<String, dynamic> toJson() => _$DonationRequestToJson(this);
 
@@ -51,6 +52,7 @@ class DonationRequest {
     String? charityId,
     String? quality,
     String? size,
+    String? postageSizeId,
     double? donation,
     double? price,
     List<String>? productImages,
@@ -65,6 +67,7 @@ class DonationRequest {
       charityId: charityId ?? this.charityId,
       quality: quality ?? this.quality,
       size: size ?? this.size,
+      postageSizeId: postageSizeId ?? this.postageSizeId,
       donation: donation ?? this.donation,
       price: price ?? this.price,
       productImages: productImages ?? this.productImages,
@@ -79,7 +82,7 @@ class DonationRequest {
 class DonationResponse {
   final bool success;
   final String message;
-  final DonationData data;
+  final Product data;
 
   DonationResponse({
     required this.success,
@@ -87,54 +90,10 @@ class DonationResponse {
     required this.data,
   });
 
-  factory DonationResponse.fromJson(Map<String, dynamic> json) =>
-      _$DonationResponseFromJson(json);
+  factory DonationResponse.fromJson(Map<String, dynamic> json) => _$DonationResponseFromJson(json);
 
   Map<String, dynamic> toJson() => _$DonationResponseToJson(this);
 
   String get id => data.id;
-  String get createdAt => data.createdAt;
-}
-
-@JsonSerializable()
-class DonationData {
-  final String id;
-  final String name;
-  final String description;
-  final String categoryId;
-  final String charityId;
-  final String quality;
-  final String size;
-  @JsonKey(name: 'product_images')
-  final List<String> productImages;
-  final double donation;
-  final double price;
-  final int likes;
-  final int number;
-  final String userId;
-  final String createdAt;
-  final String updatedAt;
-
-  DonationData({
-    required this.id,
-    required this.name,
-    required this.description,
-    required this.categoryId,
-    required this.charityId,
-    required this.quality,
-    required this.size,
-    required this.productImages,
-    required this.donation,
-    required this.price,
-    required this.likes,
-    required this.number,
-    required this.userId,
-    required this.createdAt,
-    required this.updatedAt,
-  });
-
-  factory DonationData.fromJson(Map<String, dynamic> json) =>
-      _$DonationDataFromJson(json);
-
-  Map<String, dynamic> toJson() => _$DonationDataToJson(this);
+  String? get createdAt => data.createdAt;
 }

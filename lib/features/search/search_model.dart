@@ -2,15 +2,14 @@ import 'package:cherry_mvp/core/config/config.dart';
 import 'package:cherry_mvp/core/models/model.dart';
 
 const dummyCharityCategories = [
-  Charity(
+  DummyCharity(
     charityName: "Cherry",
     charityImage: AppImages.cherryLogo,
-    description:
-        "Cherry is a CIC limited by guarantee; so we will never work for anyone's profit.",
+    description: "Cherry is a CIC limited by guarantee; so we will never work for anyone's profit.",
     charityLogo: AppImages.cherryLogo,
     likes: 12,
   ),
-  Charity(
+  DummyCharity(
     charityName: "WaterAid",
     charityImage: AppImages.discoverImage1,
     description:
