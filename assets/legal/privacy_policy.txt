@@ -1,0 +1,687 @@
+Privacy Policy
+
+Date last updated: 05.07.2026
+
+When it comes to your personal data, safety and transparency are our top priorities at cherry. To help you understand what information we collect about you, how we use it, and what rights you have, we have prepared this detailed Privacy Policy.
+
+1. General
+This Privacy Policy applies to the online platform cherry (the "Website") and the associated app (the "App") (collectively referred to as the "Platform").
+The data controller for your personal data is cherry, Ltd., headquartered at 8 Ashbee Close, Snodland, ME6 5HQ. The data controller is referred to as "we," "us," or "cherry." More details about how to contact us can be found at the end of this Privacy Policy.
+
+We take your privacy extremely seriously. All personal data is collected, stored, and used in accordance with the General Data Protection Regulation (GDPR) and other applicable statutory regulations.
+
+The services we offer via the Platform can function only if we collect, store, transfer, delete, and/or otherwise use ("collect and use") specific data relating to you ("personal data" or "data").
+
+Personal data refers to information relating to an identified or identifiable natural person, such as your name, date of birth, address, or email address.
+
+This Privacy Policy describes which of your data we collect and for what purposes we collect and use it when you use the services offered by us on the Platform. It also provides important information on the protection of your data, including the statutory rights you have in connection with it.
+
+Certain services on our Platform may be offered by third-party suppliers. When you use these services, the data protection regulations of the third-party suppliers will apply in addition to this Privacy Policy. Prior to using such services, the third-party suppliers may require you to provide additional permissions under data protection law.
+
+Under applicable data protection laws, cherry is obligated to inform you about data processing, which is addressed in this Privacy Policy.
+
+This document and its parts are not intended as contractual clauses and do not form part of the general terms and conditions ("GTC"). Under applicable laws, cherry processes data necessary for the performance of a contract with you or to take steps at your request prior to entering into a contract (Art. 6 (1) (b) GDPR).
+
+By using the Platform and our services, you enter into a legally binding contract with cherry, governed by the terms outlined in the GTC.
+
+2. Why and how do we collect and use your personal data?
+
+2.1 To enable you to use the Platform, provide our services, and perform our GTC
+
+We collect and use your personal data to enable you to use the Platform, provide our services, and fulfil the terms of our GTC.
+
+This includes facilitating commercial transactions on the Platform, enabling use of the electronic payment system, allowing communication between members, and managing reviews.
+
+To access these services, you must create a cherry account by registering as a member on the Website or App.
+
+Most of your personal data is required to perform the contract (GTC).
+
+Without this data, we cannot provide our services or fulfil legal obligations. Additionally, some data is used to improve the Platform to enhance the user experience.
+
+We retain this data until your cherry account is deactivated or after five years of inactivity.
+
+2.1.1 To enable registration on the Platform
+
+When you register as a member, we collect the following data to complete the registration process and grant access to your cherry account:
+Username (required unless registering via Facebook, Google, or Apple);
+Email address;
+Confirmation that you are over 18 years old;
+Password (required unless registering via Facebook, Google, or Apple).
+
+We also determine your location based on your IP address at the time of registration. You can adjust your location settings and visibility to others under "My settings" in your cherry account.
+
+The legal basis for this data collection is the performance of a contract (Art. 6 (1) (b) GDPR).
+
+2.1.2 To authenticate you via Google, Facebook, or Apple ID
+
+If you register using your Google, Facebook, or Apple account or later connect these accounts to your cherry account, you will be redirected to the respective service provider's website to log in.
+
+cherry receives the following data based on your chosen service provider:
+Google: Full name, profile photo, Google account ID, email address.
+Facebook: Full name, profile photo, Facebook account ID, email address (optional).
+Apple: Full name, Apple ID, email address (optional).
+
+This data is used to set up your cherry account.
+
+The member name from your linked account will serve as your cherry member name and be visible to other members. Other data obtained during authentication is not visible on the Platform.
+
+You may unlink these accounts at any time via "My settings" in your cherry account.
+
+Data collection and use are based on your consent (Art. 6 (1) (a) GDPR).
+
+2.1.3 To enable you to set up your profile information.
+
+If you choose to add profile details to your cherry account, we may collect and use the following data:
+Full name;
+Gender;
+Date of birth;
+Profile photo and associated metadata (e.g., geolocation, device ID, date, and time).
+
+Your profile photo, holiday mode status, and information in the "About You" field are visible to other members. Other data remains private.
+
+Data collection and use are based on your consent (Art. 6 (1) (a) GDPR).
+
+2.1.4 To show relevant information about your activity on the Platform
+
+We may collect, use, and display the following data to other members:
+Last login date;
+Verification status;
+Number of followers and followed members;
+Likes.
+
+This ensures members have access to relevant information about each other. Data collection and use are based on our legitimate interest (Art. 6 (1) (f) GDPR).
+
+2.1.5 To enable you to list items
+
+When you list items for sale, we collect and use the following data:
+Item title, description, category, brand, condition, size, colour, material;
+Photos and metadata (e.g., geolocation, device ID, date, and time);
+Price, discount, and shipping options;
+ISBN for books, if applicable.
+
+This data is required to create, publish, and manage your listings. Data collection and use are based on your consent (Art. 6 (1) (a) GDPR).
+
+2.1.6. To enable notifications on the Platform for you
+
+When you are a registered member on the Platform, we may provide you with notifications regarding your new followers, favourited items, activity on the forum, and other important messages.
+
+The legal basis for the collection and use of data for the purposes of sending notifications via the Platform's messaging system is the performance of a contract (GTC) to which you are party (Art. 6(1)(b) of the GDPR). The legal basis for sending push notifications is our legitimate interest to facilitate activity and engagement on the Platform (Art. 6(1)(f) of the GDPR).
+
+We collect and use your personal data for this purpose until your cherry account is deactivated or after five years of inactivity on your account.
+
+2.1.7. To enable you to communicate with other members
+
+If you communicate with other members on the Platform, we collect and use the following data:
+Name of the member you are communicating with;
+Messages;
+Date and time of messages;
+Shared photos;
+Your device;
+Information about whether another member has seen your message;
+Other data submitted in messages.
+
+The legal basis for the collection and use of data is the performance of a contract (GTC) to which you are a party (Art. 6(1)(b) of the GDPR).
+
+We collect and use your personal data for this purpose until your cherry account is deactivated or after five years of inactivity on your account.
+
+If you decide to remove a message from a conversation, it will be instantly hidden for you and the recipient and permanently deleted three months after removal.
+
+The legal basis for storing removed message data is our legitimate interest to ensure the safety of our Platform and its members (Art. 6(1)(f) of the GDPR).
+
+2.1.8. To enable you to leave reviews for other members on the Platform
+
+If you leave reviews for other members, we collect and use the following data to make reviews publicly available on the Platform:
+Review;
+Star rating;
+Member name;
+Date and time of the review;
+Reply to the review.
+
+The legal basis for this collection and use is your consent (Art. 6(1)(a) of the GDPR).
+You may edit or delete your reviews at any time. We collect and use your personal data for this purpose until your cherry account is deactivated or after five years of inactivity on your account, after which reviews are anonymised.
+
+2.1.9. To receive reviews from other members
+
+When you receive reviews from other members, we collect and use the following data to make reviews publicly available on the Platform:
+Review;
+Star rating;
+Member name;
+Date and time of the review;
+Your reply to the review.
+The legal basis for this collection and use is the legitimate interest of cherry and its members to build trust within the community (Art. 6(1)(f) of the GDPR).
+
+We collect and use your personal data for this purpose until your cherry account is deactivated or after five years of inactivity on your account.
+
+2.1.10. To enable you to post in the forum and discuss with our community
+
+The cherry forum allows members to share experiences, tips, and discuss various topics. You can create new topics or post comments in the forum. We collect and use the following data that you voluntarily submit on the Platform:
+Your member name;
+Your picture;
+Your created forum topics;
+Your forum posts;
+Photos shared in your posts;
+Date and time of your posts;
+Total number of your posts on the Platform;
+Your device;
+Likes under your posts;
+Your likes on other members' posts;
+Your favourite forum topics.
+
+If you choose to post anonymously, your member name and picture will not be visible to other members. However, your identity will still be visible to the cherry team.
+
+The legal basis for this collection and use is your consent (Art. 6(1)(a) of the GDPR).
+You may edit or delete your forum topics and posts at any time. Unless you delete your forum content earlier, we collect and use your personal data for this purpose until your cherry account is deactivated or after five years of inactivity on your account.
+
+2.1.11. To address your public feedback about us
+
+If you leave a public review or feedback about the Platform, we collect and use the following data to address your feedback:
+Full name;
+Country;
+Language (if you leave your feedback on the App Store or Google Play);
+Feedback;
+Date and time of the feedback;
+Link to feedback;
+Technical data related to your browser, device type, and operating system (if you leave your feedback on the App Store or Google Play).
+
+The legal basis for this collection and use is our legitimate interest to manage cherry's reputation (Art. 6(1)(f) of the GDPR).
+
+We collect and use your personal data for this purpose for up to four months.
+
+2.1.12. To send you important communication regarding the Platform
+
+If you register on the Platform, we will send you emails and messages via the Platform's messaging system to provide important notifications, such as changes to the GTC or Privacy Policy.
+
+The legal basis for this collection and use of data is the performance of a contract (compliance with our GTC) to which you are a party (Art. 6(1)(b) of the GDPR) and compliance with legal obligations to which cherry is subject (Art. 6(1)(c) of the GDPR).
+
+We collect and use your personal data for this purpose until your cherry account is deactivated or after five years of inactivity on your account.
+
+2.2.1. To improve our Platform
+
+cherry is committed to the best performance of the Platform. When the Platform is being used, cherry gathers information about actions performed on the Platform (button clicks, visiting time, notifications read, other information depending on a particular business case) and other data described under 2.1, 2.2, 2.5, 2.6, and 4 of this Privacy Policy in order to help us make decisions on how to improve the Platform and make it a better experience for our members.
+
+Legal basis for such collection and use is our legitimate interest to maintain performance and improve the Platform (Art. 6 (1) (f) of the GDPR).
+
+We collect and use your personal data for this purpose until the deactivation of your cherry account or for 5 years of inactivity on your account.
+
+2.2.2. To conduct surveys
+We always look for ways to improve your experience when using cherry. That is why we might invite you to participate in a survey and use your feedback. For this reason, we collect and use the following data:
+
+- User ID;
+- Your gender;
+- Your age;
+- Your live area;
+- Your responses to our questions (e.g., your satisfaction with the Platform, your needs for the Platform, problems that you encounter using the Platform).
+
+Legal basis for inviting you to participate in the survey is our legitimate interest to receive feedback from our members and use it to improve the Platform (Art. 6 (1) (f) of the GDPR, Art. 13 (2) of Directive 2002/58/EC of the European Parliament.
+
+We collect and use your personal data for this purpose until the deactivation of your cherry account or for 5 years of inactivity on your account.
+
+If you wish to participate in the survey, the information above will be collected based on your consent (Art. 6 (1) (a) of the GDPR).
+
+For our surveys, we use a service provider Widgix Limited (United Kingdom, which is considered by the European Commission as safe in terms of data protection).
+
+We will anonymise your responses after 1 year - this means that the responses will no longer be associated with you.
+
+2.2.3. To conduct interviews
+In order to understand our users' needs and improve your experience on the Platform, we may conduct voluntary on-site or online interviews with you. For this reason, we collect and use the following data:
+
+- User ID;
+- Your gender;
+- Your age;
+- Your interests;
+- Your interview recording;
+- Other data voluntarily submitted by you during the interview.
+
+Legal basis for inviting you to participate in the on-site interview is our legitimate interest to receive feedback from our members and use it to improve the Platform (Art. 6 (1) (f) of the GDPR).
+
+We collect and use your personal data for this purpose until the deactivation of your cherry account or for 5 years of inactivity on your account.
+
+If you wish to participate in the interview, the information above will be collected based on your consent (Art. 6 (1) (a) of the GDPR).
+
+We will anonymise your responses after 3 years - this means that the responses will no longer be associated with you.
+
+2.2.4. To enable you to share your user journey
+
+We constantly improve our Platform and look for ways to improve your experience when using cherry. In case you consent, we enable you to share your user journey through our Platform. We will collect and use the following data:
+
+- User ID;
+- Your contact details;
+- Date and time of the survey;
+- Category to which you are assigned (e.g., new member of our Platform);
+- Your screen recording;
+- Your voice recording;
+- Your face recording.
+
+Legal basis for inviting you to participate in the sharing of your user journey is our legitimate interest to receive feedback from our members and use it to improve the Platform (Art. 6 (1) (f) of the GDPR).
+
+We collect and use your personal data for this purpose until the deactivation of your cherry account or for 5 years of inactivity on your account.
+
+If you wish to participate in the survey, the information above will be collected based on your consent (Art. 6 (1) (a) of the GDPR).
+
+We will anonymise your responses after 3 months - this means that the responses will no longer be associated with you.
+
+2.2.5. To enable automatic content translation
+
+To make the content available in any language preferred by our members, we have integrated an automatic translation solution into the Platform.
+
+We collect and use the following data if you or another member wishes to have it translated:
+
+- Information provided in the "About You" field;
+- Item descriptions;
+- Reviews;
+- Messages.
+
+For automatic translation, cherry uses service provider Google LLC (USA), which is established outside the European Economic Area. In this case, the personal data is protected by the service provider entering into the EU standard contractual clauses for the transfer of data as approved by the European Commission.
+
+Legal basis for such collection and use of the personal data is the legitimate interest of cherry and its members (Art. 6 (1) (f) of the GDPR) to make the Platform more convenient and easier to understand for our members.
+
+We collect and use your personal data for this purpose for 2 weeks after the translation has been completed.
+
+2.3. To ensure the security of your account and the Platform
+
+cherry strives to ensure that the accounts of our members and the Platform itself would be secure and protected from cyber attacks, unauthorised access, and other related risks.
+
+2.3.1. To track visits to the Platform for security purposes
+
+When you visit, register, or log in to the Website or App, we collect and use the following data:
+
+- Username;
+- Visitor or User ID number;
+- Email;
+- IP address of your device;
+- Browser used by your device;
+- Content and URLs you connect to;
+- Session information.
+
+In the event of access via mobile devices, the following log files are also captured as part of your use of the cherry App:
+
+- Model and manufacturer of your mobile device;
+- Operating system used by your mobile device (iOS, Android, etc.).
+
+This data is used for security purposes, especially the prevention of cyberattacks such as data scraping, denial of service, and distributed denial of service attacks, and for preventing multiple impermissible applications or extensions that could be used for malicious activity.
+
+Legal basis for such collection and use is our legitimate interest to protect the Platform and ensure its security and the legitimate interest of our members to ensure the safety of their accounts on the Platform (Art. 6 (1) (f) of the GDPR).
+
+Personal data collected and used for this purpose are kept for 3 months.
+
+2.3.2. To help you avoid using a compromised password
+
+If you decide to register using a password or later on decide to change your password, we will check it against a database of passwords compromised in previous data breaches that happened on other platforms and services. To enable this functionality, we take the password, hash it, and then use the first 5 characters of the hash to Have I Been Pwned (https://haveibeenpwned.com/) to search in the compromised password database.
+
+By performing this check, we can protect your account by confirming if you are using a password that is not known to be compromised.
+
+Legal basis for such collection and use is our legitimate interest to protect the Platform and ensure its security and the legitimate interest of our members to ensure the safety of their accounts on the Platform (Art. 6 (1) (f) of the GDPR).
+
+We collect and use personal data for this purpose only for the duration necessary to perform the password check.
+
+2.3.3. To let you reset your password
+
+In case you forgot your password or decide to change it for other reasons and do not have access to your email, we may ask you to answer a few security questions to verify your identity. For this purpose, we will collect and use the following data:
+
+- Email address;
+- Date of birth;
+- Registration date;
+- Last transaction information.
+
+Legal basis for such collection and use of your personal data is our legitimate interest to protect the Platform and ensure its security and the legitimate interest of our members to ensure the safety of their accounts on the Platform (Art. 6 (1) (f) of the GDPR).
+
+We collect and use your personal data for this purpose until the deactivation of your cherry account or for 5 years of inactivity on your account.
+
+2.3.4. To verify your account in case of suspicious actions related to your account
+
+If we detect actions on your account that cherry considers suspicious, we will request you to perform a basic verification - confirm your email, Facebook, or Google accounts. For the purpose of performing a basic verification, we will collect and use the following data:
+
+- Email address; or
+- Information received during Facebook or Google authentication (as described 2.1.2 above).
+
+Legal basis for such collection and use is our legitimate interest to protect the Platform and ensure its security and the legitimate interest of our members to ensure the safety of their accounts on the Platform (Art. 6 (1) (f) of the GDPR).
+
+We collect and use your personal data for this purpose until the deactivation of your cherry account or for 5 years of inactivity on your account.
+
+2.3.5. To carry out phone number verification and 2-step verification
+
+When you decide to apply an additional layer of protection to your account and activate phone verification, we will use your phone number in order to enable this functionality.
+Legal basis for such collection and use is our legitimate interest to offer our users additional measures to protect their account (Art. 6 (1) (f) of the GDPR).
+
+You may also be requested to verify your phone in case of suspicious activities regarding your account.
+In that case, verification is mandatory and personal data collection and use is based on the performance of a contract (GTC) to which you are a party (Art. 6 (1) (b) of the GDPR).
+
+When you verify your phone number, cherry will collect and use your phone number for 2-step verification purposes.
+
+Personal data for mandatory verification are required to perform a contract (GTC) with you.
+
+In case you do not provide us with this personal data, we will not be able to conclude and execute a contract (GTC) with you.
+
+In order to carry out phone number verification and 2-step verification, we use a service provider Vonage Holdings Corp. (USA) that enables us to send you verification messages or make verification calls to dictate verification code when you do not verify your phone number in 5 minutes.
+
+While this results in your data being shared outside the European Economic Area, the data is protected by the service provider entering into the EU Standard Contractual Clauses for the transfer of data as approved by the European Commission.
+
+We collect and use your personal data for this purpose until the deactivation of your cherry account or for 5 years of inactivity on your account.
+
+2.3.6. To carry out payment source security check
+
+As part of the security process, we request our members to provide verification of their payment source. In order to perform such security checks, cherry collects and uses the following personal data:
+
+- Username;
+- When we perform a payment card security check - information contained in a photo of the payment card: full name, card's expiry date and the last four digits of the card number, other information visible on the front of the card if the member chooses not to cover it;
+- When we perform a bank account security check - information contained in a photo/screenshot of the bank statement listing the most recent charge/charges: date and description of the last cherry charge, other payment information if the member chooses not to blur out other information.
+
+Legal basis for such collection and use is our legitimate interest to protect the Platform and ensure its security and the legitimate interest of our members to ensure the safety of their accounts on the Platform (Art. 6 (1) (f) of the GDPR).
+
+Personal data collected and used for this purpose are kept for 4 days after the security check is passed.
+
+2.3.7. To ensure that listings comply with our Authenticity Policy
+
+For some listings, we collect and use the following data in order to ensure that such listings comply with our Authenticity Policy:
+
+- Information provided in the listing (see 2.1.5 above);
+- Information on the item's authenticity: photos of e.g. the receipt, certificate, tag, logo, pattern, stitches, original packaging, date code, authenticity code or any other relevant information that would showcase the authenticity of the item.
+
+Legal basis for such collection and use of your personal data is our legitimate interest to protect the Platform and our members from eventual counterfeit (Art. 6 (1) (f) of the GDPR).
+
+We can share photos of listings and other proofs of authenticity without your personal data with brand owners in order to check some items.
+
+Personal data collected and used for this purpose are kept for 2 years when it is necessary to solve a dispute between our users.
+
+2.3.8. To carry out account ownership check
+
+As part of the security process, we may request our members to verify the ownership of their cherry account.
+To confirm your identity, we will need one of the following proofs:
+
+- A photo/screenshot of your bank statement showing your recent cherry charge/charges;
+- A photo of your payment card you used for your purchases on cherry (the photo needs to showcase the cardholder's full name, last 4 digits, expiration date, bank name, card type, as well as a handwritten note with your username and current date).
+
+Legal basis for such collection and use of your personal data is our legitimate interest to protect the Platform and ensure its security and the legitimate interest of our members to ensure the safety of their accounts on the Platform (Art. 6 (1) (f) of the GDPR).
+
+Personal data collected and used for this purpose are kept for 3 days from the receipt of the proof.
+
+2.3.9. To enable you to report inappropriate behaviour or content
+
+If you choose to report inappropriate messages, forum activity, members, items, spam or spoof mail, or submit an Intellectual Property Infringement Report, we will collect and use the following data for the purpose of ensuring the security of the Platform and its members:
+
+- Reported content;
+- Reporting reason;
+- Information provided in the report;
+- Date and time of your report.
+
+Legal basis for such collection and use of your personal data is our legitimate interest to protect the Platform and ensure its security and the legitimate interest of our members to ensure the safety of their accounts on the Platform (Art. 6 (1) (f) of the GDPR).
+
+We may collect and use your personal data for this purpose for 14 months from the receipt of your report.
+
+2.3.10. To report suicidal posts
+In exceptional cases, where we notice suicidal posts on our platform, we may report them to the police. In such cases, we will collect, use and disclose the following data for the purpose of reporting suicidal posts:
+
+- Username;
+- Email address;
+- Full name;
+- IP addresses and last logins;
+- Telephone number (if verified);
+- Print screen/link of forum post or thread where the declaration of suicide appears.
+
+Legal basis for such collection and use is the protection of your vital interests (Art. 6 (1)(d) of the GDPR).
+
+We may collect and use your personal data for this purpose for 7 months after we inform you about our decision regarding the removal of the reported content.
+
+2.4. To supervise compliance with and enforce GTC
+
+cherry actively supervises compliance with and enforces GTC for the purpose of ensuring the security of your account and the Platform.
+
+2.4.1. To calculate trust score
+
+In order to ensure the security of the Platform and its members, cherry gives each member a "trust score" calculated using an algorithm and maintains a database of unlawful activities typically performed by bad actors. The "trust score" indicates the likelihood of misuse of the Platform.
+
+Our algorithm takes into account members' comments on a forum, messages to other members, items listed on the platform, transactions, reports on the member by other members, the member's profile and contact information, the member's violations of our GTC, IP addresses, and browser fingerprints, and other content the member provides us with.
+
+When evaluation of the member reaches certain thresholds, cherry can trigger a verification procedure (the member is asked to verify their telephone number, email, Facebook or Google accounts) or restrict the usage of the Platform.
+
+Legal basis for such collection and use is our legitimate interest to protect the Platform and its users and ensure its security and the legitimate interest of our members to ensure their safety on the Platform (Art. 6 (1) (f) of the GDPR).
+
+We may collect and use your personal data for this purpose until the deactivation of your cherry account or for 5 years of inactivity on your account.
+
+2.4.2. To identify and prevent malicious accounts and activities
+
+In order to ensure the security of the Platform and its members, cherry may collect and maintains a database of keywords indicating malicious accounts and activities. This database may contain emails, certain words or phrases found in messages, and other relevant data. By matching members' activity against the keywords in the database, we can identify and prevent bad actors more effectively.
+
+Legal basis for such collection and use is our legitimate interest to protect the Platform and its users and ensure its security and the legitimate interest of our members to ensure their safety on the Platform (Art. 6 (1) (f) of the GDPR).
+
+The database entries containing personal data are retained for 13 months.
+
+2.4.3. To enforce spam filtering
+
+In order to protect our members and the Platform, we use spam filtering tools. These tools have a list of keywords that are commonly associated with spam. If your messages include aforementioned keywords, they are stopped by the aforementioned tools and reviewed manually before being sent to other members.
+
+Legal basis for such collection and use is our legitimate interest to protect the Platform and its users and ensure its security and the legitimate interest of our members to ensure their safety on the Platform (Art. 6 (1) (f) of the GDPR).
+
+We collect and use your personal data for this purpose until the deactivation of your cherry account or for 5 years of inactivity on your account.
+
+2.4.4. To moderate your activity on the Platform
+
+In order to ensure the security of the Platform and its members we regularly moderate your activity on the Platform. We may check your listings automatically or we may check your listings, comments, and messages when we receive other members' or third party's reports.
+
+If you communicate with another cherry member via private messages and either you or another member sends us a report or escalates a transaction, we collect and use information contained in your communication to check for a potential violation of our GTC.
+
+Legal basis for such collection and use is our legitimate interest to protect the Platform and its users and ensure its security and the legitimate interest of our members to ensure their safety on the Platform (Art. 6 (1) (f) of the GDPR).
+
+We collect and use your personal data for this purpose until the deactivation of your cherry account or for 5 years of inactivity on your account.
+
+2.4.5. To issue and enforce warnings
+
+If you as a member violate our GTC or take other actions that result in a warning being issued to you, we collect and use the following data to issue and enforce the warning:
+
+- Username;
+- Kind of warning received by member;
+- Date of warning received by member.
+
+Legal basis for such collection and use is our legitimate interest to protect the Platform and its users and ensure its security and the legitimate interest of our members to ensure their safety on the Platform (Art. 6 (1) (f) of the GDPR).
+
+We collect and use your personal data for this purpose until the deactivation of your cherry account or for 5 years of inactivity on your account.
+
+2.4.6. To delete or hide content that is illegal or violates our GTC
+
+If you upload content (e.g., listed items, profile descriptions, or messages) on our Platform that is illegal or violates our General Terms and Conditions (GTC), we will remove or hide such content. However, we will retain the deleted content as evidence of the violation.
+
+The legal basis for this collection and use of personal data is the performance of a contract (GTC) to which you are a party (Art. 6 (1) (b) of the GDPR), or compliance with legal obligations to which cherry is subject (Art. 6 (1) (c) of the GDPR).
+
+Deleted content will be retained for 7 months from the date of removal.
+
+2.4.7. To detect and lock compromised accounts
+
+To protect our members and the Platform, we routinely monitor for suspicious activities to detect compromised accounts. If we identify that your account may be compromised or receive a request from you, we may lock your account.
+
+The legal basis for this collection and use of personal data is our legitimate interest in protecting the Platform and ensuring its security, as well as safeguarding our members (Art. 6 (1) (f) of the GDPR).
+
+We retain personal data for this purpose until your cherry account is deactivated or after 5 years of inactivity.
+If a locked account is later unlocked, we retain the data for 2 years from the unlocking date. For accounts that remain permanently locked, data is retained for 5 years after your last activity on the Platform.
+
+2.4.8. To suspend members
+If you send an excessive number of messages within a short period, you may be temporarily suspended for a duration of 1 to 6 hours. For this purpose, cherry collects and uses data regarding the time and duration of the suspension.
+
+The legal basis for this collection and use is our legitimate interest in protecting the Platform and its users, ensuring its security, and safeguarding our members (Art. 6 (1) (f) of the GDPR).
+
+We retain personal data for this purpose until your cherry account is deactivated or after 5 years of inactivity.
+
+2.4.9. To block members' accounts and enforce blocking
+
+Based on your use of the Platform and as described in our GTC, your account may be temporarily or permanently blocked.
+
+cherry may utilise automated tools to block accounts to maintain Platform integrity and ensure safe services. Automation is necessary for efficient security management and harm prevention. The data categories used to make these decisions include:
+
+- Registration data;
+- Platform activity;
+- Session information;
+- Listing information;
+- Communication data;
+- Settings and preferences.
+
+cherry identifies harmful profiles, such as scammers or users listing counterfeit items, using predefined criteria and automated tools. Harmful profiles are automatically flagged, and accounts may be blocked. Measures to ensure accuracy, such as manual reviews, are in place. The consequences of blocking are detailed in our GTC.
+
+The legal basis for this collection and use of personal data is the performance of a contract (GTC) to which you are a party (Art. 6 (1) (b) of the GDPR).
+
+We retain personal data for decisions regarding account blocking until the deletion of your cherry account. Data related to the blocking, such as reason, date, and time, is retained for 14 days or up to 7 months after blocking.
+
+2.4.10. To enforce IP blocks
+
+If there is evidence of cyber-attacks or other risks to the Platform's security originating from your IP address, we may collect and use your IP address to block access.
+
+The legal basis for this collection and use is our legitimate interest in protecting the Platform, ensuring its security, and safeguarding our members (Art. 6 (1) (f) of the GDPR).
+
+Personal data collected and used for this purpose is retained for 3 months.
+
+2.4.11. To restrict the fraudulent use of payment instruments
+
+If we detect signs of fraudulent activity involving your payment instrument (e.g., credit/debit card), we may collect and use payment and transaction data to restrict its use on the Platform.
+
+The legal basis for this collection and use is our legitimate interest in protecting the Platform, ensuring its security, and safeguarding our members (Art. 6 (1) (f) of the GDPR).
+
+Personal data collected and used for this purpose is retained for the duration of the restrictions applied.
+
+2.4.12. To verify suspected minor account ownership
+
+As the Platform is intended for individuals aged 18 and over, parents or guardians can report an account they suspect belongs to a minor and request that it be blocked.
+
+To process such a request, the parent/guardian must provide:
+
+- Full name;
+- The suspected minor's username, full name, and age;
+- Proof of parental authority (e.g., shared surname or legal authority).
+
+We will contact the account holder to verify their identity and age. Accepted proof of identity includes:
+
+- Identity card;
+- Passport;
+- Driving licence;
+- Student ID;
+- Social health insurance card;
+- Public transport pass;
+- Bank statement.
+
+Personal information irrelevant to the verification process (e.g., ID numbers, addresses) may be redacted.
+
+The legal basis for collecting and using data from parents/guardians is our legitimate interest in ensuring compliance with our GTC (Art. 6 (1) (f) of the GDPR). The legal basis for processing account holder data is the performance of a contract (GTC) (Art. 6 (1) (b) of the GDPR).
+
+Personal data collected for this purpose is retained for 2 years. Copies of uploaded documents are deleted within 3 days of receipt.
+
+2.5. To enable your payments for items
+
+Payments on the Platform are facilitated by payment service providers that handle payment processing and escrow services.
+
+Most personal data is required to fulfil a contract (GTC) with you. If you do not provide this data, we cannot conclude or execute the contract (GTC) (Art. 6 (1) (b) of the GDPR). Additionally, some data is needed to meet our or our payment providers' legal obligations (Art. 6 (1) (c) of the GDPR). Without this information, we cannot comply with legal requirements or provide our services.
+
+This data may also be used to improve the Platform and enhance user experience (see 2.2.12).
+
+2.5.1. To enable purchases or add a payment card
+
+When you add a payment card or purchase items or extra services via the Platform, we collect the following data to process payments:
+
+- Full name;
+- First six and last four digits of your payment card number;
+- Expiration date.
+
+The payment service provider (see 2.5.3) will also collect:
+
+- Payment card holder's full name;
+- Full card number;
+- Expiration date;
+- Security code (CVV/CVC).
+
+The legal basis for collecting and using this data is the performance of a contract (GTC) to which you are a party (Art. 6 (1) (b) of the GDPR).
+
+If you consent, we may store your payment card details for future transactions.
+
+The legal basis for storing payment card details is your consent (Art. 6 (1) (a) of the GDPR).
+
+We retain your personal data for this purpose until the deactivation of your cherry account or 5 years of account inactivity.
+
+2.5.2. To add a bank account for withdrawals
+
+When adding a bank account to withdraw funds, we collect the following data:
+
+- Account holder's full name;
+- Account number;
+- Address.
+
+The legal basis for collecting and using this data is the performance of a contract (GTC) to which you are a party (Art. 6 (1) (b) of the GDPR).
+
+We retain your personal data for this purpose until the deactivation of your cherry account or 5 years of account inactivity.
+
+2.5.3. To process payments and enable transactions
+
+When you make a payment for items, extra services, or use chargeable services on the Platform, payments are processed via the electronic payment system MANGOPAY, operated by MANGOPAY S.A. (Luxembourg). To use MANGOPAY, the following data is collected and transferred to MANGOPAY:
+
+- Full name;
+- Invoice address.
+
+MANGOPAY will collect additional payment information based on the selected payment method (e.g., credit card, PayPal, Google Pay, Apple Pay). Payments are processed by MANGOPAY and the payment scheme owner or facilitator of your chosen method. Their data protection rules apply. For more details, see Article 7 of our GTC.
+
+If you use a payment card, cherry will only have access to the cardholder's name, the first six and last four digits of the card number, and the expiration date. This information is used solely for payment confirmation and security purposes.
+
+The legal basis for collecting and using this data is the performance of a contract (GTC) to which you are a party (Art. 6 (1) (b) of the GDPR).
+
+We retain your personal data for this purpose until the deactivation of your cherry account or 5 years of account inactivity.
+
+2.5.4. To enable donations
+
+If/ when you make a donation via the Platform, we collect and use the following data:
+
+- Donation amount;
+- Date and time of donation;
+- Name of the receiving organisation.
+
+The legal basis for collecting and using this data is our legitimate interest in enabling members to support their chosen causes (Art. 6 (1) (f) of the GDPR).
+
+We retain your personal data for this purpose until the deactivation of your cherry account or 5 years of account inactivity.
+
+2.5.5. To conduct Know Your Customer (KYC) checks
+
+When certain thresholds are met, as defined by MANGOPAY, you may be required to provide a copy of identification (e.g., passport, ID card, or driving licence) for verification purposes. MANGOPAY collects the following data:
+
+- Full name;
+- Date of birth;
+- Country;
+- Address;
+- Information on the provided document, including document number, photograph, gender, nationality, issue and expiry dates, and other relevant details.
+
+For KYC checks, MANGOPAY acts as the data controller. You can find their privacy policy at [www.mangopay.com/privacy-statement](http://www.mangopay.com/privacy-statement).
+
+cherry implements MANGOPAY's API, allowing you to submit documents directly without storing copies on cherry's systems.
+
+The legal basis for providing this data is to fulfil MANGOPAY's legal obligations (Art. 6 (1) (f) of the GDPR).
+
+2.5.6. To carry out Politically Exposed Persons (PEP) checks on our Platform
+
+In rare instances, additional information may be required to continue using cherry. If you conduct a high volume of transactions on our Platform, our payment provider MANGOPAY may require further checks as part of anti-money laundering and counter-terrorist financing measures. In such cases, we collect and use the following data provided in a declaration regarding Politically Exposed Persons (PEP):
+
+- Full name;
+- Date and place of birth;
+- Country of residence;
+- Address;
+- Phone number;
+- Email address;
+- The function held and the country where the function is held;
+- Origin of the funds used on the Platform or destination of the funds;
+- Information related to relatives who are PEPs - connection to the PEP, full names, dates and places of birth;
+- Current job;
+- Date;
+- Signature.
+
+This data is necessary to fulfil our legitimate interest in providing MANGOPAY with the required information to comply with its legal obligations (Art. 6 (1) (f) of the GDPR).
+
+Personal data collected for this purpose is retained only until it is transferred to MANGOPAY.
+
+For PEP checks, MANGOPAY acts as the data controller. For more information, refer to MANGOPAY's privacy policy at [www.mangopay.com/privacy-statement](https://www.mangopay.com/privacy-statement).
+
+2.5.7. To issue refunds
+
+If you make a claim because an item you purchased is not shipped, arrives damaged, or is not as described, we use the data collected during your purchase (see section 2.5.1) to process your refund.
+
+The legal basis for collecting and using this data is the performance of a contract (GTC) to which you are a party (Art. 6 (1) (b) of the GDPR).
+
+Personal data is necessary to perform the contract. Without this information, we cannot fulfil the contract (GTC) or issue a refund.
+
+Transaction data is retained for 13 months from the transaction date.
+
+2.5.8. To transfer your information to a seller
+
+If you purchase an item from a seller, we may collect and transfer your email address to the seller to fulfil their obligation to issue an invoice.
+
+This is necessary to fulfil our legitimate interest in providing sellers with the information required to comply with their legal obligations (Art. 6 (1) (f) of the GDPR).

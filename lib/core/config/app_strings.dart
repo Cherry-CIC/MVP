@@ -322,6 +322,9 @@ class AppStrings {
   static const securityText = "Security";
   static const aboutUsText = "About us";
   static const legalInformationText = "Legal information";
+  static const privacyPolicyText = "Privacy Policy";
+  static const termsAndConditionsText = "Terms and Conditions";
+  static const legalDocumentLoadErrorText = "We couldn't load this legal document. Please try again.";
   static const cookieSettingsText = "Cookie settings";
   static const logOutText = "Log out";
   static const supportText = "Support";

@@ -11,6 +11,11 @@ void _navigateToFaq(BuildContext context) {
   navigator.navigateTo(AppRoutes.faqsPage);
 }
 
+void _navigateToLegalInformation(BuildContext context) {
+  final navigator = Provider.of<NavigationProvider>(context, listen: false);
+  navigator.navigateTo(AppRoutes.legalInformationPage);
+}
+
 final dummyAccountSection = [
   SectionSettingsItem(
     title: AppStrings.languageText,
@@ -18,7 +23,11 @@ final dummyAccountSection = [
   ),
   SectionSettingsItem(title: AppStrings.securityText, trailing: ''),
   SectionSettingsItem(title: AppStrings.aboutUsText, trailing: ''),
-  SectionSettingsItem(title: AppStrings.legalInformationText, trailing: ''),
+  SectionSettingsItem(
+    title: AppStrings.legalInformationText,
+    trailing: '',
+    onTap: _navigateToLegalInformation,
+  ),
   SectionSettingsItem(title: AppStrings.cookieSettingsText, trailing: ''),
   SectionSettingsItem(title: AppStrings.logOutText, trailing: ''),
 ];
