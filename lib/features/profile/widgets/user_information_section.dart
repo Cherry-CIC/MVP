@@ -1,0 +1,183 @@
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:cherry_mvp/core/config/feature_flags.dart';
+import 'package:cherry_mvp/core/config/app_images.dart';
+import 'package:cherry_mvp/core/config/app_strings.dart';
+import 'package:cherry_mvp/core/models/user_section.dart';
+import 'package:cherry_mvp/core/widgets/profile_section_icontextrow.dart';
+import 'package:cherry_mvp/core/widgets/star_rating.dart';
+import 'package:cherry_mvp/features/auth/auth_view_model.dart';
+
+class UserInformationSection extends StatelessWidget {
+  final UserInformation userInformationSection;
+  final VoidCallback onSettingsPressed;
+
+  const UserInformationSection({
+    super.key,
+    required this.userInformationSection,
+    required this.onSettingsPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<AuthViewModel>(
+      builder: (context, auth, _) {
+        final username = auth.userCredentials?.username?.trim();
+        final firstName = auth.userCredentials?.firstname?.trim();
+        final email = auth.userCredentials?.email?.trim();
+        final photoUrl = auth.userCredentials?.photoUrl?.trim();
+        final emailName = (email != null && email.contains('@')) ? email.split('@').first : email;
+
+        final name = (username != null && username.isNotEmpty)
+            ? username
+            : (firstName != null && firstName.isNotEmpty)
+            ? firstName
+            : (emailName != null && emailName.isNotEmpty)
+            ? emailName
+            : 'User';
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            /// Top Greeting Row
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text("${AppStrings.greeting}, $name!"),
+              titleTextStyle: Theme.of(context).textTheme.titleLarge,
+              trailing: IconButton(
+                onPressed: onSettingsPressed,
+                icon: Icon(Icons.settings),
+                color: Theme.of(context).colorScheme.primary,
+              ),
+            ),
+            const SizedBox(height: 8),
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: _ProfileImage(photoUrl: photoUrl),
+              title: Text(name),
+              titleTextStyle: Theme.of(context).textTheme.titleSmall,
+              subtitle: FeatureFlags.showRatings
+                  ? Row(
+                      spacing: 16,
+                      children: [
+                        Expanded(
+                          child: Wrap(
+                            crossAxisAlignment: WrapCrossAlignment.start,
+                            spacing: 4,
+                            runSpacing: 2,
+                            children: [
+                              StarRating(userInformation: userInformationSection),
+                              Text(
+                                ' ${userInformationSection.reviewsCount} ${AppStrings.profileUserInfoSectionBuyerReviews}',
+                                style: Theme.of(context).textTheme.labelMedium,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    )
+                  : null,
+              trailing: Icon(
+                Icons.chevron_right,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            if (FeatureFlags.showProfileStats ||
+                (FeatureFlags.showDonorDiscounts && userInformationSection.hasBuyerDiscounts)) ...[
+              /// Stats Section
+              Wrap(
+                alignment: WrapAlignment.spaceBetween,
+                spacing: 24,
+                runSpacing: 16,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  /// Info Column
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (FeatureFlags.showProfileStats) ...[
+                        IconTextRow(
+                          assetPath: AppImages.profileFollowers,
+                          text:
+                              '${userInformationSection.followingCount} ${AppStrings.profileUserInfoSectionFollowing}, '
+                              '${userInformationSection.followersCount} ${AppStrings.profileUserInfoSectionFollowers}',
+                        ),
+                        IconTextRow(
+                          assetPath: AppImages.profileLocation,
+                          text: userInformationSection.location,
+                        ),
+                        IconTextRow(
+                          assetPath: AppImages.profileemail,
+                          text: AppStrings.email,
+                        ),
+                      ],
+                      if (FeatureFlags.showDonorDiscounts && userInformationSection.hasBuyerDiscounts)
+                        IconTextRow(
+                          assetPath: AppImages.profileDiscount,
+                          text: AppStrings.profileUserInfoSectionBuyerDiscount,
+                        ),
+                    ],
+                  ),
+
+                  /// Awards Column
+                  if (FeatureFlags.showProfileStats)
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Image.asset(
+                          AppImages.profileAwards,
+                          height: 32,
+                          width: 32,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          "${userInformationSection.awards} ${AppStrings.profileUserInfoSectionBuyerAwards}",
+                          style: Theme.of(context).textTheme.titleSmall,
+                        ),
+                      ],
+                    ),
+                ],
+              ),
+              const SizedBox(height: 16),
+            ],
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _ProfileImage extends StatelessWidget {
+  final String? photoUrl;
+
+  const _ProfileImage({required this.photoUrl});
+
+  @override
+  Widget build(BuildContext context) {
+    final url = photoUrl;
+    if (url != null && url.isNotEmpty) {
+      return ClipOval(
+        child: Image.network(
+          url,
+          height: 48,
+          width: 48,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) => _fallbackImage(),
+        ),
+      );
+    }
+
+    return _fallbackImage();
+  }
+
+  Widget _fallbackImage() {
+    return Image.asset(
+      AppImages.profileProfileIcon,
+      height: 48,
+      width: 48,
+    );
+  }
+}

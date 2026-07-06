@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "401854471349",
+    "project_id": "cherry-mvp",
+    "storage_bucket": "cherry-mvp.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:401854471349:android:8cff1aa597379a8c85f2fc",
+        "android_client_info": {
+          "package_name": "uk.org.cherry.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "401854471349-803q3o5vmr8m94fuvt50t1ke07h79c87.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCKF0hkCPR2nhUfv_CsgZFsnWcx7hjkep4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "401854471349-803q3o5vmr8m94fuvt50t1ke07h79c87.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

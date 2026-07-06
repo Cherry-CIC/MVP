@@ -1,0 +1,36 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function onlyUpdatesSafeUserFields() {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+        'firstname',
+        'username',
+        'phone',
+        'photoUrl',
+        'photoStoragePath',
+        'photoUpdatedAt'
+      ]);
+    }
+
+    match /users/{userId} {
+      allow read: if true;
+      allow create: if isOwner(userId) && request.resource.data.id == userId;
+      allow update: if isOwner(userId) && onlyUpdatesSafeUserFields();
+      allow delete: if false;
+    }
+
+    match /{document=**} {
+      // TODO: replace with collection-specific rules before production scale.
+      allow read, write: if isSignedIn();
+    }
+  }
+}

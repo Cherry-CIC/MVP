@@ -1,0 +1,48 @@
+import 'package:flutter/cupertino.dart';
+import 'package:logging/logging.dart';
+import 'package:cherry_mvp/core/router/nav_provider.dart';
+import 'package:cherry_mvp/core/utils/utils.dart';
+import 'package:cherry_mvp/features/charity_page/charity_model.dart';
+import 'package:cherry_mvp/features/charity_page/charity_repository.dart';
+
+class CharityViewModel extends ChangeNotifier {
+  final _log = Logger('CharityViewModel');
+  final ICharityRepository charityRepository;
+  final NavigationProvider navigator;
+
+  CharityViewModel({required this.charityRepository, required this.navigator});
+
+  // Private variables
+  Status _status = Status.uninitialized;
+  List<Charity> _charities = [];
+
+  // Public getters
+  Status get status => _status;
+  List<Charity> get charities => _charities;
+
+  Future<void> fetchCharities() async {
+    _status = Status.loading;
+    notifyListeners();
+
+    try {
+      final result = await charityRepository.fetchCharities();
+
+      if (result.isSuccess && result.value != null) {
+        _charities = result.value!;
+        _status = Status.success;
+      } else {
+        _status = Status.failure(result.error ?? 'Failed to fetch charities');
+        _log.warning('Fetch charities failed! ${result.error}');
+      }
+    } catch (e) {
+      _status = Status.failure(e.toString());
+      _log.severe('Fetch charities error: $e');
+    }
+
+    notifyListeners();
+  }
+
+  void goBack([Charity? charity]) {
+    navigator.goBack(charity);
+  }
+}

@@ -1,0 +1,59 @@
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+migrate_working_dir/
+
+# IntelliJ related
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# Flutter/Dart/Pub related
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+/build/
+
+# Firebase
+/lib/firebase_options.dart
+
+# iOS builds
+/ios/Pods/
+/ios/build/
+/ios/Podfile.lock
+# Removed /ios/Runner.xcodeproj to unblock iOS contributors
+
+# Flutter generated
+**/Generated.xcconfig
+**/Flutter.podspec
+
+# Symbolication related
+app.*.symbols
+
+# Obfuscation related
+app.*.map.json
+
+# Android Studio will place build artifacts here
+/android/app/debug
+/android/app/profile
+/android/app/release
+
+.env
+.metadata
+
+# Ignore generated JSON files
+#lib/core/models/category.g.dart

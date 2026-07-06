@@ -1,0 +1,163 @@
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:cherry_mvp/core/config/feature_flags.dart';
+import 'package:cherry_mvp/core/config/app_images.dart';
+import 'package:cherry_mvp/core/config/app_strings.dart';
+import 'package:cherry_mvp/core/models/user_section.dart';
+import 'package:cherry_mvp/core/router/nav_provider.dart';
+import 'package:cherry_mvp/core/router/nav_routes.dart';
+import 'package:cherry_mvp/core/services/services.dart';
+import 'package:cherry_mvp/core/utils/donor_discount_state_store.dart';
+import 'package:cherry_mvp/features/checkout/checkout_view_model.dart';
+import 'package:cherry_mvp/features/products/product_viewmodel.dart';
+import 'package:cherry_mvp/features/products/widgets/product_highlight_title.dart';
+import 'package:cherry_mvp/features/products/widgets/product_information.dart';
+import 'package:cherry_mvp/features/products/widgets/seller_information.dart';
+import 'package:cherry_mvp/features/products/widgets/product_header_carousel.dart';
+
+class ProductPage extends StatelessWidget {
+  const ProductPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final viewModel = Provider.of<ProductViewModel>(context);
+    final product = viewModel.product;
+
+    if (product == null) {
+      return Scaffold(
+        appBar: AppBar(),
+        body: const Center(child: Text('No product selected')),
+      );
+    }
+
+    const hasOptionalProductHighlights = FeatureFlags.showDonorDiscounts || FeatureFlags.showOtherCharityRequests;
+
+    return Scaffold(
+      body: CustomScrollView(
+        slivers: [
+          ProductHeaderCarousel(product),
+          SliverList.list(
+            children: [
+              FutureBuilder<String?>(
+                future: UsernameService.getUsername(product.userId ?? ''),
+                builder: (context, snapshot) {
+                  final resolvedUsername = snapshot.data?.trim();
+                  final sellerUsername = (resolvedUsername != null && resolvedUsername.isNotEmpty)
+                      ? resolvedUsername
+                      : 'User';
+
+                  return SellerInformation(
+                    user: UserInformation(
+                      username: sellerUsername,
+                      // TODO remove filler values
+                      location: 'New York, USA',
+                      reviewsCount: 120,
+                      followersCount: 300,
+                      followingCount: 150,
+                      rating: 3.5,
+                      awards: 37,
+                      hasBuyerDiscounts: true,
+                    ),
+                    charity: product.charity?.imageUrl != null
+                        ? Image.network(product.charity!.imageUrl)
+                        : SizedBox.shrink(),
+                    padding: const EdgeInsets.fromLTRB(16, 24, 16, 16),
+                  );
+                },
+              ),
+              const Divider(thickness: 8),
+              ProductInformation(
+                product: product,
+                padding: const EdgeInsets.all(16),
+              ),
+              const Divider(thickness: 8),
+              ListTile(
+                title: Text(AppStrings.productPageDescription),
+                titleTextStyle: Theme.of(context).textTheme.titleSmall,
+                subtitle: Text(product.description),
+                subtitleTextStyle: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+              if (hasOptionalProductHighlights) ...[
+                const Divider(thickness: 8),
+                Column(
+                  children: [
+                    if (FeatureFlags.showDonorDiscounts)
+                      FutureBuilder<bool?>(
+                        future: DonorDiscountStateStore.getDonorDiscountState(
+                          product.id,
+                        ),
+                        builder: (context, snapshot) {
+                          final bool isDonorDiscountActive = snapshot.data ?? false;
+                          final donorDiscountLabel = isDonorDiscountActive
+                              ? AppStrings.productPageBuyerDiscountActive
+                              : AppStrings.productPageDonorDiscountInactive;
+                          final donorDiscountDetail = isDonorDiscountActive
+                              ? AppStrings.productPageBuy2Get1HalfPrice
+                              : AppStrings.productPageDonorDiscountInactiveDetail;
+
+                          return ProductHighlightTile(
+                            onTap: () {},
+                            leadingText: donorDiscountLabel,
+                            trailingText: donorDiscountDetail,
+                            trailingIcon: Image.asset(
+                              AppImages.sale,
+                              height: 24,
+                              width: 24,
+                            ),
+                          );
+                        },
+                      ),
+                    if (FeatureFlags.showOtherCharityRequests)
+                      ProductHighlightTile(
+                        onTap: () {},
+                        leadingText: AppStrings.productPageOpenToOtherCharities,
+                        trailingText: AppStrings.productPageRequestOtherCharity,
+                        trailingIcon: const Icon(Icons.arrow_forward),
+                      ),
+                  ],
+                ),
+              ],
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    if (FeatureFlags.showOffers) ...[
+                      Expanded(
+                        child: SizedBox(
+                          height: 56,
+                          child: OutlinedButton(
+                            onPressed: () {},
+                            child: Text(AppStrings.productPageMakeOffer, textAlign: TextAlign.center),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                    ],
+                    Expanded(
+                      child: SizedBox(
+                        height: 56,
+                        child: FilledButton(
+                          onPressed: () {
+                            context.read<CheckoutViewModel>().clearBasket();
+                            context.read<CheckoutViewModel>().addItem(product);
+                            context.read<NavigationProvider>().navigateTo(
+                              AppRoutes.checkout,
+                            );
+                          },
+                          child: Text(AppStrings.productPageBuyNow, textAlign: TextAlign.center),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(height: MediaQuery.of(context).padding.bottom),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}

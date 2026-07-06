@@ -1,0 +1,174 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:cherry_mvp/core/config/firestore_constants.dart';
+import 'package:cherry_mvp/core/services/error_string.dart';
+import 'package:cherry_mvp/core/utils/result.dart';
+
+class FirestoreService {
+  final FirebaseFirestore firebaseFirestore;
+  final SharedPreferences prefs;
+  final FirebaseAuth _firebaseAuth;
+
+  FirestoreService({
+    required this.firebaseFirestore,
+    required this.prefs,
+    FirebaseAuth? firebaseAuth,
+  }) : _firebaseAuth = firebaseAuth ?? FirebaseAuth.instance;
+
+  String? get currentUserId => _resolveCurrentUserId();
+
+  Future<Result<DocumentSnapshot>> getDocument(
+    String collectionName,
+    String documentId, {
+    bool isOrder = false,
+  }) async {
+    try {
+      dynamic documentSnapshot;
+      if (isOrder) {
+        final uid = _resolveCurrentUserId();
+        if (uid == null || uid.isEmpty) {
+          return Result.failure(ErrorStrings.unauthorizedError);
+        }
+        documentSnapshot = await firebaseFirestore
+            .collection(collectionName)
+            .doc(documentId)
+            .collection(FirestoreConstants.lockers)
+            .doc(uid)
+            .get();
+      } else {
+        documentSnapshot = await firebaseFirestore.collection(collectionName).doc(documentId).get();
+      }
+
+      if (documentSnapshot.exists) {
+        return Result.success(documentSnapshot);
+      } else {
+        return Result.failure(ErrorStrings.documentError);
+      }
+    } catch (e) {
+      return Result.failure(e.toString());
+    }
+  }
+
+  Future<Result<void>> saveDocument(
+    String collectionName,
+    String documentId,
+    Map<String, dynamic> data, {
+    bool isOrder = false,
+  }) async {
+    try {
+      if (isOrder) {
+        final uid = _resolveCurrentUserId();
+        if (uid == null || uid.isEmpty) {
+          return Result.failure(ErrorStrings.unauthorizedError);
+        }
+        await firebaseFirestore
+            .collection(collectionName)
+            .doc(documentId)
+            .collection(FirestoreConstants.lockers)
+            .doc(uid)
+            .set(data);
+      } else {
+        await firebaseFirestore.collection(collectionName).doc(documentId).set(data);
+      }
+
+      return Result.success(null);
+    } catch (e) {
+      return Result.failure(e.toString());
+    }
+  }
+
+  Stream<Result<QuerySnapshot>> getRealTimeUpdates(String collectionName) {
+    try {
+      return firebaseFirestore
+          .collection(collectionName)
+          .snapshots()
+          .map((querySnapshot) => Result.success(querySnapshot));
+    } catch (e) {
+      return Stream.value(Result.failure(e.toString()));
+    }
+  }
+
+  Future<Result<List<QueryDocumentSnapshot>>> getProductsForUser(
+    String userId,
+  ) async {
+    try {
+      final querySnapshot = await firebaseFirestore.collection('products').where('userId', isEqualTo: userId).get();
+      return Result.success(querySnapshot.docs);
+    } catch (e) {
+      return Result.failure(e.toString());
+    }
+  }
+
+  Future<Result<void>> fetchUser(String uid) async {
+    // Fetch user document from Firestore
+    final result = await getDocument(
+      FirestoreConstants.pathUserCollection,
+      uid,
+    );
+
+    if (result.isSuccess) {
+      final document = result.value;
+      final data = (document?.data() as Map<String, dynamic>?) ?? const <String, dynamic>{};
+
+      String readString(String key) {
+        final value = data[key];
+        return value is String ? value : '';
+      }
+
+      // Store user data to shared preferences
+      await prefs.setString(FirestoreConstants.id, uid);
+      await prefs.setString(
+        FirestoreConstants.username,
+        readString(FirestoreConstants.username),
+      );
+      await prefs.setString(
+        FirestoreConstants.firstname,
+        readString(FirestoreConstants.firstname),
+      );
+      await prefs.setString(
+        FirestoreConstants.photoUrl,
+        readString(FirestoreConstants.photoUrl),
+      );
+      await prefs.setString(
+        FirestoreConstants.phone,
+        readString(FirestoreConstants.phone),
+      );
+      await prefs.setString(
+        FirestoreConstants.email,
+        readString(FirestoreConstants.email),
+      );
+
+      return Result.success(null);
+    } else {
+      return Result.failure(result.error);
+    }
+  }
+
+  Future<Result<List<DocumentSnapshot>>> queryCollection(
+    String collectionPath, {
+    required String field,
+    required dynamic value,
+  }) async {
+    try {
+      final query = await firebaseFirestore.collection(collectionPath).where(field, isEqualTo: value).get();
+
+      return Result.success(query.docs);
+    } catch (e) {
+      return Result.failure(e.toString());
+    }
+  }
+
+  String? _resolveCurrentUserId() {
+    final authUserId = _firebaseAuth.currentUser?.uid;
+    if (authUserId != null && authUserId.isNotEmpty) {
+      return authUserId;
+    }
+
+    final cachedId = prefs.getString(FirestoreConstants.id);
+    if (cachedId != null && cachedId.isNotEmpty) {
+      return cachedId;
+    }
+    return null;
+  }
+}
