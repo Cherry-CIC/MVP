@@ -46,6 +46,7 @@ flutter:
   assets:
     - assets/images/
     - assets/fonts/
+    - assets/legal/
     - .env
   config:
     enable-swift-package-manager: false
