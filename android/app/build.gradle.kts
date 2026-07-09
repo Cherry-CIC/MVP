@@ -27,7 +27,7 @@ if (keystorePropertiesFile.exists()) {
 android {
     namespace = "uk.org.cherry.app"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = localProperties.getProperty("flutter.ndkVersion")
+    ndkVersion = flutter.ndkVersion
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
