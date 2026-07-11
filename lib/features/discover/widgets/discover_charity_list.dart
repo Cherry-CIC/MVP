@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cherry_mvp/core/config/feature_flags.dart';
 import 'package:cherry_mvp/core/models/dummy_charity.dart';
 import 'package:cherry_mvp/core/models/product.dart';
 import 'package:cherry_mvp/features/discover/widgets/discover_charity_card.dart';
@@ -27,8 +28,10 @@ class DiscoverCharityList extends StatelessWidget {
                 logoPath: charity.charityLogo,
                 likes: charity.likes,
               ),
-              SizedBox(height: 8),
-              ItemsInSupport(products: products),
+              if (FeatureFlags.showItemsInSupport) ...[
+                const SizedBox(height: 8),
+                ItemsInSupport(products: products),
+              ],
             ],
           ),
         );

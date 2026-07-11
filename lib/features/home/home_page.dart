@@ -23,8 +23,7 @@ class _HomePageState extends State<HomePage> {
   static const int _inboxNavIndex = 1;
   static const int _giveNavIndex = FeatureFlags.showInbox ? 2 : 1;
   static const int _searchNavIndex = _giveNavIndex + 1;
-  static const int _profileNavIndex =
-      _giveNavIndex + (FeatureFlags.showSearch ? 2 : 1);
+  static const int _profileNavIndex = _giveNavIndex + (FeatureFlags.showSearchNavigation ? 2 : 1);
 
   int _selectedIndex = 0;
   final PageController _pageController = PageController();
@@ -54,7 +53,7 @@ class _HomePageState extends State<HomePage> {
       return;
     }
 
-    if (FeatureFlags.showSearch && index == _searchNavIndex) {
+    if (FeatureFlags.showSearchNavigation && index == _searchNavIndex) {
       context.read<SearchController>().openView();
       return;
     }

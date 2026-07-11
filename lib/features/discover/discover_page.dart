@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'package:cherry_mvp/core/config/feature_flags.dart';
 import 'package:cherry_mvp/features/discover/discover_viewmodel.dart';
 import 'package:cherry_mvp/features/discover/widgets/discover_charity_list.dart';
 import 'package:cherry_mvp/features/discover/widgets/discover_selection_bar.dart';
@@ -26,15 +27,21 @@ class DiscoverPage extends StatelessWidget {
                   primary: false,
                   snap: true,
                 ),
-                SliverAppBar(
-                  automaticallyImplyLeading: false,
-                  title: const DiscoverSelectionBar(),
-                  primary: false,
-                  pinned: true,
-                ),
-                DiscoverCharityList(
-                  charities: charities,
-                  products: products,
+                if (FeatureFlags.showDiscoverSelectionBar)
+                  SliverAppBar(
+                    automaticallyImplyLeading: false,
+                    title: const DiscoverSelectionBar(),
+                    primary: false,
+                    pinned: true,
+                  ),
+                SliverPadding(
+                  padding: EdgeInsets.only(
+                    top: FeatureFlags.showDiscoverSelectionBar ? 0 : 16,
+                  ),
+                  sliver: DiscoverCharityList(
+                    charities: charities,
+                    products: products,
+                  ),
                 ),
               ],
             ),

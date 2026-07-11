@@ -21,11 +21,9 @@ class CherryBottomNavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const giveIndex = FeatureFlags.showInbox ? 2 : 1;
-    const profileIndex = giveIndex + (FeatureFlags.showSearch ? 2 : 1);
-    final selectedColor =
-        this.selectedColor ?? Theme.of(context).colorScheme.primary;
-    final unselectedColor =
-        this.unselectedColor ?? Theme.of(context).colorScheme.onSurfaceVariant;
+    const profileIndex = giveIndex + (FeatureFlags.showSearchNavigation ? 2 : 1);
+    final selectedColor = this.selectedColor ?? Theme.of(context).colorScheme.primary;
+    final unselectedColor = this.unselectedColor ?? Theme.of(context).colorScheme.onSurfaceVariant;
     return DecoratedBox(
       decoration: const BoxDecoration(
         borderRadius: BorderRadius.only(
@@ -73,22 +71,17 @@ class CherryBottomNavBar extends StatelessWidget {
               AppImages.icAdd,
               width: 24,
               height: 24,
-              color: selectedIndex == giveIndex
-                  ? selectedColor
-                  : unselectedColor,
+              color: selectedIndex == giveIndex ? selectedColor : unselectedColor,
             ),
             label: 'Give',
           ),
-          if (FeatureFlags.showSearch)
-            BottomNavigationBarItem(icon: Search(), label: 'Search'),
+          if (FeatureFlags.showSearchNavigation) BottomNavigationBarItem(icon: Search(), label: 'Search'),
           BottomNavigationBarItem(
             icon: Image.asset(
               AppImages.icProfile,
               width: 24,
               height: 24,
-              color: selectedIndex == profileIndex
-                  ? selectedColor
-                  : unselectedColor,
+              color: selectedIndex == profileIndex ? selectedColor : unselectedColor,
             ),
             label: 'Profile',
           ),

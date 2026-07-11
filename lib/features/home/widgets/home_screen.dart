@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:cherry_mvp/core/config/feature_flags.dart';
 import 'package:cherry_mvp/features/home/widgets/dashboard.dart';
 import 'package:cherry_mvp/features/home/widgets/discover_button.dart';
+import 'package:cherry_mvp/features/search/widgets/search.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -29,39 +29,7 @@ class HomeScreenState extends State<HomeScreen> {
                   16,
                   8,
                 ),
-                child: Material(
-                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                  elevation: 1,
-                  shape: const StadiumBorder(),
-                  child: InkWell(
-                    onTap: context.read<SearchController>().openView,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.search,
-                            size: 16,
-                            color: Theme.of(context).colorScheme.secondary,
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              'AI Search: Red Polka Dot Dress',
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                color: Theme.of(context).colorScheme.secondary,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
+                child: const Search(showAsBar: true),
               ),
             ),
           SliverPadding(

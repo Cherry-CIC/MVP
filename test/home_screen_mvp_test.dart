@@ -1,8 +1,11 @@
 import 'package:cherry_mvp/core/config/app_images.dart';
 import 'package:cherry_mvp/core/config/app_strings.dart';
+import 'package:cherry_mvp/core/models/category.dart';
 import 'package:cherry_mvp/core/models/product.dart';
 import 'package:cherry_mvp/core/router/nav_provider.dart';
 import 'package:cherry_mvp/core/utils/result.dart';
+import 'package:cherry_mvp/features/categories/category_repository.dart';
+import 'package:cherry_mvp/features/categories/category_view_model.dart';
 import 'package:cherry_mvp/features/home/home_repository.dart';
 import 'package:cherry_mvp/features/home/home_viewmodel.dart';
 import 'package:cherry_mvp/features/home/widgets/discover_button.dart';
@@ -24,6 +27,13 @@ class _HomeRepositoryStub implements IHomeRepository {
   }
 }
 
+class _CategoryRepositoryStub implements ICategoryRepository {
+  @override
+  Future<Result<List<Category>>> fetchCategories() async {
+    return Result.success(const []);
+  }
+}
+
 Future<void> _pumpHomeScreen(
   WidgetTester tester, {
   List<Product> products = const [],
@@ -35,6 +45,13 @@ Future<void> _pumpHomeScreen(
     MultiProvider(
       providers: [
         Provider<NavigationProvider>.value(value: navigator),
+        ChangeNotifierProvider(create: (_) => SearchController()),
+        ChangeNotifierProvider<CategoryViewModel>(
+          create: (_) => CategoryViewModel(
+            categoryRepository: _CategoryRepositoryStub(),
+            navigator: navigator,
+          ),
+        ),
         ChangeNotifierProvider<HomeViewModel>(
           create: (_) => HomeViewModel(homeRepository: _HomeRepositoryStub(products)),
         ),
@@ -75,13 +92,18 @@ Product _product(int index) {
 }
 
 void main() {
-  testWidgets('HomeScreen hides the global search bar for the MVP', (
+  testWidgets('HomeScreen shows the homepage search bar for the MVP', (
     tester,
   ) async {
     await _pumpHomeScreen(tester);
 
-    expect(find.text('AI Search: Red Polka Dot Dress'), findsNothing);
-    expect(find.byIcon(Icons.search), findsNothing);
+    expect(find.text('AI Search: Red Polka Dot Dress'), findsOneWidget);
+    expect(find.byIcon(Icons.search), findsOneWidget);
+
+    await tester.tap(find.text('AI Search: Red Polka Dot Dress'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(SearchBar), findsOneWidget);
   });
 
   testWidgets(
@@ -93,8 +115,9 @@ void main() {
       );
 
       final discoverTop = tester.getTopLeft(find.byType(DiscoverButton)).dy;
+      final searchBottom = tester.getBottomLeft(find.text('AI Search: Red Polka Dot Dress')).dy;
 
-      expect(discoverTop, 48);
+      expect(discoverTop, greaterThan(searchBottom));
     },
   );
 
