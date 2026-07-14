@@ -41,4 +41,4 @@ Amazing! Thank you so much for considering to volunteer your time and skills to 
 Firstly, please connect with our team over on Slack
 [![slack](https://img.shields.io/badge/Slack-4A154B?style=for-the-badge&logo=slack&logoColor=white)](https://cherry-aik4933.slack.com)
 
-Secondly, head over to our CONTRIBUTION.md document to find out how to start contributing.
+Secondly, head over to our [CONTRIBUTION.md](https://github.com/Cherry-CIC/MVP/blob/main/CONTRIBUTION.md) document to find out how to start contributing.
