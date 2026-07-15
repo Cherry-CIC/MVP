@@ -1,5 +1,4 @@
 import 'package:cherry_mvp/core/models/model.dart';
-import 'package:cherry_mvp/core/services/error_string.dart';
 import 'package:cherry_mvp/core/services/network/api_endpoints.dart';
 import 'package:cherry_mvp/core/services/network/api_service.dart';
 import 'package:cherry_mvp/core/utils/utils.dart';
@@ -25,24 +24,33 @@ final class HomeRepository implements IHomeRepository {
       if (result.isSuccess && result.value != null) {
         _log.info('API call successful, parsing response...');
         final data = result.value;
-
-        final jsonList = _extractProductList(data);
-        if (jsonList == null) {
-          _log.warning('Unexpected products response structure: ${data.runtimeType}');
-          return Result.failure(ErrorStrings.apiError);
+        
+        // Try different response structures
+        List<dynamic> jsonList = [];
+        if (data is List) {
+          jsonList = data;
+        } else if (data is Map<String, dynamic>) {
+          if (data.containsKey('data')) {
+            jsonList = data['data'] ?? [];
+          } else if (data.containsKey('products')) {
+            jsonList = data['products'] ?? [];
+          } else {
+            _log.warning('Unexpected response structure, treating as single item');
+            jsonList = [data];
+          }
         }
-
+        
         final List<Product> products = [];
         for (int i = 0; i < jsonList.length; i++) {
           try {
-            final json = Map<String, dynamic>.from(jsonList[i] as Map);
+            final json = jsonList[i];
             final product = Product.fromJson(json);
             products.add(product);
           } catch (e) {
             _log.warning('Failed to parse product $i: $e');
           }
         }
-
+        
         _log.info('Successfully parsed ${products.length} products');
         return Result.success(products);
       } else {
@@ -51,39 +59,13 @@ final class HomeRepository implements IHomeRepository {
       }
     } catch (e) {
       _log.severe('Exception during product fetch: $e');
-      return Result.failure(ErrorStrings.apiError);
+      return Result.failure(e.toString());
     }
-  }
-
-  List<dynamic>? _extractProductList(dynamic data) {
-    if (data is List) {
-      return data;
-    }
-
-    if (data is Map<String, dynamic>) {
-      final nestedData = data['data'];
-      if (nestedData is List) {
-        return nestedData;
-      }
-
-      if (nestedData is Map<String, dynamic>) {
-        final nestedProducts = nestedData['products'];
-        if (nestedProducts is List) {
-          return nestedProducts;
-        }
-      }
-
-      final products = data['products'];
-      if (products is List) {
-        return products;
-      }
-    }
-
-    return null;
   }
 }
 
 final class HomeRepositoryMock implements IHomeRepository {
+
   @override
   Future<Result<List<Product>>> fetchProducts() async {
     return Result.success(dummyProducts);
