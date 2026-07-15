@@ -87,7 +87,7 @@ class UserInformationSection extends StatelessWidget {
             ),
             const SizedBox(height: 20),
 
-            if (FeatureFlags.showProfileStats ||
+            if (FeatureFlags.showProfileContactDetails ||
                 (FeatureFlags.showDonorDiscounts && userInformationSection.hasBuyerDiscounts)) ...[
               /// Stats Section
               Wrap(
@@ -101,13 +101,7 @@ class UserInformationSection extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      if (FeatureFlags.showProfileStats) ...[
-                        IconTextRow(
-                          assetPath: AppImages.profileFollowers,
-                          text:
-                              '${userInformationSection.followingCount} ${AppStrings.profileUserInfoSectionFollowing}, '
-                              '${userInformationSection.followersCount} ${AppStrings.profileUserInfoSectionFollowers}',
-                        ),
+                      if (FeatureFlags.showProfileContactDetails) ...[
                         IconTextRow(
                           assetPath: AppImages.profileLocation,
                           text: userInformationSection.location,

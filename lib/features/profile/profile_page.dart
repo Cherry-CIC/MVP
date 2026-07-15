@@ -81,7 +81,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   navigateToSettings();
                 },
               ),
-              if (FeatureFlags.showProfileStats || FeatureFlags.showDonorDiscounts) UserOrderDetails(),
+              if (FeatureFlags.showProfileShortcutCards || FeatureFlags.showDonorDiscounts) UserOrderDetails(),
               if (FeatureFlags.showImpactSummaries) ...[
                 SizedBox(height: 16),
                 DonationChart(

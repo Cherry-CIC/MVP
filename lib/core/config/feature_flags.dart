@@ -37,6 +37,12 @@ class FeatureFlags {
   // Hide product rows within Discover charity cards for the MVP.
   static const bool showItemsInSupport = false;
 
+  // Show basic profile contact rows requested for the MVP.
+  static const bool showProfileContactDetails = true;
+
+  // Show profile shortcut cards requested for the MVP.
+  static const bool showProfileShortcutCards = true;
+
   // Hide placeholder profile stats and inactive profile shortcuts for the MVP.
   static const bool showProfileStats = false;
 

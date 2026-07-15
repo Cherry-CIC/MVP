@@ -11,7 +11,7 @@ class UserOrderDetails extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        if (FeatureFlags.showProfileStats)
+        if (FeatureFlags.showProfileShortcutCards)
           SizedBox(
             height: 96,
             child: Row(
