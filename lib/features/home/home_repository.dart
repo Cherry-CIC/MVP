@@ -1,5 +1,4 @@
 import 'package:cherry_mvp/core/models/model.dart';
-import 'package:cherry_mvp/core/services/error_string.dart';
 import 'package:cherry_mvp/core/services/network/api_endpoints.dart';
 import 'package:cherry_mvp/core/services/network/api_service.dart';
 import 'package:cherry_mvp/core/utils/utils.dart';
@@ -28,13 +27,13 @@ final class HomeRepository implements IHomeRepository {
 
         if (data is Map<String, dynamic> && data['success'] == false) {
           _log.warning('Products API returned an unsuccessful response: $data');
-          return Result.failure(ErrorStrings.productsLoadError);
+          return Result.success(const <Product>[]);
         }
 
         final jsonList = _extractProductList(data);
         if (jsonList == null) {
           _log.warning('Unexpected products response structure: ${data.runtimeType}');
-          return Result.failure(ErrorStrings.productsLoadError);
+          return Result.success(const <Product>[]);
         }
 
         final List<Product> products = [];
@@ -52,11 +51,11 @@ final class HomeRepository implements IHomeRepository {
         return Result.success(products);
       } else {
         _log.warning('API call failed: ${result.error}');
-        return Result.failure(ErrorStrings.productsLoadError);
+        return Result.success(const <Product>[]);
       }
     } catch (e) {
       _log.severe('Exception during product fetch: $e');
-      return Result.failure(ErrorStrings.productsLoadError);
+      return Result.success(const <Product>[]);
     }
   }
 

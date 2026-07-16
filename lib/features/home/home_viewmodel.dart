@@ -1,4 +1,3 @@
-import 'package:cherry_mvp/core/services/error_string.dart';
 import 'package:cherry_mvp/features/home/home_repository.dart';
 import 'package:cherry_mvp/core/models/model.dart';
 import 'package:cherry_mvp/core/utils/utils.dart';
@@ -31,11 +30,13 @@ class HomeViewModel extends ChangeNotifier {
         _status = Status.success;
       } else {
         _log.warning('Fetch products failed! ${result.error}');
-        _status = Status.failure(ErrorStrings.productsLoadError);
+        _products = const [];
+        _status = Status.success;
       }
     } catch (e) {
       _log.severe('Fetch products error: $e');
-      _status = Status.failure(ErrorStrings.productsLoadError);
+      _products = const [];
+      _status = Status.success;
     }
 
     notifyListeners();

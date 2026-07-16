@@ -1,4 +1,3 @@
-import 'package:cherry_mvp/core/services/error_string.dart';
 import 'package:cherry_mvp/core/services/network/api_service.dart';
 import 'package:cherry_mvp/core/utils/result.dart';
 import 'package:cherry_mvp/features/home/home_repository.dart';
@@ -15,6 +14,21 @@ class _FakeApiService implements ApiService {
     Map<String, dynamic>? queryParameters,
   }) async {
     return Result.success(response as T);
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class _FailingApiService implements ApiService {
+  const _FailingApiService();
+
+  @override
+  Future<Result<T>> get<T>(
+    String endpoint, {
+    Map<String, dynamic>? queryParameters,
+  }) async {
+    return Result.failure('technical failure');
   }
 
   @override
@@ -83,7 +97,7 @@ void main() {
       expect(result.value!.single.id, 'product-4');
     });
 
-    test('returns a friendly error for unsuccessful response envelopes', () async {
+    test('returns an empty product list for unsuccessful response envelopes', () async {
       final repository = HomeRepository(
         _FakeApiService({
           'success': false,
@@ -93,8 +107,30 @@ void main() {
 
       final result = await repository.fetchProducts();
 
-      expect(result.isSuccess, isFalse);
-      expect(result.error, ErrorStrings.productsLoadError);
+      expect(result.isSuccess, isTrue);
+      expect(result.value, isEmpty);
+    });
+
+    test('returns an empty product list for unexpected response structures', () async {
+      final repository = HomeRepository(
+        _FakeApiService({
+          'message': 'Unexpected response without products',
+        }),
+      );
+
+      final result = await repository.fetchProducts();
+
+      expect(result.isSuccess, isTrue);
+      expect(result.value, isEmpty);
+    });
+
+    test('returns an empty product list when the API service fails', () async {
+      final repository = HomeRepository(const _FailingApiService());
+
+      final result = await repository.fetchProducts();
+
+      expect(result.isSuccess, isTrue);
+      expect(result.value, isEmpty);
     });
   });
 }
