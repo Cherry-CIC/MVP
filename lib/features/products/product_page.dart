@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:cherry_mvp/core/config/feature_flags.dart';
 import 'package:cherry_mvp/core/config/app_images.dart';
 import 'package:cherry_mvp/core/config/app_strings.dart';
 import 'package:cherry_mvp/core/models/user_section.dart';
@@ -28,6 +29,8 @@ class ProductPage extends StatelessWidget {
         body: const Center(child: Text('No product selected')),
       );
     }
+
+    const hasOptionalProductHighlights = FeatureFlags.showDonorDiscounts || FeatureFlags.showOtherCharityRequests;
 
     return Scaffold(
       body: CustomScrollView(
@@ -76,56 +79,62 @@ class ProductPage extends StatelessWidget {
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
-              const Divider(thickness: 8),
-              FutureBuilder<bool?>(
-                future: DonorDiscountStateStore.getDonorDiscountState(
-                  product.id,
-                ),
-                builder: (context, snapshot) {
-                  final bool isDonorDiscountActive = snapshot.data ?? false;
-                  final donorDiscountLabel = isDonorDiscountActive
-                      ? AppStrings.productPageBuyerDiscountActive
-                      : AppStrings.productPageDonorDiscountInactive;
-                  final donorDiscountDetail = isDonorDiscountActive
-                      ? AppStrings.productPageBuy2Get1HalfPrice
-                      : AppStrings.productPageDonorDiscountInactiveDetail;
-
-                  return Column(
-                    children: [
-                      ProductHighlightTile(
-                        onTap: () {},
-                        leadingText: donorDiscountLabel,
-                        trailingText: donorDiscountDetail,
-                        trailingIcon: Image.asset(
-                          AppImages.sale,
-                          height: 24,
-                          width: 24,
+              if (hasOptionalProductHighlights) ...[
+                const Divider(thickness: 8),
+                Column(
+                  children: [
+                    if (FeatureFlags.showDonorDiscounts)
+                      FutureBuilder<bool?>(
+                        future: DonorDiscountStateStore.getDonorDiscountState(
+                          product.id,
                         ),
+                        builder: (context, snapshot) {
+                          final bool isDonorDiscountActive = snapshot.data ?? false;
+                          final donorDiscountLabel = isDonorDiscountActive
+                              ? AppStrings.productPageBuyerDiscountActive
+                              : AppStrings.productPageDonorDiscountInactive;
+                          final donorDiscountDetail = isDonorDiscountActive
+                              ? AppStrings.productPageBuy2Get1HalfPrice
+                              : AppStrings.productPageDonorDiscountInactiveDetail;
+
+                          return ProductHighlightTile(
+                            onTap: () {},
+                            leadingText: donorDiscountLabel,
+                            trailingText: donorDiscountDetail,
+                            trailingIcon: Image.asset(
+                              AppImages.sale,
+                              height: 24,
+                              width: 24,
+                            ),
+                          );
+                        },
                       ),
+                    if (FeatureFlags.showOtherCharityRequests)
                       ProductHighlightTile(
                         onTap: () {},
                         leadingText: AppStrings.productPageOpenToOtherCharities,
                         trailingText: AppStrings.productPageRequestOtherCharity,
                         trailingIcon: const Icon(Icons.arrow_forward),
                       ),
-                    ],
-                  );
-                },
-              ),
+                  ],
+                ),
+              ],
               Padding(
                 padding: const EdgeInsets.all(16),
                 child: Row(
                   children: [
-                    Expanded(
-                      child: SizedBox(
-                        height: 56,
-                        child: OutlinedButton(
-                          onPressed: () {},
-                          child: Text(AppStrings.productPageMakeOffer, textAlign: TextAlign.center),
+                    if (FeatureFlags.showOffers) ...[
+                      Expanded(
+                        child: SizedBox(
+                          height: 56,
+                          child: OutlinedButton(
+                            onPressed: () {},
+                            child: Text(AppStrings.productPageMakeOffer, textAlign: TextAlign.center),
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 16),
+                      const SizedBox(width: 16),
+                    ],
                     Expanded(
                       child: SizedBox(
                         height: 56,

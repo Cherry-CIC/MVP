@@ -23,6 +23,10 @@ class SettingsCategoryGroup extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (children.isEmpty) {
+      return const SliverToBoxAdapter(child: SizedBox.shrink());
+    }
+
     return SliverList.separated(
       itemCount: children.length + 1,
       separatorBuilder: (context, index) => const Divider(height: 1),
@@ -80,13 +84,7 @@ class SettingsCategoryGroup extends StatelessWidget {
         return SettingsItem(
           title: item.title,
           trailing: item.trailing,
-          onTap: () {
-            // Inside the closure, we check if the item has an action...
-            if (item.onTap != null) {
-              // ...and execute that action, passing the context available from itemBuilder.
-              item.onTap!(context);
-            }
-          },
+          onTap: item.onTap == null ? null : () => item.onTap!(context),
         );
       },
     );

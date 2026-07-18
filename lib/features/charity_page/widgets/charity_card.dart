@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cherry_mvp/core/config/feature_flags.dart';
 import 'package:cherry_mvp/core/config/app_strings.dart';
 import 'package:cherry_mvp/core/utils/image_provider_helper.dart';
 import 'package:cherry_mvp/features/charity_page/charity_model.dart';
@@ -33,12 +34,14 @@ class CharityCardState extends State<CharityCard> {
                     ),
                   ],
                 ),
-                child: widget.charity.imageUrl.isNotEmpty ? ImageProviderHelper.buildImage(
-                  imagePath: widget.charity.imageUrl,
-                  height: 80,
-                  width: 80,
-                  borderRadius: BorderRadius.circular(12),
-                )  : SizedBox(height: 80, width: 80),
+                child: widget.charity.imageUrl.isNotEmpty
+                    ? ImageProviderHelper.buildImage(
+                        imagePath: widget.charity.imageUrl,
+                        height: 80,
+                        width: 80,
+                        borderRadius: BorderRadius.circular(12),
+                      )
+                    : SizedBox(height: 80, width: 80),
               ),
               const SizedBox(width: 15),
               Expanded(
@@ -50,8 +53,7 @@ class CharityCardState extends State<CharityCard> {
                       style: Theme.of(context).textTheme.titleSmall,
                     ),
                     Text(
-                      widget.charity.description ??
-                          AppStrings.charityDescription,
+                      widget.charity.description ?? AppStrings.charityDescription,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
@@ -59,19 +61,19 @@ class CharityCardState extends State<CharityCard> {
                       overflow: TextOverflow.ellipsis,
                       softWrap: true,
                     ),
-                    Padding(
-                      padding: const EdgeInsets.only(right: 10),
-                      child: InkWell(
-                        onTap: () {},
-                        child: Text(
-                          AppStrings.seeMore,
-                          style: Theme.of(context).textTheme.labelMedium
-                              ?.copyWith(
-                                color: Theme.of(context).colorScheme.primary,
-                              ),
+                    if (FeatureFlags.showDeferredControls)
+                      Padding(
+                        padding: const EdgeInsets.only(right: 10),
+                        child: InkWell(
+                          onTap: () {},
+                          child: Text(
+                            AppStrings.seeMore,
+                            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                          ),
                         ),
                       ),
-                    ),
                   ],
                 ),
               ),

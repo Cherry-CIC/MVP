@@ -12,6 +12,8 @@ class CheckoutCompletePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final basket = context.read<CheckoutViewModel>();
+    const showCheckoutActions = FeatureFlags.showCheckoutConfirmationShortcuts || FeatureFlags.showImpactSummaries;
+
     return Scaffold(
       body: SingleChildScrollView(
         padding: MediaQuery.of(context).padding,
@@ -78,53 +80,55 @@ class CheckoutCompletePage extends StatelessWidget {
               ),
             ),
             for (final product in basket.basketItems) BasketListItem(product: product),
-            Container(
-              height: 160,
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                spacing: 8,
-                children: [
-                  CheckoutActionButton(
-                    label: Text(AppStrings.checkoutTrackOrders),
-                    icon: SvgPicture.asset(
-                      AppImages.checkoutTrackOrdersIcon,
-                      colorFilter: ColorFilter.mode(
-                        Theme.of(context).colorScheme.onSurfaceVariant,
-                        BlendMode.srcIn,
+            if (showCheckoutActions)
+              Container(
+                height: 160,
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  spacing: 8,
+                  children: [
+                    if (FeatureFlags.showCheckoutConfirmationShortcuts)
+                      CheckoutActionButton(
+                        label: Text(AppStrings.checkoutTrackOrders),
+                        icon: SvgPicture.asset(
+                          AppImages.checkoutTrackOrdersIcon,
+                          colorFilter: ColorFilter.mode(
+                            Theme.of(context).colorScheme.onSurfaceVariant,
+                            BlendMode.srcIn,
+                          ),
+                          height: 24,
+                          width: 24,
+                        ),
                       ),
-                      height: 24,
-                      width: 24,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  CheckoutActionButton(
-                    label: Text(AppStrings.checkoutImpactSummary),
-                    icon: SvgPicture.asset(
-                      AppImages.checkoutImpactSummaryIcon,
-                      colorFilter: ColorFilter.mode(
-                        Theme.of(context).colorScheme.onSurfaceVariant,
-                        BlendMode.srcIn,
+                    if (FeatureFlags.showImpactSummaries)
+                      CheckoutActionButton(
+                        label: Text(AppStrings.checkoutImpactSummary),
+                        icon: SvgPicture.asset(
+                          AppImages.checkoutImpactSummaryIcon,
+                          colorFilter: ColorFilter.mode(
+                            Theme.of(context).colorScheme.onSurfaceVariant,
+                            BlendMode.srcIn,
+                          ),
+                          height: 24,
+                          width: 24,
+                        ),
                       ),
-                      height: 24,
-                      width: 24,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  CheckoutActionButton(
-                    label: Text(AppStrings.checkoutReview),
-                    icon: SvgPicture.asset(
-                      AppImages.checkoutReviewIcon,
-                      colorFilter: ColorFilter.mode(
-                        Theme.of(context).colorScheme.onSurfaceVariant,
-                        BlendMode.srcIn,
+                    if (FeatureFlags.showCheckoutConfirmationShortcuts)
+                      CheckoutActionButton(
+                        label: Text(AppStrings.checkoutReview),
+                        icon: SvgPicture.asset(
+                          AppImages.checkoutReviewIcon,
+                          colorFilter: ColorFilter.mode(
+                            Theme.of(context).colorScheme.onSurfaceVariant,
+                            BlendMode.srcIn,
+                          ),
+                          height: 24,
+                          width: 24,
+                        ),
                       ),
-                      height: 24,
-                      width: 24,
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
             Container(
               margin: const EdgeInsets.all(16),
               height: 56,
