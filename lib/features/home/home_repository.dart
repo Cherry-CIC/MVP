@@ -24,48 +24,70 @@ final class HomeRepository implements IHomeRepository {
       if (result.isSuccess && result.value != null) {
         _log.info('API call successful, parsing response...');
         final data = result.value;
-        
-        // Try different response structures
-        List<dynamic> jsonList = [];
-        if (data is List) {
-          jsonList = data;
-        } else if (data is Map<String, dynamic>) {
-          if (data.containsKey('data')) {
-            jsonList = data['data'] ?? [];
-          } else if (data.containsKey('products')) {
-            jsonList = data['products'] ?? [];
-          } else {
-            _log.warning('Unexpected response structure, treating as single item');
-            jsonList = [data];
-          }
+
+        if (data is Map<String, dynamic> && data['success'] == false) {
+          _log.warning('Products API returned an unsuccessful response: $data');
+          return Result.success(const <Product>[]);
         }
-        
+
+        final jsonList = _extractProductList(data);
+        if (jsonList == null) {
+          _log.warning('Unexpected products response structure: ${data.runtimeType}');
+          return Result.success(const <Product>[]);
+        }
+
         final List<Product> products = [];
         for (int i = 0; i < jsonList.length; i++) {
           try {
-            final json = jsonList[i];
+            final json = Map<String, dynamic>.from(jsonList[i] as Map);
             final product = Product.fromJson(json);
             products.add(product);
           } catch (e) {
             _log.warning('Failed to parse product $i: $e');
           }
         }
-        
+
         _log.info('Successfully parsed ${products.length} products');
         return Result.success(products);
       } else {
         _log.warning('API call failed: ${result.error}');
-        return Result.failure(result.error ?? 'Failed to fetch products');
+        return Result.success(const <Product>[]);
       }
     } catch (e) {
       _log.severe('Exception during product fetch: $e');
-      return Result.failure(e.toString());
+      return Result.success(const <Product>[]);
     }
+  }
+
+  List<dynamic>? _extractProductList(dynamic data) {
+    if (data is List) {
+      return data;
+    }
+
+    if (data is Map<String, dynamic>) {
+      final directData = data['data'];
+      if (directData is List) {
+        return directData;
+      }
+
+      if (directData is Map<String, dynamic>) {
+        final nestedProducts = directData['products'];
+        if (nestedProducts is List) {
+          return nestedProducts;
+        }
+      }
+
+      final directProducts = data['products'];
+      if (directProducts is List) {
+        return directProducts;
+      }
+    }
+
+    return null;
   }
 }
 
 final class HomeRepositoryMock implements IHomeRepository {
-
   @override
   Future<Result<List<Product>>> fetchProducts() async {
     return Result.success(dummyProducts);
