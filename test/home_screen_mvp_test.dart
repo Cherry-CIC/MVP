@@ -14,29 +14,31 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
 class _HomeRepositoryStub implements IHomeRepository {
-  _HomeRepositoryStub(this.products);
+  _HomeRepositoryStub(this.result);
 
-  final List<Product> products;
+  final Result<List<Product>> result;
 
   @override
   Future<Result<List<Product>>> fetchProducts() async {
-    return Result.success(products);
+    return result;
   }
 }
 
 Future<void> _pumpHomeScreen(
   WidgetTester tester, {
   List<Product> products = const [],
+  Result<List<Product>>? fetchResult,
   EdgeInsets mediaPadding = EdgeInsets.zero,
 }) async {
   final navigator = NavigationProvider();
+  final result = fetchResult ?? Result.success(products);
 
   await tester.pumpWidget(
     MultiProvider(
       providers: [
         Provider<NavigationProvider>.value(value: navigator),
         ChangeNotifierProvider<HomeViewModel>(
-          create: (_) => HomeViewModel(homeRepository: _HomeRepositoryStub(products)),
+          create: (_) => HomeViewModel(homeRepository: _HomeRepositoryStub(result)),
         ),
         ChangeNotifierProvider<ProductViewModel>(
           create: (_) => ProductViewModel(
@@ -115,5 +117,18 @@ void main() {
 
     expect(find.text('MVP item 1'), findsOneWidget);
     expect(find.text(AppStrings.adText), findsNothing);
+  });
+
+  testWidgets('HomeScreen does not show product load errors on fetch failure', (
+    tester,
+  ) async {
+    await _pumpHomeScreen(
+      tester,
+      fetchResult: Result.failure('technical failure'),
+    );
+    await tester.pump();
+
+    expect(find.text(AppStrings.failedToLoadProducts), findsNothing);
+    expect(find.text(AppStrings.noProductsAvailable), findsOneWidget);
   });
 }
