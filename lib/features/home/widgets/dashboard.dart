@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:cherry_mvp/core/config/feature_flags.dart';
 import 'package:cherry_mvp/core/config/app_spacing.dart';
 import 'package:cherry_mvp/core/models/product.dart';
 import 'package:cherry_mvp/core/router/nav_provider.dart';
@@ -82,7 +83,7 @@ class _DashboardPageState extends State<DashboardPage> {
         final totalCardHeight = imageHeight + textHeight;
 
         final numProductRows = (products.length / 2).ceil();
-        final numAds = (products.length / 6).floor();
+        final numAds = FeatureFlags.showCharityAds ? (products.length / 6).floor() : 0;
         final totalCount = numProductRows + numAds;
 
         return SliverPadding(
@@ -90,15 +91,15 @@ class _DashboardPageState extends State<DashboardPage> {
           sliver: SliverList(
             delegate: SliverChildBuilderDelegate(
               (context, index) {
-                // Insert Ad every 4th list item (after every 3 product rows / 6 products)
-                if ((index + 1) % 4 == 0) {
+                // Insert adverts after every 3 product rows when the advert feature is ready.
+                if (FeatureFlags.showCharityAds && (index + 1) % 4 == 0) {
                   return const Padding(
                     padding: EdgeInsets.symmetric(vertical: 24),
                     child: AdExample(),
                   );
                 }
 
-                final productRowIndex = index - (index ~/ 4);
+                final productRowIndex = FeatureFlags.showCharityAds ? index - (index ~/ 4) : index;
                 final firstProductInRowIndex = productRowIndex * 2;
                 final secondProductInRowIndex = firstProductInRowIndex + 1;
 

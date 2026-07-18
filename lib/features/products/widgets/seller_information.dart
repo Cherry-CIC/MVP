@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cherry_mvp/core/config/feature_flags.dart';
 import 'package:cherry_mvp/core/config/app_images.dart';
 import 'package:cherry_mvp/core/config/app_strings.dart';
 import 'package:cherry_mvp/core/models/user_section.dart';
@@ -52,11 +53,13 @@ class SellerInformation extends StatelessWidget {
                               spacing: 4,
                               runSpacing: 2,
                               children: [
-                                StarRating(userInformation: user, starSize: 12),
-                                Text(
-                                  '(${user.reviewsCount})',
-                                  style: Theme.of(context).textTheme.labelSmall,
-                                ),
+                                if (FeatureFlags.showRatings) ...[
+                                  StarRating(userInformation: user, starSize: 12),
+                                  Text(
+                                    '(${user.reviewsCount})',
+                                    style: Theme.of(context).textTheme.labelSmall,
+                                  ),
+                                ],
                               ],
                             ),
                           ),
@@ -85,20 +88,21 @@ class SellerInformation extends StatelessWidget {
               ],
             ),
           ),
-          Expanded(
-            flex: 3,
-            child: OutlinedButton(
-              style: OutlinedButton.styleFrom(
-                foregroundColor: Theme.of(context).colorScheme.secondary,
-                side: BorderSide(
-                  color: Theme.of(context).colorScheme.secondary,
+          if (FeatureFlags.showAskSeller)
+            Expanded(
+              flex: 3,
+              child: OutlinedButton(
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Theme.of(context).colorScheme.secondary,
+                  side: BorderSide(
+                    color: Theme.of(context).colorScheme.secondary,
+                  ),
+                  shape: StadiumBorder(),
                 ),
-                shape: StadiumBorder(),
+                onPressed: onAskSeller,
+                child: Text(AppStrings.askSeller, textAlign: TextAlign.center),
               ),
-              onPressed: onAskSeller,
-              child: Text(AppStrings.askSeller, textAlign: TextAlign.center),
             ),
-          ),
         ],
       ),
     );

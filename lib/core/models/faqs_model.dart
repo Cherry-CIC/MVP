@@ -1,4 +1,5 @@
 import 'package:cherry_mvp/core/config/app_strings.dart';
+import 'package:cherry_mvp/core/config/feature_flags.dart';
 
 class FaqEntry {
   final String question;
@@ -32,19 +33,20 @@ final List<FaqCategory> dummyFaqData = [
   ),
 
   // 2. Offers
-  FaqCategory(
-    title: AppStrings.offers,
-    entries: [
-      FaqEntry(
-        question: AppStrings.howDoIOfferQuestion,
-        answer: AppStrings.howDoIOfferAnswer,
-      ),
-      FaqEntry(
-        question: AppStrings.offerDeclinedQuestion,
-        answer: AppStrings.offerDeclinedAnswer,
-      ),
-    ],
-  ),
+  if (FeatureFlags.showOffers)
+    FaqCategory(
+      title: AppStrings.offers,
+      entries: [
+        FaqEntry(
+          question: AppStrings.howDoIOfferQuestion,
+          answer: AppStrings.howDoIOfferAnswer,
+        ),
+        FaqEntry(
+          question: AppStrings.offerDeclinedQuestion,
+          answer: AppStrings.offerDeclinedAnswer,
+        ),
+      ],
+    ),
 
   // 3. Selling
   FaqCategory(

@@ -1,3 +1,4 @@
+import 'package:cherry_mvp/core/config/feature_flags.dart';
 import 'package:cherry_mvp/core/config/app_images.dart';
 import 'package:cherry_mvp/core/config/app_spacing.dart';
 import 'package:cherry_mvp/core/config/app_strings.dart';
@@ -31,8 +32,7 @@ class NotYouPage extends StatelessWidget {
                   padding: EdgeInsets.only(
                     left: AppSpacing.medium,
                     right: AppSpacing.medium,
-                    bottom: MediaQuery.of(context).viewInsets.bottom +
-                        AppSpacing.medium,
+                    bottom: MediaQuery.of(context).viewInsets.bottom + AppSpacing.medium,
                   ),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -52,8 +52,7 @@ class NotYouPage extends StatelessWidget {
                       // First Text
                       Align(
                         alignment: Alignment.centerLeft,
-                        child: Text(AppStrings.userCheck,
-                            style: Theme.of(context).textTheme.headlineMedium),
+                        child: Text(AppStrings.userCheck, style: Theme.of(context).textTheme.headlineMedium),
                       ),
                       SizedBox(height: AppSpacing.medium),
                       Align(
@@ -66,15 +65,17 @@ class NotYouPage extends StatelessWidget {
                           hintText: AppStrings.email,
                         ),
                       ),
-                      SizedBox(height: AppSpacing.large),
-                      SizedBox(
-                        width: double.infinity,
-                        height: 60,
-                        child: OutlinedButton(
-                          onPressed: () {},
-                          child: const Text(AppStrings.sendEmail),
+                      if (FeatureFlags.showDeferredControls) ...[
+                        SizedBox(height: AppSpacing.large),
+                        SizedBox(
+                          width: double.infinity,
+                          height: 60,
+                          child: OutlinedButton(
+                            onPressed: () {},
+                            child: const Text(AppStrings.sendEmail),
+                          ),
                         ),
-                      ),
+                      ],
                       SizedBox(height: AppSpacing.large),
                     ],
                   ),

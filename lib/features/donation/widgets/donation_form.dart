@@ -4,6 +4,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:cherry_mvp/core/config/app_colors.dart';
+import 'package:cherry_mvp/core/config/feature_flags.dart';
 import 'package:cherry_mvp/core/config/app_strings.dart';
 import 'package:cherry_mvp/core/utils/donor_discount_state_store.dart';
 import 'package:cherry_mvp/core/utils/utils.dart';
@@ -142,10 +143,12 @@ class DonationFormState extends State<DonationForm> {
               context,
               listen: false,
             );
-            await DonorDiscountStateStore.setDonorDiscountState(
-              donationViewModel.lastSubmission!.id,
-              isSwitchedApplicableBuyerDiscounts,
-            );
+            if (FeatureFlags.showDonorDiscounts) {
+              await DonorDiscountStateStore.setDonorDiscountState(
+                donationViewModel.lastSubmission!.id,
+                isSwitchedApplicableBuyerDiscounts,
+              );
+            }
             if (!mounted) return;
             _clearForm();
             donationViewModel.resetStatus();
@@ -383,37 +386,40 @@ class DonationFormState extends State<DonationForm> {
                   toggleSwitchApplicableBuyerDiscounts: toggleSwitchApplicableBuyerDiscounts,
                 ),
               ],
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        AppStrings.thoughtsOnUpload,
-                        softWrap: true,
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+              if (FeatureFlags.showDeferredControls)
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          AppStrings.thoughtsOnUpload,
+                          softWrap: true,
+                          style: TextStyle(
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
+                          ),
                         ),
                       ),
-                    ),
-                    OutlinedButton(
-                      onPressed: () {},
-                      style: OutlinedButton.styleFrom(
-                        side: BorderSide(color: AppColors.grey),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 0,
+                      OutlinedButton(
+                        onPressed: () {},
+                        style: OutlinedButton.styleFrom(
+                          side: BorderSide(color: AppColors.grey),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 0,
+                          ),
+                        ),
+                        child: Text(
+                          AppStrings.giveFeedback,
+                          style: TextStyle(color: AppColors.grey, fontSize: 14),
                         ),
                       ),
-                      child: Text(
-                        AppStrings.giveFeedback,
-                        style: TextStyle(color: AppColors.grey, fontSize: 14),
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
 
               Padding(
                 padding: const EdgeInsets.all(16),

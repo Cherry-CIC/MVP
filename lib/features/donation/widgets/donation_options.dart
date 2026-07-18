@@ -46,23 +46,26 @@ class DonationOptions extends StatelessWidget {
           child: Column(
             spacing: 8,
             children: [
-              DonationOption(
-                labelText: AppStrings.openToOtherCharitiesText,
-                value: isSwitchedOpenToOtherCharity,
-                onChanged: toggleSwitchOpenToOtherCharity ?? (value) {},
-              ),
-              DonationOption(
-                labelText: AppStrings.openToOffersText,
-                value: isSwitchedOpenToOffer,
-                onChanged: toggleSwitchOpenToOffer ?? (value) {},
-              ),
-              DonationOption(
-                labelText: isSwitchedApplicableBuyerDiscounts
-                    ? AppStrings.donorDiscountsActiveText
-                    : AppStrings.donorDiscountsInactiveText,
-                value: isSwitchedApplicableBuyerDiscounts,
-                onChanged: toggleSwitchApplicableBuyerDiscounts ?? (value) {},
-              ),
+              if (FeatureFlags.showOtherCharityRequests)
+                DonationOption(
+                  labelText: AppStrings.openToOtherCharitiesText,
+                  value: isSwitchedOpenToOtherCharity,
+                  onChanged: toggleSwitchOpenToOtherCharity ?? (value) {},
+                ),
+              if (FeatureFlags.showOffers)
+                DonationOption(
+                  labelText: AppStrings.openToOffersText,
+                  value: isSwitchedOpenToOffer,
+                  onChanged: toggleSwitchOpenToOffer ?? (value) {},
+                ),
+              if (FeatureFlags.showDonorDiscounts)
+                DonationOption(
+                  labelText: isSwitchedApplicableBuyerDiscounts
+                      ? AppStrings.donorDiscountsActiveText
+                      : AppStrings.donorDiscountsInactiveText,
+                  value: isSwitchedApplicableBuyerDiscounts,
+                  onChanged: toggleSwitchApplicableBuyerDiscounts ?? (value) {},
+                ),
             ],
           ),
         ),
