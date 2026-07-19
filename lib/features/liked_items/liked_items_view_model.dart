@@ -43,7 +43,10 @@ class LikedItemsViewModel extends ChangeNotifier {
       return;
     }
 
-    _products = result.value ?? const [];
+    _products = _mergeProducts(
+      result.value ?? const [],
+      productViewModel.cachedLikedProducts,
+    );
     productViewModel.cacheLikedProducts(_products);
     _status = _products.isEmpty ? LikedItemsStatus.empty : LikedItemsStatus.loaded;
     notifyListeners();
@@ -72,5 +75,22 @@ class LikedItemsViewModel extends ChangeNotifier {
 
   Future<void> retry() {
     return loadLikedProducts();
+  }
+
+  List<Product> _mergeProducts(
+    List<Product> primaryProducts,
+    List<Product> cachedProducts,
+  ) {
+    final products = <Product>[];
+    final seenProductIds = <String>{};
+
+    for (final product in [...primaryProducts, ...cachedProducts]) {
+      if (product.id.trim().isEmpty || !seenProductIds.add(product.id)) {
+        continue;
+      }
+      products.add(product);
+    }
+
+    return List.unmodifiable(products);
   }
 }

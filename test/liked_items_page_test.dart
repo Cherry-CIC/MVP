@@ -23,6 +23,11 @@ class _FakeProductRepository extends ProductRepository {
   int fetchCount = 0;
 
   @override
+  Future<Result<void>> likeProduct(Product product) async {
+    return Result.success(null);
+  }
+
+  @override
   Future<Result<List<Product>>> fetchLikedProducts() async {
     fetchCount += 1;
     return fetchResult;
