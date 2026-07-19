@@ -5,40 +5,48 @@ import 'package:flutter/material.dart';
 class UserOrderDetails extends StatelessWidget {
   const UserOrderDetails({
     super.key,
+    this.showLikedShortcut = false,
+    this.onLikedPressed,
   });
+
+  final bool showLikedShortcut;
+  final VoidCallback? onLikedPressed;
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
-        if (FeatureFlags.showProfileStats)
+        if (FeatureFlags.showProfileStats || showLikedShortcut)
           SizedBox(
             height: 96,
             child: Row(
               children: [
-                Expanded(
-                  child: UserOrderTile(
-                    title: AppStrings.profileUserOrders,
-                    onPressed: () {},
-                    assetPath: AppImages.profileOrder,
+                if (FeatureFlags.showProfileStats)
+                  Expanded(
+                    child: UserOrderTile(
+                      title: AppStrings.profileUserOrders,
+                      onPressed: () {},
+                      assetPath: AppImages.profileOrder,
+                    ),
                   ),
-                ),
-                SizedBox(width: 8),
-                Expanded(
-                  child: UserOrderTile(
-                    title: AppStrings.profileUserLiked,
-                    onPressed: () {},
-                    assetPath: AppImages.profileLiked,
+                if (FeatureFlags.showProfileStats && showLikedShortcut) SizedBox(width: 8),
+                if (showLikedShortcut)
+                  Expanded(
+                    child: UserOrderTile(
+                      title: AppStrings.profileUserLiked,
+                      onPressed: onLikedPressed ?? () {},
+                      assetPath: AppImages.profileLiked,
+                    ),
                   ),
-                ),
-                SizedBox(width: 8),
-                Expanded(
-                  child: UserOrderTile(
-                    title: AppStrings.profileUserListings,
-                    onPressed: () {},
-                    assetPath: AppImages.profileListings,
+                if (FeatureFlags.showProfileStats) SizedBox(width: 8),
+                if (FeatureFlags.showProfileStats)
+                  Expanded(
+                    child: UserOrderTile(
+                      title: AppStrings.profileUserListings,
+                      onPressed: () {},
+                      assetPath: AppImages.profileListings,
+                    ),
                   ),
-                ),
               ],
             ),
           ),
