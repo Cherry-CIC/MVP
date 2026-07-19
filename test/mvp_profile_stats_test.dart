@@ -90,7 +90,7 @@ void main() {
     expect(find.text(AppStrings.profileUserBuyerDisc), findsNothing);
   });
 
-  testWidgets('ProfilePage shows Liked shortcut while hiding placeholder profile activity cards', (
+  testWidgets('ProfilePage shows profile shortcuts while hiding placeholder profile activity cards', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(1200, 5000);
@@ -109,9 +109,9 @@ void main() {
     );
     await tester.pump();
 
-    expect(find.text(AppStrings.profileUserOrders), findsNothing);
+    expect(find.text(AppStrings.profileUserOrders), findsOneWidget);
     expect(find.text(AppStrings.profileUserLiked), findsOneWidget);
-    expect(find.text(AppStrings.profileUserListings), findsNothing);
+    expect(find.text(AppStrings.profileUserListings), findsOneWidget);
     expect(find.text(AppStrings.profileUserActivityBought), findsNothing);
     expect(find.text(AppStrings.profileUserActivitySold), findsNothing);
     expect(find.text(AppStrings.profileUserActivityTotal), findsNothing);
