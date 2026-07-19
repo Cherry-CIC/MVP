@@ -10,6 +10,7 @@ class ProductViewModel extends ChangeNotifier {
 
   // Centralized tracker: Map<ProductID, IsLiked>
   final Map<String, bool> _likedProducts = {};
+  final Map<String, Product> _likedProductSnapshots = {};
   final Set<String> _pendingLikeUpdates = {};
 
   Product? get product => _product;
@@ -26,6 +27,16 @@ class ProductViewModel extends ChangeNotifier {
 
   bool isLikeUpdatePending(String productId) {
     return _pendingLikeUpdates.contains(productId);
+  }
+
+  List<Product> get cachedLikedProducts {
+    final products = <Product>[];
+    for (final entry in _likedProductSnapshots.entries) {
+      if (_likedProducts[entry.key] == true) {
+        products.add(entry.value);
+      }
+    }
+    return List.unmodifiable(products);
   }
 
   // Get dynamic count for a product
@@ -55,12 +66,17 @@ class ProductViewModel extends ChangeNotifier {
     _pendingLikeUpdates.add(id);
     notifyListeners();
 
-    final result = liked ? await productRepository.likeProduct(id) : await productRepository.unlikeProduct(id);
+    final result = liked ? await productRepository.likeProduct(product) : await productRepository.unlikeProduct(id);
 
     _pendingLikeUpdates.remove(id);
 
     if (result.isSuccess) {
       _likedProducts[id] = liked;
+      if (liked) {
+        _likedProductSnapshots[id] = product;
+      } else {
+        _likedProductSnapshots.remove(id);
+      }
       notifyListeners();
       return Result.success(liked);
     }
@@ -75,6 +91,9 @@ class ProductViewModel extends ChangeNotifier {
     }
 
     _likedProducts[productId] = liked;
+    if (!liked) {
+      _likedProductSnapshots.remove(productId);
+    }
     notifyListeners();
   }
 
@@ -88,6 +107,11 @@ class ProductViewModel extends ChangeNotifier {
 
       if (_likedProducts[product.id] != true) {
         _likedProducts[product.id] = true;
+        changed = true;
+      }
+
+      if (_likedProductSnapshots[product.id] != product) {
+        _likedProductSnapshots[product.id] = product;
         changed = true;
       }
     }

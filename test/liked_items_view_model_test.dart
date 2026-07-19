@@ -18,6 +18,11 @@ class _FakeProductRepository extends ProductRepository {
   final unlikedIds = <String>[];
 
   @override
+  Future<Result<void>> likeProduct(Product product) async {
+    return Result.success(null);
+  }
+
+  @override
   Future<Result<List<Product>>> fetchLikedProducts() async {
     return fetchResult ?? Result.success(const <Product>[]);
   }
@@ -66,6 +71,26 @@ void main() {
       expect(viewModel.status, LikedItemsStatus.loaded);
       expect(viewModel.products, hasLength(1));
       expect(productViewModel.isProductLiked('liked-product'), isTrue);
+    });
+
+    test('uses cached liked products when stored references cannot hydrate yet', () async {
+      final product = _product();
+      final repository = _FakeProductRepository(
+        fetchResult: Result.success(const <Product>[]),
+      );
+      final productViewModel = ProductViewModel(
+        productRepository: repository,
+        navigator: NavigationProvider(),
+      )..cacheLikedProducts([product]);
+      final viewModel = LikedItemsViewModel(
+        productRepository: repository,
+        productViewModel: productViewModel,
+      );
+
+      await viewModel.loadLikedProducts();
+
+      expect(viewModel.status, LikedItemsStatus.loaded);
+      expect(viewModel.products, [product]);
     });
 
     test('sets empty state when there are no liked products', () async {

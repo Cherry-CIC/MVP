@@ -26,5 +26,6 @@ class FirestoreConstants {
   static const lockers = "lockers";
   static const productId = "productId";
   static const likedAt = "likedAt";
+  static const productSnapshot = "productSnapshot";
   static const likes = "likes";
 }
