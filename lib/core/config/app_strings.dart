@@ -64,6 +64,11 @@ class AppStrings {
   static const profileUserLiked = "Liked";
   static const profileUserListings = "Listings";
   static const profileUserBuyerDisc = "Donor discounts";
+  static const likedItemsTitle = 'Liked Items ❤️';
+  static const likedItemsEmptyTitle = 'No likes??? 👀';
+  static const likedItemsEmptyBody = 'Tap the heart on anything you want to find again.';
+  static const likedItemsBrowseProducts = 'Browse products';
+  static const likedItemsLoadError = 'We couldn’t load your liked items.';
 
   // Profile: Donations & Activity
   static const profileUserActivityBought = 'Bought';
@@ -198,6 +203,8 @@ class AppStrings {
   static const giveInStyle = 'Give in style';
   static const productIncl = 'Incl.';
   static const askSeller = 'Ask seller';
+  static const likeProduct = 'Like product';
+  static const unlikeProduct = 'Unlike product';
 
   // Checkout
   static const checkoutTitle = 'Checkout';
