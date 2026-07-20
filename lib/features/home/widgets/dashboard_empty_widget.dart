@@ -6,18 +6,18 @@ class DashboardEmptyWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
+    return Center(
       child: Padding(
-        padding: EdgeInsets.all(40.0),
+        padding: const EdgeInsets.all(40.0),
         child: Column(
           children: [
-            Icon(
+            const Icon(
               Icons.shopping_bag_outlined,
               size: 48,
               color: Colors.grey,
             ),
-            SizedBox(height: 16),
-            Text(
+            const SizedBox(height: 16),
+            const Text(
               AppStrings.noProductsAvailable,
               style: TextStyle(
                 fontSize: 16,

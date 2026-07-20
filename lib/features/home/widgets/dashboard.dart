@@ -84,13 +84,21 @@ class _DashboardPageState extends State<DashboardPage> {
 
         final numProductRows = (products.length / 2).ceil();
         final numAds = FeatureFlags.showCharityAds ? (products.length / 6).floor() : 0;
-        final totalCount = numProductRows + numAds;
+        final loaderCount = homeViewModel.isLoadingMore ? 1 : 0;
+        final totalCount = numProductRows + numAds + loaderCount;
 
         return SliverPadding(
           padding: const EdgeInsets.symmetric(horizontal: 12),
           sliver: SliverList(
             delegate: SliverChildBuilderDelegate(
               (context, index) {
+                if (homeViewModel.isLoadingMore && index == totalCount - 1) {
+                  return const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 24),
+                    child: Center(child: CircularProgressIndicator()),
+                  );
+                }
+
                 // Insert adverts after every 3 product rows when the advert feature is ready.
                 if (FeatureFlags.showCharityAds && (index + 1) % 4 == 0) {
                   return const Padding(
