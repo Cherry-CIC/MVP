@@ -7,12 +7,14 @@ class _FakeApiService implements ApiService {
   _FakeApiService(this.response);
 
   final dynamic response;
+  Map<String, dynamic>? lastQueryParameters;
 
   @override
   Future<Result<T>> get<T>(
     String endpoint, {
     Map<String, dynamic>? queryParameters,
   }) async {
+    lastQueryParameters = queryParameters;
     return Result.success(response as T);
   }
 
@@ -45,8 +47,9 @@ void main() {
       final result = await repository.fetchProducts();
 
       expect(result.isSuccess, isTrue);
-      expect(result.value, hasLength(1));
-      expect(result.value!.single.id, 'product-1');
+      expect(result.value!.products, hasLength(1));
+      expect(result.value!.products.single.id, 'product-1');
+      expect(result.value!.hasMore, isFalse);
     });
 
     test('parses products from the standard wrapped data list', () async {
@@ -61,8 +64,8 @@ void main() {
       final result = await repository.fetchProducts();
 
       expect(result.isSuccess, isTrue);
-      expect(result.value, hasLength(1));
-      expect(result.value!.single.id, 'product-2');
+      expect(result.value!.products, hasLength(1));
+      expect(result.value!.products.single.id, 'product-2');
     });
 
     test('parses products from direct products responses', () async {
@@ -75,29 +78,47 @@ void main() {
       final result = await repository.fetchProducts();
 
       expect(result.isSuccess, isTrue);
-      expect(result.value, hasLength(1));
-      expect(result.value!.single.id, 'product-3');
+      expect(result.value!.products, hasLength(1));
+      expect(result.value!.products.single.id, 'product-3');
     });
 
-    test('parses products from nested data.products responses', () async {
+    test('parses products and pagination meta from nested data.products responses', () async {
+      final apiService = _FakeApiService({
+        'success': true,
+        'message': 'Products with details fetched successfully',
+        'data': {
+          'products': [_productJson(id: 'product-4')],
+        },
+        'meta': {
+          'limit': 20,
+          'nextCursor': 'cursor-2',
+          'hasMore': true,
+        },
+      });
       final repository = HomeRepository(
-        _FakeApiService({
-          'success': true,
-          'message': 'Products with details fetched successfully',
-          'data': {
-            'products': [_productJson(id: 'product-4')],
-          },
-        }),
+        apiService,
       );
 
-      final result = await repository.fetchProducts();
+      final result = await repository.fetchProducts(
+        limit: 20,
+        cursor: 'cursor-1',
+        search: ' jumper ',
+      );
 
       expect(result.isSuccess, isTrue);
-      expect(result.value, hasLength(1));
-      expect(result.value!.single.id, 'product-4');
+      expect(result.value!.products, hasLength(1));
+      expect(result.value!.products.single.id, 'product-4');
+      expect(result.value!.limit, 20);
+      expect(result.value!.nextCursor, 'cursor-2');
+      expect(result.value!.hasMore, isTrue);
+      expect(apiService.lastQueryParameters, {
+        'limit': 20,
+        'cursor': 'cursor-1',
+        'search': 'jumper',
+      });
     });
 
-    test('returns an empty product list for unsuccessful response envelopes', () async {
+    test('returns failure for unsuccessful response envelopes', () async {
       final repository = HomeRepository(
         _FakeApiService({
           'success': false,
@@ -107,11 +128,11 @@ void main() {
 
       final result = await repository.fetchProducts();
 
-      expect(result.isSuccess, isTrue);
-      expect(result.value, isEmpty);
+      expect(result.isSuccess, isFalse);
+      expect(result.error, isNotEmpty);
     });
 
-    test('returns an empty product list for unexpected response structures', () async {
+    test('returns failure for unexpected response structures', () async {
       final repository = HomeRepository(
         _FakeApiService({
           'message': 'Unexpected response without products',
@@ -120,17 +141,31 @@ void main() {
 
       final result = await repository.fetchProducts();
 
-      expect(result.isSuccess, isTrue);
-      expect(result.value, isEmpty);
+      expect(result.isSuccess, isFalse);
+      expect(result.error, isNotEmpty);
     });
 
-    test('returns an empty product list when the API service fails', () async {
+    test('returns failure when the API service fails', () async {
       final repository = HomeRepository(const _FailingApiService());
 
       final result = await repository.fetchProducts();
 
-      expect(result.isSuccess, isTrue);
-      expect(result.value, isEmpty);
+      expect(result.isSuccess, isFalse);
+      expect(result.error, 'technical failure');
+    });
+
+    test('omits empty cursor and search query parameters', () async {
+      final apiService = _FakeApiService({
+        'success': true,
+        'data': {
+          'products': [_productJson(id: 'product-5')],
+        },
+      });
+      final repository = HomeRepository(apiService);
+
+      await repository.fetchProducts(limit: 10, cursor: '', search: '   ');
+
+      expect(apiService.lastQueryParameters, {'limit': 10});
     });
   });
 }
