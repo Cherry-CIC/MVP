@@ -57,6 +57,10 @@ class AppImages {
   static const placeholderDisasterAidUkIreland = '${_path}placeholder_disaster_aid_uk_ireland.jpg';
   static const placeholderNewCollegeWorcester = '${_path}placeholder_new_college_worcester.jpg';
   static const placeholderGroundwork = '${_path}placeholder_groundwork.jpg';
+  static const maudsleyCharityLogo = '${_path}maudsley_charity_logo.png';
+  static const britishHeartFoundationLogo = '${_path}british_heart_foundation_logo.jpg';
+  static const disasterAidUkIrelandLogo = '${_path}disaster_aid_uk_ireland_logo.png';
+  static const groundworkLogo = '${_path}groundwork_logo.png';
   static const profilesettings = '${_path}profile_setting.png';
   static const profileProfileIcon = '${_path}profile_profile_icon.png';
   static const profileFollowers = '${_path}profile_followers.png';

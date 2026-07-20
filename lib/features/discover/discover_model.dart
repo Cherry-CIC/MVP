@@ -44,6 +44,7 @@ final List<DummyCharity> dummyCharities = [
     description:
         'Maudsley Charity funds improvements and innovation in mental health care across south London. It supports clinical teams, researchers and community organisations working to ensure people experiencing mental illness can access the right care.',
     charityImage: AppImages.placeholderMaudsleyCharity,
+    charityLogo: AppImages.maudsleyCharityLogo,
     likes: 0,
     tags: {'popular'},
   ),
@@ -52,6 +53,7 @@ final List<DummyCharity> dummyCharities = [
     description:
         'British Heart Foundation funds life-saving research into heart and circulatory diseases. It also supports people living with cardiovascular conditions and campaigns for improvements in prevention, diagnosis and treatment.',
     charityImage: AppImages.placeholderBritishHeartFoundation,
+    charityLogo: AppImages.britishHeartFoundationLogo,
     likes: 0,
     tags: {'popular'},
   ),
@@ -68,6 +70,7 @@ final List<DummyCharity> dummyCharities = [
     description:
         'Disaster Aid UK & Ireland provides humanitarian support to communities affected by disasters around the world. Working through Disaster Aid International, it helps fund and deliver practical aid while supporting communities as they recover and rebuild.',
     charityImage: AppImages.placeholderDisasterAidUkIreland,
+    charityLogo: AppImages.disasterAidUkIrelandLogo,
     likes: 0,
     tags: {'popular'},
   ),
@@ -84,6 +87,7 @@ final List<DummyCharity> dummyCharities = [
     description:
         'Groundwork works with communities across the UK to create a fairer and greener future. Its projects improve local green spaces, tackle poverty and inequality, support healthier communities and help people access skills and employment.',
     charityImage: AppImages.placeholderGroundwork,
+    charityLogo: AppImages.groundworkLogo,
     likes: 0,
     tags: {'popular'},
   ),

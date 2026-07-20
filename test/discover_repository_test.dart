@@ -36,4 +36,19 @@ void main() {
       contains('West London NHS Charity'),
     );
   });
+
+  test('uses the supplied official logos where available', () {
+    final charitiesByName = {
+      for (final charity in repository.fetchCharities()) charity.charityName: charity,
+    };
+
+    for (final charityName in [
+      'Maudsley Charity',
+      'British Heart Foundation',
+      'Disaster Aid UK & Ireland',
+      'Groundwork',
+    ]) {
+      expect(charitiesByName[charityName]!.charityLogo, isNotEmpty);
+    }
+  });
 }
