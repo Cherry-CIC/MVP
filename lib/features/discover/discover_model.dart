@@ -10,6 +10,7 @@ final List<DummyCharity> dummyCharities = [
     charityImage: AppImages.discoverImage1,
     charityLogo: AppImages.waterAidLogo,
     likes: 3,
+    tags: {'popular'},
   ),
   DummyCharity(
     charityName: "WWF",
@@ -18,6 +19,7 @@ final List<DummyCharity> dummyCharities = [
     charityImage: AppImages.wwf,
     charityLogo: AppImages.wwfLogo,
     likes: 3,
+    tags: {'popular'},
   ),
   DummyCharity(
     charityName: "Shelter",
@@ -26,6 +28,7 @@ final List<DummyCharity> dummyCharities = [
     charityImage: AppImages.shelter,
     charityLogo: AppImages.shelterLogo,
     likes: 3,
+    tags: {'smaller-charities'},
   ),
   DummyCharity(
     charityName: "Mind",
@@ -34,6 +37,55 @@ final List<DummyCharity> dummyCharities = [
     charityImage: AppImages.mind,
     charityLogo: AppImages.mindLogo,
     likes: 3,
+    tags: {'popular'},
+  ),
+  DummyCharity(
+    charityName: 'Maudsley Charity',
+    description:
+        'Maudsley Charity funds improvements and innovation in mental health care across south London. It supports clinical teams, researchers and community organisations working to ensure people experiencing mental illness can access the right care.',
+    charityImage: AppImages.placeholderMaudsleyCharity,
+    likes: 0,
+    tags: {'popular'},
+  ),
+  DummyCharity(
+    charityName: 'British Heart Foundation',
+    description:
+        'British Heart Foundation funds life-saving research into heart and circulatory diseases. It also supports people living with cardiovascular conditions and campaigns for improvements in prevention, diagnosis and treatment.',
+    charityImage: AppImages.placeholderBritishHeartFoundation,
+    likes: 0,
+    tags: {'popular'},
+  ),
+  DummyCharity(
+    charityName: 'West London NHS Charity',
+    description:
+        'West London NHS Charity raises funds to improve the wellbeing of patients, service users, carers and NHS staff. Donations support projects and improvements that cannot normally be funded through standard NHS budgets.',
+    charityImage: AppImages.placeholderWestLondonNhsCharity,
+    likes: 0,
+    tags: {'smaller-charities', 'local'},
+  ),
+  DummyCharity(
+    charityName: 'Disaster Aid UK & Ireland',
+    description:
+        'Disaster Aid UK & Ireland provides humanitarian support to communities affected by disasters around the world. Working through Disaster Aid International, it helps fund and deliver practical aid while supporting communities as they recover and rebuild.',
+    charityImage: AppImages.placeholderDisasterAidUkIreland,
+    likes: 0,
+    tags: {'popular'},
+  ),
+  DummyCharity(
+    charityName: 'New College Worcester',
+    description:
+        'New College Worcester is a national residential school and college for young people who are blind or vision impaired. It provides specialist education, independent living skills and support to help students become confident and fulfilled adults.',
+    charityImage: AppImages.placeholderNewCollegeWorcester,
+    likes: 0,
+    tags: {'smaller-charities'},
+  ),
+  DummyCharity(
+    charityName: 'Groundwork',
+    description:
+        'Groundwork works with communities across the UK to create a fairer and greener future. Its projects improve local green spaces, tackle poverty and inequality, support healthier communities and help people access skills and employment.',
+    charityImage: AppImages.placeholderGroundwork,
+    likes: 0,
+    tags: {'popular'},
   ),
 ];
 

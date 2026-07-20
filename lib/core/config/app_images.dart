@@ -51,6 +51,12 @@ class AppImages {
 
   static const discoverImage1 = '${_path}discover_image1.png';
   static const discoverImage2 = '${_path}discover_image2.png';
+  static const placeholderMaudsleyCharity = '${_path}placeholder_maudsley_charity.jpg';
+  static const placeholderBritishHeartFoundation = '${_path}placeholder_british_heart_foundation.jpg';
+  static const placeholderWestLondonNhsCharity = '${_path}placeholder_west_london_nhs_charity.jpg';
+  static const placeholderDisasterAidUkIreland = '${_path}placeholder_disaster_aid_uk_ireland.jpg';
+  static const placeholderNewCollegeWorcester = '${_path}placeholder_new_college_worcester.jpg';
+  static const placeholderGroundwork = '${_path}placeholder_groundwork.jpg';
   static const profilesettings = '${_path}profile_setting.png';
   static const profileProfileIcon = '${_path}profile_profile_icon.png';
   static const profileFollowers = '${_path}profile_followers.png';

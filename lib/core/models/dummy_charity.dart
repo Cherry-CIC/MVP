@@ -2,14 +2,16 @@ class DummyCharity {
   final String charityName;
   final String charityImage;
   final String description;
-  final String charityLogo;
+  final String? charityLogo;
   final int likes;
+  final Set<String> tags;
 
   const DummyCharity({
     required this.charityName,
     required this.charityImage,
     required this.description,
-    required this.charityLogo,
+    this.charityLogo,
     required this.likes,
+    this.tags = const {},
   });
 }
