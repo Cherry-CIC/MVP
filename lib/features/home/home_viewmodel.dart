@@ -9,6 +9,7 @@ import 'package:logging/logging.dart';
 class HomeViewModel extends ChangeNotifier {
   static const int defaultPageSize = 20;
   static const Duration searchDebounceDuration = Duration(milliseconds: 400);
+  static const Duration loadMoreRetryBackoff = Duration(seconds: 3);
 
   final _log = Logger('HomeViewModel');
   final IHomeRepository homeRepository;
@@ -30,6 +31,7 @@ class HomeViewModel extends ChangeNotifier {
   String _searchText = '';
   String _searchQuery = '';
   Timer? _searchDebounce;
+  DateTime? _homeLoadMoreRetryAt;
   int _homeRequestSequence = 0;
   int _searchRequestSequence = 0;
 
@@ -100,6 +102,11 @@ class HomeViewModel extends ChangeNotifier {
       return;
     }
 
+    final retryAt = _homeLoadMoreRetryAt;
+    if (retryAt != null && DateTime.now().isBefore(retryAt)) {
+      return;
+    }
+
     final requestId = _homeRequestSequence;
     _isLoadingMore = true;
     notifyListeners();
@@ -120,11 +127,14 @@ class HomeViewModel extends ChangeNotifier {
         _homeProducts = [..._homeProducts, ...newProducts];
         _nextCursor = page.nextCursor;
         _hasMore = page.hasMore;
+        _homeLoadMoreRetryAt = null;
       } else {
         _log.warning('Load more products failed! ${result.error}');
+        _homeLoadMoreRetryAt = DateTime.now().add(loadMoreRetryBackoff);
       }
     } catch (e) {
       _log.severe('Load more products error: $e');
+      _homeLoadMoreRetryAt = DateTime.now().add(loadMoreRetryBackoff);
     }
 
     if (requestId != _homeRequestSequence) {
@@ -187,6 +197,7 @@ class HomeViewModel extends ChangeNotifier {
     }
     _nextCursor = null;
     _hasMore = false;
+    _homeLoadMoreRetryAt = null;
     notifyListeners();
 
     try {
