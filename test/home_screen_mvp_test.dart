@@ -16,10 +16,14 @@ import 'package:provider/provider.dart';
 class _HomeRepositoryStub implements IHomeRepository {
   _HomeRepositoryStub(this.result);
 
-  final Result<List<Product>> result;
+  final Result<ProductPage> result;
 
   @override
-  Future<Result<List<Product>>> fetchProducts() async {
+  Future<Result<ProductPage>> fetchProducts({
+    int limit = 20,
+    String? cursor,
+    String? search,
+  }) async {
     return result;
   }
 }
@@ -27,16 +31,26 @@ class _HomeRepositoryStub implements IHomeRepository {
 Future<void> _pumpHomeScreen(
   WidgetTester tester, {
   List<Product> products = const [],
-  Result<List<Product>>? fetchResult,
+  Result<ProductPage>? fetchResult,
   EdgeInsets mediaPadding = EdgeInsets.zero,
 }) async {
   final navigator = NavigationProvider();
-  final result = fetchResult ?? Result.success(products);
+  final result =
+      fetchResult ??
+      Result.success(
+        ProductPage(
+          products: products,
+          limit: 20,
+          nextCursor: null,
+          hasMore: false,
+        ),
+      );
 
   await tester.pumpWidget(
     MultiProvider(
       providers: [
         Provider<NavigationProvider>.value(value: navigator),
+        ChangeNotifierProvider(create: (_) => SearchController()),
         ChangeNotifierProvider<HomeViewModel>(
           create: (_) => HomeViewModel(homeRepository: _HomeRepositoryStub(result)),
         ),
@@ -77,13 +91,13 @@ Product _product(int index) {
 }
 
 void main() {
-  testWidgets('HomeScreen hides the global search bar for the MVP', (
+  testWidgets('HomeScreen shows the global search bar', (
     tester,
   ) async {
     await _pumpHomeScreen(tester);
 
-    expect(find.text('AI Search: Red Polka Dot Dress'), findsNothing);
-    expect(find.byIcon(Icons.search), findsNothing);
+    expect(find.text('AI Search: Red Polka Dot Dress'), findsOneWidget);
+    expect(find.byIcon(Icons.search), findsOneWidget);
   });
 
   testWidgets(
@@ -96,7 +110,7 @@ void main() {
 
       final discoverTop = tester.getTopLeft(find.byType(DiscoverButton)).dy;
 
-      expect(discoverTop, 48);
+      expect(discoverTop, 108);
     },
   );
 
@@ -119,7 +133,7 @@ void main() {
     expect(find.text(AppStrings.adText), findsNothing);
   });
 
-  testWidgets('HomeScreen does not show product load errors on fetch failure', (
+  testWidgets('HomeScreen shows product load errors on fetch failure', (
     tester,
   ) async {
     await _pumpHomeScreen(
@@ -128,7 +142,8 @@ void main() {
     );
     await tester.pump();
 
-    expect(find.text(AppStrings.failedToLoadProducts), findsNothing);
-    expect(find.text(AppStrings.noProductsAvailable), findsOneWidget);
+    expect(find.text(AppStrings.failedToLoadProducts), findsOneWidget);
+    expect(find.text('technical failure'), findsOneWidget);
+    expect(find.text(AppStrings.noProductsAvailable), findsNothing);
   });
 }
