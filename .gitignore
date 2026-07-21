@@ -35,7 +35,6 @@ migrate_working_dir/
 /ios/Pods/
 /ios/build/
 /ios/Podfile.lock
-# Removed /ios/Runner.xcodeproj to unblock iOS contributors
 
 # Flutter generated
 **/Generated.xcconfig
