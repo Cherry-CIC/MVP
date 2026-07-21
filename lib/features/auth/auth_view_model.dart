@@ -116,13 +116,7 @@ class AuthViewModel extends ChangeNotifier {
         return Result.failure(message);
       }
 
-      final signOutResult = await _signOutAndClearPrefs();
-      if (!signOutResult.isSuccess) {
-        final message = signOutResult.error ?? 'Account deleted, but local sign out failed';
-        _deleteAccountStatus = Status.failure(message);
-        notifyListeners();
-        return Result.failure(message);
-      }
+      await _bestEffortSignOutAndClearPrefs();
 
       _deleteAccountStatus = Status.success;
       notifyListeners();
@@ -150,5 +144,21 @@ class AuthViewModel extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     await prefs.clear();
     return Result.success(null);
+  }
+
+  Future<void> _bestEffortSignOutAndClearPrefs() async {
+    try {
+      final result = await _signOutAndClearPrefs();
+      if (result.isSuccess) return;
+    } catch (_) {}
+
+    try {
+      await firebaseAuth.signOut();
+    } catch (_) {}
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.clear();
+    } catch (_) {}
   }
 }
