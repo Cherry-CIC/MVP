@@ -1,238 +1,124 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cherry_mvp/core/config/firestore_constants.dart';
 import 'package:cherry_mvp/core/models/product.dart';
+import 'package:cherry_mvp/core/services/network/api_endpoints.dart';
+import 'package:cherry_mvp/core/services/network/api_service.dart';
 import 'package:cherry_mvp/core/utils/result.dart';
-import 'package:cherry_mvp/features/home/home_repository.dart';
-import 'package:cherry_mvp/features/liked_items/models/liked_product_reference.dart';
 
 class ProductRepository {
-  ProductRepository({
-    this.firebaseAuth,
-    this.firebaseFirestore,
-    this.homeRepository,
-  });
+  ProductRepository(this._apiService);
 
-  final FirebaseAuth? firebaseAuth;
-  final FirebaseFirestore? firebaseFirestore;
-  final IHomeRepository? homeRepository;
+  static const int _likedProductsPageLimit = 50;
+  static const String _loadFailureMessage = 'We couldn’t load your liked items.';
 
-  FirebaseAuth get _auth => firebaseAuth ?? FirebaseAuth.instance;
-  FirebaseFirestore get _firestore => firebaseFirestore ?? FirebaseFirestore.instance;
+  final ApiService _apiService;
 
   Future<Result<void>> likeProduct(Product product) async {
-    final productId = product.id;
-    final validationError = _validateProductId(productId);
-    if (validationError != null) {
-      return Result.failure(validationError);
-    }
-
-    final uid = _currentUserId();
-    if (uid == null) {
-      return Result.failure('Please sign in to like products.');
-    }
-
-    try {
-      await _likedProductsCollection(uid).doc(productId).set({
-        FirestoreConstants.productId: productId,
-        FirestoreConstants.likedAt: FieldValue.serverTimestamp(),
-        FirestoreConstants.productSnapshot: _productSnapshot(product),
-      }, SetOptions(merge: true));
-
-      return Result.success(null);
-    } catch (e) {
-      return Result.failure('Unable to save this liked item. Please try again.');
-    }
+    return _setProductLiked(product.id, liked: true);
   }
 
   Future<Result<void>> unlikeProduct(String productId) async {
-    final validationError = _validateProductId(productId);
-    if (validationError != null) {
-      return Result.failure(validationError);
-    }
-
-    final uid = _currentUserId();
-    if (uid == null) {
-      return Result.failure('Please sign in to update liked products.');
-    }
-
-    try {
-      await _likedProductsCollection(uid).doc(productId).delete();
-      return Result.success(null);
-    } catch (e) {
-      return Result.failure('Unable to remove this liked item. Please try again.');
-    }
-  }
-
-  Future<Result<bool>> isProductLiked(String productId) async {
-    final validationError = _validateProductId(productId);
-    if (validationError != null) {
-      return Result.failure(validationError);
-    }
-
-    final uid = _currentUserId();
-    if (uid == null) {
-      return Result.failure('Please sign in to view liked products.');
-    }
-
-    try {
-      final document = await _likedProductsCollection(uid).doc(productId).get();
-      return Result.success(document.exists);
-    } catch (e) {
-      return Result.failure('Unable to check this liked item. Please try again.');
-    }
+    return _setProductLiked(productId, liked: false);
   }
 
   Future<Result<List<Product>>> fetchLikedProducts() async {
-    final uid = _currentUserId();
-    if (uid == null) {
-      return Result.failure('Please sign in to view liked products.');
-    }
-
     try {
-      final likedSnapshot = await _likedProductsCollection(
-        uid,
-      ).orderBy(FirestoreConstants.likedAt, descending: true).get();
+      final result = await _apiService.get<dynamic>(
+        ApiEndpoints.likedProducts,
+        queryParameters: const {'limit': _likedProductsPageLimit},
+      );
+      if (!result.isSuccess) {
+        return Result.failure(result.error ?? _loadFailureMessage);
+      }
+
+      final response = result.value;
+      if (_isUnsuccessfulResponse(response)) {
+        return Result.failure(_loadFailureMessage);
+      }
+
+      final productList = _extractProductList(response);
+      if (productList == null) {
+        return Result.success(const <Product>[]);
+      }
+
       final products = <Product>[];
-      final missingProductIds = <String>[];
       final seenProductIds = <String>{};
 
-      for (final likedDocument in likedSnapshot.docs) {
-        final reference = LikedProductReference.tryParse(
-          documentId: likedDocument.id,
-          data: likedDocument.data(),
-        );
-        if (reference == null) {
+      for (final productData in productList) {
+        if (productData is! Map) {
           continue;
         }
 
-        final product =
-            _productFromLikedDocument(
-              likedDocument.data(),
-              reference.productId,
-            ) ??
-            await _fetchProduct(reference.productId);
-        if (product != null) {
+        try {
+          final product = Product.fromJson(
+            Map<String, dynamic>.from(productData),
+          );
           if (seenProductIds.add(product.id)) {
             products.add(product);
           }
-        } else {
-          missingProductIds.add(reference.productId);
-        }
-      }
-
-      final fallbackProducts = await _fetchProductsFromHomeFeed(missingProductIds);
-      for (final productId in missingProductIds) {
-        final product = fallbackProducts[productId];
-        if (product != null && seenProductIds.add(product.id)) {
-          products.add(product);
+        } catch (_) {
+          continue;
         }
       }
 
       return Result.success(products);
-    } catch (e) {
-      return Result.failure('We couldn’t load your liked items.');
+    } catch (_) {
+      return Result.failure(_loadFailureMessage);
     }
   }
 
-  Map<String, dynamic> _productSnapshot(Product product) {
-    return {
-      'id': product.id,
-      'userId': product.userId,
-      'name': product.name,
-      'description': product.description,
-      'quality': product.quality,
-      'product_images': product.productImages,
-      'donation': product.donation,
-      'price': product.price,
-      'securityFee': product.securityFee,
-      'likes': product.likes,
-      'number': product.number,
-      'size': product.size,
-      'postageSize': product.postageSizeId,
-      'categoryId': product.categoryId,
-      'charityId': product.charityId,
-      'createdAt': product.createdAt,
-      'updatedAt': product.updatedAt,
-      if (product.category != null) 'category': product.category!.toJson(),
-      if (product.charity != null) 'charity': product.charity!.toJson(),
-    };
-  }
-
-  Product? _productFromLikedDocument(Map<String, dynamic> data, String productId) {
-    final snapshot = data[FirestoreConstants.productSnapshot];
-    if (snapshot is! Map) {
-      return null;
+  Future<Result<void>> _setProductLiked(
+    String productId, {
+    required bool liked,
+  }) async {
+    final validationError = _validateProductId(productId);
+    if (validationError != null) {
+      return Result.failure(validationError);
     }
+
+    final failureMessage = liked
+        ? 'Unable to save this liked item. Please try again.'
+        : 'Unable to remove this liked item. Please try again.';
 
     try {
-      return Product.fromJson({
-        ...Map<String, dynamic>.from(snapshot),
-        'id': productId,
-      });
-    } catch (e) {
-      return null;
-    }
-  }
-
-  Future<Map<String, Product>> _fetchProductsFromHomeFeed(
-    List<String> productIds,
-  ) async {
-    final repository = homeRepository;
-    if (repository == null || productIds.isEmpty) {
-      return const <String, Product>{};
-    }
-
-    final requiredIds = productIds.toSet();
-    final result = await repository.fetchProducts();
-    if (!result.isSuccess || result.value == null) {
-      return const <String, Product>{};
-    }
-
-    return {
-      for (final product in result.value!)
-        if (requiredIds.contains(product.id)) product.id: product,
-    };
-  }
-
-  String? _currentUserId() {
-    final uid = _auth.currentUser?.uid.trim();
-    return uid == null || uid.isEmpty ? null : uid;
-  }
-
-  CollectionReference<Map<String, dynamic>> _likedProductsCollection(String uid) {
-    return _firestore.collection(FirestoreConstants.users).doc(uid).collection(FirestoreConstants.likedProducts);
-  }
-
-  Future<Product?> _fetchProduct(String productId) async {
-    try {
-      final productDocument = await _firestore.collection(FirestoreConstants.products).doc(productId).get();
-
-      if (!productDocument.exists) {
-        return null;
+      final result = await _apiService.post<dynamic>(
+        ApiEndpoints.productLike(productId),
+        data: {'like': liked},
+      );
+      if (!result.isSuccess) {
+        return Result.failure(result.error ?? failureMessage);
       }
 
-      final data = productDocument.data();
-      if (data == null || _isHiddenProduct(data)) {
-        return null;
+      final response = result.value;
+      if (response is! Map || response['success'] != true) {
+        return Result.failure(failureMessage);
       }
 
-      return Product.fromJson({
-        ...data,
-        'id': productDocument.id,
-      });
-    } catch (e) {
-      return null;
+      final responseData = response['data'];
+      if (responseData is! Map || responseData['liked'] != liked) {
+        return Result.failure(failureMessage);
+      }
+
+      return Result.success(null);
+    } catch (_) {
+      return Result.failure(failureMessage);
     }
   }
 
-  bool _isHiddenProduct(Map<String, dynamic> data) {
-    final status = data['status'];
-    if (status is! String) {
-      return false;
+  bool _isUnsuccessfulResponse(dynamic response) {
+    return response is Map && response['success'] == false;
+  }
+
+  List<dynamic>? _extractProductList(dynamic response) {
+    if (response is! Map) {
+      return null;
     }
 
-    return const {'deleted', 'archived'}.contains(status.trim().toLowerCase());
+    final data = response['data'];
+    if (data is! Map) {
+      return null;
+    }
+
+    final products = data['products'];
+    return products is List ? products : null;
   }
 
   String? _validateProductId(String productId) {

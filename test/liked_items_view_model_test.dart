@@ -7,11 +7,13 @@ import 'package:cherry_mvp/features/products/product_repository.dart';
 import 'package:cherry_mvp/features/products/product_viewmodel.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'support/unexpected_api_service.dart';
+
 class _FakeProductRepository extends ProductRepository {
   _FakeProductRepository({
     this.fetchResult,
     this.unlikeResult,
-  });
+  }) : super(const UnexpectedApiService());
 
   Result<List<Product>>? fetchResult;
   Result<void>? unlikeResult;
@@ -73,7 +75,7 @@ void main() {
       expect(productViewModel.isProductLiked('liked-product'), isTrue);
     });
 
-    test('uses cached liked products when stored references cannot hydrate yet', () async {
+    test('uses cached liked products when the API response is empty', () async {
       final product = _product();
       final repository = _FakeProductRepository(
         fetchResult: Result.success(const <Product>[]),
