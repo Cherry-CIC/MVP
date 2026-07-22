@@ -214,6 +214,7 @@ List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
         navigator: Provider.of<NavigationProvider>(context, listen: false),
         firebaseAuth: Provider.of<FirebaseAuth>(context, listen: false),
         firestore: Provider.of<FirebaseFirestore>(context, listen: false),
+        apiService: Provider.of<ApiService>(context, listen: false),
       ),
     ),
   ];
