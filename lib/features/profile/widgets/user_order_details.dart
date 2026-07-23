@@ -13,7 +13,7 @@ class UserOrderDetails extends StatelessWidget {
       children: [
         if (FeatureFlags.showProfileShortcutCards)
           SizedBox(
-            height: 96,
+            height: 132,
             child: Row(
               children: [
                 Expanded(
@@ -29,14 +29,6 @@ class UserOrderDetails extends StatelessWidget {
                     title: AppStrings.profileUserLiked,
                     onPressed: () {},
                     assetPath: AppImages.profileLiked,
-                  ),
-                ),
-                SizedBox(width: 8),
-                Expanded(
-                  child: UserOrderTile(
-                    title: AppStrings.profileUserListings,
-                    onPressed: () {},
-                    assetPath: AppImages.profileListings,
                   ),
                 ),
               ],

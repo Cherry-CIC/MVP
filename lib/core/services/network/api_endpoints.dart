@@ -3,6 +3,7 @@ class ApiEndpoints {
 
   static const String products = '$_apiPrefix/products';
   static const String productsWithDetails = '$_apiPrefix/products/with-details';
+  static const String myProducts = '$_apiPrefix/products/my-products';
 
   // Auth sync
   static const String authSync = '$_apiPrefix/auth/sync';

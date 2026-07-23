@@ -6,6 +6,7 @@ import 'package:cherry_mvp/features/home/widgets/bottom_nav_bar.dart';
 import 'package:cherry_mvp/features/home/widgets/home_screen.dart';
 import 'package:cherry_mvp/features/messages/message_page.dart';
 import 'package:cherry_mvp/features/profile/profile_page.dart';
+import 'package:cherry_mvp/features/profile/profile_listings_view_model.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -59,6 +60,9 @@ class _HomePageState extends State<HomePage> {
     }
 
     if (index == _profileNavIndex) {
+      if (_selectedIndex == _profileNavIndex) {
+        context.read<ProfileListingsViewModel>().refreshListings();
+      }
       _pageController.jumpToPage(_profilePageIndex);
     }
   }
@@ -67,6 +71,7 @@ class _HomePageState extends State<HomePage> {
     var nextSelectedIndex = _homeNavIndex;
     if (index == _profilePageIndex) {
       nextSelectedIndex = _profileNavIndex;
+      context.read<ProfileListingsViewModel>().refreshListings();
     } else if (FeatureFlags.showInbox && index == _inboxPageIndex) {
       nextSelectedIndex = _inboxNavIndex;
     }

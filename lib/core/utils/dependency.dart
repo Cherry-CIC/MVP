@@ -28,6 +28,8 @@ import 'package:cherry_mvp/features/forgot_password/forgot_password_repository.d
 import 'package:cherry_mvp/features/forgot_password/forgot_password_viewmodel.dart';
 import 'package:cherry_mvp/features/products/product_repository.dart';
 import 'package:cherry_mvp/features/products/product_viewmodel.dart';
+import 'package:cherry_mvp/features/profile/profile_listings_repository.dart';
+import 'package:cherry_mvp/features/profile/profile_listings_view_model.dart';
 import 'package:cherry_mvp/features/register/register_repository.dart';
 import 'package:cherry_mvp/features/register/register_viewmodel.dart';
 import 'package:cherry_mvp/features/search/search_repository.dart';
@@ -123,6 +125,11 @@ List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
         );
       },
     ),
+    Provider<IProfileListingsRepository>(
+      create: (context) => ProfileListingsRepository(
+        Provider.of<ApiService>(context, listen: false),
+      ),
+    ),
     Provider<ICharityRepository>(
       create: (context) {
         if (useMockData) {
@@ -201,6 +208,14 @@ List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
       create: (context) => CharityViewModel(
         charityRepository: Provider.of<ICharityRepository>(context, listen: false),
         navigator: Provider.of<NavigationProvider>(context, listen: false),
+      ),
+    ),
+    ChangeNotifierProvider<ProfileListingsViewModel>(
+      create: (context) => ProfileListingsViewModel(
+        repository: Provider.of<IProfileListingsRepository>(
+          context,
+          listen: false,
+        ),
       ),
     ),
     // Logout provider
