@@ -20,6 +20,27 @@ void main() {
     );
   });
 
+  test('includes each newly supplied charity exactly once', () {
+    final charityNames = repository.fetchCharities().map((charity) => charity.charityName).toList();
+    final expectedNames = {
+      "Alzheimer's Society",
+      'World Animal Protection',
+      'Leicester Animal Aid',
+      'British Red Cross',
+      'UNICEF',
+      'Save the Children',
+      'Prostate Cancer Research',
+      'Macmillan Cancer Support',
+      'RSPCA',
+      'The Cat Welfare Group',
+    };
+
+    expect(charityNames, containsAll(expectedNames));
+    for (final name in expectedNames) {
+      expect(charityNames.where((charityName) => charityName == name), hasLength(1));
+    }
+  });
+
   test('filters charities using their Discover category tag', () {
     final smallerCharities = repository.fetchCharities(tag: 'smaller-charities');
     final localCharities = repository.fetchCharities(tag: 'local');
@@ -29,6 +50,8 @@ void main() {
       containsAll(<String>[
         'West London NHS Charity',
         'New College Worcester',
+        'Leicester Animal Aid',
+        'The Cat Welfare Group',
       ]),
     );
     expect(
@@ -47,8 +70,23 @@ void main() {
       'British Heart Foundation',
       'Disaster Aid UK & Ireland',
       'Groundwork',
+      "Alzheimer's Society",
+      'World Animal Protection',
+      'Leicester Animal Aid',
+      'British Red Cross',
+      'UNICEF',
+      'Save the Children',
+      'Prostate Cancer Research',
+      'Macmillan Cancer Support',
+      'RSPCA',
+      'The Cat Welfare Group',
     ]) {
       expect(charitiesByName[charityName]!.charityLogo, isNotEmpty);
     }
+
+    expect(
+      charitiesByName['The Cat Welfare Group']!.logoUsesDarkBackground,
+      isTrue,
+    );
   });
 }

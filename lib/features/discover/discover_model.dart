@@ -91,6 +91,97 @@ final List<DummyCharity> dummyCharities = [
     likes: 0,
     tags: {'popular'},
   ),
+  DummyCharity(
+    charityName: "Alzheimer's Society",
+    description:
+        "Alzheimer's Society supports people affected by dementia with advice and practical guidance. It also funds research and campaigns for lasting change so dementia becomes a priority.",
+    charityImage: AppImages.placeholderAlzheimersSociety,
+    charityLogo: AppImages.alzheimersSocietyLogo,
+    likes: 0,
+    tags: {'popular'},
+  ),
+  DummyCharity(
+    charityName: 'World Animal Protection',
+    description:
+        'World Animal Protection works globally to end cruelty and create lasting change for animals. It challenges factory farming, opposes the exploitation of wild animals and campaigns for stronger welfare standards.',
+    charityImage: AppImages.placeholderWorldAnimalProtection,
+    charityLogo: AppImages.worldAnimalProtectionLogo,
+    likes: 0,
+    tags: {'popular'},
+  ),
+  DummyCharity(
+    charityName: 'Leicester Animal Aid',
+    description:
+        'Leicester Animal Aid rescues and rehomes cats and dogs that are lost, abandoned, neglected or unwanted. It also gives owners practical advice and runs support services that help people keep caring for their pets.',
+    charityImage: AppImages.placeholderLeicesterAnimalAid,
+    charityLogo: AppImages.leicesterAnimalAidLogo,
+    likes: 0,
+    tags: {'smaller-charities'},
+  ),
+  DummyCharity(
+    charityName: 'British Red Cross',
+    description:
+        'British Red Cross helps people prepare for, respond to and recover from crises in the UK and overseas. Its humanitarian work includes emergency response, health and care services, and support for refugees and displaced people.',
+    charityImage: AppImages.placeholderBritishRedCross,
+    charityLogo: AppImages.britishRedCrossLogo,
+    likes: 0,
+    tags: {'popular'},
+  ),
+  DummyCharity(
+    charityName: 'UNICEF',
+    description:
+        "UNICEF UK raises funds for UNICEF's emergency and development work for children worldwide. It also promotes children's rights and helps deliver healthcare, education, nutrition, clean water and protection in emergencies.",
+    charityImage: AppImages.placeholderUnicef,
+    charityLogo: AppImages.unicefLogo,
+    likes: 0,
+    tags: {'popular'},
+  ),
+  DummyCharity(
+    charityName: 'Save the Children',
+    description:
+        "Save the Children works with families and communities in the UK and around the world to keep children safe, healthy and learning. It provides emergency help and campaigns for lasting improvements to children's lives and rights.",
+    charityImage: AppImages.placeholderSaveTheChildren,
+    charityLogo: AppImages.saveTheChildrenLogo,
+    likes: 0,
+    tags: {'popular'},
+  ),
+  DummyCharity(
+    charityName: 'Prostate Cancer Research',
+    description:
+        'Prostate Cancer Research funds research to improve survival and find better treatments for prostate cancer. It also works to turn discoveries into real-world diagnostics and treatments while improving access to care.',
+    charityImage: AppImages.placeholderProstateCancerResearch,
+    charityLogo: AppImages.prostateCancerResearchLogo,
+    likes: 0,
+    tags: {'popular'},
+  ),
+  DummyCharity(
+    charityName: 'Macmillan Cancer Support',
+    description:
+        'Macmillan Cancer Support provides information, practical and emotional support, and services for people living with cancer. It also supports healthcare professionals, researches cancer care and campaigns for better services and fairer access.',
+    charityImage: AppImages.placeholderMacmillanCancerSupport,
+    charityLogo: AppImages.macmillanCancerSupportLogo,
+    likes: 0,
+    tags: {'popular'},
+  ),
+  DummyCharity(
+    charityName: 'RSPCA',
+    description:
+        'The RSPCA rescues and cares for animals facing cruelty, neglect or urgent need across England and Wales. It rehabilitates and rehomes animals, investigates cruelty, campaigns for stronger laws and works to improve welfare standards.',
+    charityImage: AppImages.placeholderRspca,
+    charityLogo: AppImages.rspcaLogo,
+    likes: 0,
+    tags: {'popular'},
+  ),
+  DummyCharity(
+    charityName: 'The Cat Welfare Group',
+    description:
+        'The Cat Welfare Group rescues stray, abandoned and mistreated cats and kittens on the South Coast. It provides medical treatment before rehoming and neuters feral cats, returning them or finding a suitable new home when needed.',
+    charityImage: AppImages.placeholderCatWelfareGroup,
+    charityLogo: AppImages.catWelfareGroupLogo,
+    logoUsesDarkBackground: true,
+    likes: 0,
+    tags: {'smaller-charities'},
+  ),
 ];
 
 const dummyProducts = [

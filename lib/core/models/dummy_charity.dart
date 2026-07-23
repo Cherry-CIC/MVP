@@ -3,6 +3,7 @@ class DummyCharity {
   final String charityImage;
   final String description;
   final String? charityLogo;
+  final bool logoUsesDarkBackground;
   final int likes;
   final Set<String> tags;
 
@@ -11,6 +12,7 @@ class DummyCharity {
     required this.charityImage,
     required this.description,
     this.charityLogo,
+    this.logoUsesDarkBackground = false,
     required this.likes,
     this.tags = const {},
   });

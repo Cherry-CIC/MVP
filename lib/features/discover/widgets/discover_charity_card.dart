@@ -9,6 +9,7 @@ class DiscoverCharityCard extends StatefulWidget {
     required this.description,
     required this.imagePath,
     required this.logoPath,
+    this.logoUsesDarkBackground = false,
     required this.likes,
   });
 
@@ -16,6 +17,7 @@ class DiscoverCharityCard extends StatefulWidget {
   final String description;
   final String imagePath;
   final String? logoPath;
+  final bool logoUsesDarkBackground;
   final int likes;
 
   @override
@@ -53,6 +55,7 @@ class DiscoverCharityCardState extends State<DiscoverCharityCard> {
               child: _CharityLogoBadge(
                 title: widget.title,
                 logoPath: widget.logoPath,
+                useDarkBackground: widget.logoUsesDarkBackground,
               ),
             ),
             Positioned(
@@ -102,10 +105,12 @@ class _CharityLogoBadge extends StatelessWidget {
   const _CharityLogoBadge({
     required this.title,
     required this.logoPath,
+    required this.useDarkBackground,
   });
 
   final String title;
   final String? logoPath;
+  final bool useDarkBackground;
 
   @override
   Widget build(BuildContext context) {
@@ -118,7 +123,7 @@ class _CharityLogoBadge extends StatelessWidget {
         alignment: Alignment.center,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(8),
-          color: Theme.of(context).colorScheme.surface,
+          color: useDarkBackground ? Colors.black : Theme.of(context).colorScheme.surface,
         ),
         clipBehavior: Clip.antiAlias,
         child: logoPath == null
