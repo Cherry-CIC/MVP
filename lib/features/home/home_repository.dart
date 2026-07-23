@@ -6,7 +6,25 @@ import 'package:logging/logging.dart';
 import 'home_model.dart';
 
 abstract class IHomeRepository {
-  Future<Result<List<Product>>> fetchProducts();
+  Future<Result<ProductPage>> fetchProducts({
+    int limit = 20,
+    String? cursor,
+    String? search,
+  });
+}
+
+final class ProductPage {
+  final List<Product> products;
+  final int limit;
+  final String? nextCursor;
+  final bool hasMore;
+
+  const ProductPage({
+    required this.products,
+    required this.limit,
+    required this.nextCursor,
+    required this.hasMore,
+  });
 }
 
 final class HomeRepository implements IHomeRepository {
@@ -16,10 +34,21 @@ final class HomeRepository implements IHomeRepository {
   HomeRepository(this._apiService);
 
   @override
-  Future<Result<List<Product>>> fetchProducts() async {
+  Future<Result<ProductPage>> fetchProducts({
+    int limit = 20,
+    String? cursor,
+    String? search,
+  }) async {
     try {
       _log.info('Fetching products from API...');
-      final result = await _apiService.get(ApiEndpoints.productsWithDetails);
+      final result = await _apiService.get(
+        ApiEndpoints.productsWithDetails,
+        queryParameters: {
+          'limit': limit,
+          if (cursor != null && cursor.isNotEmpty) 'cursor': cursor,
+          if (search != null && search.trim().isNotEmpty) 'search': search.trim(),
+        },
+      );
 
       if (result.isSuccess && result.value != null) {
         _log.info('API call successful, parsing response...');
@@ -27,13 +56,13 @@ final class HomeRepository implements IHomeRepository {
 
         if (data is Map<String, dynamic> && data['success'] == false) {
           _log.warning('Products API returned an unsuccessful response: $data');
-          return Result.success(const <Product>[]);
+          return Result.failure('Products API returned an unsuccessful response');
         }
 
         final jsonList = _extractProductList(data);
         if (jsonList == null) {
           _log.warning('Unexpected products response structure: ${data.runtimeType}');
-          return Result.success(const <Product>[]);
+          return Result.failure('Unexpected products response structure');
         }
 
         final List<Product> products = [];
@@ -48,14 +77,22 @@ final class HomeRepository implements IHomeRepository {
         }
 
         _log.info('Successfully parsed ${products.length} products');
-        return Result.success(products);
+        final meta = _extractMeta(data);
+        return Result.success(
+          ProductPage(
+            products: products,
+            limit: meta.limit ?? limit,
+            nextCursor: meta.nextCursor,
+            hasMore: meta.hasMore,
+          ),
+        );
       } else {
         _log.warning('API call failed: ${result.error}');
-        return Result.success(const <Product>[]);
+        return Result.failure(result.error ?? 'Products API request failed');
       }
     } catch (e) {
       _log.severe('Exception during product fetch: $e');
-      return Result.success(const <Product>[]);
+      return Result.failure('Exception during product fetch');
     }
   }
 
@@ -85,11 +122,64 @@ final class HomeRepository implements IHomeRepository {
 
     return null;
   }
+
+  _ProductMeta _extractMeta(dynamic data) {
+    if (data is! Map<String, dynamic>) {
+      return const _ProductMeta();
+    }
+
+    final meta = data['meta'];
+    if (meta is! Map<String, dynamic>) {
+      return const _ProductMeta();
+    }
+
+    return _ProductMeta(
+      limit: _parseInt(meta['limit']),
+      nextCursor: meta['nextCursor'] is String ? meta['nextCursor'] as String : null,
+      hasMore: meta['hasMore'] == true,
+    );
+  }
+
+  int? _parseInt(dynamic value) {
+    if (value is int) {
+      return value;
+    }
+    if (value is num) {
+      return value.toInt();
+    }
+    if (value is String) {
+      return int.tryParse(value);
+    }
+    return null;
+  }
 }
 
 final class HomeRepositoryMock implements IHomeRepository {
   @override
-  Future<Result<List<Product>>> fetchProducts() async {
-    return Result.success(dummyProducts);
+  Future<Result<ProductPage>> fetchProducts({
+    int limit = 20,
+    String? cursor,
+    String? search,
+  }) async {
+    return Result.success(
+      ProductPage(
+        products: dummyProducts.take(limit).toList(),
+        limit: limit,
+        nextCursor: null,
+        hasMore: false,
+      ),
+    );
   }
+}
+
+final class _ProductMeta {
+  final int? limit;
+  final String? nextCursor;
+  final bool hasMore;
+
+  const _ProductMeta({
+    this.limit,
+    this.nextCursor,
+    this.hasMore = false,
+  });
 }

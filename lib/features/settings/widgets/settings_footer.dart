@@ -1,11 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cherry_mvp/core/config/config.dart';
-import 'package:cherry_mvp/core/services/services.dart';
 import 'package:cherry_mvp/features/auth/auth_view_model.dart';
 
-class SettingsFooter extends StatelessWidget {
+class SettingsFooter extends StatefulWidget {
   const SettingsFooter({super.key});
+
+  @override
+  State<SettingsFooter> createState() => _SettingsFooterState();
+}
+
+class _SettingsFooterState extends State<SettingsFooter> {
+  bool _isDeletingAccount = false;
 
   Future<bool?> _showConfirmDialog(BuildContext context) {
     return showDialog<bool>(
@@ -30,16 +36,6 @@ class SettingsFooter extends StatelessWidget {
     );
   }
 
-  Future<void> _showLoadingDialog(BuildContext context) async {
-    return showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => const Center(
-        child: CircularProgressIndicator(),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return SliverList.list(
@@ -47,48 +43,29 @@ class SettingsFooter extends StatelessWidget {
         ListTile(
           title: Text(AppStrings.deleteAccountText),
           textColor: Theme.of(context).colorScheme.primary,
+          trailing: _isDeletingAccount
+              ? const SizedBox.square(
+                  dimension: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : null,
           onTap: () async {
-            // TODO: this should be handled by a view model, probably AuthViewModel, with status returned
-            // TODO: so SnackBars can be displayed
+            if (_isDeletingAccount) return;
+
             final confirm = await _showConfirmDialog(context);
             if (confirm != true) return;
+            if (!context.mounted) return;
 
-            if (context.mounted) {
-              // show loading
-              _showLoadingDialog(context);
+            setState(() => _isDeletingAccount = true);
+            final result = await context.read<AuthViewModel>().deleteAccount();
 
-              try {
-                final apiService = Provider.of<ApiService>(context, listen: false);
-                final result = await apiService.delete(ApiEndpoints.deleteAccount);
+            if (!context.mounted) return;
+            setState(() => _isDeletingAccount = false);
 
-                // Temporary: pause here if a Dart debugger is attached
-                // import dart:developer as developer at top when using this in real debug
-                // developer.debugger();
-
-                // dismiss loading
-                if (context.mounted) Navigator.of(context).pop();
-
-                if (result.isSuccess) {
-                  // On successful account deletion, log the user out and navigate to welcome
-                  if (context.mounted) {
-                    final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
-                    await authViewModel.logout(context);
-                  }
-                } else {
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(result.error ?? 'Failed to delete account')),
-                    );
-                  }
-                }
-              } catch (e) {
-                if (context.mounted) Navigator.of(context).pop();
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Error: ${e.toString()}')),
-                  );
-                }
-              }
+            if (!result.isSuccess) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(result.error ?? 'Failed to delete account')),
+              );
             }
           },
         ),
