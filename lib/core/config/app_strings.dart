@@ -64,6 +64,14 @@ class AppStrings {
   static const profileUserLiked = "Liked";
   static const profileUserListings = "Listings";
   static const profileUserBuyerDisc = "Donor discounts";
+  static const myOrdersTitle = 'My Orders';
+  static const myOrdersLoading = 'Loading your orders';
+  static const myOrdersEmpty = 'You have no orders yet.';
+  static const myOrdersLoadFailed = 'We could not load your orders. Please try again.';
+  static const myOrdersRefreshFailed = 'We could not refresh your orders.';
+  static const myOrdersStatusUnavailable = 'Status unavailable';
+  static const myOrdersPriceUnavailable = 'Price unavailable';
+  static const myOrdersSizeUnavailable = 'Size unavailable';
 
   // Profile: Donations & Activity
   static const profileUserActivityBought = 'Bought';

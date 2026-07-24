@@ -11,7 +11,12 @@ import 'package:cherry_mvp/features/profile/widgets/user_order_details.dart';
 import '../auth/auth_view_model.dart';
 
 class ProfilePage extends StatefulWidget {
-  const ProfilePage({super.key});
+  final VoidCallback? onOrdersPressed;
+
+  const ProfilePage({
+    super.key,
+    this.onOrdersPressed,
+  });
 
   @override
   State<ProfilePage> createState() => _ProfilePageState();
@@ -81,7 +86,9 @@ class _ProfilePageState extends State<ProfilePage> {
                   navigateToSettings();
                 },
               ),
-              if (FeatureFlags.showProfileShortcutCards || FeatureFlags.showDonorDiscounts) UserOrderDetails(),
+              if (FeatureFlags.showProfileShortcutCards ||
+                  FeatureFlags.showDonorDiscounts)
+                UserOrderDetails(onOrdersPressed: widget.onOrdersPressed),
               if (FeatureFlags.showImpactSummaries) ...[
                 SizedBox(height: 16),
                 DonationChart(

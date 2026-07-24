@@ -3,8 +3,11 @@ import 'package:cherry_mvp/core/widgets/profile_user_order_details.dart';
 import 'package:flutter/material.dart';
 
 class UserOrderDetails extends StatelessWidget {
+  final VoidCallback? onOrdersPressed;
+
   const UserOrderDetails({
     super.key,
+    this.onOrdersPressed,
   });
 
   @override
@@ -19,7 +22,7 @@ class UserOrderDetails extends StatelessWidget {
                 Expanded(
                   child: UserOrderTile(
                     title: AppStrings.profileUserOrders,
-                    onPressed: () {},
+                    onPressed: onOrdersPressed ?? () {},
                     assetPath: AppImages.profileOrder,
                   ),
                 ),
