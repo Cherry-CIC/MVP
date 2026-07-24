@@ -1,4 +1,6 @@
 import 'package:cherry_mvp/core/router/nav_provider.dart';
+import 'package:cherry_mvp/core/config/app_strings.dart';
+import 'package:cherry_mvp/core/models/product.dart';
 import 'package:cherry_mvp/features/donation/donation_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
@@ -56,6 +58,42 @@ void main() {
       expect(viewModel.hasPaymentMethod, false);
       expect(viewModel.canCheckout, false);
       expect(viewModel.nearestInposts, isEmpty);
+    });
+
+    test('should reject an item owned by the signed-in user', () {
+      viewModel = CheckoutViewModel(
+        checkoutRepository: FakeCheckoutRepository(),
+        navigator: mockNavigator,
+        donationRepository: FakeDonationRepository(),
+        currentUserIdProvider: () => 'seller-1',
+      );
+      final product = _product(userId: 'seller-1');
+
+      final added = viewModel.addItem(product);
+
+      expect(added, isFalse);
+      expect(viewModel.basketItems, isEmpty);
+      expect(viewModel.isOwnProduct(product), isTrue);
+    });
+
+    test('should stop checkout if an owned item is already in the basket', () async {
+      var currentUserId = 'buyer-1';
+      viewModel = CheckoutViewModel(
+        checkoutRepository: FakeCheckoutRepository(),
+        navigator: mockNavigator,
+        donationRepository: FakeDonationRepository(),
+        currentUserIdProvider: () => currentUserId,
+      );
+      viewModel.addItem(_product(userId: 'seller-1'));
+      currentUserId = 'seller-1';
+
+      final paid = await viewModel.payWithPaymentSheet();
+
+      expect(paid, isFalse);
+      expect(
+        viewModel.createOrderStatus.message,
+        AppStrings.checkoutOwnProductNotAllowed,
+      );
     });
 
     test('should set shipping address correctly', () {
@@ -277,4 +315,22 @@ void main() {
       expect(viewModel.nearestInposts.first.inpost.name, 'InPost');
     });
   });
+}
+
+Product _product({required String userId}) {
+  return Product(
+    id: 'product-1',
+    userId: userId,
+    name: 'Jumper',
+    description: 'Blue jumper',
+    quality: 'Good',
+    productImages: const ['https://example.com/jumper.jpg'],
+    donation: 20,
+    price: 20,
+    securityFee: 2,
+    likes: 0,
+    number: 1,
+    size: 'M',
+    postageSizeId: 'small',
+  );
 }

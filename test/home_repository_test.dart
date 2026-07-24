@@ -167,12 +167,33 @@ void main() {
 
       expect(apiService.lastQueryParameters, {'limit': 10});
     });
+
+    test('excludes products owned by the signed-in seller', () async {
+      final repository = HomeRepository(
+        _FakeApiService([
+          _productJson(id: 'own-product', userId: 'seller-1'),
+          _productJson(id: 'other-product', userId: 'seller-2'),
+        ]),
+        currentUserIdProvider: () => 'seller-1',
+      );
+
+      final result = await repository.fetchProducts();
+
+      expect(
+        result.value!.products.map((product) => product.id),
+        ['other-product'],
+      );
+    });
   });
 }
 
-Map<String, dynamic> _productJson({required String id}) {
+Map<String, dynamic> _productJson({
+  required String id,
+  String? userId,
+}) {
   return {
     'id': id,
+    'userId': ?userId,
     'name': 'Jumper',
     'description': 'Blue jumper',
     'quality': 'GOOD',
