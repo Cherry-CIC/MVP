@@ -31,6 +31,8 @@ class ProductPage extends StatelessWidget {
     }
 
     const hasOptionalProductHighlights = FeatureFlags.showDonorDiscounts || FeatureFlags.showOtherCharityRequests;
+    final checkoutViewModel = context.watch<CheckoutViewModel>();
+    final isOwnListing = checkoutViewModel.isOwnProduct(product);
 
     return Scaffold(
       body: CustomScrollView(
@@ -139,14 +141,23 @@ class ProductPage extends StatelessWidget {
                       child: SizedBox(
                         height: 56,
                         child: FilledButton(
-                          onPressed: () {
-                            context.read<CheckoutViewModel>().clearBasket();
-                            context.read<CheckoutViewModel>().addItem(product);
-                            context.read<NavigationProvider>().navigateTo(
-                              AppRoutes.checkout,
-                            );
-                          },
-                          child: Text(AppStrings.productPageBuyNow, textAlign: TextAlign.center),
+                          onPressed: isOwnListing
+                              ? null
+                              : () {
+                                  checkoutViewModel.clearBasket();
+                                  if (!checkoutViewModel.addItem(product)) {
+                                    return;
+                                  }
+                                  context.read<NavigationProvider>().navigateTo(
+                                    AppRoutes.checkout,
+                                  );
+                                },
+                          child: Text(
+                            isOwnListing
+                                ? AppStrings.productPageYourListing
+                                : AppStrings.productPageBuyNow,
+                            textAlign: TextAlign.center,
+                          ),
                         ),
                       ),
                     ),

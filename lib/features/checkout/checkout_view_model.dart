@@ -23,9 +23,15 @@ class CheckoutViewModel extends ChangeNotifier {
   final ICheckoutRepository checkoutRepository;
   final IDonationRepository _donationRepository;
   final NavigationProvider navigator;
+  final String? Function() _currentUserIdProvider;
   final _log = Logger('CheckoutViewModel');
 
-  CheckoutViewModel({required this._donationRepository, required this.checkoutRepository, required this.navigator});
+  CheckoutViewModel({
+    required this._donationRepository,
+    required this.checkoutRepository,
+    required this.navigator,
+    String? Function()? currentUserIdProvider,
+  }) : _currentUserIdProvider = currentUserIdProvider ?? (() => null);
 
   Status _status = Status.uninitialized;
 
@@ -142,7 +148,8 @@ class CheckoutViewModel extends ChangeNotifier {
   bool get hasPaymentMethod => _selectedPaymentType != null || _hasPaymentMethod;
 
   /// Whether the order is ready for checkout (has both address and payment method)
-  bool get canCheckout => hasShippingAddress && hasPaymentMethod;
+  bool get canCheckout =>
+      hasShippingAddress && hasPaymentMethod && !_containsOwnProduct;
 
   void setAddressConfirmed(bool value) {
     isShippingAddressConfirmed = value;
@@ -150,9 +157,14 @@ class CheckoutViewModel extends ChangeNotifier {
   }
 
   // Existing basket methods
-  void addItem(Product product) {
+  bool addItem(Product product) {
+    if (isOwnProduct(product)) {
+      return false;
+    }
+
     _basketItems.add(product);
     notifyListeners();
+    return true;
   }
 
   void removeItem(Product product) {
@@ -164,6 +176,18 @@ class CheckoutViewModel extends ChangeNotifier {
     _basketItems.clear();
     notifyListeners();
   }
+
+  bool isOwnProduct(Product product) {
+    final currentUserId = _currentUserIdProvider()?.trim();
+    final sellerId = product.userId?.trim();
+    return currentUserId != null &&
+        currentUserId.isNotEmpty &&
+        sellerId != null &&
+        sellerId.isNotEmpty &&
+        sellerId == currentUserId;
+  }
+
+  bool get _containsOwnProduct => _basketItems.any(isOwnProduct);
 
   // Shipping address methods
 
@@ -496,6 +520,20 @@ class CheckoutViewModel extends ChangeNotifier {
   // }
 
   Future<bool> payWithPaymentSheet() async {
+    if (basketItems.isEmpty) {
+      _createOrderStatus = Status.failure('Your basket is empty');
+      notifyListeners();
+      return false;
+    }
+
+    if (_containsOwnProduct) {
+      _createOrderStatus = Status.failure(
+        AppStrings.checkoutOwnProductNotAllowed,
+      );
+      notifyListeners();
+      return false;
+    }
+
     if (_selectedPaymentType == null) {
       _createOrderStatus = Status.failure(
         AppStrings.checkoutPaymentMethodRequired,
@@ -587,6 +625,14 @@ class CheckoutViewModel extends ChangeNotifier {
 
     if (basketItems.isEmpty) {
       _createOrderStatus = Status.failure('Your basket is empty');
+      notifyListeners();
+      return;
+    }
+
+    if (_containsOwnProduct) {
+      _createOrderStatus = Status.failure(
+        AppStrings.checkoutOwnProductNotAllowed,
+      );
       notifyListeners();
       return;
     }

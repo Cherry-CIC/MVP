@@ -29,9 +29,13 @@ final class ProductPage {
 
 final class HomeRepository implements IHomeRepository {
   final ApiService _apiService;
+  final String? Function() _currentUserIdProvider;
   final _log = Logger('HomeRepository');
 
-  HomeRepository(this._apiService);
+  HomeRepository(
+    this._apiService, {
+    String? Function()? currentUserIdProvider,
+  }) : _currentUserIdProvider = currentUserIdProvider ?? (() => null);
 
   @override
   Future<Result<ProductPage>> fetchProducts({
@@ -80,7 +84,10 @@ final class HomeRepository implements IHomeRepository {
         final meta = _extractMeta(data);
         return Result.success(
           ProductPage(
-            products: products,
+            products: excludeCurrentSellerProducts(
+              products,
+              _currentUserIdProvider(),
+            ),
             limit: meta.limit ?? limit,
             nextCursor: meta.nextCursor,
             hasMore: meta.hasMore,
@@ -155,6 +162,12 @@ final class HomeRepository implements IHomeRepository {
 }
 
 final class HomeRepositoryMock implements IHomeRepository {
+  final String? Function() _currentUserIdProvider;
+
+  HomeRepositoryMock({
+    String? Function()? currentUserIdProvider,
+  }) : _currentUserIdProvider = currentUserIdProvider ?? (() => null);
+
   @override
   Future<Result<ProductPage>> fetchProducts({
     int limit = 20,
@@ -163,13 +176,30 @@ final class HomeRepositoryMock implements IHomeRepository {
   }) async {
     return Result.success(
       ProductPage(
-        products: dummyProducts.take(limit).toList(),
+        products: excludeCurrentSellerProducts(
+          dummyProducts,
+          _currentUserIdProvider(),
+        ).take(limit).toList(),
         limit: limit,
         nextCursor: null,
         hasMore: false,
       ),
     );
   }
+}
+
+List<Product> excludeCurrentSellerProducts(
+  Iterable<Product> products,
+  String? currentUserId,
+) {
+  final normalizedUserId = currentUserId?.trim();
+  if (normalizedUserId == null || normalizedUserId.isEmpty) {
+    return products.toList();
+  }
+
+  return products
+      .where((product) => product.userId?.trim() != normalizedUserId)
+      .toList();
 }
 
 final class _ProductMeta {

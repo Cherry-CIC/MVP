@@ -200,6 +200,7 @@ class AppStrings {
   static const productPageRequestOtherCharity = 'Request other charity';
   static const productPageMakeOffer = 'Make Offer';
   static const productPageBuyNow = 'Buy Now';
+  static const productPageYourListing = 'Your listing';
   static const giveInStyle = 'Give in style';
   static const productIncl = 'Incl.';
   static const askSeller = 'Ask seller';
@@ -250,6 +251,7 @@ class AppStrings {
   static const checkoutMobilePhoneRequired = 'A mobile phone number is required for InPost pickup';
   static const checkoutPickupPostcodeRequired = 'Please enter a postcode';
   static const checkoutPickupPostcodeInvalid = 'Please enter a valid UK postcode';
+  static const checkoutOwnProductNotAllowed = 'You cannot buy your own listing.';
 
   // Card Details
   static const cardDetailsTitle = 'Card Details';
