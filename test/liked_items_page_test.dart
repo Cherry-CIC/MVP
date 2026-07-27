@@ -12,11 +12,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
+import 'support/unexpected_api_service.dart';
+
 class _FakeProductRepository extends ProductRepository {
   _FakeProductRepository({
     required this.fetchResult,
     this.unlikeResult,
-  });
+  }) : super(const UnexpectedApiService());
 
   Result<List<Product>> fetchResult;
   Result<void>? unlikeResult;

@@ -10,7 +10,7 @@ class ProductViewModel extends ChangeNotifier {
 
   // Centralized tracker: Map<ProductID, IsLiked>
   final Map<String, bool> _likedProducts = {};
-  final Map<String, Product> _likedProductSnapshots = {};
+  final Map<String, Product> _likedProductCache = {};
   final Set<String> _pendingLikeUpdates = {};
 
   Product? get product => _product;
@@ -31,7 +31,7 @@ class ProductViewModel extends ChangeNotifier {
 
   List<Product> get cachedLikedProducts {
     final products = <Product>[];
-    for (final entry in _likedProductSnapshots.entries) {
+    for (final entry in _likedProductCache.entries) {
       if (_likedProducts[entry.key] == true) {
         products.add(entry.value);
       }
@@ -73,9 +73,9 @@ class ProductViewModel extends ChangeNotifier {
     if (result.isSuccess) {
       _likedProducts[id] = liked;
       if (liked) {
-        _likedProductSnapshots[id] = product;
+        _likedProductCache[id] = product;
       } else {
-        _likedProductSnapshots.remove(id);
+        _likedProductCache.remove(id);
       }
       notifyListeners();
       return Result.success(liked);
@@ -92,7 +92,7 @@ class ProductViewModel extends ChangeNotifier {
 
     _likedProducts[productId] = liked;
     if (!liked) {
-      _likedProductSnapshots.remove(productId);
+      _likedProductCache.remove(productId);
     }
     notifyListeners();
   }
@@ -110,8 +110,8 @@ class ProductViewModel extends ChangeNotifier {
         changed = true;
       }
 
-      if (_likedProductSnapshots[product.id] != product) {
-        _likedProductSnapshots[product.id] = product;
+      if (_likedProductCache[product.id] != product) {
+        _likedProductCache[product.id] = product;
         changed = true;
       }
     }

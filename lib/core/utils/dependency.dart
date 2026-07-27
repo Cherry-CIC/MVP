@@ -101,7 +101,7 @@ List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
     Provider<DiscoverRepository>(create: (context) => DiscoverRepository()),
     Provider<ProductRepository>(
       create: (context) => ProductRepository(
-        homeRepository: Provider.of<IHomeRepository>(context, listen: false),
+        Provider.of<ApiService>(context, listen: false),
       ),
     ),
     Provider<IDonationRepository>(

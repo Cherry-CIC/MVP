@@ -13,6 +13,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
+import 'support/unexpected_api_service.dart';
+
 class _HomeRepositoryStub implements IHomeRepository {
   _HomeRepositoryStub(this.result);
 
@@ -56,7 +58,9 @@ Future<void> _pumpHomeScreen(
         ),
         ChangeNotifierProvider<ProductViewModel>(
           create: (_) => ProductViewModel(
-            productRepository: ProductRepository(),
+            productRepository: ProductRepository(
+              const UnexpectedApiService(),
+            ),
             navigator: navigator,
           ),
         ),
