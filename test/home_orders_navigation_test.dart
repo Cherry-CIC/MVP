@@ -67,7 +67,7 @@ Future<void> _pumpHomePage(WidgetTester tester) async {
         ),
         ChangeNotifierProvider(
           create: (_) => ProductViewModel(
-            productRepository: ProductRepository(),
+            productRepository: ProductRepository(_ApiServiceMock()),
             navigator: navigator,
           ),
         ),
