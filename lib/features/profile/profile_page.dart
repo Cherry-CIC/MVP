@@ -62,6 +62,11 @@ class _ProfilePageState extends State<ProfilePage> {
       navigator.navigateTo(AppRoutes.settingspage);
     }
 
+    void navigateToLikedItems() {
+      final navigator = Provider.of<NavigationProvider>(context, listen: false);
+      navigator.navigateTo(AppRoutes.likedItems);
+    }
+
     return Scaffold(
       //profile header
       appBar: AppBar(
@@ -81,7 +86,8 @@ class _ProfilePageState extends State<ProfilePage> {
                   navigateToSettings();
                 },
               ),
-              if (FeatureFlags.showProfileShortcutCards || FeatureFlags.showDonorDiscounts) UserOrderDetails(),
+              if (FeatureFlags.showProfileShortcutCards || FeatureFlags.showDonorDiscounts)
+                UserOrderDetails(onLikedPressed: navigateToLikedItems),
               if (FeatureFlags.showImpactSummaries) ...[
                 SizedBox(height: 16),
                 DonationChart(

@@ -99,7 +99,11 @@ List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
       },
     ),
     Provider<DiscoverRepository>(create: (context) => DiscoverRepository()),
-    Provider<ProductRepository>(create: (context) => ProductRepository()),
+    Provider<ProductRepository>(
+      create: (context) => ProductRepository(
+        Provider.of<ApiService>(context, listen: false),
+      ),
+    ),
     Provider<IDonationRepository>(
       create: (context) {
         if (useMockData) {

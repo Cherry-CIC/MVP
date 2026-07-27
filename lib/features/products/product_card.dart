@@ -11,8 +11,14 @@ import 'package:cherry_mvp/features/products/product_viewmodel.dart';
 class ProductCard extends StatelessWidget {
   final Product product;
   final VoidCallback? onTap;
+  final VoidCallback? onLikePressed;
 
-  const ProductCard({super.key, required this.product, this.onTap});
+  const ProductCard({
+    super.key,
+    required this.product,
+    this.onTap,
+    this.onLikePressed,
+  });
 
   static const _sizeAbbreviations = {
     'extra small': 'XS',
@@ -79,7 +85,9 @@ class ProductCard extends StatelessWidget {
                               borderRadius: BorderRadius.circular(8),
                               image: DecorationImage(
                                 image: ImageProviderHelper.getImageProvider(
-                                  product.productImages.first,
+                                  product.productImages.isNotEmpty
+                                      ? product.productImages.first
+                                      : AppImages.emptyStateBg,
                                 ),
                                 fit: BoxFit.cover,
                               ),
@@ -90,43 +98,48 @@ class ProductCard extends StatelessWidget {
                       Positioned(
                         bottom: 16,
                         right: 16,
-                        child: GestureDetector(
-                          onTap: () => viewModel.toggleLike(product),
-                          child: Material(
-                            borderRadius: BorderRadius.circular(4),
-                            elevation: 2,
-                            color: Colors.white,
-                            type: MaterialType.button,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 6,
-                                vertical: 4,
-                              ),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  isLiked
-                                      ? Image.asset(
-                                          AppImages.likeHeart,
-                                          height: 16,
-                                          fit: BoxFit.contain,
-                                          color: Colors.red,
-                                        )
-                                      : const Icon(
-                                          Icons.favorite_outline,
-                                          size: 16,
-                                          color: AppColors.grey,
-                                        ),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    displayLikes.toString(),
-                                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                      color: isLiked ? Colors.red : AppColors.grey,
+                        child: Semantics(
+                          key: ValueKey('product-like-${product.id}'),
+                          button: true,
+                          label: isLiked ? AppStrings.unlikeProduct : AppStrings.likeProduct,
+                          child: GestureDetector(
+                            onTap: onLikePressed ?? () => viewModel.toggleLike(product),
+                            child: Material(
+                              borderRadius: BorderRadius.circular(4),
+                              elevation: 2,
+                              color: Colors.white,
+                              type: MaterialType.button,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 4,
+                                ),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    isLiked
+                                        ? Image.asset(
+                                            AppImages.likeHeart,
+                                            height: 16,
+                                            fit: BoxFit.contain,
+                                            color: Colors.red,
+                                          )
+                                        : const Icon(
+                                            Icons.favorite_outline,
+                                            size: 16,
+                                            color: AppColors.grey,
+                                          ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      displayLikes.toString(),
+                                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                        color: isLiked ? Colors.red : AppColors.grey,
+                                      ),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
                             ),
                           ),

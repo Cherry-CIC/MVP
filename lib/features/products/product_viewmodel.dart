@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:cherry_mvp/core/models/model.dart';
 import 'package:cherry_mvp/core/router/nav_provider.dart';
 import 'package:cherry_mvp/core/router/nav_routes.dart';
+import 'package:cherry_mvp/core/utils/result.dart';
 import 'package:cherry_mvp/features/products/product_repository.dart';
 
 class ProductViewModel extends ChangeNotifier {
@@ -9,6 +10,8 @@ class ProductViewModel extends ChangeNotifier {
 
   // Centralized tracker: Map<ProductID, IsLiked>
   final Map<String, bool> _likedProducts = {};
+  final Map<String, Product> _likedProductCache = {};
+  final Set<String> _pendingLikeUpdates = {};
 
   Product? get product => _product;
 
@@ -22,6 +25,20 @@ class ProductViewModel extends ChangeNotifier {
     return _likedProducts[productId] ?? false;
   }
 
+  bool isLikeUpdatePending(String productId) {
+    return _pendingLikeUpdates.contains(productId);
+  }
+
+  List<Product> get cachedLikedProducts {
+    final products = <Product>[];
+    for (final entry in _likedProductCache.entries) {
+      if (_likedProducts[entry.key] == true) {
+        products.add(entry.value);
+      }
+    }
+    return List.unmodifiable(products);
+  }
+
   // Get dynamic count for a product
   int getLikesCount(Product product) {
     bool isLiked = _likedProducts[product.id] ?? false;
@@ -33,15 +50,75 @@ class ProductViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  void toggleLike(Product product) {
+  Future<Result<bool>> toggleLike(Product product) async {
     final String id = product.id;
     final bool currentStatus = _likedProducts[id] ?? false;
 
-    _likedProducts[id] = !currentStatus;
+    return setProductLiked(product, !currentStatus);
+  }
 
-    // In future: productRepository.likeProduct(id, !currentStatus);
+  Future<Result<bool>> setProductLiked(Product product, bool liked) async {
+    final id = product.id;
+    if (id.trim().isEmpty || _pendingLikeUpdates.contains(id)) {
+      return Result.failure('Unable to update this liked item.');
+    }
+
+    _pendingLikeUpdates.add(id);
+    notifyListeners();
+
+    final result = liked ? await productRepository.likeProduct(product) : await productRepository.unlikeProduct(id);
+
+    _pendingLikeUpdates.remove(id);
+
+    if (result.isSuccess) {
+      _likedProducts[id] = liked;
+      if (liked) {
+        _likedProductCache[id] = product;
+      } else {
+        _likedProductCache.remove(id);
+      }
+      notifyListeners();
+      return Result.success(liked);
+    }
 
     notifyListeners();
+    return Result.failure(result.error ?? 'Unable to update this liked item.');
+  }
+
+  void setCachedLikeState(String productId, bool liked) {
+    if (productId.trim().isEmpty) {
+      return;
+    }
+
+    _likedProducts[productId] = liked;
+    if (!liked) {
+      _likedProductCache.remove(productId);
+    }
+    notifyListeners();
+  }
+
+  void cacheLikedProducts(Iterable<Product> products) {
+    var changed = false;
+
+    for (final product in products) {
+      if (product.id.trim().isEmpty) {
+        continue;
+      }
+
+      if (_likedProducts[product.id] != true) {
+        _likedProducts[product.id] = true;
+        changed = true;
+      }
+
+      if (_likedProductCache[product.id] != product) {
+        _likedProductCache[product.id] = product;
+        changed = true;
+      }
+    }
+
+    if (changed) {
+      notifyListeners();
+    }
   }
 
   // For the Product Page (the currently active product)
