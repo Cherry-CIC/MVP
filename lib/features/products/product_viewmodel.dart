@@ -12,24 +12,47 @@ class ProductViewModel extends ChangeNotifier {
   final Map<String, bool> _likedProducts = {};
   final Map<String, Product> _likedProductCache = {};
   final Set<String> _pendingLikeUpdates = {};
+  final String? Function() _currentUserIdProvider;
+  int _accountStateVersion = 0;
+  bool _accountOwnerInitialised = false;
+  String? _accountOwnerId;
 
   Product? get product => _product;
 
   final ProductRepository productRepository;
   final NavigationProvider navigator;
 
-  ProductViewModel({required this.productRepository, required this.navigator});
+  ProductViewModel({
+    required this.productRepository,
+    required this.navigator,
+    String? Function()? currentUserIdProvider,
+  }) : _currentUserIdProvider = currentUserIdProvider ?? _unauthenticatedUserId;
+
+  static String? _unauthenticatedUserId() => null;
+
+  int get accountStateVersion {
+    _ensureCurrentAccount();
+    return _accountStateVersion;
+  }
+
+  bool isAccountStateCurrent(int version) {
+    _ensureCurrentAccount();
+    return version == _accountStateVersion;
+  }
 
   // Check if a specific product is liked
   bool isProductLiked(String productId) {
+    _ensureCurrentAccount();
     return _likedProducts[productId] ?? false;
   }
 
   bool isLikeUpdatePending(String productId) {
+    _ensureCurrentAccount();
     return _pendingLikeUpdates.contains(productId);
   }
 
   List<Product> get cachedLikedProducts {
+    _ensureCurrentAccount();
     final products = <Product>[];
     for (final entry in _likedProductCache.entries) {
       if (_likedProducts[entry.key] == true) {
@@ -41,6 +64,7 @@ class ProductViewModel extends ChangeNotifier {
 
   // Get dynamic count for a product
   int getLikesCount(Product product) {
+    _ensureCurrentAccount();
     bool isLiked = _likedProducts[product.id] ?? false;
     return product.likes + (isLiked ? 1 : 0);
   }
@@ -58,6 +82,8 @@ class ProductViewModel extends ChangeNotifier {
   }
 
   Future<Result<bool>> setProductLiked(Product product, bool liked) async {
+    _ensureCurrentAccount();
+    final accountStateVersion = _accountStateVersion;
     final id = product.id;
     if (id.trim().isEmpty || _pendingLikeUpdates.contains(id)) {
       return Result.failure('Unable to update this liked item.');
@@ -67,6 +93,10 @@ class ProductViewModel extends ChangeNotifier {
     notifyListeners();
 
     final result = liked ? await productRepository.likeProduct(product) : await productRepository.unlikeProduct(id);
+
+    if (!isAccountStateCurrent(accountStateVersion)) {
+      return Result.failure('Unable to update this liked item.');
+    }
 
     _pendingLikeUpdates.remove(id);
 
@@ -86,6 +116,7 @@ class ProductViewModel extends ChangeNotifier {
   }
 
   void setCachedLikeState(String productId, bool liked) {
+    _ensureCurrentAccount();
     if (productId.trim().isEmpty) {
       return;
     }
@@ -98,6 +129,7 @@ class ProductViewModel extends ChangeNotifier {
   }
 
   void cacheLikedProducts(Iterable<Product> products) {
+    _ensureCurrentAccount();
     var changed = false;
 
     for (final product in products) {
@@ -121,8 +153,35 @@ class ProductViewModel extends ChangeNotifier {
     }
   }
 
+  void clearUserState() {
+    _resetAccountState(_currentUserIdProvider());
+    notifyListeners();
+  }
+
+  void _ensureCurrentAccount() {
+    final currentUserId = _currentUserIdProvider();
+    if (!_accountOwnerInitialised) {
+      _accountOwnerId = currentUserId;
+      _accountOwnerInitialised = true;
+      return;
+    }
+
+    if (_accountOwnerId != currentUserId) {
+      _resetAccountState(currentUserId);
+    }
+  }
+
+  void _resetAccountState(String? currentUserId) {
+    _likedProducts.clear();
+    _likedProductCache.clear();
+    _pendingLikeUpdates.clear();
+    _accountOwnerId = currentUserId;
+    _accountOwnerInitialised = true;
+    _accountStateVersion += 1;
+  }
+
   // For the Product Page (the currently active product)
-  bool get isCurrentProductLiked => _product != null && (_likedProducts[_product!.id] ?? false);
+  bool get isCurrentProductLiked => _product != null && isProductLiked(_product!.id);
   int get currentProductLikesCount => _product == null ? 0 : getLikesCount(_product!);
 
   Future<void> showPurchaseSecurity() async {

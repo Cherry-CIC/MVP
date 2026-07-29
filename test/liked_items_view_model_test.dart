@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cherry_mvp/core/config/app_images.dart';
 import 'package:cherry_mvp/core/models/product.dart';
 import 'package:cherry_mvp/core/router/nav_provider.dart';
@@ -13,20 +15,24 @@ class _FakeProductRepository extends ProductRepository {
   _FakeProductRepository({
     this.fetchResult,
     this.unlikeResult,
+    this.fetchCompleter,
+    this.likeCompleter,
   }) : super(const UnexpectedApiService());
 
   Result<List<Product>>? fetchResult;
   Result<void>? unlikeResult;
+  Completer<Result<List<Product>>>? fetchCompleter;
+  Completer<Result<void>>? likeCompleter;
   final unlikedIds = <String>[];
 
   @override
   Future<Result<void>> likeProduct(Product product) async {
-    return Result.success(null);
+    return likeCompleter?.future ?? Result.success(null);
   }
 
   @override
   Future<Result<List<Product>>> fetchLikedProducts() async {
-    return fetchResult ?? Result.success(const <Product>[]);
+    return fetchCompleter?.future ?? fetchResult ?? Result.success(const <Product>[]);
   }
 
   @override
@@ -175,6 +181,98 @@ void main() {
       expect(removed, isFalse);
       expect(viewModel.products, [product]);
       expect(viewModel.errorMessage, 'Unlike failed');
+    });
+
+    test('does not expose cached likes after the account changes', () {
+      var currentUserId = 'account-a';
+      final product = _product();
+      final repository = _FakeProductRepository();
+      final productViewModel = ProductViewModel(
+        productRepository: repository,
+        navigator: NavigationProvider(),
+        currentUserIdProvider: () => currentUserId,
+      )..cacheLikedProducts([product]);
+
+      currentUserId = 'account-b';
+
+      expect(productViewModel.cachedLikedProducts, isEmpty);
+      expect(productViewModel.isProductLiked(product.id), isFalse);
+    });
+
+    test('clears an open liked-items view when user state is reset', () async {
+      final product = _product();
+      final repository = _FakeProductRepository(
+        fetchResult: Result.success([product]),
+      );
+      final productViewModel = ProductViewModel(
+        productRepository: repository,
+        navigator: NavigationProvider(),
+      );
+      final viewModel = LikedItemsViewModel(
+        productRepository: repository,
+        productViewModel: productViewModel,
+      );
+
+      await viewModel.loadLikedProducts();
+      expect(viewModel.products, [product]);
+
+      productViewModel.clearUserState();
+
+      expect(viewModel.status, LikedItemsStatus.empty);
+      expect(viewModel.products, isEmpty);
+      viewModel.dispose();
+    });
+
+    test('ignores a liked-items response from the previous account', () async {
+      var currentUserId = 'account-a';
+      final fetchCompleter = Completer<Result<List<Product>>>();
+      final repository = _FakeProductRepository(
+        fetchCompleter: fetchCompleter,
+      );
+      final productViewModel = ProductViewModel(
+        productRepository: repository,
+        navigator: NavigationProvider(),
+        currentUserIdProvider: () => currentUserId,
+      );
+      final viewModel = LikedItemsViewModel(
+        productRepository: repository,
+        productViewModel: productViewModel,
+      );
+
+      final loadFuture = viewModel.loadLikedProducts();
+      currentUserId = 'account-b';
+      fetchCompleter.complete(Result.success([_product()]));
+      await loadFuture;
+
+      expect(viewModel.status, LikedItemsStatus.empty);
+      expect(viewModel.products, isEmpty);
+      expect(productViewModel.cachedLikedProducts, isEmpty);
+    });
+
+    test('ignores a like response completed after the account changes', () async {
+      var currentUserId = 'account-a';
+      final likeCompleter = Completer<Result<void>>();
+      final product = _product();
+      final repository = _FakeProductRepository(
+        likeCompleter: likeCompleter,
+      );
+      final productViewModel = ProductViewModel(
+        productRepository: repository,
+        navigator: NavigationProvider(),
+        currentUserIdProvider: () => currentUserId,
+      );
+
+      final likeFuture = productViewModel.setProductLiked(product, true);
+      expect(productViewModel.isLikeUpdatePending(product.id), isTrue);
+
+      currentUserId = 'account-b';
+      likeCompleter.complete(Result.success(null));
+      final result = await likeFuture;
+
+      expect(result.isSuccess, isFalse);
+      expect(productViewModel.isLikeUpdatePending(product.id), isFalse);
+      expect(productViewModel.isProductLiked(product.id), isFalse);
+      expect(productViewModel.cachedLikedProducts, isEmpty);
     });
   });
 }

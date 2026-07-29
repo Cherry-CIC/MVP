@@ -16,6 +16,7 @@ class AuthViewModel extends ChangeNotifier {
   final FirebaseAuth firebaseAuth;
   final FirebaseFirestore firestore;
   final ApiService apiService;
+  final VoidCallback _clearUserState;
 
   AuthViewModel({
     required this.loginRepository,
@@ -23,7 +24,10 @@ class AuthViewModel extends ChangeNotifier {
     required this.firebaseAuth,
     required this.firestore,
     required this.apiService,
-  });
+    VoidCallback? clearUserState,
+  }) : _clearUserState = clearUserState ?? _noop;
+
+  static void _noop() {}
 
   Status _status = Status.uninitialized;
   Status _deleteAccountStatus = Status.uninitialized;
@@ -77,6 +81,9 @@ class AuthViewModel extends ChangeNotifier {
         }
       }
     } catch (e) {
+      if (firebaseAuth.currentUser == null) {
+        _clearLocalUserState();
+      }
       _status = Status.failure(e.toString());
       if (context.mounted) {
         ScaffoldMessenger.of(
@@ -138,9 +145,13 @@ class AuthViewModel extends ChangeNotifier {
   Future<Result<void>> _signOutAndClearPrefs() async {
     final result = await loginRepository.logout();
     if (!result.isSuccess) {
+      if (firebaseAuth.currentUser == null) {
+        _clearLocalUserState();
+      }
       return Result.failure(result.error);
     }
 
+    _clearLocalUserState();
     final prefs = await SharedPreferences.getInstance();
     await prefs.clear();
     return Result.success(null);
@@ -160,5 +171,12 @@ class AuthViewModel extends ChangeNotifier {
       final prefs = await SharedPreferences.getInstance();
       await prefs.clear();
     } catch (_) {}
+
+    _clearLocalUserState();
+  }
+
+  void _clearLocalUserState() {
+    userCredentials = null;
+    _clearUserState();
   }
 }

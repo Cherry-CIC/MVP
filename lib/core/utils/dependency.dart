@@ -186,6 +186,7 @@ List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
       create: (context) => ProductViewModel(
         productRepository: Provider.of<ProductRepository>(context, listen: false),
         navigator: Provider.of<NavigationProvider>(context, listen: false),
+        currentUserIdProvider: () => Provider.of<FirebaseAuth>(context, listen: false).currentUser?.uid,
       ),
     ),
     ChangeNotifierProvider<DonationViewModel>(
@@ -224,6 +225,10 @@ List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
         firebaseAuth: Provider.of<FirebaseAuth>(context, listen: false),
         firestore: Provider.of<FirebaseFirestore>(context, listen: false),
         apiService: Provider.of<ApiService>(context, listen: false),
+        clearUserState: Provider.of<ProductViewModel>(
+          context,
+          listen: false,
+        ).clearUserState,
       ),
     ),
   ];
