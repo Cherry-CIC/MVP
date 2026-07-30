@@ -11,6 +11,7 @@ class ProductViewModel extends ChangeNotifier {
   // Centralized tracker: Map<ProductID, IsLiked>
   final Map<String, bool> _likedProducts = {};
   final Map<String, Product> _likedProductCache = {};
+  final Map<String, int> _likeCountOverrides = {};
   final Set<String> _pendingLikeUpdates = {};
 
   Product? get product => _product;
@@ -41,8 +42,7 @@ class ProductViewModel extends ChangeNotifier {
 
   // Get dynamic count for a product
   int getLikesCount(Product product) {
-    bool isLiked = _likedProducts[product.id] ?? false;
-    return product.likes + (isLiked ? 1 : 0);
+    return _likeCountOverrides[product.id] ?? product.likes;
   }
 
   void setProduct(Product product) {
@@ -70,15 +70,17 @@ class ProductViewModel extends ChangeNotifier {
 
     _pendingLikeUpdates.remove(id);
 
-    if (result.isSuccess) {
-      _likedProducts[id] = liked;
-      if (liked) {
+    final update = result.value;
+    if (result.isSuccess && update != null && update.liked == liked) {
+      _likedProducts[id] = update.liked;
+      _likeCountOverrides[id] = update.likes;
+      if (update.liked) {
         _likedProductCache[id] = product;
       } else {
         _likedProductCache.remove(id);
       }
       notifyListeners();
-      return Result.success(liked);
+      return Result.success(update.liked);
     }
 
     notifyListeners();
@@ -112,6 +114,25 @@ class ProductViewModel extends ChangeNotifier {
 
       if (_likedProductCache[product.id] != product) {
         _likedProductCache[product.id] = product;
+        changed = true;
+      }
+
+      if (_likeCountOverrides[product.id] != product.likes) {
+        _likeCountOverrides[product.id] = product.likes;
+        changed = true;
+      }
+    }
+
+    if (changed) {
+      notifyListeners();
+    }
+  }
+
+  void reconcileProductCounts(Iterable<Product> products) {
+    var changed = false;
+
+    for (final product in products) {
+      if (_likeCountOverrides.remove(product.id) != null) {
         changed = true;
       }
     }
