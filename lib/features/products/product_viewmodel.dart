@@ -13,6 +13,7 @@ class ProductViewModel extends ChangeNotifier {
   final Map<String, Product> _likedProductCache = {};
   final Map<String, int> _likeCountOverrides = {};
   final Set<String> _pendingLikeUpdates = {};
+  Future<Result<void>>? _likedProductsHydration;
 
   Product? get product => _product;
 
@@ -43,6 +44,43 @@ class ProductViewModel extends ChangeNotifier {
   // Get dynamic count for a product
   int getLikesCount(Product product) {
     return _likeCountOverrides[product.id] ?? product.likes;
+  }
+
+  Future<Result<void>> hydrateLikedProducts() {
+    final pendingHydration = _likedProductsHydration;
+    if (pendingHydration != null) {
+      return pendingHydration;
+    }
+
+    final hydration = _hydrateLikedProducts();
+    _likedProductsHydration = hydration;
+    return hydration;
+  }
+
+  Future<Result<void>> _hydrateLikedProducts() async {
+    try {
+      _clearCachedLikedState();
+
+      final result = await productRepository.fetchLikedProducts();
+      if (!result.isSuccess) {
+        return Result.failure(result.error ?? 'Unable to restore liked items.');
+      }
+
+      cacheLikedProducts(result.value ?? const []);
+      return Result.success(null);
+    } finally {
+      _likedProductsHydration = null;
+    }
+  }
+
+  void _clearCachedLikedState() {
+    if (_likedProducts.isEmpty && _likedProductCache.isEmpty) {
+      return;
+    }
+
+    _likedProducts.clear();
+    _likedProductCache.clear();
+    notifyListeners();
   }
 
   void setProduct(Product product) {

@@ -9,10 +9,22 @@ import 'package:flutter_test/flutter_test.dart';
 import 'support/unexpected_api_service.dart';
 
 class _LikeUpdateRepository extends ProductRepository {
-  _LikeUpdateRepository({required this.likeUpdate, required this.unlikeUpdate}) : super(const UnexpectedApiService());
+  _LikeUpdateRepository({
+    required this.likeUpdate,
+    required this.unlikeUpdate,
+    this.likedProductsResult,
+  }) : super(const UnexpectedApiService());
 
   final ProductLikeUpdate likeUpdate;
   final ProductLikeUpdate unlikeUpdate;
+  final Result<List<Product>>? likedProductsResult;
+  int fetchLikedProductsCount = 0;
+
+  @override
+  Future<Result<List<Product>>> fetchLikedProducts() async {
+    fetchLikedProductsCount++;
+    return likedProductsResult ?? Result.success(const <Product>[]);
+  }
 
   @override
   Future<Result<ProductLikeUpdate>> likeProduct(Product product) async {
@@ -86,6 +98,63 @@ void main() {
 
     await viewModel.setProductLiked(product, true);
 
+    expect(viewModel.getLikesCount(product), 1);
+  });
+
+  test('shares concurrent liked-state hydration requests', () async {
+    final repository = _LikeUpdateRepository(
+      likeUpdate: const ProductLikeUpdate(liked: true, likes: 1),
+      unlikeUpdate: const ProductLikeUpdate(liked: false, likes: 0),
+    );
+    final viewModel = ProductViewModel(
+      productRepository: repository,
+      navigator: NavigationProvider(),
+    );
+
+    final firstHydration = viewModel.hydrateLikedProducts();
+    final secondHydration = viewModel.hydrateLikedProducts();
+    await Future.wait([firstHydration, secondHydration]);
+
+    expect(identical(firstHydration, secondHydration), isTrue);
+    expect(repository.fetchLikedProductsCount, 1);
+  });
+
+  test('restores liked state from the API after a fresh start', () async {
+    final product = _product(likes: 1);
+    final viewModel = ProductViewModel(
+      productRepository: _LikeUpdateRepository(
+        likeUpdate: const ProductLikeUpdate(liked: true, likes: 1),
+        unlikeUpdate: const ProductLikeUpdate(liked: false, likes: 0),
+        likedProductsResult: Result.success([product]),
+      ),
+      navigator: NavigationProvider(),
+    );
+
+    expect(viewModel.isProductLiked(product.id), isFalse);
+
+    final result = await viewModel.hydrateLikedProducts();
+
+    expect(result.isSuccess, isTrue);
+    expect(viewModel.isProductLiked(product.id), isTrue);
+    expect(viewModel.getLikesCount(product), 1);
+  });
+
+  test('failed hydration clears stale user-specific liked state', () async {
+    final product = _product(likes: 1);
+    final viewModel = ProductViewModel(
+      productRepository: _LikeUpdateRepository(
+        likeUpdate: const ProductLikeUpdate(liked: true, likes: 1),
+        unlikeUpdate: const ProductLikeUpdate(liked: false, likes: 0),
+        likedProductsResult: Result.failure('Load failed'),
+      ),
+      navigator: NavigationProvider(),
+    )..cacheLikedProducts([product]);
+
+    final result = await viewModel.hydrateLikedProducts();
+
+    expect(result.isSuccess, isFalse);
+    expect(viewModel.isProductLiked(product.id), isFalse);
+    expect(viewModel.cachedLikedProducts, isEmpty);
     expect(viewModel.getLikesCount(product), 1);
   });
 }
