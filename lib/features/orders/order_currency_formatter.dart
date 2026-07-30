@@ -5,7 +5,7 @@ class OrderCurrencyFormatter {
 
   static String? formatItemPrice(OrderSummary order) {
     final minorUnits = order.itemPriceMinor;
-    if (minorUnits == null || order.currency != 'GBP') {
+    if (minorUnits == null) {
       return null;
     }
 

@@ -39,6 +39,7 @@ void main() {
         'id': ' order-1 ',
         'productId': ' product-1 ',
         'productName': ' Shirt ',
+        'productAmount': 400,
         'totalAmount': 2599,
         'currency': ' gbp ',
         'deliveryState': ' shipped ',
@@ -49,6 +50,7 @@ void main() {
       expect(order!.id, 'order-1');
       expect(order.productId, 'product-1');
       expect(order.productName, 'Shirt');
+      expect(order.itemPriceMinor, 400);
       expect(order.totalAmountMinor, 2599);
       expect(order.currency, 'GBP');
       expect(order.deliveryState, 'shipped');
@@ -91,6 +93,7 @@ void main() {
       expect(orderWithoutProduct, isNotNull);
       expect(orderWithoutProduct!.productId, isEmpty);
       expect(orderWithoutProduct.productName, 'Purchased item');
+      expect(orderWithoutProduct.itemPriceMinor, isNull);
     });
 
     test('treats unsafe monetary values as unavailable', () {
@@ -98,15 +101,17 @@ void main() {
         _orderJson(
           id: 'order-2',
           productId: 'product-2',
+          productAmount: 12.5,
           totalAmount: 12.5,
         ),
       );
-      expect(order!.totalAmountMinor, isNull);
+      expect(order!.itemPriceMinor, isNull);
+      expect(order.totalAmountMinor, isNull);
     });
   });
 
   group('OrdersRepository', () {
-    test('uses the documented routes and enriches an order', () async {
+    test('enriches order metadata without replacing its purchase price', () async {
       final apiService = _FakeApiService((endpoint) {
         if (endpoint == ApiEndpoints.myOrders) {
           return Result.success({
@@ -117,6 +122,7 @@ void main() {
                   id: 'order-1',
                   productId: 'product-1',
                   productName: 'Purchased shirt',
+                  productAmount: 400,
                   totalAmount: 2599,
                   currency: 'gbp',
                   deliveryState: 'shipped',
@@ -167,7 +173,7 @@ void main() {
       expect(order.imageUrl, 'https://example.com/product.jpg');
       expect(order.size, 'M');
       expect(order.charityLogoUrl, 'https://example.com/charity.png');
-      expect(order.itemPriceMinor, 425);
+      expect(order.itemPriceMinor, 400);
       expect(order.totalAmountMinor, 2599);
       expect(order.currency, 'GBP');
       expect(order.deliveryState, 'shipped');
@@ -251,10 +257,10 @@ void main() {
       expect(order.productName, 'Purchased item');
       expect(order.imageUrl, isEmpty);
       expect(order.charityLogoUrl, isEmpty);
-      expect(order.itemPriceMinor, isNull);
+      expect(order.itemPriceMinor, 400);
     });
 
-    test('does not mislabel a GBP product price with another order currency', () async {
+    test('keeps the historical amount paired with its order currency', () async {
       final apiService = _FakeApiService((endpoint) {
         if (endpoint == ApiEndpoints.myOrders) {
           return Result.success({
@@ -280,7 +286,7 @@ void main() {
           'success': true,
           'data': _productJson(
             id: 'product-1',
-            price: 4,
+            price: 9,
           ),
         });
       });
@@ -290,7 +296,7 @@ void main() {
 
       expect(result.isSuccess, isTrue);
       expect(result.value!.single.currency, 'EUR');
-      expect(result.value!.single.itemPriceMinor, isNull);
+      expect(result.value!.single.itemPriceMinor, 400);
     });
 
     test('deduplicates product IDs and runs no more than four product requests', () async {
@@ -411,6 +417,7 @@ Map<String, dynamic> _orderJson({
   required String id,
   required String productId,
   String productName = 'Example shirt',
+  dynamic productAmount = 400,
   dynamic totalAmount = 2599,
   dynamic currency = 'GBP',
   dynamic deliveryState = 'preparing',
@@ -421,6 +428,7 @@ Map<String, dynamic> _orderJson({
     'id': id,
     'productId': productId,
     'productName': productName,
+    'productAmount': productAmount,
     'totalAmount': totalAmount,
     'currency': currency,
     'deliveryState': deliveryState,

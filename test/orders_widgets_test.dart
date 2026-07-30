@@ -73,12 +73,12 @@ void main() {
       );
     });
 
-    test('does not label a GBP product price as another currency', () {
+    test('formats a trusted non-GBP order amount with its ISO code', () {
       expect(
         OrderCurrencyFormatter.formatItemPrice(
           _order(currency: 'EUR'),
         ),
-        isNull,
+        'EUR 4.00',
       );
     });
 

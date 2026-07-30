@@ -57,7 +57,6 @@ final class OrdersRepository implements IOrdersRepository {
               imageUrl: product.imageUrl,
               size: product.size,
               charityLogoUrl: charityLogos[product.charityId] ?? '',
-              itemPriceMinor: order.currency == 'GBP' ? product.itemPriceMinor : null,
             );
           })
           .toList(growable: false);
@@ -183,14 +182,12 @@ final class _ProductEnrichment {
   final String imageUrl;
   final String size;
   final String charityId;
-  final int? itemPriceMinor;
 
   const _ProductEnrichment({
     required this.name,
     required this.imageUrl,
     required this.size,
     required this.charityId,
-    required this.itemPriceMinor,
   });
 
   static _ProductEnrichment? tryFromJson(dynamic value) {
@@ -214,22 +211,7 @@ final class _ProductEnrichment {
       imageUrl: imageUrl,
       size: _readString(value['size']),
       charityId: _readString(value['charityId']),
-      itemPriceMinor: _majorUnitsToMinor(value['price']),
     );
-  }
-
-  static int? _majorUnitsToMinor(dynamic value) {
-    double? amount;
-    if (value is num) {
-      amount = value.toDouble();
-    } else if (value is String) {
-      amount = double.tryParse(value.trim());
-    }
-
-    if (amount == null || !amount.isFinite || amount.isNegative) {
-      return null;
-    }
-    return (amount * 100).round();
   }
 
   static String _readString(dynamic value) {

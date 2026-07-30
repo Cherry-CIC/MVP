@@ -49,7 +49,7 @@ class OrderSummary {
       imageUrl: '',
       size: '',
       charityLogoUrl: '',
-      itemPriceMinor: null,
+      itemPriceMinor: _readNonNegativeInteger(json['productAmount']),
       totalAmountMinor: _readNonNegativeInteger(json['totalAmount']),
       currency: normaliseCurrency(json['currency']),
       deliveryState: _readFirstString([
@@ -70,7 +70,6 @@ class OrderSummary {
     String? imageUrl,
     String? size,
     String? charityLogoUrl,
-    int? itemPriceMinor,
   }) {
     return OrderSummary(
       id: id,
@@ -79,7 +78,7 @@ class OrderSummary {
       imageUrl: imageUrl ?? this.imageUrl,
       size: size ?? this.size,
       charityLogoUrl: charityLogoUrl ?? this.charityLogoUrl,
-      itemPriceMinor: itemPriceMinor ?? this.itemPriceMinor,
+      itemPriceMinor: itemPriceMinor,
       totalAmountMinor: totalAmountMinor,
       currency: currency,
       deliveryState: deliveryState,
