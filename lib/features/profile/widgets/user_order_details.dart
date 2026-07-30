@@ -5,35 +5,43 @@ import 'package:flutter/material.dart';
 class UserOrderDetails extends StatelessWidget {
   const UserOrderDetails({
     super.key,
+    this.onOrdersPressed,
+    this.onLikedPressed,
   });
 
+  final VoidCallback? onOrdersPressed;
+  final VoidCallback? onLikedPressed;
+  
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
         if (FeatureFlags.showProfileShortcutCards)
-          SizedBox(
-            height: 132,
-            child: Row(
-              children: [
-                Expanded(
-                  child: UserOrderTile(
-                    title: AppStrings.profileUserOrders,
-                    onPressed: () {},
-                    assetPath: AppImages.profileOrder,
-                  ),
+          Column(
+            children: [
+              SizedBox(
+                height: 96,
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: UserOrderTile(
+                        title: AppStrings.profileUserOrders,
+                        onPressed: onOrdersPressed ?? () {},
+                        assetPath: AppImages.profileOrder,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: UserOrderTile(
+                        title: AppStrings.profileUserLiked,
+                        onPressed: onLikedPressed ?? () {},
+                        assetPath: AppImages.profileLiked,
+                      ),
+                    ),
+                  ],
                 ),
-                SizedBox(width: 8),
-                Expanded(
-                  child: UserOrderTile(
-                    title: AppStrings.profileUserLiked,
-                    onPressed: () {},
-                    assetPath: AppImages.profileLiked,
-                  ),
-                ),
-              ],
-            ),
-          ),
+              ),
+),
         if (FeatureFlags.showDonorDiscounts) ...[
           const SizedBox(height: 16),
           Container(

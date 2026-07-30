@@ -84,17 +84,28 @@ List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
     ChangeNotifierProvider(create: (_) => SearchController()),
     Provider<IHomeRepository>(
       create: (context) {
+        final firebaseAuth = Provider.of<FirebaseAuth>(
+          context,
+          listen: false,
+        );
         if (useMockData) {
-          return HomeRepositoryMock();
+          return HomeRepositoryMock(
+            currentUserIdProvider: () => firebaseAuth.currentUser?.uid,
+          );
         } else {
           return HomeRepository(
             Provider.of<ApiService>(context, listen: false),
+            currentUserIdProvider: () => firebaseAuth.currentUser?.uid,
           );
         }
       },
     ),
     Provider<DiscoverRepository>(create: (context) => DiscoverRepository()),
-    Provider<ProductRepository>(create: (context) => ProductRepository()),
+    Provider<ProductRepository>(
+      create: (context) => ProductRepository(
+        Provider.of<ApiService>(context, listen: false),
+      ),
+    ),
     Provider<IDonationRepository>(
       create: (context) {
         if (useMockData) {
@@ -202,6 +213,8 @@ List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
         checkoutRepository: Provider.of<ICheckoutRepository>(context, listen: false),
         navigator: Provider.of<NavigationProvider>(context, listen: false),
         donationRepository: Provider.of<IDonationRepository>(context, listen: false),
+        currentUserIdProvider: () =>
+            Provider.of<FirebaseAuth>(context, listen: false).currentUser?.uid,
       ),
     ),
     ChangeNotifierProvider<CharityViewModel>(
