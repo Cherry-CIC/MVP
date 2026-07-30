@@ -41,7 +41,8 @@ class UserOrderDetails extends StatelessWidget {
                   ],
                 ),
               ),
-),
+            ],
+          ),
         if (FeatureFlags.showDonorDiscounts) ...[
           const SizedBox(height: 16),
           Container(
@@ -52,7 +53,6 @@ class UserOrderDetails extends StatelessWidget {
               borderRadius: BorderRadius.circular(12),
             ),
             child: Row(
-              spacing: 8,
               children: [
                 Expanded(
                   child: Text(
@@ -62,6 +62,7 @@ class UserOrderDetails extends StatelessWidget {
                     ),
                   ),
                 ),
+                const SizedBox(width: 8),
                 Image.asset(
                   AppImages.profileDiscount,
                   color: Theme.of(context).colorScheme.primary,
