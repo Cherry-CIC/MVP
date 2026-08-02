@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cherry_mvp/core/config/feature_flags.dart';
@@ -32,7 +34,14 @@ class _DashboardPageState extends State<DashboardPage> {
       _hasInitialized = true;
 
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        context.read<HomeViewModel>().fetchProducts();
+        if (!mounted) {
+          return;
+        }
+
+        unawaited(
+          context.read<ProductViewModel>().hydrateLikedProducts(),
+        );
+        unawaited(context.read<HomeViewModel>().fetchProducts());
       });
     }
   }
