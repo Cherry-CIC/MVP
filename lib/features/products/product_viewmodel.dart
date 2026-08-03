@@ -11,11 +11,14 @@ class ProductViewModel extends ChangeNotifier {
   // Centralized tracker: Map<ProductID, IsLiked>
   final Map<String, bool> _likedProducts = {};
   final Map<String, Product> _likedProductCache = {};
+  final Map<String, int> _likeCountOverrides = {};
   final Set<String> _pendingLikeUpdates = {};
   final String? Function() _currentUserIdProvider;
   int _accountStateVersion = 0;
   bool _accountOwnerInitialised = false;
   String? _accountOwnerId;
+  Future<Result<void>>? _likedProductsHydration;
+  int? _likedProductsHydrationVersion;
 
   Product? get product => _product;
 
@@ -65,8 +68,55 @@ class ProductViewModel extends ChangeNotifier {
   // Get dynamic count for a product
   int getLikesCount(Product product) {
     _ensureCurrentAccount();
-    bool isLiked = _likedProducts[product.id] ?? false;
-    return product.likes + (isLiked ? 1 : 0);
+    return _likeCountOverrides[product.id] ?? product.likes;
+  }
+
+  Future<Result<void>> hydrateLikedProducts() {
+    _ensureCurrentAccount();
+    final accountStateVersion = _accountStateVersion;
+    final pendingHydration = _likedProductsHydration;
+    if (pendingHydration != null &&
+        _likedProductsHydrationVersion == accountStateVersion) {
+      return pendingHydration;
+    }
+
+    final hydration = _hydrateLikedProducts(accountStateVersion);
+    _likedProductsHydration = hydration;
+    _likedProductsHydrationVersion = accountStateVersion;
+    return hydration;
+  }
+
+  Future<Result<void>> _hydrateLikedProducts(int accountStateVersion) async {
+    try {
+      _clearCachedLikedState();
+
+      final result = await productRepository.fetchLikedProducts();
+      if (!isAccountStateCurrent(accountStateVersion)) {
+        return Result.failure('Unable to restore liked items.');
+      }
+
+      if (!result.isSuccess) {
+        return Result.failure(result.error ?? 'Unable to restore liked items.');
+      }
+
+      cacheLikedProducts(result.value ?? const []);
+      return Result.success(null);
+    } finally {
+      if (_likedProductsHydrationVersion == accountStateVersion) {
+        _likedProductsHydration = null;
+        _likedProductsHydrationVersion = null;
+      }
+    }
+  }
+
+  void _clearCachedLikedState() {
+    if (_likedProducts.isEmpty && _likedProductCache.isEmpty) {
+      return;
+    }
+
+    _likedProducts.clear();
+    _likedProductCache.clear();
+    notifyListeners();
   }
 
   void setProduct(Product product) {
@@ -75,6 +125,7 @@ class ProductViewModel extends ChangeNotifier {
   }
 
   Future<Result<bool>> toggleLike(Product product) async {
+    _ensureCurrentAccount();
     final String id = product.id;
     final bool currentStatus = _likedProducts[id] ?? false;
 
@@ -100,15 +151,17 @@ class ProductViewModel extends ChangeNotifier {
 
     _pendingLikeUpdates.remove(id);
 
-    if (result.isSuccess) {
-      _likedProducts[id] = liked;
-      if (liked) {
+    final update = result.value;
+    if (result.isSuccess && update != null && update.liked == liked) {
+      _likedProducts[id] = update.liked;
+      _likeCountOverrides[id] = update.likes;
+      if (update.liked) {
         _likedProductCache[id] = product;
       } else {
         _likedProductCache.remove(id);
       }
       notifyListeners();
-      return Result.success(liked);
+      return Result.success(update.liked);
     }
 
     notifyListeners();
@@ -146,6 +199,25 @@ class ProductViewModel extends ChangeNotifier {
         _likedProductCache[product.id] = product;
         changed = true;
       }
+
+      if (_likeCountOverrides[product.id] != product.likes) {
+        _likeCountOverrides[product.id] = product.likes;
+        changed = true;
+      }
+    }
+
+    if (changed) {
+      notifyListeners();
+    }
+  }
+
+  void reconcileProductCounts(Iterable<Product> products) {
+    var changed = false;
+
+    for (final product in products) {
+      if (_likeCountOverrides.remove(product.id) != null) {
+        changed = true;
+      }
     }
 
     if (changed) {
@@ -175,6 +247,8 @@ class ProductViewModel extends ChangeNotifier {
     _likedProducts.clear();
     _likedProductCache.clear();
     _pendingLikeUpdates.clear();
+    _likedProductsHydration = null;
+    _likedProductsHydrationVersion = null;
     _accountOwnerId = currentUserId;
     _accountOwnerInitialised = true;
     _accountStateVersion += 1;

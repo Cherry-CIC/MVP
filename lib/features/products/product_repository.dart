@@ -3,6 +3,13 @@ import 'package:cherry_mvp/core/services/network/api_endpoints.dart';
 import 'package:cherry_mvp/core/services/network/api_service.dart';
 import 'package:cherry_mvp/core/utils/result.dart';
 
+final class ProductLikeUpdate {
+  const ProductLikeUpdate({required this.liked, required this.likes});
+
+  final bool liked;
+  final int likes;
+}
+
 class ProductRepository {
   ProductRepository(this._apiService);
 
@@ -11,11 +18,11 @@ class ProductRepository {
 
   final ApiService _apiService;
 
-  Future<Result<void>> likeProduct(Product product) async {
+  Future<Result<ProductLikeUpdate>> likeProduct(Product product) async {
     return _setProductLiked(product.id, liked: true);
   }
 
-  Future<Result<void>> unlikeProduct(String productId) async {
+  Future<Result<ProductLikeUpdate>> unlikeProduct(String productId) async {
     return _setProductLiked(productId, liked: false);
   }
 
@@ -65,7 +72,7 @@ class ProductRepository {
     }
   }
 
-  Future<Result<void>> _setProductLiked(
+  Future<Result<ProductLikeUpdate>> _setProductLiked(
     String productId, {
     required bool liked,
   }) async {
@@ -97,10 +104,25 @@ class ProductRepository {
         return Result.failure(failureMessage);
       }
 
-      return Result.success(null);
+      final likes = _parseLikeCount(responseData['likes']);
+      if (likes == null) {
+        return Result.failure(failureMessage);
+      }
+
+      return Result.success(ProductLikeUpdate(liked: liked, likes: likes));
     } catch (_) {
       return Result.failure(failureMessage);
     }
+  }
+
+  int? _parseLikeCount(dynamic value) {
+    final likes = switch (value) {
+      int() => value,
+      String() => int.tryParse(value),
+      _ => null,
+    };
+
+    return likes != null && likes >= 0 ? likes : null;
   }
 
   bool _isUnsuccessfulResponse(dynamic response) {

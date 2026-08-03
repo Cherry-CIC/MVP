@@ -20,25 +20,31 @@ class _FakeProductRepository extends ProductRepository {
   }) : super(const UnexpectedApiService());
 
   Result<List<Product>>? fetchResult;
-  Result<void>? unlikeResult;
+  Result<ProductLikeUpdate>? unlikeResult;
   Completer<Result<List<Product>>>? fetchCompleter;
-  Completer<Result<void>>? likeCompleter;
+  Completer<Result<ProductLikeUpdate>>? likeCompleter;
   final unlikedIds = <String>[];
 
   @override
-  Future<Result<void>> likeProduct(Product product) async {
-    return likeCompleter?.future ?? Result.success(null);
+  Future<Result<ProductLikeUpdate>> likeProduct(Product product) async {
+    return likeCompleter?.future ??
+        Result.success(
+          ProductLikeUpdate(liked: true, likes: product.likes + 1),
+        );
   }
 
   @override
   Future<Result<List<Product>>> fetchLikedProducts() async {
-    return fetchCompleter?.future ?? fetchResult ?? Result.success(const <Product>[]);
+    return fetchCompleter?.future ??
+        fetchResult ??
+        Result.success(const <Product>[]);
   }
 
   @override
-  Future<Result<void>> unlikeProduct(String productId) async {
+  Future<Result<ProductLikeUpdate>> unlikeProduct(String productId) async {
     unlikedIds.add(productId);
-    return unlikeResult ?? Result.success(null);
+    return unlikeResult ??
+        Result.success(const ProductLikeUpdate(liked: false, likes: 0));
   }
 }
 
@@ -226,9 +232,7 @@ void main() {
     test('ignores a liked-items response from the previous account', () async {
       var currentUserId = 'account-a';
       final fetchCompleter = Completer<Result<List<Product>>>();
-      final repository = _FakeProductRepository(
-        fetchCompleter: fetchCompleter,
-      );
+      final repository = _FakeProductRepository(fetchCompleter: fetchCompleter);
       final productViewModel = ProductViewModel(
         productRepository: repository,
         navigator: NavigationProvider(),
@@ -249,30 +253,33 @@ void main() {
       expect(productViewModel.cachedLikedProducts, isEmpty);
     });
 
-    test('ignores a like response completed after the account changes', () async {
-      var currentUserId = 'account-a';
-      final likeCompleter = Completer<Result<void>>();
-      final product = _product();
-      final repository = _FakeProductRepository(
-        likeCompleter: likeCompleter,
-      );
-      final productViewModel = ProductViewModel(
-        productRepository: repository,
-        navigator: NavigationProvider(),
-        currentUserIdProvider: () => currentUserId,
-      );
+    test(
+      'ignores a like response completed after the account changes',
+      () async {
+        var currentUserId = 'account-a';
+        final likeCompleter = Completer<Result<ProductLikeUpdate>>();
+        final product = _product();
+        final repository = _FakeProductRepository(likeCompleter: likeCompleter);
+        final productViewModel = ProductViewModel(
+          productRepository: repository,
+          navigator: NavigationProvider(),
+          currentUserIdProvider: () => currentUserId,
+        );
 
-      final likeFuture = productViewModel.setProductLiked(product, true);
-      expect(productViewModel.isLikeUpdatePending(product.id), isTrue);
+        final likeFuture = productViewModel.setProductLiked(product, true);
+        expect(productViewModel.isLikeUpdatePending(product.id), isTrue);
 
-      currentUserId = 'account-b';
-      likeCompleter.complete(Result.success(null));
-      final result = await likeFuture;
+        currentUserId = 'account-b';
+        likeCompleter.complete(
+          Result.success(const ProductLikeUpdate(liked: true, likes: 1)),
+        );
+        final result = await likeFuture;
 
-      expect(result.isSuccess, isFalse);
-      expect(productViewModel.isLikeUpdatePending(product.id), isFalse);
-      expect(productViewModel.isProductLiked(product.id), isFalse);
-      expect(productViewModel.cachedLikedProducts, isEmpty);
-    });
+        expect(result.isSuccess, isFalse);
+        expect(productViewModel.isLikeUpdatePending(product.id), isFalse);
+        expect(productViewModel.isProductLiked(product.id), isFalse);
+        expect(productViewModel.cachedLikedProducts, isEmpty);
+      },
+    );
   });
 }

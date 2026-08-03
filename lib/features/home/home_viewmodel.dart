@@ -13,8 +13,9 @@ class HomeViewModel extends ChangeNotifier {
 
   final _log = Logger('HomeViewModel');
   final IHomeRepository homeRepository;
+  final void Function(Iterable<Product>)? onProductsLoaded;
 
-  HomeViewModel({required this.homeRepository});
+  HomeViewModel({required this.homeRepository, this.onProductsLoaded});
 
   // Private variables
   Status _status = Status.uninitialized;
@@ -125,6 +126,7 @@ class HomeViewModel extends ChangeNotifier {
         final existingIds = _homeProducts.map((product) => product.id).toSet();
         final newProducts = page.products.where((product) => !existingIds.contains(product.id));
         _homeProducts = [..._homeProducts, ...newProducts];
+        onProductsLoaded?.call(page.products);
         _nextCursor = page.nextCursor;
         _hasMore = page.hasMore;
         _homeLoadMoreRetryAt = null;
@@ -168,6 +170,7 @@ class HomeViewModel extends ChangeNotifier {
         final existingIds = _searchProducts.map((product) => product.id).toSet();
         final newProducts = page.products.where((product) => !existingIds.contains(product.id));
         _searchProducts = [..._searchProducts, ...newProducts];
+        onProductsLoaded?.call(page.products);
         _searchNextCursor = page.nextCursor;
         _searchHasMore = page.hasMore;
       } else {
@@ -211,6 +214,7 @@ class HomeViewModel extends ChangeNotifier {
         }
         final page = result.value!;
         _homeProducts = page.products;
+        onProductsLoaded?.call(page.products);
         _nextCursor = page.nextCursor;
         _hasMore = page.hasMore;
         _status = Status.success;
@@ -270,6 +274,7 @@ class HomeViewModel extends ChangeNotifier {
         }
         final page = result.value!;
         _searchProducts = page.products;
+        onProductsLoaded?.call(page.products);
         _searchNextCursor = page.nextCursor;
         _searchHasMore = page.hasMore;
         _searchStatus = Status.success;
