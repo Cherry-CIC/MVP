@@ -169,7 +169,7 @@ void main() {
       final apiService = _RecordingApiService(
         postValue: const {
           'success': true,
-          'data': {'liked': true},
+          'data': {'liked': true, 'likes': 2},
         },
       );
       final repository = ProductRepository(apiService);
@@ -182,13 +182,15 @@ void main() {
         ApiEndpoints.productLike('liked-product'),
       );
       expect(apiService.lastPostData, {'like': true});
+      expect(result.value!.liked, isTrue);
+      expect(result.value!.likes, 2);
     });
 
     test('unlikes a product through the same API endpoint', () async {
       final apiService = _RecordingApiService(
         postValue: const {
           'success': true,
-          'data': {'liked': false},
+          'data': {'liked': false, 'likes': 0},
         },
       );
       final repository = ProductRepository(apiService);
@@ -201,6 +203,8 @@ void main() {
         ApiEndpoints.productLike('liked-product'),
       );
       expect(apiService.lastPostData, {'like': false});
+      expect(result.value!.liked, isFalse);
+      expect(result.value!.likes, 0);
     });
 
     test('does not call the API for an invalid product ID', () async {
@@ -230,7 +234,23 @@ void main() {
         _RecordingApiService(
           postValue: const {
             'success': true,
-            'data': {'liked': false},
+            'data': {'liked': false, 'likes': 0},
+          },
+        ),
+      );
+
+      final result = await repository.likeProduct(_product());
+
+      expect(result.isSuccess, isFalse);
+      expect(result.error, isNotEmpty);
+    });
+
+    test('rejects a response without an authoritative like count', () async {
+      final repository = ProductRepository(
+        _RecordingApiService(
+          postValue: const {
+            'success': true,
+            'data': {'liked': true},
           },
         ),
       );

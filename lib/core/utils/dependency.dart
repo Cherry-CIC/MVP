@@ -163,10 +163,23 @@ List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
         navigator: Provider.of<NavigationProvider>(context, listen: false),
       ),
     ),
-    ChangeNotifierProvider<HomeViewModel>(
-      create: (context) => HomeViewModel(
-        homeRepository: Provider.of<IHomeRepository>(context, listen: false),
+    ChangeNotifierProvider<ProductViewModel>(
+      create: (context) => ProductViewModel(
+        productRepository: Provider.of<ProductRepository>(context, listen: false),
+        navigator: Provider.of<NavigationProvider>(context, listen: false),
       ),
+    ),
+    ChangeNotifierProvider<HomeViewModel>(
+      create: (context) {
+        final productViewModel = Provider.of<ProductViewModel>(
+          context,
+          listen: false,
+        );
+        return HomeViewModel(
+          homeRepository: Provider.of<IHomeRepository>(context, listen: false),
+          onProductsLoaded: productViewModel.reconcileProductCounts,
+        );
+      },
     ),
     Provider<SearchRepository>(create: (context) => SearchRepository()),
     ChangeNotifierProvider<SearchViewModel>(
@@ -180,12 +193,6 @@ List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
           context,
           listen: false,
         ),
-      ),
-    ),
-    ChangeNotifierProvider<ProductViewModel>(
-      create: (context) => ProductViewModel(
-        productRepository: Provider.of<ProductRepository>(context, listen: false),
-        navigator: Provider.of<NavigationProvider>(context, listen: false),
       ),
     ),
     ChangeNotifierProvider<DonationViewModel>(
