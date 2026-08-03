@@ -19,6 +19,8 @@ class ProductViewModel extends ChangeNotifier {
   String? _accountOwnerId;
   Future<Result<void>>? _likedProductsHydration;
   int? _likedProductsHydrationVersion;
+  bool _accountChangeNotificationPending = false;
+  bool _disposed = false;
 
   Product? get product => _product;
 
@@ -226,7 +228,12 @@ class ProductViewModel extends ChangeNotifier {
   }
 
   void clearUserState() {
+    if (_disposed) {
+      return;
+    }
+
     _resetAccountState(_currentUserIdProvider());
+    _accountChangeNotificationPending = false;
     notifyListeners();
   }
 
@@ -240,7 +247,24 @@ class ProductViewModel extends ChangeNotifier {
 
     if (_accountOwnerId != currentUserId) {
       _resetAccountState(currentUserId);
+      _scheduleAccountChangeNotification();
     }
+  }
+
+  void _scheduleAccountChangeNotification() {
+    if (_accountChangeNotificationPending || _disposed) {
+      return;
+    }
+
+    _accountChangeNotificationPending = true;
+    Future<void>.microtask(() {
+      if (!_accountChangeNotificationPending || _disposed) {
+        return;
+      }
+
+      _accountChangeNotificationPending = false;
+      notifyListeners();
+    });
   }
 
   void _resetAccountState(String? currentUserId) {
@@ -265,5 +289,12 @@ class ProductViewModel extends ChangeNotifier {
   void goToProductPage(Product product) async {
     setProduct(product);
     await navigator.navigateTo(AppRoutes.product);
+  }
+
+  @override
+  void dispose() {
+    _disposed = true;
+    _accountChangeNotificationPending = false;
+    super.dispose();
   }
 }

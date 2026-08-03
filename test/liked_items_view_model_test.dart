@@ -229,6 +229,34 @@ void main() {
       viewModel.dispose();
     });
 
+    test('clears an open liked-items view after an account change', () async {
+      var currentUserId = 'account-a';
+      final product = _product();
+      final repository = _FakeProductRepository(
+        fetchResult: Result.success([product]),
+      );
+      final productViewModel = ProductViewModel(
+        productRepository: repository,
+        navigator: NavigationProvider(),
+        currentUserIdProvider: () => currentUserId,
+      );
+      final viewModel = LikedItemsViewModel(
+        productRepository: repository,
+        productViewModel: productViewModel,
+      );
+
+      await viewModel.loadLikedProducts();
+      expect(viewModel.products, [product]);
+
+      currentUserId = 'account-b';
+      productViewModel.isProductLiked(product.id);
+      await Future<void>.microtask(() {});
+
+      expect(viewModel.status, LikedItemsStatus.empty);
+      expect(viewModel.products, isEmpty);
+      viewModel.dispose();
+    });
+
     test('ignores a liked-items response from the previous account', () async {
       var currentUserId = 'account-a';
       final fetchCompleter = Completer<Result<List<Product>>>();

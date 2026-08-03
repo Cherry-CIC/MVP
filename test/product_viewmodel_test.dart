@@ -191,6 +191,75 @@ void main() {
     expect(viewModel.isProductLiked('account-b-product'), isTrue);
   });
 
+  test('coalesces notifications for lazily detected account changes', () async {
+    var currentUserId = 'account-a';
+    final viewModel = ProductViewModel(
+      productRepository: _LikeUpdateRepository(
+        likeUpdate: const ProductLikeUpdate(liked: true, likes: 1),
+        unlikeUpdate: const ProductLikeUpdate(liked: false, likes: 0),
+      ),
+      navigator: NavigationProvider(),
+      currentUserIdProvider: () => currentUserId,
+    );
+    viewModel.isProductLiked('liked-product');
+    var notificationCount = 0;
+    viewModel.addListener(() => notificationCount++);
+
+    currentUserId = 'account-b';
+    viewModel.isProductLiked('liked-product');
+    currentUserId = 'account-c';
+    viewModel.cachedLikedProducts;
+
+    expect(notificationCount, 0);
+    await Future<void>.microtask(() {});
+    expect(notificationCount, 1);
+  });
+
+  test('explicit clearing cancels a pending account-change notification', () async {
+    var currentUserId = 'account-a';
+    final viewModel = ProductViewModel(
+      productRepository: _LikeUpdateRepository(
+        likeUpdate: const ProductLikeUpdate(liked: true, likes: 1),
+        unlikeUpdate: const ProductLikeUpdate(liked: false, likes: 0),
+      ),
+      navigator: NavigationProvider(),
+      currentUserIdProvider: () => currentUserId,
+    );
+    viewModel.isProductLiked('liked-product');
+    var notificationCount = 0;
+    viewModel.addListener(() => notificationCount++);
+
+    currentUserId = 'account-b';
+    viewModel.isProductLiked('liked-product');
+    viewModel.clearUserState();
+
+    expect(notificationCount, 1);
+    await Future<void>.microtask(() {});
+    expect(notificationCount, 1);
+  });
+
+  test('skips a pending account-change notification after disposal', () async {
+    var currentUserId = 'account-a';
+    final viewModel = ProductViewModel(
+      productRepository: _LikeUpdateRepository(
+        likeUpdate: const ProductLikeUpdate(liked: true, likes: 1),
+        unlikeUpdate: const ProductLikeUpdate(liked: false, likes: 0),
+      ),
+      navigator: NavigationProvider(),
+      currentUserIdProvider: () => currentUserId,
+    );
+    viewModel.isProductLiked('liked-product');
+    var notificationCount = 0;
+    viewModel.addListener(() => notificationCount++);
+
+    currentUserId = 'account-b';
+    viewModel.isProductLiked('liked-product');
+    viewModel.dispose();
+
+    await Future<void>.microtask(() {});
+    expect(notificationCount, 0);
+  });
+
   test('failed hydration clears stale user-specific liked state', () async {
     final product = _product(likes: 1);
     final viewModel = ProductViewModel(
