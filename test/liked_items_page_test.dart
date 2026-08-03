@@ -21,12 +21,14 @@ class _FakeProductRepository extends ProductRepository {
   }) : super(const UnexpectedApiService());
 
   Result<List<Product>> fetchResult;
-  Result<void>? unlikeResult;
+  Result<ProductLikeUpdate>? unlikeResult;
   int fetchCount = 0;
 
   @override
-  Future<Result<void>> likeProduct(Product product) async {
-    return Result.success(null);
+  Future<Result<ProductLikeUpdate>> likeProduct(Product product) async {
+    return Result.success(
+      ProductLikeUpdate(liked: true, likes: product.likes + 1),
+    );
   }
 
   @override
@@ -36,8 +38,9 @@ class _FakeProductRepository extends ProductRepository {
   }
 
   @override
-  Future<Result<void>> unlikeProduct(String productId) async {
-    return unlikeResult ?? Result.success(null);
+  Future<Result<ProductLikeUpdate>> unlikeProduct(String productId) async {
+    return unlikeResult ??
+        Result.success(const ProductLikeUpdate(liked: false, likes: 0));
   }
 }
 
