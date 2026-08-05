@@ -47,7 +47,7 @@ void main() {
     }
 
     expect(find.text(AppStrings.privacyPolicyText), findsWidgets);
-    expect(find.text('Date last updated: 2024-13-11'), findsOneWidget);
+    expect(find.text('Date last updated: 05.07.2026'), findsOneWidget);
     expect(find.text('1. General'), findsOneWidget);
 
     await tester.pageBack();

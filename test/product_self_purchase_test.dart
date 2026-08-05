@@ -13,6 +13,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'support/unexpected_api_service.dart';
+
 class _CheckoutRepositoryStub implements ICheckoutRepository {
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -35,7 +37,7 @@ void main() {
 
     final navigator = NavigationProvider();
     final productViewModel = ProductViewModel(
-      productRepository: ProductRepository(),
+      productRepository: ProductRepository(const UnexpectedApiService()),
       navigator: navigator,
     )..setProduct(_product);
     final checkoutViewModel = CheckoutViewModel(
