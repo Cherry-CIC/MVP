@@ -30,9 +30,21 @@ class _HomeRepositoryStub implements IHomeRepository {
   }
 }
 
-Future<void> _pumpHomeScreen(
+class _ProductRepositoryStub extends ProductRepository {
+  _ProductRepositoryStub(this.likedProducts) : super(const UnexpectedApiService());
+
+  final List<Product> likedProducts;
+
+  @override
+  Future<Result<List<Product>>> fetchLikedProducts() async {
+    return Result.success(likedProducts);
+  }
+}
+
+Future<ProductViewModel> _pumpHomeScreen(
   WidgetTester tester, {
   List<Product> products = const [],
+  List<Product> likedProducts = const [],
   Result<ProductPage>? fetchResult,
   EdgeInsets mediaPadding = EdgeInsets.zero,
 }) async {
@@ -47,6 +59,10 @@ Future<void> _pumpHomeScreen(
           hasMore: false,
         ),
       );
+  final productViewModel = ProductViewModel(
+    productRepository: _ProductRepositoryStub(likedProducts),
+    navigator: navigator,
+  );
 
   await tester.pumpWidget(
     MultiProvider(
@@ -56,13 +72,8 @@ Future<void> _pumpHomeScreen(
         ChangeNotifierProvider<HomeViewModel>(
           create: (_) => HomeViewModel(homeRepository: _HomeRepositoryStub(result)),
         ),
-        ChangeNotifierProvider<ProductViewModel>(
-          create: (_) => ProductViewModel(
-            productRepository: ProductRepository(
-              const UnexpectedApiService(),
-            ),
-            navigator: navigator,
-          ),
+        ChangeNotifierProvider<ProductViewModel>.value(
+          value: productViewModel,
         ),
       ],
       child: MaterialApp(
@@ -75,6 +86,8 @@ Future<void> _pumpHomeScreen(
       ),
     ),
   );
+
+  return productViewModel;
 }
 
 Product _product(int index) {
@@ -149,5 +162,24 @@ void main() {
     expect(find.text(AppStrings.failedToLoadProducts), findsOneWidget);
     expect(find.text('technical failure'), findsOneWidget);
     expect(find.text(AppStrings.noProductsAvailable), findsNothing);
+  });
+
+  testWidgets('HomeScreen restores liked hearts from the API', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1200, 2400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final product = _product(1);
+    final productViewModel = await _pumpHomeScreen(
+      tester,
+      products: [product],
+      likedProducts: [product],
+    );
+    await tester.pumpAndSettle();
+
+    expect(productViewModel.isProductLiked(product.id), isTrue);
   });
 }

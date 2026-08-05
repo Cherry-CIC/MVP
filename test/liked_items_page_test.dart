@@ -3,6 +3,9 @@ import 'package:cherry_mvp/core/config/app_strings.dart';
 import 'package:cherry_mvp/core/models/product.dart';
 import 'package:cherry_mvp/core/router/router.dart';
 import 'package:cherry_mvp/core/utils/result.dart';
+import 'package:cherry_mvp/features/checkout/checkout_repository.dart';
+import 'package:cherry_mvp/features/checkout/checkout_view_model.dart';
+import 'package:cherry_mvp/features/donation/donation_repository.dart';
 import 'package:cherry_mvp/features/liked_items/liked_items_page.dart';
 import 'package:cherry_mvp/features/products/product_card.dart';
 import 'package:cherry_mvp/features/products/product_page.dart';
@@ -14,6 +17,16 @@ import 'package:provider/provider.dart';
 
 import 'support/unexpected_api_service.dart';
 
+class _CheckoutRepositoryStub implements ICheckoutRepository {
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class _DonationRepositoryStub implements IDonationRepository {
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
 class _FakeProductRepository extends ProductRepository {
   _FakeProductRepository({
     required this.fetchResult,
@@ -21,12 +34,14 @@ class _FakeProductRepository extends ProductRepository {
   }) : super(const UnexpectedApiService());
 
   Result<List<Product>> fetchResult;
-  Result<void>? unlikeResult;
+  Result<ProductLikeUpdate>? unlikeResult;
   int fetchCount = 0;
 
   @override
-  Future<Result<void>> likeProduct(Product product) async {
-    return Result.success(null);
+  Future<Result<ProductLikeUpdate>> likeProduct(Product product) async {
+    return Result.success(
+      ProductLikeUpdate(liked: true, likes: product.likes + 1),
+    );
   }
 
   @override
@@ -36,8 +51,8 @@ class _FakeProductRepository extends ProductRepository {
   }
 
   @override
-  Future<Result<void>> unlikeProduct(String productId) async {
-    return unlikeResult ?? Result.success(null);
+  Future<Result<ProductLikeUpdate>> unlikeProduct(String productId) async {
+    return unlikeResult ?? Result.success(const ProductLikeUpdate(liked: false, likes: 0));
   }
 }
 
@@ -67,6 +82,11 @@ Future<void> _pumpLikedItemsPage(
     productRepository: repository,
     navigator: navigator,
   );
+  final checkoutViewModel = CheckoutViewModel(
+    donationRepository: _DonationRepositoryStub(),
+    checkoutRepository: _CheckoutRepositoryStub(),
+    navigator: navigator,
+  );
 
   await tester.pumpWidget(
     MultiProvider(
@@ -74,6 +94,9 @@ Future<void> _pumpLikedItemsPage(
         Provider<NavigationProvider>.value(value: navigator),
         Provider<ProductRepository>.value(value: repository),
         ChangeNotifierProvider<ProductViewModel>.value(value: productViewModel),
+        ChangeNotifierProvider<CheckoutViewModel>.value(
+          value: checkoutViewModel,
+        ),
       ],
       child: MaterialApp(
         navigatorKey: navigator.navigatorKey,
