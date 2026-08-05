@@ -2,7 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:cherry_mvp/features/donation/models/donation_model.dart';
 
 void main() {
-  test('DonationRequest sends postage_size as the backend enum value', () {
+  test('DonationRequest serialises the backend postage size ID', () {
     final request = DonationRequest(
       name: 'Jumper',
       description: 'Warm wool jumper',
@@ -15,6 +15,6 @@ void main() {
       price: 12,
     );
 
-    expect(request.toJson()['postage_size'], 'medium');
+    expect(request.toJson()['postageSize'], 'HnGf34ED');
   });
 }

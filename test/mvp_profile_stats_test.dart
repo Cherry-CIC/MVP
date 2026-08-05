@@ -13,6 +13,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
 import 'package:provider/provider.dart';
 
+import 'support/unexpected_api_service.dart';
+
 class _MockLoginRepository extends Mock implements LoginRepository {}
 
 class _MockNavigationProvider extends Mock implements NavigationProvider {}
@@ -27,6 +29,7 @@ AuthViewModel _authViewModel() {
     navigator: _MockNavigationProvider(),
     firebaseAuth: _MockFirebaseAuth(),
     firestore: _MockFirebaseFirestore(),
+    apiService: const UnexpectedApiService(),
   );
 }
 
