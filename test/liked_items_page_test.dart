@@ -3,6 +3,9 @@ import 'package:cherry_mvp/core/config/app_strings.dart';
 import 'package:cherry_mvp/core/models/product.dart';
 import 'package:cherry_mvp/core/router/router.dart';
 import 'package:cherry_mvp/core/utils/result.dart';
+import 'package:cherry_mvp/features/checkout/checkout_repository.dart';
+import 'package:cherry_mvp/features/checkout/checkout_view_model.dart';
+import 'package:cherry_mvp/features/donation/donation_repository.dart';
 import 'package:cherry_mvp/features/liked_items/liked_items_page.dart';
 import 'package:cherry_mvp/features/products/product_card.dart';
 import 'package:cherry_mvp/features/products/product_page.dart';
@@ -13,6 +16,16 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
 import 'support/unexpected_api_service.dart';
+
+class _CheckoutRepositoryStub implements ICheckoutRepository {
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class _DonationRepositoryStub implements IDonationRepository {
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
 
 class _FakeProductRepository extends ProductRepository {
   _FakeProductRepository({
@@ -39,8 +52,7 @@ class _FakeProductRepository extends ProductRepository {
 
   @override
   Future<Result<ProductLikeUpdate>> unlikeProduct(String productId) async {
-    return unlikeResult ??
-        Result.success(const ProductLikeUpdate(liked: false, likes: 0));
+    return unlikeResult ?? Result.success(const ProductLikeUpdate(liked: false, likes: 0));
   }
 }
 
@@ -70,6 +82,11 @@ Future<void> _pumpLikedItemsPage(
     productRepository: repository,
     navigator: navigator,
   );
+  final checkoutViewModel = CheckoutViewModel(
+    donationRepository: _DonationRepositoryStub(),
+    checkoutRepository: _CheckoutRepositoryStub(),
+    navigator: navigator,
+  );
 
   await tester.pumpWidget(
     MultiProvider(
@@ -77,6 +94,9 @@ Future<void> _pumpLikedItemsPage(
         Provider<NavigationProvider>.value(value: navigator),
         Provider<ProductRepository>.value(value: repository),
         ChangeNotifierProvider<ProductViewModel>.value(value: productViewModel),
+        ChangeNotifierProvider<CheckoutViewModel>.value(
+          value: checkoutViewModel,
+        ),
       ],
       child: MaterialApp(
         navigatorKey: navigator.navigatorKey,
