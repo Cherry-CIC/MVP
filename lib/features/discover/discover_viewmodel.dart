@@ -7,8 +7,8 @@ class DiscoverViewModel extends ChangeNotifier {
 
   DiscoverViewModel({required this.discoverRepository});
 
-  List<DummyCharity> fetchCharities() {
-    return discoverRepository.fetchCharities();
+  List<DummyCharity> fetchCharities({String? tag}) {
+    return discoverRepository.fetchCharities(tag: tag);
   }
 
   List<Product> fetchProducts() {
