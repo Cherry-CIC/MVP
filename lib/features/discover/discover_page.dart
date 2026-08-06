@@ -6,15 +6,22 @@ import 'package:cherry_mvp/features/discover/discover_viewmodel.dart';
 import 'package:cherry_mvp/features/discover/widgets/discover_charity_list.dart';
 import 'package:cherry_mvp/features/discover/widgets/discover_selection_bar.dart';
 
-class DiscoverPage extends StatelessWidget {
+class DiscoverPage extends StatefulWidget {
   const DiscoverPage({super.key});
+
+  @override
+  State<DiscoverPage> createState() => _DiscoverPageState();
+}
+
+class _DiscoverPageState extends State<DiscoverPage> {
+  String _selectedTag = 'popular';
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Consumer<DiscoverViewModel>(
         builder: (context, viewModel, _) {
-          final charities = viewModel.fetchCharities();
+          final charities = viewModel.fetchCharities(tag: _selectedTag);
           final products = viewModel.fetchProducts();
 
           return SafeArea(
@@ -30,7 +37,10 @@ class DiscoverPage extends StatelessWidget {
                 if (FeatureFlags.showDiscoverSelectionBar)
                   SliverAppBar(
                     automaticallyImplyLeading: false,
-                    title: const DiscoverSelectionBar(),
+                    title: DiscoverSelectionBar(
+                      selectedTag: _selectedTag,
+                      onSelected: (tag) => setState(() => _selectedTag = tag),
+                    ),
                     primary: false,
                     pinned: true,
                   ),

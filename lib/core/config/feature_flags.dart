@@ -31,8 +31,8 @@ class FeatureFlags {
   // Hide static impact summaries for the MVP until impact data is live.
   static const bool showImpactSummaries = false;
 
-  // Hide non-functional Discover category filters for the MVP.
-  static const bool showDiscoverSelectionBar = false;
+  // Display the locally filtered Discover charity categories for the MVP.
+  static const bool showDiscoverSelectionBar = true;
 
   // Hide product rows within Discover charity cards for the MVP.
   static const bool showItemsInSupport = false;
