@@ -13,6 +13,8 @@ import 'package:cherry_mvp/features/orders/orders_view_model.dart';
 import 'package:cherry_mvp/features/products/product_repository.dart';
 import 'package:cherry_mvp/features/products/product_viewmodel.dart';
 import 'package:cherry_mvp/features/profile/profile_page.dart';
+import 'package:cherry_mvp/features/profile/profile_listings_repository.dart';
+import 'package:cherry_mvp/features/profile/profile_listings_view_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -45,6 +47,23 @@ class _OrdersRepositoryStub implements IOrdersRepository {
   }
 }
 
+class _ProfileListingsRepositoryStub implements IProfileListingsRepository {
+  @override
+  Future<Result<ProfileListingsPage>> fetchListings({
+    int limit = 20,
+    String? cursor,
+  }) async {
+    return Result.success(
+      const ProfileListingsPage(
+        listings: [],
+        limit: 20,
+        nextCursor: null,
+        hasMore: false,
+      ),
+    );
+  }
+}
+
 class _ApiServiceMock extends Mock implements ApiService {}
 
 class _FirebaseAuthMock extends Mock implements FirebaseAuth {}
@@ -73,6 +92,11 @@ Future<void> _pumpHomePage(WidgetTester tester) async {
         ),
         ChangeNotifierProvider(
           create: (_) => OrdersViewModel(repository: _OrdersRepositoryStub()),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => ProfileListingsViewModel(
+            repository: _ProfileListingsRepositoryStub(),
+          ),
         ),
         ChangeNotifierProvider(
           create: (_) => AuthViewModel(
@@ -107,9 +131,7 @@ void main() {
     expect(find.text('My Orders'), findsOneWidget);
     expect(find.byType(BottomNavigationBar), findsOneWidget);
     expect(
-      tester
-          .widget<BottomNavigationBar>(find.byType(BottomNavigationBar))
-          .currentIndex,
+      tester.widget<BottomNavigationBar>(find.byType(BottomNavigationBar)).currentIndex,
       2,
     );
   });
