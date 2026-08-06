@@ -26,6 +26,8 @@ import 'package:cherry_mvp/features/login/login_repository.dart';
 import 'package:cherry_mvp/features/login/login_viewmodel.dart';
 import 'package:cherry_mvp/features/forgot_password/forgot_password_repository.dart';
 import 'package:cherry_mvp/features/forgot_password/forgot_password_viewmodel.dart';
+import 'package:cherry_mvp/features/orders/orders_repository.dart';
+import 'package:cherry_mvp/features/orders/orders_view_model.dart';
 import 'package:cherry_mvp/features/products/product_repository.dart';
 import 'package:cherry_mvp/features/products/product_viewmodel.dart';
 import 'package:cherry_mvp/features/register/register_repository.dart';
@@ -134,6 +136,11 @@ List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
         );
       },
     ),
+    Provider<IOrdersRepository>(
+      create: (context) => OrdersRepository(
+        Provider.of<ApiService>(context, listen: false),
+      ),
+    ),
     Provider<ICharityRepository>(
       create: (context) {
         if (useMockData) {
@@ -223,6 +230,14 @@ List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
       create: (context) => CharityViewModel(
         charityRepository: Provider.of<ICharityRepository>(context, listen: false),
         navigator: Provider.of<NavigationProvider>(context, listen: false),
+      ),
+    ),
+    ChangeNotifierProvider<OrdersViewModel>(
+      create: (context) => OrdersViewModel(
+        repository: Provider.of<IOrdersRepository>(
+          context,
+          listen: false,
+        ),
       ),
     ),
     // Logout provider
