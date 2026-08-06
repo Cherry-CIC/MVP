@@ -26,6 +26,7 @@ class DiscoverCharityList extends StatelessWidget {
                 description: charity.description,
                 imagePath: charity.charityImage,
                 logoPath: charity.charityLogo,
+                logoUsesDarkBackground: charity.logoUsesDarkBackground,
                 likes: charity.likes,
               ),
               if (FeatureFlags.showItemsInSupport) ...[
