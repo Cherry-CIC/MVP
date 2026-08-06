@@ -5,6 +5,7 @@ import 'package:cherry_mvp/features/donation/donation_page.dart';
 import 'package:cherry_mvp/features/home/widgets/bottom_nav_bar.dart';
 import 'package:cherry_mvp/features/home/widgets/home_screen.dart';
 import 'package:cherry_mvp/features/messages/message_page.dart';
+import 'package:cherry_mvp/features/orders/orders_page.dart';
 import 'package:cherry_mvp/features/profile/profile_page.dart';
 import 'package:cherry_mvp/features/profile/profile_listings_view_model.dart';
 
@@ -24,24 +25,34 @@ class _HomePageState extends State<HomePage> {
   static const int _inboxNavIndex = 1;
   static const int _giveNavIndex = FeatureFlags.showInbox ? 2 : 1;
   static const int _searchNavIndex = _giveNavIndex + 1;
-  static const int _profileNavIndex = _giveNavIndex + (FeatureFlags.showSearchNavigation ? 2 : 1);
+  static const int _profileNavIndex =
+      _giveNavIndex + (FeatureFlags.showSearchNavigation ? 2 : 1);
 
   int _selectedIndex = 0;
+  bool _showOrders = false;
   final PageController _pageController = PageController();
 
-  static final List<Widget> _pages = <Widget>[
-    HomeScreen(),
-    if (FeatureFlags.showInbox) MessagePage(),
-    ProfilePage(),
-  ];
+  void _openOrders() {
+    if (!_showOrders) {
+      setState(() => _showOrders = true);
+    }
+  }
+
+  void _showProfileRoot() {
+    if (_showOrders) {
+      setState(() => _showOrders = false);
+    }
+  }
 
   void _onItemTapped(int index) {
     if (index == _homeNavIndex) {
+      _showProfileRoot();
       _pageController.jumpToPage(_homePageIndex);
       return;
     }
 
     if (FeatureFlags.showInbox && index == _inboxNavIndex) {
+      _showProfileRoot();
       _pageController.jumpToPage(_inboxPageIndex);
       return;
     }
@@ -60,6 +71,9 @@ class _HomePageState extends State<HomePage> {
     }
 
     if (index == _profileNavIndex) {
+      if (_showOrders) {
+        _showProfileRoot();
+      }
       if (_selectedIndex == _profileNavIndex) {
         context.read<ProfileListingsViewModel>().refreshListings();
       }
@@ -78,6 +92,9 @@ class _HomePageState extends State<HomePage> {
 
     setState(() {
       _selectedIndex = nextSelectedIndex;
+      if (index != _profilePageIndex) {
+        _showOrders = false;
+      }
     });
   }
 
@@ -89,17 +106,41 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: PageView(
-        controller: _pageController,
-        onPageChanged: _onPageChanged,
-        children: _pages,
-      ),
-      bottomNavigationBar: CherryBottomNavBar(
-        selectedIndex: _selectedIndex,
-        onItemSelected: _onItemTapped,
-        selectedColor: Theme.of(context).colorScheme.primary,
-        unselectedColor: Theme.of(context).colorScheme.secondary,
+    return PopScope(
+      canPop: !_showOrders,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop && _showOrders) {
+          _showProfileRoot();
+        }
+      },
+      child: Scaffold(
+        body: PageView(
+          controller: _pageController,
+          onPageChanged: _onPageChanged,
+          children: [
+            const HomeScreen(),
+            if (FeatureFlags.showInbox) const MessagePage(),
+            Stack(
+              fit: StackFit.expand,
+              children: [
+                Offstage(
+                  offstage: _showOrders,
+                  child: TickerMode(
+                    enabled: !_showOrders,
+                    child: ProfilePage(onOrdersPressed: _openOrders),
+                  ),
+                ),
+                if (_showOrders) MyOrdersPage(onBack: _showProfileRoot),
+              ],
+            ),
+          ],
+        ),
+        bottomNavigationBar: CherryBottomNavBar(
+          selectedIndex: _selectedIndex,
+          onItemSelected: _onItemTapped,
+          selectedColor: Theme.of(context).colorScheme.primary,
+          unselectedColor: Theme.of(context).colorScheme.secondary,
+        ),
       ),
     );
   }

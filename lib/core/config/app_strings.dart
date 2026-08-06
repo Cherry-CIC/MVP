@@ -72,6 +72,14 @@ class AppStrings {
   static const profileListingUntitled = 'Untitled listing';
   static const profileListingPriceUnavailable = 'Price unavailable';
   static const profileUserBuyerDisc = "Donor discounts";
+  static const myOrdersTitle = 'My Orders';
+  static const myOrdersLoading = 'Loading your orders';
+  static const myOrdersEmpty = 'You have no orders yet.';
+  static const myOrdersLoadFailed = 'We could not load your orders. Please try again.';
+  static const myOrdersRefreshFailed = 'We could not refresh your orders.';
+  static const myOrdersStatusUnavailable = 'Status unavailable';
+  static const myOrdersPriceUnavailable = 'Price unavailable';
+  static const myOrdersSizeUnavailable = 'Size unavailable';
   static const likedItemsTitle = 'Liked Items ❤️';
   static const likedItemsEmptyTitle = 'No likes??? 👀';
   static const likedItemsEmptyBody = 'Tap the heart on anything you want to find again.';

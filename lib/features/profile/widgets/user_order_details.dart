@@ -11,7 +11,7 @@ class UserOrderDetails extends StatelessWidget {
 
   final VoidCallback? onOrdersPressed;
   final VoidCallback? onLikedPressed;
-  
+
   @override
   Widget build(BuildContext context) {
     return Column(
