@@ -192,6 +192,8 @@ List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
           listen: false,
         ),
         navigator: Provider.of<NavigationProvider>(context, listen: false),
+        currentUserIdProvider: () =>
+            Provider.of<FirebaseAuth>(context, listen: false).currentUser?.uid,
       ),
     ),
     ChangeNotifierProvider<HomeViewModel>(
@@ -284,6 +286,10 @@ List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
         firebaseAuth: Provider.of<FirebaseAuth>(context, listen: false),
         firestore: Provider.of<FirebaseFirestore>(context, listen: false),
         apiService: Provider.of<ApiService>(context, listen: false),
+        clearUserState: Provider.of<ProductViewModel>(
+          context,
+          listen: false,
+        ).clearUserState,
       ),
     ),
   ];
