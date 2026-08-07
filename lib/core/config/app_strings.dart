@@ -251,8 +251,8 @@ class AppStrings {
   static const checkoutOrderPlaced = 'Order Placed 🎉';
   static const checkoutThankYou = 'Thank you';
   static const checkoutEscrowInfo =
-      'Your payment will be held in escrow until the seller sends the item and '
-      'you confirm it, after which it will be sent to the charity!';
+      "Your payment is sent to the charity as soon as you confirm you're happy "
+      'with the order!';
   static const checkoutTrackOrders = 'Track Orders';
   static const checkoutImpactSummary = 'Impact Summary';
   static const checkoutReview = 'Review';
