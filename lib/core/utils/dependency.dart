@@ -30,6 +30,8 @@ import 'package:cherry_mvp/features/orders/orders_repository.dart';
 import 'package:cherry_mvp/features/orders/orders_view_model.dart';
 import 'package:cherry_mvp/features/products/product_repository.dart';
 import 'package:cherry_mvp/features/products/product_viewmodel.dart';
+import 'package:cherry_mvp/features/profile/profile_listings_repository.dart';
+import 'package:cherry_mvp/features/profile/profile_listings_view_model.dart';
 import 'package:cherry_mvp/features/register/register_repository.dart';
 import 'package:cherry_mvp/features/register/register_viewmodel.dart';
 import 'package:cherry_mvp/features/search/search_repository.dart';
@@ -46,15 +48,22 @@ List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
 
     // Add API Service
     Provider<ApiService>(
-      create: (context) => DioApiService(firebaseAuth: Provider.of<FirebaseAuth>(context, listen: false)),
+      create: (context) => DioApiService(
+        firebaseAuth: Provider.of<FirebaseAuth>(context, listen: false),
+      ),
     ),
 
     Provider<FirebaseAuthService>(
-      create: (context) => FirebaseAuthService(firebaseAuth: Provider.of<FirebaseAuth>(context, listen: false)),
+      create: (context) => FirebaseAuthService(
+        firebaseAuth: Provider.of<FirebaseAuth>(context, listen: false),
+      ),
     ),
     Provider<FirestoreService>(
       create: (context) => FirestoreService(
-        firebaseFirestore: Provider.of<FirebaseFirestore>(context, listen: false),
+        firebaseFirestore: Provider.of<FirebaseFirestore>(
+          context,
+          listen: false,
+        ),
         prefs: prefs,
         firebaseAuth: FirebaseAuth.instance,
       ),
@@ -84,10 +93,7 @@ List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
     ChangeNotifierProvider(create: (_) => SearchController()),
     Provider<IHomeRepository>(
       create: (context) {
-        final firebaseAuth = Provider.of<FirebaseAuth>(
-          context,
-          listen: false,
-        );
+        final firebaseAuth = Provider.of<FirebaseAuth>(context, listen: false);
         if (useMockData) {
           return HomeRepositoryMock(
             currentUserIdProvider: () => firebaseAuth.currentUser?.uid,
@@ -102,9 +108,8 @@ List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
     ),
     Provider<DiscoverRepository>(create: (context) => DiscoverRepository()),
     Provider<ProductRepository>(
-      create: (context) => ProductRepository(
-        Provider.of<ApiService>(context, listen: false),
-      ),
+      create: (context) =>
+          ProductRepository(Provider.of<ApiService>(context, listen: false)),
     ),
     Provider<IDonationRepository>(
       create: (context) {
@@ -137,7 +142,11 @@ List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
       },
     ),
     Provider<IOrdersRepository>(
-      create: (context) => OrdersRepository(
+      create: (context) =>
+          OrdersRepository(Provider.of<ApiService>(context, listen: false)),
+    ),
+    Provider<IProfileListingsRepository>(
+      create: (context) => ProfileListingsRepository(
         Provider.of<ApiService>(context, listen: false),
       ),
     ),
@@ -160,19 +169,28 @@ List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
     ),
     ChangeNotifierProvider<ForgotPasswordViewModel>(
       create: (context) => ForgotPasswordViewModel(
-        forgotPasswordRepository: Provider.of<ForgotPasswordRepository>(context, listen: false),
+        forgotPasswordRepository: Provider.of<ForgotPasswordRepository>(
+          context,
+          listen: false,
+        ),
         navigator: Provider.of<NavigationProvider>(context, listen: false),
       ),
     ),
     ChangeNotifierProvider<RegisterViewModel>(
       create: (context) => RegisterViewModel(
-        registerRepository: Provider.of<RegisterRepository>(context, listen: false),
+        registerRepository: Provider.of<RegisterRepository>(
+          context,
+          listen: false,
+        ),
         navigator: Provider.of<NavigationProvider>(context, listen: false),
       ),
     ),
     ChangeNotifierProvider<ProductViewModel>(
       create: (context) => ProductViewModel(
-        productRepository: Provider.of<ProductRepository>(context, listen: false),
+        productRepository: Provider.of<ProductRepository>(
+          context,
+          listen: false,
+        ),
         navigator: Provider.of<NavigationProvider>(context, listen: false),
         currentUserIdProvider: () =>
             Provider.of<FirebaseAuth>(context, listen: false).currentUser?.uid,
@@ -206,35 +224,55 @@ List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
     ),
     ChangeNotifierProvider<DonationViewModel>(
       create: (context) => DonationViewModel(
-        donationRepository: Provider.of<IDonationRepository>(context, listen: false),
+        donationRepository: Provider.of<IDonationRepository>(
+          context,
+          listen: false,
+        ),
         navigator: Provider.of<NavigationProvider>(context, listen: false),
       ),
     ),
     ChangeNotifierProvider<CategoryViewModel>(
       create: (context) => CategoryViewModel(
-        categoryRepository: Provider.of<ICategoryRepository>(context, listen: false),
+        categoryRepository: Provider.of<ICategoryRepository>(
+          context,
+          listen: false,
+        ),
         navigator: Provider.of<NavigationProvider>(context, listen: false),
       ),
     ),
 
     ChangeNotifierProvider<CheckoutViewModel>(
       create: (context) => CheckoutViewModel(
-        checkoutRepository: Provider.of<ICheckoutRepository>(context, listen: false),
+        checkoutRepository: Provider.of<ICheckoutRepository>(
+          context,
+          listen: false,
+        ),
         navigator: Provider.of<NavigationProvider>(context, listen: false),
-        donationRepository: Provider.of<IDonationRepository>(context, listen: false),
+        donationRepository: Provider.of<IDonationRepository>(
+          context,
+          listen: false,
+        ),
         currentUserIdProvider: () =>
             Provider.of<FirebaseAuth>(context, listen: false).currentUser?.uid,
       ),
     ),
     ChangeNotifierProvider<CharityViewModel>(
       create: (context) => CharityViewModel(
-        charityRepository: Provider.of<ICharityRepository>(context, listen: false),
+        charityRepository: Provider.of<ICharityRepository>(
+          context,
+          listen: false,
+        ),
         navigator: Provider.of<NavigationProvider>(context, listen: false),
       ),
     ),
     ChangeNotifierProvider<OrdersViewModel>(
       create: (context) => OrdersViewModel(
-        repository: Provider.of<IOrdersRepository>(
+        repository: Provider.of<IOrdersRepository>(context, listen: false),
+      ),
+    ),
+    ChangeNotifierProvider<ProfileListingsViewModel>(
+      create: (context) => ProfileListingsViewModel(
+        repository: Provider.of<IProfileListingsRepository>(
           context,
           listen: false,
         ),

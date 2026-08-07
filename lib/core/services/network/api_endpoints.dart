@@ -3,6 +3,7 @@ class ApiEndpoints {
 
   static const String products = '$_apiPrefix/products';
   static const String productsWithDetails = '$_apiPrefix/products/with-details';
+  static const String myProducts = '$_apiPrefix/products/my-products';
   static const String likedProducts = '$products/my-liked-items';
   static String productLike(String productId) => '$products/${Uri.encodeComponent(productId)}/like';
 

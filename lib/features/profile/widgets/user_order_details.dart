@@ -7,12 +7,10 @@ class UserOrderDetails extends StatelessWidget {
     super.key,
     this.onOrdersPressed,
     this.onLikedPressed,
-    this.onListingsPressed,
   });
 
   final VoidCallback? onOrdersPressed;
   final VoidCallback? onLikedPressed;
-  final VoidCallback? onListingsPressed;
 
   @override
   Widget build(BuildContext context) {
@@ -43,16 +41,6 @@ class UserOrderDetails extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(height: 8),
-              SizedBox(
-                height: 56,
-                width: double.infinity,
-                child: UserOrderTile(
-                  title: AppStrings.profileUserListings,
-                  onPressed: onListingsPressed ?? () {},
-                  assetPath: AppImages.profileListings,
-                ),
-              ),
             ],
           ),
         if (FeatureFlags.showDonorDiscounts) ...[
@@ -65,7 +53,6 @@ class UserOrderDetails extends StatelessWidget {
               borderRadius: BorderRadius.circular(12),
             ),
             child: Row(
-              spacing: 8,
               children: [
                 Expanded(
                   child: Text(
@@ -75,6 +62,7 @@ class UserOrderDetails extends StatelessWidget {
                     ),
                   ),
                 ),
+                const SizedBox(width: 8),
                 Image.asset(
                   AppImages.profileDiscount,
                   color: Theme.of(context).colorScheme.primary,

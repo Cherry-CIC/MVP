@@ -1,9 +1,12 @@
 import 'package:cherry_mvp/core/config/app_strings.dart';
 import 'package:cherry_mvp/core/models/user_section.dart';
 import 'package:cherry_mvp/core/router/nav_provider.dart';
+import 'package:cherry_mvp/core/utils/result.dart';
 import 'package:cherry_mvp/features/auth/auth_view_model.dart';
 import 'package:cherry_mvp/features/login/login_repository.dart';
 import 'package:cherry_mvp/features/profile/profile_page.dart';
+import 'package:cherry_mvp/features/profile/profile_listings_repository.dart';
+import 'package:cherry_mvp/features/profile/profile_listings_view_model.dart';
 import 'package:cherry_mvp/features/profile/widgets/user_information_section.dart';
 import 'package:cherry_mvp/features/profile/widgets/user_order_details.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -22,6 +25,23 @@ class _MockNavigationProvider extends Mock implements NavigationProvider {}
 class _MockFirebaseAuth extends Mock implements FirebaseAuth {}
 
 class _MockFirebaseFirestore extends Mock implements FirebaseFirestore {}
+
+class _ProfileListingsRepositoryStub implements IProfileListingsRepository {
+  @override
+  Future<Result<ProfileListingsPage>> fetchListings({
+    int limit = 20,
+    String? cursor,
+  }) async {
+    return Result.success(
+      const ProfileListingsPage(
+        listings: [],
+        limit: 20,
+        nextCursor: null,
+        hasMore: false,
+      ),
+    );
+  }
+}
 
 AuthViewModel _authViewModel() {
   return AuthViewModel(
@@ -89,7 +109,7 @@ void main() {
 
     expect(find.text(AppStrings.profileUserOrders), findsOneWidget);
     expect(find.text(AppStrings.profileUserLiked), findsOneWidget);
-    expect(find.text(AppStrings.profileUserListings), findsOneWidget);
+    expect(find.text(AppStrings.profileUserListings), findsNothing);
     expect(find.text(AppStrings.profileUserBuyerDisc), findsNothing);
   });
 
@@ -106,11 +126,16 @@ void main() {
         providers: [
           ChangeNotifierProvider<AuthViewModel>.value(value: _authViewModel()),
           Provider<NavigationProvider>.value(value: NavigationProvider()),
+          ChangeNotifierProvider(
+            create: (_) => ProfileListingsViewModel(
+              repository: _ProfileListingsRepositoryStub(),
+            ),
+          ),
         ],
         child: const MaterialApp(home: ProfilePage()),
       ),
     );
-    await tester.pump();
+    await tester.pumpAndSettle();
 
     expect(find.text(AppStrings.profileUserOrders), findsOneWidget);
     expect(find.text(AppStrings.profileUserLiked), findsOneWidget);

@@ -7,6 +7,7 @@ import 'package:cherry_mvp/features/home/widgets/home_screen.dart';
 import 'package:cherry_mvp/features/messages/message_page.dart';
 import 'package:cherry_mvp/features/orders/orders_page.dart';
 import 'package:cherry_mvp/features/profile/profile_page.dart';
+import 'package:cherry_mvp/features/profile/profile_listings_view_model.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -24,7 +25,8 @@ class _HomePageState extends State<HomePage> {
   static const int _inboxNavIndex = 1;
   static const int _giveNavIndex = FeatureFlags.showInbox ? 2 : 1;
   static const int _searchNavIndex = _giveNavIndex + 1;
-  static const int _profileNavIndex = _giveNavIndex + (FeatureFlags.showSearchNavigation ? 2 : 1);
+  static const int _profileNavIndex =
+      _giveNavIndex + (FeatureFlags.showSearchNavigation ? 2 : 1);
 
   int _selectedIndex = 0;
   bool _showOrders = false;
@@ -72,6 +74,9 @@ class _HomePageState extends State<HomePage> {
       if (_showOrders) {
         _showProfileRoot();
       }
+      if (_selectedIndex == _profileNavIndex) {
+        context.read<ProfileListingsViewModel>().refreshListings();
+      }
       _pageController.jumpToPage(_profilePageIndex);
     }
   }
@@ -80,6 +85,7 @@ class _HomePageState extends State<HomePage> {
     var nextSelectedIndex = _homeNavIndex;
     if (index == _profilePageIndex) {
       nextSelectedIndex = _profileNavIndex;
+      context.read<ProfileListingsViewModel>().refreshListings();
     } else if (FeatureFlags.showInbox && index == _inboxPageIndex) {
       nextSelectedIndex = _inboxNavIndex;
     }

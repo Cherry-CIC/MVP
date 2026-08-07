@@ -4,12 +4,14 @@ class UserOrderTile extends StatelessWidget {
   final String title;
   final VoidCallback onPressed;
   final String assetPath;
+  final double iconSize;
 
   const UserOrderTile({
     super.key,
     required this.title,
     required this.onPressed,
     required this.assetPath,
+    this.iconSize = 28,
   });
 
   @override
@@ -36,8 +38,8 @@ class UserOrderTile extends StatelessWidget {
               right: 8,
               child: Image.asset(
                 assetPath,
-                height: 18,
-                width: 18,
+                height: iconSize,
+                width: iconSize,
               ),
             ),
           ],

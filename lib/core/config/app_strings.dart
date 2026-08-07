@@ -63,6 +63,14 @@ class AppStrings {
   static const profileUserOrders = "Orders";
   static const profileUserLiked = "Liked";
   static const profileUserListings = "Listings";
+  static const profileListingsLoading = 'Loading your listings';
+  static const profileListingsLoadFailed = 'We could not load your listings.';
+  static const profileListingsEmpty = 'You have not listed anything yet.';
+  static const profileListingsCreate = 'List an item';
+  static const profileListingsLoadMore = 'Load more listings';
+  static const profileListingsLoadMoreFailed = 'We could not load more listings.';
+  static const profileListingUntitled = 'Untitled listing';
+  static const profileListingPriceUnavailable = 'Price unavailable';
   static const profileUserBuyerDisc = "Donor discounts";
   static const myOrdersTitle = 'My Orders';
   static const myOrdersLoading = 'Loading your orders';
