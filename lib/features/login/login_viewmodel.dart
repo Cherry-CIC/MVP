@@ -1,6 +1,6 @@
 import 'package:flutter/cupertino.dart';
-import 'package:logging/logging.dart';
 import 'package:cherry_mvp/core/router/nav_provider.dart';
+import 'package:cherry_mvp/core/services/safe_log.dart';
 import 'package:cherry_mvp/core/utils/utils.dart';
 import 'package:cherry_mvp/features/login/login_model.dart';
 import 'package:cherry_mvp/features/login/login_repository.dart';
@@ -17,7 +17,6 @@ class LoginViewModel extends ChangeNotifier {
   //public (exposed to loginpage)
   Status get status => _status;
 
-  final _log = Logger('LoginViewModel');
   void clearStatus() {
     _status = Status.uninitialized;
     notifyListeners();
@@ -34,7 +33,7 @@ class LoginViewModel extends ChangeNotifier {
         navigator.goBack();
       } else {
         _status = Status.failure(result.error ?? "");
-        _log.warning('Login failed! ${result.error}');
+        SafeLog.event(AppLogEvent.loginFailed, level: SafeLogLevel.warning);
       }
     } catch (e) {
       _status = Status.failure(e.toString());
@@ -53,7 +52,7 @@ class LoginViewModel extends ChangeNotifier {
         _status = Status.success;
       } else {
         _status = Status.failure(result.error ?? "");
-        _log.warning('Login failed! ${result.error}');
+        SafeLog.event(AppLogEvent.loginFailed, level: SafeLogLevel.warning);
       }
     } catch (e) {
       _status = Status.failure(e.toString());
@@ -73,7 +72,7 @@ class LoginViewModel extends ChangeNotifier {
         _status = Status.success;
       } else {
         _status = Status.failure(result.error ?? "");
-        _log.warning('Login failed! ${result.error}');
+        SafeLog.event(AppLogEvent.loginFailed, level: SafeLogLevel.warning);
       }
     } catch (e) {
       _status = Status.failure(e.toString());

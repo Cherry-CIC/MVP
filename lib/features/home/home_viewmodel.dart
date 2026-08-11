@@ -1,17 +1,16 @@
 import 'dart:async';
 
+import 'package:cherry_mvp/core/services/safe_log.dart';
 import 'package:cherry_mvp/features/home/home_repository.dart';
 import 'package:cherry_mvp/core/models/model.dart';
 import 'package:cherry_mvp/core/utils/utils.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:logging/logging.dart';
 
 class HomeViewModel extends ChangeNotifier {
   static const int defaultPageSize = 20;
   static const Duration searchDebounceDuration = Duration(milliseconds: 400);
   static const Duration loadMoreRetryBackoff = Duration(seconds: 3);
 
-  final _log = Logger('HomeViewModel');
   final IHomeRepository homeRepository;
   final void Function(Iterable<Product>)? onProductsLoaded;
 
@@ -131,11 +130,17 @@ class HomeViewModel extends ChangeNotifier {
         _hasMore = page.hasMore;
         _homeLoadMoreRetryAt = null;
       } else {
-        _log.warning('Load more products failed! ${result.error}');
+        SafeLog.event(
+          AppLogEvent.homeProductsLoadFailed,
+          level: SafeLogLevel.warning,
+        );
         _homeLoadMoreRetryAt = DateTime.now().add(loadMoreRetryBackoff);
       }
-    } catch (e) {
-      _log.severe('Load more products error: $e');
+    } catch (_) {
+      SafeLog.event(
+        AppLogEvent.homeProductsLoadFailed,
+        level: SafeLogLevel.severe,
+      );
       _homeLoadMoreRetryAt = DateTime.now().add(loadMoreRetryBackoff);
     }
 
@@ -174,10 +179,16 @@ class HomeViewModel extends ChangeNotifier {
         _searchNextCursor = page.nextCursor;
         _searchHasMore = page.hasMore;
       } else {
-        _log.warning('Load more search products failed! ${result.error}');
+        SafeLog.event(
+          AppLogEvent.homeSearchFailed,
+          level: SafeLogLevel.warning,
+        );
       }
-    } catch (e) {
-      _log.severe('Load more search products error: $e');
+    } catch (_) {
+      SafeLog.event(
+        AppLogEvent.homeSearchFailed,
+        level: SafeLogLevel.severe,
+      );
     }
 
     if (requestId != _searchRequestSequence) {
@@ -222,18 +233,24 @@ class HomeViewModel extends ChangeNotifier {
         if (requestId != _homeRequestSequence) {
           return;
         }
-        _log.warning('Fetch products failed! ${result.error}');
+        SafeLog.event(
+          AppLogEvent.homeProductsLoadFailed,
+          level: SafeLogLevel.warning,
+        );
         if (_homeProducts.isEmpty) {
           _status = Status.failure(result.error ?? 'Failed to load products');
         } else {
           _status = Status.success;
         }
       }
-    } catch (e) {
+    } catch (_) {
       if (requestId != _homeRequestSequence) {
         return;
       }
-      _log.severe('Fetch products error: $e');
+      SafeLog.event(
+        AppLogEvent.homeProductsLoadFailed,
+        level: SafeLogLevel.severe,
+      );
       if (_homeProducts.isEmpty) {
         _status = Status.failure('Failed to load products');
       } else {
@@ -282,15 +299,21 @@ class HomeViewModel extends ChangeNotifier {
         if (requestId != _searchRequestSequence || query != _searchText) {
           return;
         }
-        _log.warning('Search products failed! ${result.error}');
+        SafeLog.event(
+          AppLogEvent.homeSearchFailed,
+          level: SafeLogLevel.warning,
+        );
         _searchProducts = const [];
         _searchStatus = Status.failure(result.error ?? 'Failed to search products');
       }
-    } catch (e) {
+    } catch (_) {
       if (requestId != _searchRequestSequence || query != _searchText) {
         return;
       }
-      _log.severe('Search products error: $e');
+      SafeLog.event(
+        AppLogEvent.homeSearchFailed,
+        level: SafeLogLevel.severe,
+      );
       _searchProducts = const [];
       _searchStatus = Status.failure('Failed to search products');
     }

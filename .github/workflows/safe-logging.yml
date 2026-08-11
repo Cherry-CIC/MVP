@@ -1,0 +1,37 @@
+name: Safe logging guard
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  safe-logging:
+    name: Reject unsafe application logging
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Check logging policy
+        run: bash tool/check_safe_logging.sh
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.44.4
+          cache: true
+
+      - name: Prepare public test configuration
+        run: cp .env.example .env
+
+      - name: Resolve dependencies
+        run: flutter pub get
+
+      - name: Run logging regression tests
+        run: flutter test test/core/services/network/safe_http_log_interceptor_test.dart

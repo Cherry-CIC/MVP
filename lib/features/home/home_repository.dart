@@ -1,8 +1,8 @@
 import 'package:cherry_mvp/core/models/model.dart';
 import 'package:cherry_mvp/core/services/network/api_endpoints.dart';
 import 'package:cherry_mvp/core/services/network/api_service.dart';
+import 'package:cherry_mvp/core/services/safe_log.dart';
 import 'package:cherry_mvp/core/utils/utils.dart';
-import 'package:logging/logging.dart';
 import 'home_model.dart';
 
 abstract class IHomeRepository {
@@ -30,7 +30,6 @@ final class ProductPage {
 final class HomeRepository implements IHomeRepository {
   final ApiService _apiService;
   final String? Function() _currentUserIdProvider;
-  final _log = Logger('HomeRepository');
 
   HomeRepository(
     this._apiService, {
@@ -44,7 +43,7 @@ final class HomeRepository implements IHomeRepository {
     String? search,
   }) async {
     try {
-      _log.info('Fetching products from API...');
+      SafeLog.event(AppLogEvent.homeProductsLoadStarted);
       final result = await _apiService.get(
         ApiEndpoints.productsWithDetails,
         queryParameters: {
@@ -55,17 +54,22 @@ final class HomeRepository implements IHomeRepository {
       );
 
       if (result.isSuccess && result.value != null) {
-        _log.info('API call successful, parsing response...');
         final data = result.value;
 
         if (data is Map<String, dynamic> && data['success'] == false) {
-          _log.warning('Products API returned an unsuccessful response: $data');
+          SafeLog.event(
+            AppLogEvent.homeProductsResponseInvalid,
+            level: SafeLogLevel.warning,
+          );
           return Result.failure('Products API returned an unsuccessful response');
         }
 
         final jsonList = _extractProductList(data);
         if (jsonList == null) {
-          _log.warning('Unexpected products response structure: ${data.runtimeType}');
+          SafeLog.event(
+            AppLogEvent.homeProductsResponseInvalid,
+            level: SafeLogLevel.warning,
+          );
           return Result.failure('Unexpected products response structure');
         }
 
@@ -75,12 +79,18 @@ final class HomeRepository implements IHomeRepository {
             final json = Map<String, dynamic>.from(jsonList[i] as Map);
             final product = Product.fromJson(json);
             products.add(product);
-          } catch (e) {
-            _log.warning('Failed to parse product $i: $e');
+          } catch (_) {
+            SafeLog.event(
+              AppLogEvent.homeProductParseFailed,
+              level: SafeLogLevel.warning,
+            );
           }
         }
 
-        _log.info('Successfully parsed ${products.length} products');
+        SafeLog.count(
+          AppLogEvent.homeProductsLoadSucceeded,
+          products.length,
+        );
         final meta = _extractMeta(data);
         return Result.success(
           ProductPage(
@@ -94,11 +104,17 @@ final class HomeRepository implements IHomeRepository {
           ),
         );
       } else {
-        _log.warning('API call failed: ${result.error}');
+        SafeLog.event(
+          AppLogEvent.homeProductsLoadFailed,
+          level: SafeLogLevel.warning,
+        );
         return Result.failure(result.error ?? 'Products API request failed');
       }
-    } catch (e) {
-      _log.severe('Exception during product fetch: $e');
+    } catch (_) {
+      SafeLog.event(
+        AppLogEvent.homeProductsLoadFailed,
+        level: SafeLogLevel.severe,
+      );
       return Result.failure('Exception during product fetch');
     }
   }
@@ -197,9 +213,7 @@ List<Product> excludeCurrentSellerProducts(
     return products.toList();
   }
 
-  return products
-      .where((product) => product.userId?.trim() != normalizedUserId)
-      .toList();
+  return products.where((product) => product.userId?.trim() != normalizedUserId).toList();
 }
 
 final class _ProductMeta {

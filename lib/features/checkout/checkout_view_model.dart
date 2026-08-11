@@ -1,9 +1,9 @@
 import 'package:cherry_mvp/core/models/model.dart';
+import 'package:cherry_mvp/core/services/safe_log.dart';
 import 'package:cherry_mvp/features/donation/donation_repository.dart';
 import 'package:cherry_mvp/features/donation/models/postage_size_info.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
-import 'package:logging/logging.dart';
 import 'package:cherry_mvp/core/config/config.dart';
 import 'package:cherry_mvp/core/models/inpost.dart';
 import 'package:cherry_mvp/core/models/inpost_shipping_method.dart';
@@ -24,7 +24,6 @@ class CheckoutViewModel extends ChangeNotifier {
   final IDonationRepository _donationRepository;
   final NavigationProvider navigator;
   final String? Function() _currentUserIdProvider;
-  final _log = Logger('CheckoutViewModel');
 
   CheckoutViewModel({
     required this._donationRepository,
@@ -148,8 +147,7 @@ class CheckoutViewModel extends ChangeNotifier {
   bool get hasPaymentMethod => _selectedPaymentType != null || _hasPaymentMethod;
 
   /// Whether the order is ready for checkout (has both address and payment method)
-  bool get canCheckout =>
-      hasShippingAddress && hasPaymentMethod && !_containsOwnProduct;
+  bool get canCheckout => hasShippingAddress && hasPaymentMethod && !_containsOwnProduct;
 
   void setAddressConfirmed(bool value) {
     isShippingAddressConfirmed = value;
@@ -325,18 +323,19 @@ class CheckoutViewModel extends ChangeNotifier {
               ? 'Pickup points currently unavailable, please try again later'
               : (result.error ?? 'Pickup points currently unavailable, please try again later'),
         );
-        _log.warning(
-          result.isSuccess
-              ? 'Fetch nearest inPost locker returned an empty or invalid '
-                    'payload for postcode $postalCode'
-              : 'Fetch nearest inPost locker failed: ${result.error}',
+        SafeLog.event(
+          AppLogEvent.checkoutPickupPointsFailed,
+          level: SafeLogLevel.warning,
         );
       }
-    } catch (e) {
+    } catch (_) {
       _showLocker = false;
       _nearestInposts.clear();
-      _status = Status.failure(e.toString());
-      _log.severe('Fetch nearest inPost locker error:: $e');
+      _status = Status.failure('Pickup points currently unavailable, please try again later');
+      SafeLog.event(
+        AppLogEvent.checkoutPickupPointsFailed,
+        level: SafeLogLevel.severe,
+      );
     }
 
     notifyListeners();
@@ -371,16 +370,18 @@ class CheckoutViewModel extends ChangeNotifier {
               ? 'InPost shipping methods currently unavailable, please try again later'
               : (result.error ?? 'InPost shipping methods currently unavailable, please try again later'),
         );
-        _log.warning(
-          result.isSuccess
-              ? 'Fetch inPost shipping methods returned an empty or invalid payload for service point ${selectedInpost!.id}'
-              : 'Fetch inPost shipping methods failed: ${result.error}',
+        SafeLog.event(
+          AppLogEvent.checkoutShippingMethodsFailed,
+          level: SafeLogLevel.warning,
         );
       }
-    } catch (e) {
+    } catch (_) {
       _inpostShippingMethods.clear();
-      _status = Status.failure(e.toString());
-      _log.severe('Fetch inPost shipping methods error:: $e');
+      _status = Status.failure('InPost shipping methods currently unavailable, please try again later');
+      SafeLog.event(
+        AppLogEvent.checkoutShippingMethodsFailed,
+        level: SafeLogLevel.severe,
+      );
     }
 
     notifyListeners();
@@ -422,8 +423,12 @@ class CheckoutViewModel extends ChangeNotifier {
         _postageSizeInfos = result.value!;
         _status = Status.success;
       }
-    } catch (e) {
-      _status = Status.failure(e.toString());
+    } catch (_) {
+      _status = Status.failure('Could not load postage sizes');
+      SafeLog.event(
+        AppLogEvent.donationPostageSizesLoadFailed,
+        level: SafeLogLevel.severe,
+      );
     }
 
     notifyListeners();
@@ -432,8 +437,7 @@ class CheckoutViewModel extends ChangeNotifier {
   // Future<void> storeLockerInFirestore() async {
   //   try {
   //     await checkoutRepository.storeLockerInFirestore(selectedInpost!);
-  //   } catch (e) {
-  //     _log.severe('Error storing locker to firestore:: $e');
+  //   } catch (_) {
   //   }
   // }
 
@@ -513,8 +517,7 @@ class CheckoutViewModel extends ChangeNotifier {
   //   };
   //   try {
   //     await checkoutRepository.storeOrderInFirestore(orderData);
-  //   } catch (e) {
-  //     _log.severe('Error storing order to firestore:: $e');
+  //   } catch (_) {
   //     rethrow;
   //   }
   // }
@@ -594,25 +597,30 @@ class CheckoutViewModel extends ChangeNotifier {
         _lastPaymentIntentId = paymentResponse.paymentIntentId;
         return true;
       } else {
-        _createOrderStatus = Status.failure(response.error.toString());
+        _createOrderStatus = Status.failure('Payment could not be completed. Please try again.');
         _lastPaymentIntentId = null;
-        _log.severe('Create Payment intent Error :: ${response.error}');
+        SafeLog.event(
+          AppLogEvent.checkoutPaymentIntentFailed,
+          level: SafeLogLevel.severe,
+        );
         notifyListeners();
         return false;
       }
-    } on StripeException catch (e) {
-      _createOrderStatus = Status.failure(
-        e.error.localizedMessage ?? e.toString(),
-      );
-      _log.severe(
-        'Stripe Payment Error :: ${e.error.localizedMessage ?? e.toString()}',
+    } on StripeException {
+      _createOrderStatus = Status.failure('Payment could not be completed. Please try again.');
+      SafeLog.event(
+        AppLogEvent.checkoutPaymentFailed,
+        level: SafeLogLevel.severe,
       );
       _lastPaymentIntentId = null;
       notifyListeners();
       return false;
-    } catch (e) {
-      _createOrderStatus = Status.failure(e.toString());
-      _log.severe('Error making payment::: $e');
+    } catch (_) {
+      _createOrderStatus = Status.failure('Payment could not be completed. Please try again.');
+      SafeLog.event(
+        AppLogEvent.checkoutPaymentFailed,
+        level: SafeLogLevel.severe,
+      );
       _lastPaymentIntentId = null;
       notifyListeners();
       return false;
@@ -677,11 +685,17 @@ class CheckoutViewModel extends ChangeNotifier {
         _createOrderStatus = Status.success;
       } else {
         _createOrderStatus = Status.failure(result.error ?? "");
-        _log.warning('Create order failed! ${result.error}');
+        SafeLog.event(
+          AppLogEvent.checkoutOrderCreationFailed,
+          level: SafeLogLevel.warning,
+        );
       }
-    } catch (e) {
-      _createOrderStatus = Status.failure(e.toString());
-      _log.severe('Create order failed! ${e.toString()}');
+    } catch (_) {
+      _createOrderStatus = Status.failure('Order could not be created. Please try again.');
+      SafeLog.event(
+        AppLogEvent.checkoutOrderCreationFailed,
+        level: SafeLogLevel.severe,
+      );
     }
     notifyListeners();
   }
@@ -691,15 +705,21 @@ class CheckoutViewModel extends ChangeNotifier {
       final result = await checkoutRepository.fetchUserProfile();
       if (result.isSuccess) {
         if (result.value == null) {
-          _log.warning('fetchUserProfile returned null value');
+          SafeLog.event(
+            AppLogEvent.checkoutProfileMissing,
+            level: SafeLogLevel.warning,
+          );
           return null;
         }
         return result.value;
       } else {
         return null;
       }
-    } catch (e) {
-      _log.severe('fetch profile failed! ${e.toString()}');
+    } catch (_) {
+      SafeLog.event(
+        AppLogEvent.checkoutProfileLoadFailed,
+        level: SafeLogLevel.severe,
+      );
       return null;
     }
   }

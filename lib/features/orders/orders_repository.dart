@@ -1,8 +1,8 @@
 import 'package:cherry_mvp/core/services/network/api_endpoints.dart';
 import 'package:cherry_mvp/core/services/network/api_service.dart';
+import 'package:cherry_mvp/core/services/safe_log.dart';
 import 'package:cherry_mvp/core/utils/result.dart';
 import 'package:cherry_mvp/features/orders/models/order_summary.dart';
-import 'package:logging/logging.dart';
 
 abstract class IOrdersRepository {
   Future<Result<List<OrderSummary>>> fetchOrders();
@@ -12,7 +12,6 @@ final class OrdersRepository implements IOrdersRepository {
   static const int _maximumConcurrentProductRequests = 4;
 
   final ApiService _apiService;
-  final _log = Logger('OrdersRepository');
 
   OrdersRepository(this._apiService);
 
@@ -21,7 +20,10 @@ final class OrdersRepository implements IOrdersRepository {
     try {
       final result = await _apiService.get<dynamic>(ApiEndpoints.myOrders);
       if (!result.isSuccess || result.value == null) {
-        _log.warning('The orders request failed.');
+        SafeLog.event(
+          AppLogEvent.ordersLoadFailed,
+          level: SafeLogLevel.warning,
+        );
         return Result.failure(
           result.error ?? 'Could not load your orders',
         );
@@ -29,7 +31,10 @@ final class OrdersRepository implements IOrdersRepository {
 
       final rawOrders = _extractOrders(result.value);
       if (rawOrders == null) {
-        _log.warning('The orders response did not match the documented structure.');
+        SafeLog.event(
+          AppLogEvent.ordersResponseInvalid,
+          level: SafeLogLevel.warning,
+        );
         return Result.failure('Could not load your orders');
       }
 
@@ -63,7 +68,10 @@ final class OrdersRepository implements IOrdersRepository {
 
       return Result.success(enrichedOrders);
     } catch (_) {
-      _log.warning('The orders request could not be completed.');
+      SafeLog.event(
+        AppLogEvent.ordersLoadFailed,
+        level: SafeLogLevel.warning,
+      );
       return Result.failure('Could not load your orders');
     }
   }
@@ -86,19 +94,28 @@ final class OrdersRepository implements IOrdersRepository {
     try {
       final result = await _apiService.get<dynamic>(ApiEndpoints.charities);
       if (!result.isSuccess || result.value == null) {
-        _log.warning('Charity enrichment could not be loaded.');
+        SafeLog.event(
+          AppLogEvent.ordersCharityEnrichmentFailed,
+          level: SafeLogLevel.warning,
+        );
         return const {};
       }
 
       final response = result.value;
       if (response is! Map || response['success'] == false) {
-        _log.warning('Charity enrichment could not be parsed.');
+        SafeLog.event(
+          AppLogEvent.ordersCharityEnrichmentInvalid,
+          level: SafeLogLevel.warning,
+        );
         return const {};
       }
 
       final data = response['data'];
       if (data is! List) {
-        _log.warning('Charity enrichment could not be parsed.');
+        SafeLog.event(
+          AppLogEvent.ordersCharityEnrichmentInvalid,
+          level: SafeLogLevel.warning,
+        );
         return const {};
       }
 
@@ -115,7 +132,10 @@ final class OrdersRepository implements IOrdersRepository {
       }
       return charityLogos;
     } catch (_) {
-      _log.warning('Charity enrichment could not be completed.');
+      SafeLog.event(
+        AppLogEvent.ordersCharityEnrichmentFailed,
+        level: SafeLogLevel.warning,
+      );
       return const {};
     }
   }
@@ -146,7 +166,10 @@ final class OrdersRepository implements IOrdersRepository {
     }
 
     if (failedProducts > 0) {
-      _log.warning('Some order products could not be enriched.');
+      SafeLog.event(
+        AppLogEvent.ordersProductEnrichmentPartial,
+        level: SafeLogLevel.warning,
+      );
     }
     return products;
   }

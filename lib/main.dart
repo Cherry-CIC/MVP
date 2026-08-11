@@ -6,12 +6,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
-import 'package:logging/logging.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cherry_mvp/core/config/app_theme.dart';
 import 'package:cherry_mvp/core/config/environment_config.dart';
 import 'package:cherry_mvp/core/router/router.dart';
+import 'package:cherry_mvp/core/services/safe_log.dart';
 import 'package:cherry_mvp/core/utils/dependency.dart';
 import 'package:cherry_mvp/features/welcome/widgets/auth_gate.dart';
 import 'package:cherry_mvp/core/theme/theme_notifier.dart';
@@ -24,13 +24,6 @@ void main() async {
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]);
-
-  Logger.root.level = Level.ALL;
-  Logger.root.onRecord.listen((record) {
-    if (kDebugMode) {
-      debugPrint('${record.level.name}: ${record.time}: ${record.message}');
-    }
-  });
 
   /// Load environment variables
   await dotenv.load();
@@ -62,11 +55,7 @@ Future<void> _configureFirebaseEmulators() async {
     emulatorConfig.firestorePort,
   );
 
-  debugPrint(
-    'Firebase emulators enabled on ${emulatorConfig.host} '
-    '(auth: ${emulatorConfig.authPort}, '
-    'firestore: ${emulatorConfig.firestorePort})',
-  );
+  SafeLog.event(AppLogEvent.firebaseEmulatorsEnabled);
 }
 
 class MyApp extends StatelessWidget {

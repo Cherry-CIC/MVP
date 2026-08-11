@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:logging/logging.dart';
 import 'package:cherry_mvp/core/models/model.dart';
 import 'package:cherry_mvp/core/router/nav_provider.dart';
+import 'package:cherry_mvp/core/services/safe_log.dart';
 import 'package:cherry_mvp/core/utils/status.dart';
 import 'package:cherry_mvp/features/categories/category_repository.dart';
 
 class CategoryViewModel extends ChangeNotifier {
   final ICategoryRepository categoryRepository;
   final NavigationProvider navigator;
-  final _log = Logger('CategoryViewModel');
 
   CategoryViewModel({required this.categoryRepository, required this.navigator});
 
@@ -62,11 +61,17 @@ class CategoryViewModel extends ChangeNotifier {
         _status = Status.success;
       } else {
         _status = Status.failure(result.error ?? 'Could not load categories');
-        _log.warning('Fetch categories failed! ${result.error}');
+        SafeLog.event(
+          AppLogEvent.categoryLoadFailed,
+          level: SafeLogLevel.warning,
+        );
       }
     } catch (e) {
       _status = Status.failure(e.toString());
-      _log.severe('Fetch categories error:: $e');
+      SafeLog.event(
+        AppLogEvent.categoryLoadFailed,
+        level: SafeLogLevel.severe,
+      );
     }
 
     notifyListeners();

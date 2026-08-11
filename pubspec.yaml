@@ -1,6 +1,6 @@
 name: cherry_mvp
 description: Cherry MVP
-version: 0.1.0+8
+version: 0.1.1+9
 
 environment:
   sdk: '^3.12.0'
@@ -17,7 +17,6 @@ dependencies:
   shared_preferences: ^2.5.5
   provider: ^6.1.5+1
   fluttertoast: ^9.1.0
-  logging: ^1.3.0
   image_picker: ^1.2.2
   flutter_dotenv: ^6.0.1
   google_sign_in: ^7.2.0
@@ -26,7 +25,6 @@ dependencies:
   mask_text_input_formatter: ^2.9.0
   flutter_svg: ^2.3.0
   dio: ^5.9.2
-  pretty_dio_logger: ^1.4.0
   json_annotation: ^4.12.0
   http: ^1.6.0
   flutter_stripe: ^12.6.0
