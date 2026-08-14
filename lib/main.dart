@@ -15,6 +15,7 @@ import 'package:cherry_mvp/core/services/safe_log.dart';
 import 'package:cherry_mvp/core/utils/dependency.dart';
 import 'package:cherry_mvp/features/welcome/widgets/auth_gate.dart';
 import 'package:cherry_mvp/core/theme/theme_notifier.dart';
+import 'package:cherry_mvp/firebase_options.dart';
 
 void main() async {
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
@@ -28,7 +29,9 @@ void main() async {
   /// Load environment variables
   await dotenv.load();
 
-  await Firebase.initializeApp();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   await _configureFirebaseEmulators();
 
   SharedPreferences prefs = await SharedPreferences.getInstance();
