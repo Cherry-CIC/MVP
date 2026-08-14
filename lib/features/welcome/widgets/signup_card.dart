@@ -5,9 +5,9 @@ import 'package:cherry_mvp/core/router/router.dart';
 import 'package:cherry_mvp/core/utils/status.dart';
 import 'package:cherry_mvp/features/login/login_viewmodel.dart';
 import 'package:cherry_mvp/features/welcome/welcome_page.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'dart:io';
 
 class AuthCard extends StatelessWidget {
   final VoidCallback onClose;
@@ -54,7 +54,7 @@ class AuthCard extends StatelessWidget {
                 ...(viewModel.status.type == StatusType.loading
                     ? [const LoadingView()]
                     : [
-                        if (Platform.isIOS) ...[
+                        if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) ...[
                           SocialLoginButton(
                             label: AppStrings.continueWithApple,
                             iconAsset: AppImages.authAppleIcon,
