@@ -119,7 +119,7 @@ class CharityPageState extends State<CharityPage> {
             Text('${AppStrings.charityError}: ${status.message}'),
             const SizedBox(height: 16),
             ElevatedButton(
-              onPressed: () => viewModel.fetchCharities(),
+              onPressed: () => viewModel.fetchCharities(forceRefresh: true),
               child: Text(AppStrings.retry),
             ),
           ],

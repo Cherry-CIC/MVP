@@ -8,6 +8,8 @@ import 'package:cherry_mvp/features/messages/message_page.dart';
 import 'package:cherry_mvp/features/orders/orders_page.dart';
 import 'package:cherry_mvp/features/profile/profile_page.dart';
 import 'package:cherry_mvp/features/profile/profile_listings_view_model.dart';
+import 'package:cherry_mvp/features/charity_page/charity_viewmodel.dart';
+import 'package:cherry_mvp/features/categories/category_view_model.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -25,8 +27,7 @@ class _HomePageState extends State<HomePage> {
   static const int _inboxNavIndex = 1;
   static const int _giveNavIndex = FeatureFlags.showInbox ? 2 : 1;
   static const int _searchNavIndex = _giveNavIndex + 1;
-  static const int _profileNavIndex =
-      _giveNavIndex + (FeatureFlags.showSearchNavigation ? 2 : 1);
+  static const int _profileNavIndex = _giveNavIndex + (FeatureFlags.showSearchNavigation ? 2 : 1);
 
   int _selectedIndex = 0;
   bool _showOrders = false;
@@ -58,6 +59,11 @@ class _HomePageState extends State<HomePage> {
     }
 
     if (index == _giveNavIndex) {
+      // Start loading charities and categories before the donation form is
+      // built, so the dropdowns are populated without showing loading states.
+      context.read<CharityViewModel>().fetchCharities();
+      context.read<CategoryViewModel>().fetchCategories();
+
       showDialog(
         context: context,
         builder: (context) => Dialog.fullscreen(child: DonationPage()),
