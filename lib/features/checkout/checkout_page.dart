@@ -1,3 +1,4 @@
+import 'package:cherry_mvp/features/shared_widgets/bottom_cta.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
@@ -135,73 +136,56 @@ class _CheckoutPageState extends State<CheckoutPage> {
             ),
           ],
         ),
+        bottomNavigationBar: Consumer<CheckoutViewModel>(
+          builder: (context, viewModel, _) {
+            final isLoading = viewModel.createOrderStatus.type == StatusType.loading;
 
-        bottomNavigationBar: Container(
-          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          height: 56,
-          width: double.infinity,
-          child: Consumer<CheckoutViewModel>(
-            builder: (context, viewModel, _) {
-              final isLoading = viewModel.createOrderStatus.type == StatusType.loading;
+            final isPickup = viewModel.deliveryChoice == DeliveryType.pickup;
 
-              final isPickup = viewModel.deliveryChoice == DeliveryType.pickup;
+            final hasValidDelivery = (isPickup
+                ? viewModel.selectedInpost != null
+                : viewModel.isShippingAddressConfirmed && viewModel.hasShippingAddress);
 
-              final hasValidDelivery = (isPickup
-                  ? viewModel.selectedInpost != null
-                  : viewModel.isShippingAddressConfirmed && viewModel.hasShippingAddress);
+            final canAttemptPayment = hasValidDelivery && basket.total > 0 && !isLoading;
+            return BottomCta(
+              enabled: canAttemptPayment,
+              text: AppStrings.checkoutPay,
+              onPressed: () async {
+                if (isPickup && viewModel.selectedInpostShippingMethod == null) {
+                  setState(() {
+                    _errorMessage = AppStrings.checkoutShippingMethodRequired;
+                  });
+                  return;
+                }
+                if (isPickup && viewModel.mobilePhoneNumber.isEmpty) {
+                  setState(() => _errorMessage = AppStrings.checkoutMobilePhoneRequired);
+                  return;
+                }
 
-              final canAttemptPayment = hasValidDelivery && basket.total > 0 && !isLoading;
+                if (!viewModel.hasPaymentMethod) {
+                  setState(() {
+                    _errorMessage = AppStrings.checkoutPaymentMethodRequired;
+                  });
 
-              return FilledButton(
-                onPressed: canAttemptPayment
-                    ? () async {
-                        if (isPickup && viewModel.selectedInpostShippingMethod == null) {
-                          setState(() {
-                            _errorMessage = AppStrings.checkoutShippingMethodRequired;
-                          });
-                          return;
-                        }
-                        if (isPickup && viewModel.mobilePhoneNumber.isEmpty) {
-                          setState(() => _errorMessage = AppStrings.checkoutMobilePhoneRequired);
-                          return;
-                        }
+                  final paymentType = await showModalBottomSheet<PaymentType>(
+                    context: context,
+                    isScrollControlled: true,
+                    backgroundColor: Colors.transparent,
+                    builder: (_) => const SelectPaymentTypeBottomSheet(),
+                  );
+                  if (paymentType == null || !viewModel.hasPaymentMethod) return;
+                }
 
-                        if (!viewModel.hasPaymentMethod) {
-                          setState(() {
-                            _errorMessage = AppStrings.checkoutPaymentMethodRequired;
-                          });
+                setState(() => _errorMessage = '');
 
-                          final paymentType = await showModalBottomSheet<PaymentType>(
-                            context: context,
-                            isScrollControlled: true,
-                            backgroundColor: Colors.transparent,
-                            builder: (_) => const SelectPaymentTypeBottomSheet(),
-                          );
-                          if (paymentType == null || !viewModel.hasPaymentMethod) return;
-                        }
+                final paid = await viewModel.payWithPaymentSheet();
 
-                        setState(() => _errorMessage = '');
-
-                        final paid = await viewModel.payWithPaymentSheet();
-
-                        if (paid) {
-                          await viewModel.createOrder();
-                        }
-                      }
-                    : null,
-                child: isLoading
-                    ? const SizedBox(
-                        height: 22,
-                        width: 22,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
-                    : Text(AppStrings.checkoutPay),
-              );
-            },
-          ),
+                if (paid) {
+                  await viewModel.createOrder();
+                }
+              },
+            );
+          },
         ),
       ),
     );

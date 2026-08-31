@@ -53,6 +53,7 @@ app.*.map.json
 
 .env
 .metadata
+.pubspec.lock
 
 # Ignore generated JSON files
 #lib/core/models/category.g.dart
