@@ -111,6 +111,11 @@ class _ProfilePageState extends State<ProfilePage> {
       navigator.navigateTo(AppRoutes.likedItems);
     }
 
+    void navigateToEditProfile() {
+      final navigator = Provider.of<NavigationProvider>(context, listen: false);
+      navigator.navigateTo(AppRoutes.editProfile);
+    }
+
     return Scaffold(
       //profile header
       appBar: AppBar(
@@ -119,8 +124,7 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
       body: SafeArea(
         child: RefreshIndicator(
-          onRefresh: () =>
-              context.read<ProfileListingsViewModel>().refreshListings(),
+          onRefresh: () => context.read<ProfileListingsViewModel>().refreshListings(),
           child: SingleChildScrollView(
             controller: _scrollController,
             physics: const AlwaysScrollableScrollPhysics(),
@@ -134,9 +138,9 @@ class _ProfilePageState extends State<ProfilePage> {
                   onSettingsPressed: () {
                     navigateToSettings();
                   },
+                  onProfilePressed: navigateToEditProfile,
                 ),
-                if (FeatureFlags.showProfileShortcutCards ||
-                    FeatureFlags.showDonorDiscounts)
+                if (FeatureFlags.showProfileShortcutCards || FeatureFlags.showDonorDiscounts)
                   UserOrderDetails(
                     onOrdersPressed: widget.onOrdersPressed,
                     onLikedPressed: navigateToLikedItems,
