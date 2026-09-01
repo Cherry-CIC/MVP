@@ -15,7 +15,8 @@ class DonationViewModel extends ChangeNotifier {
   final IDonationRepository _donationRepository;
   final NavigationProvider navigator;
 
-  DonationViewModel({required this._donationRepository, required this.navigator});
+  DonationViewModel({required IDonationRepository donationRepository, required this.navigator})
+    : _donationRepository = donationRepository;
 
   Status _status = Status.uninitialized;
   DonationResponse? _lastSubmission;
