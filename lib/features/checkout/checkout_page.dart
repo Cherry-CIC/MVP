@@ -150,6 +150,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
             return BottomCta(
               enabled: canAttemptPayment,
               text: AppStrings.checkoutPay,
+              loading: isLoading,
               onPressed: () async {
                 if (isPickup && viewModel.selectedInpostShippingMethod == null) {
                   setState(() {
