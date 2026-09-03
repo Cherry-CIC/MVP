@@ -11,6 +11,7 @@ import 'package:cherry_mvp/features/liked_items/liked_items_page.dart';
 import 'package:cherry_mvp/features/login/login_page.dart';
 import 'package:cherry_mvp/features/forgot_password/forgot_password_page.dart';
 import 'package:cherry_mvp/features/products/product_page.dart';
+import 'package:cherry_mvp/features/profile/edit_profile_page.dart';
 import 'package:cherry_mvp/features/register/register_page.dart';
 import 'package:cherry_mvp/features/search/widgets/category_page/category_page.dart';
 import 'package:cherry_mvp/features/settings/faq_page.dart';
@@ -44,6 +45,7 @@ class AppRoutes {
   static const String postageSize = '/postageSize';
   static const String pickupPointSelector = '/pickupPointSelector';
   static const String likedItems = '/liked-items';
+  static const String editProfile = '/editProfile';
 
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
@@ -63,6 +65,8 @@ class AppRoutes {
         return MaterialPageRoute(builder: (_) => DiscoverPage());
       case likedItems:
         return MaterialPageRoute(builder: (_) => const LikedItemsPage());
+      case editProfile:
+        return MaterialPageRoute(builder: (_) => const EditProfilePage());
       case settingspage:
         return MaterialPageRoute(builder: (_) => SettingsPage());
       case donations:

@@ -68,6 +68,19 @@ class AppStrings {
   static const profileListingsEmpty = 'You have not listed anything yet.';
   static const profileListingsCreate = 'List an item';
   static const profileListingsLoadMore = 'Load more listings';
+
+  // Edit profile
+  static const editProfileTitle = 'Edit profile';
+  static const editProfileFirstNameLabel = 'First name';
+  static const editProfileUsernameLabel = 'Username';
+  static const editProfilePhoneLabel = 'Phone number';
+  static const editProfileEmailHelper = 'Email cannot be changed here';
+  static const editProfileSave = 'Save changes';
+  static const editProfileSaveSuccess = 'Profile updated';
+  static const editProfileSaveFailed =
+      'Could not update profile. Please try again.';
+  static const editProfileUsernameNotSaved =
+      'Your details were saved, but the username could not be updated. Please try the username again.';
   static const profileListingsLoadMoreFailed = 'We could not load more listings.';
   static const profileListingUntitled = 'Untitled listing';
   static const profileListingPriceUnavailable = 'Price unavailable';
