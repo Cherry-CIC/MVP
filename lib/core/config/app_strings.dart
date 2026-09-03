@@ -79,6 +79,8 @@ class AppStrings {
   static const editProfileSaveSuccess = 'Profile updated';
   static const editProfileSaveFailed =
       'Could not update profile. Please try again.';
+  static const editProfileUsernameNotSaved =
+      'Your details were saved, but the username could not be updated. Please try the username again.';
   static const profileListingsLoadMoreFailed = 'We could not load more listings.';
   static const profileListingUntitled = 'Untitled listing';
   static const profileListingPriceUnavailable = 'Price unavailable';

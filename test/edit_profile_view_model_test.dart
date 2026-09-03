@@ -1,3 +1,4 @@
+import 'package:cherry_mvp/core/config/app_strings.dart';
 import 'package:cherry_mvp/core/utils/result.dart';
 import 'package:cherry_mvp/core/utils/status.dart';
 import 'package:cherry_mvp/features/profile/edit_profile_repository.dart';
@@ -67,6 +68,43 @@ void main() {
 
       expect(result.isSuccess, isTrue);
       expect(repository.updateCount, 0);
+    });
+
+    test('reports a partial save when the username write fails after the profile write',
+        () async {
+      final repository = _FakeEditProfileRepository();
+      final viewModel = EditProfileViewModel(
+        repository: repository,
+        isUsernameTaken: (username, {excludeUid}) async => Result.success(false),
+        saveUsername: (uid, username) async => Result.failure('firestore down'),
+      );
+
+      final result = await viewModel.saveProfile(
+        uid: 'uid-1',
+        firstName: 'Joshua',
+        username: 'josh',
+      );
+
+      expect(result.isSuccess, isFalse);
+      expect(result.error, AppStrings.editProfileUsernameNotSaved);
+      expect(repository.updateCount, 1);
+      expect(viewModel.isPartialSave, isTrue);
+    });
+
+    test('a username-only failure is not a partial save', () async {
+      final repository = _FakeEditProfileRepository();
+      final viewModel = EditProfileViewModel(
+        repository: repository,
+        isUsernameTaken: (username, {excludeUid}) async => Result.success(false),
+        saveUsername: (uid, username) async => Result.failure('firestore down'),
+      );
+
+      final result = await viewModel.saveProfile(uid: 'uid-1', username: 'josh');
+
+      expect(result.isSuccess, isFalse);
+      expect(result.error, 'firestore down');
+      expect(repository.updateCount, 0);
+      expect(viewModel.isPartialSave, isFalse);
     });
 
     test('surfaces repository failures', () async {
