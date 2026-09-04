@@ -70,6 +70,8 @@ class OrderSummary {
     String? imageUrl,
     String? size,
     String? charityLogoUrl,
+    String? deliveryState,
+    String? deliveryLabel,
   }) {
     return OrderSummary(
       id: id,
@@ -81,8 +83,8 @@ class OrderSummary {
       itemPriceMinor: itemPriceMinor,
       totalAmountMinor: totalAmountMinor,
       currency: currency,
-      deliveryState: deliveryState,
-      deliveryLabel: deliveryLabel,
+      deliveryState: deliveryState ?? this.deliveryState,
+      deliveryLabel: deliveryLabel ?? this.deliveryLabel,
     );
   }
 

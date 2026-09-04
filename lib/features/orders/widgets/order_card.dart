@@ -6,10 +6,12 @@ import 'package:flutter/material.dart';
 
 class OrderCard extends StatelessWidget {
   final OrderSummary order;
+  final VoidCallback? onTap;
 
   const OrderCard({
     super.key,
     required this.order,
+    this.onTap,
   });
 
   @override
@@ -24,41 +26,47 @@ class OrderCard extends StatelessWidget {
           '${order.productName}. Size $sizeLabel. '
           '$priceLabel. $statusLabel.',
       child: ExcludeSemantics(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final textScale = MediaQuery.textScalerOf(context).scale(1);
-            final useFlexibleLayout = constraints.maxWidth < 340 || textScale > 1.3;
-            final imageSize = useFlexibleLayout ? 112.0 : (constraints.maxWidth * 0.36).clamp(120.0, 144.0).toDouble();
+        child: GestureDetector(
+          onTap: onTap,
+          behavior: HitTestBehavior.opaque,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final textScale = MediaQuery.textScalerOf(context).scale(1);
+              final useFlexibleLayout = constraints.maxWidth < 340 || textScale > 1.3;
+              final imageSize = useFlexibleLayout
+                  ? 112.0
+                  : (constraints.maxWidth * 0.36).clamp(120.0, 144.0).toDouble();
 
-            if (useFlexibleLayout) {
-              return _FlexibleOrderLayout(
-                order: order,
-                imageSize: imageSize,
-                sizeLabel: sizeLabel,
-                priceLabel: priceLabel,
-                statusLabel: statusLabel,
-              );
-            }
+              if (useFlexibleLayout) {
+                return _FlexibleOrderLayout(
+                  order: order,
+                  imageSize: imageSize,
+                  sizeLabel: sizeLabel,
+                  priceLabel: priceLabel,
+                  statusLabel: statusLabel,
+                );
+              }
 
-            return Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _OrderImage(order: order, size: imageSize),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(minHeight: imageSize),
-                    child: _OrderDetails(
-                      order: order,
-                      sizeLabel: sizeLabel,
-                      priceLabel: priceLabel,
-                      statusLabel: statusLabel,
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _OrderImage(order: order, size: imageSize),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(minHeight: imageSize),
+                      child: _OrderDetails(
+                        order: order,
+                        sizeLabel: sizeLabel,
+                        priceLabel: priceLabel,
+                        statusLabel: statusLabel,
+                      ),
                     ),
                   ),
-                ),
-              ],
-            );
-          },
+                ],
+              );
+            },
+          ),
         ),
       ),
     );
@@ -368,6 +376,9 @@ class OrderStatusFormatter {
       'dispatched' || 'shipped' || 'in_transit' => 'On the way',
       'out_for_delivery' => 'Out for delivery',
       'delivered' => 'Delivered',
+      'awaiting_confirmation' => AppStrings.myOrdersAwaitingConfirmation,
+      'confirmed' => AppStrings.myOrdersConfirmed,
+      'disputed' => AppStrings.myOrdersDisputed,
       'cancelled' || 'canceled' => 'Cancelled',
       'returned' => 'Returned',
       'refunded' => 'Refunded',

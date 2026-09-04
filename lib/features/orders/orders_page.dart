@@ -1,5 +1,6 @@
 import 'package:cherry_mvp/core/config/app_strings.dart';
 import 'package:cherry_mvp/core/utils/status.dart';
+import 'package:cherry_mvp/features/orders/models/order_summary.dart';
 import 'package:cherry_mvp/features/orders/orders_view_model.dart';
 import 'package:cherry_mvp/features/orders/widgets/order_card.dart';
 import 'package:flutter/material.dart';
@@ -40,6 +41,69 @@ class _MyOrdersPageState extends State<MyOrdersPage> {
   void dispose() {
     _viewModel?.clearOrders(notify: false);
     super.dispose();
+  }
+
+  Future<void> _handleOrderTap(BuildContext context, OrderSummary order) async {
+    final state = order.deliveryState.trim().toLowerCase();
+    if (state != 'awaiting_confirmation' && state != 'delivered') {
+      return;
+    }
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => _ConfirmItemDialog(order: order),
+    );
+
+    if (!mounted || confirmed != true) {
+      return;
+    }
+
+    final result = await _viewModel?.confirmOrderReceived(order.id);
+    if (!mounted) {
+      return;
+    }
+
+    if (result?.isSuccess == true) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Receipt confirmed')),
+      );
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(result?.error ?? 'Could not confirm this item')),
+    );
+  }
+
+  Future<void> _openDisputeDialog(BuildContext context, OrderSummary order) async {
+    final result = await showDialog<_DisputeChoice>(
+      context: context,
+      builder: (dialogContext) => _DisputeDialog(order: order),
+    );
+
+    if (!mounted || result == null) {
+      return;
+    }
+
+    final submitResult = await _viewModel?.submitOrderDispute(
+      order.id,
+      reason: result.reason,
+      message: result.message,
+    );
+    if (!mounted) {
+      return;
+    }
+
+    if (submitResult?.isSuccess == true) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Dispute submitted')),
+      );
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(submitResult?.error ?? 'Could not submit the dispute')),
+    );
   }
 
   @override
@@ -204,12 +268,190 @@ class _OrdersList extends StatelessWidget {
           }
 
           final orderIndex = index - (hasRefreshError ? 1 : 0);
+          final order = viewModel.orders[orderIndex];
           return OrderCard(
-            key: ValueKey(viewModel.orders[orderIndex].id),
-            order: viewModel.orders[orderIndex],
+            key: ValueKey(order.id),
+            order: order,
+            onTap: () => _OrdersListState.handleOrderAction(context, order, viewModel),
           );
         },
       ),
+    );
+  }
+}
+
+class _ConfirmItemDialog extends StatelessWidget {
+  final OrderSummary order;
+
+  const _ConfirmItemDialog({required this.order});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final orderImage = order.imageUrl.trim().isNotEmpty
+        ? ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: SizedBox(
+              height: 180,
+              width: double.infinity,
+              child: Image.network(
+                order.imageUrl,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+              ),
+            ),
+          )
+        : const SizedBox.shrink();
+
+    return AlertDialog(
+      title: const Text('Confirm this item'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (orderImage is! SizedBox || order.imageUrl.trim().isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: orderImage,
+            ),
+          Text(
+            order.productName,
+            style: theme.textTheme.titleMedium,
+          ),
+          const SizedBox(height: 16),
+          const Text('Have you received your item as expected?'),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(false),
+          child: const Text('Cancel'),
+        ),
+        OutlinedButton(
+          onPressed: () {
+            Navigator.of(context).pop(false);
+            final pageState = context.findAncestorStateOfType<_MyOrdersPageState>();
+            pageState?._openDisputeDialog(context, order);
+          },
+          child: const Text('Raise dispute'),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.of(context).pop(true),
+          child: const Text('Yes, all good'),
+        ),
+      ],
+    );
+  }
+}
+
+class _DisputeChoice {
+  final String reason;
+  final String message;
+
+  const _DisputeChoice({required this.reason, required this.message});
+}
+
+class _DisputeDialog extends StatefulWidget {
+  final OrderSummary order;
+
+  const _DisputeDialog({required this.order});
+
+  @override
+  State<_DisputeDialog> createState() => _DisputeDialogState();
+}
+
+class _DisputeDialogState extends State<_DisputeDialog> {
+  String _reason = 'wrong_item';
+  final TextEditingController _messageController = TextEditingController();
+
+  @override
+  void dispose() {
+    _messageController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Raise dispute'),
+      content: SizedBox(
+        width: 420,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            DropdownButtonFormField<String>(
+              value: _reason,
+              items: const [
+                DropdownMenuItem(value: 'wrong_item', child: Text('Wrong item')),
+                DropdownMenuItem(value: 'item_not_as_described', child: Text('Item not as described')),
+                DropdownMenuItem(value: 'item_arrived_damaged', child: Text('Item arrived damaged')),
+                DropdownMenuItem(value: 'something_else', child: Text('Something else')),
+              ],
+              onChanged: (value) => setState(() => _reason = value ?? _reason),
+              decoration: const InputDecoration(labelText: 'Reason'),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _messageController,
+              maxLines: 4,
+              decoration: const InputDecoration(
+                labelText: 'Tell us what went wrong',
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.of(context).pop(
+            _DisputeChoice(
+              reason: _reason,
+              message: _messageController.text,
+            ),
+          ),
+          child: const Text('Submit'),
+        ),
+      ],
+    );
+  }
+}
+
+class _OrdersListState {
+  static Future<void> handleOrderAction(
+    BuildContext context,
+    OrderSummary order,
+    OrdersViewModel viewModel,
+  ) async {
+    final state = order.deliveryState.trim().toLowerCase();
+    if (state != 'awaiting_confirmation' && state != 'delivered') {
+      return;
+    }
+
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => _ConfirmItemDialog(order: order),
+    );
+    if (result != true) {
+      return;
+    }
+
+    final confirmResult = await viewModel.confirmOrderReceived(order.id);
+    if (!context.mounted) {
+      return;
+    }
+    if (confirmResult.isSuccess) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Receipt confirmed')),
+      );
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(confirmResult.error ?? 'Could not confirm this item')),
     );
   }
 }

@@ -6,6 +6,12 @@ import 'package:cherry_mvp/features/orders/models/order_summary.dart';
 
 abstract class IOrdersRepository {
   Future<Result<List<OrderSummary>>> fetchOrders();
+  Future<Result<dynamic>> confirmOrderReceived(String orderId);
+  Future<Result<dynamic>> submitOrderDispute(
+    String orderId, {
+    required String reason,
+    String? message,
+  });
 }
 
 final class OrdersRepository implements IOrdersRepository {
@@ -14,6 +20,47 @@ final class OrdersRepository implements IOrdersRepository {
   final ApiService _apiService;
 
   OrdersRepository(this._apiService);
+
+  @override
+  Future<Result<dynamic>> confirmOrderReceived(String orderId) async {
+    try {
+      final result = await _apiService.post<dynamic>(
+        ApiEndpoints.confirmOrderReceived(orderId),
+      );
+      if (!result.isSuccess || result.value == null) {
+        return Result.failure(result.error ?? 'Could not confirm this item');
+      }
+      return Result.success(result.value);
+    } catch (_) {
+      return Result.failure('Could not confirm this item');
+    }
+  }
+
+  @override
+  Future<Result<dynamic>> submitOrderDispute(
+    String orderId, {
+    required String reason,
+    String? message,
+  }) async {
+    try {
+      final payload = <String, dynamic>{'reason': reason};
+      final trimmedMessage = (message ?? '').trim();
+      if (trimmedMessage.isNotEmpty) {
+        payload['message'] = trimmedMessage;
+      }
+
+      final result = await _apiService.post<dynamic>(
+        ApiEndpoints.disputeOrder(orderId),
+        data: payload,
+      );
+      if (!result.isSuccess || result.value == null) {
+        return Result.failure(result.error ?? 'Could not submit the dispute');
+      }
+      return Result.success(result.value);
+    } catch (_) {
+      return Result.failure('Could not submit the dispute');
+    }
+  }
 
   @override
   Future<Result<List<OrderSummary>>> fetchOrders() async {
