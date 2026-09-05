@@ -260,28 +260,67 @@ class _OrdersList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final hasRefreshError = viewModel.refreshError != null;
+    final awaitingConfirmationOrders = viewModel.orders
+        .where((order) => order.deliveryState.trim().toLowerCase() == 'awaiting_confirmation')
+        .toList(growable: false);
+    final otherOrders = viewModel.orders
+        .where((order) => order.deliveryState.trim().toLowerCase() != 'awaiting_confirmation')
+        .toList(growable: false);
+    final children = <Widget>[
+      if (hasRefreshError) _RefreshFailure(onRetry: viewModel.refreshOrders),
+      if (awaitingConfirmationOrders.isNotEmpty) ...[
+        const _OrderSectionHeader(title: AppStrings.myOrdersAwaitingConfirmation),
+        ...awaitingConfirmationOrders.map(
+          (order) => _OrderListItem(order: order, viewModel: viewModel),
+        ),
+      ],
+      if (otherOrders.isNotEmpty) ...[
+        const _OrderSectionHeader(title: AppStrings.myOrdersOther),
+        ...otherOrders.map(
+          (order) => _OrderListItem(order: order, viewModel: viewModel),
+        ),
+      ],
+    ];
 
     return RefreshIndicator(
       onRefresh: viewModel.refreshOrders,
       child: ListView.separated(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-        itemCount: viewModel.orders.length + (hasRefreshError ? 1 : 0),
+        itemCount: children.length,
         separatorBuilder: (_, _) => const SizedBox(height: 24),
-        itemBuilder: (context, index) {
-          if (hasRefreshError && index == 0) {
-            return _RefreshFailure(onRetry: viewModel.refreshOrders);
-          }
-
-          final orderIndex = index - (hasRefreshError ? 1 : 0);
-          final order = viewModel.orders[orderIndex];
-          return OrderCard(
-            key: ValueKey(order.id),
-            order: order,
-            onTap: () => _OrdersListState.handleOrderAction(context, order, viewModel),
-          );
-        },
+        itemBuilder: (_, index) => children[index],
       ),
+    );
+  }
+}
+
+class _OrderSectionHeader extends StatelessWidget {
+  final String title;
+
+  const _OrderSectionHeader({required this.title});
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(title, style: Theme.of(context).textTheme.titleMedium);
+  }
+}
+
+class _OrderListItem extends StatelessWidget {
+  final OrderSummary order;
+  final OrdersViewModel viewModel;
+
+  const _OrderListItem({
+    required this.order,
+    required this.viewModel,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return OrderCard(
+      key: ValueKey(order.id),
+      order: order,
+      onTap: () => _OrdersListState.handleOrderAction(context, order, viewModel),
     );
   }
 }

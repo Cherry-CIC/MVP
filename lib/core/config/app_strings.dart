@@ -79,6 +79,7 @@ class AppStrings {
   static const myOrdersRefreshFailed = 'We could not refresh your orders.';
   static const myOrdersStatusUnavailable = 'Status unavailable';
   static const myOrdersAwaitingConfirmation = 'Awaiting confirmation';
+    static const myOrdersOther = 'Other orders';
   static const myOrdersConfirmed = 'Confirmed';
   static const myOrdersDisputed = 'Disputed';
   static const myOrdersPriceUnavailable = 'Price unavailable';

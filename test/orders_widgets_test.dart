@@ -13,9 +13,13 @@ import 'package:provider/provider.dart';
 
 class _QueuedOrdersRepository implements IOrdersRepository {
   final List<Result<List<OrderSummary>>> responses;
+  final Result<dynamic>? confirmationResult;
   int requestCount = 0;
 
-  _QueuedOrdersRepository(this.responses);
+  _QueuedOrdersRepository(
+    this.responses, {
+    this.confirmationResult,
+  });
 
   @override
   Future<Result<List<OrderSummary>>> fetchOrders() async {
@@ -25,7 +29,7 @@ class _QueuedOrdersRepository implements IOrdersRepository {
 
   @override
   Future<Result<dynamic>> confirmOrderReceived(String orderId) async {
-    return Result.failure('Not configured for this test');
+    return confirmationResult ?? Result.failure('Not configured for this test');
   }
 
   @override
@@ -370,6 +374,37 @@ void main() {
 
     expect(find.text('Raise dispute'), findsOneWidget);
     expect(find.text('Tell us what went wrong'), findsOneWidget);
+  });
+
+  testWidgets('confirmation removes an order from Awaiting confirmation', (
+    tester,
+  ) async {
+    final viewModel = OrdersViewModel(
+      repository: _QueuedOrdersRepository(
+        [
+          Result.success([
+            _order(
+              deliveryState: 'awaiting_confirmation',
+              deliveryLabel: 'Awaiting your confirmation',
+            ),
+          ]),
+        ],
+        confirmationResult: Result.success({}),
+      ),
+    );
+
+    await _pumpPage(tester, viewModel: viewModel);
+    await tester.pumpAndSettle();
+    expect(find.text(AppStrings.myOrdersAwaitingConfirmation), findsOneWidget);
+
+    await tester.tap(find.text('Example shirt'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Yes, all good'));
+    await tester.pumpAndSettle();
+
+    expect(find.text(AppStrings.myOrdersAwaitingConfirmation), findsNothing);
+    expect(find.text(AppStrings.myOrdersOther), findsOneWidget);
+    expect(find.text(AppStrings.myOrdersConfirmed), findsOneWidget);
   });
 
   testWidgets('disposing My Orders clears cached account data', (
