@@ -5,6 +5,7 @@ import 'package:cherry_mvp/features/orders/order_currency_formatter.dart';
 import 'package:cherry_mvp/features/orders/orders_page.dart';
 import 'package:cherry_mvp/features/orders/orders_repository.dart';
 import 'package:cherry_mvp/features/orders/orders_view_model.dart';
+import 'package:cherry_mvp/features/orders/widgets/confirm_item_dialog.dart';
 import 'package:cherry_mvp/features/orders/widgets/order_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -134,6 +135,35 @@ void main() {
         AppStrings.myOrdersStatusUnavailable,
       );
     });
+  });
+
+  testWidgets('ConfirmItemDialog returns its selected action', (tester) async {
+    ConfirmItemAction? selectedAction;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) => Scaffold(
+            body: TextButton(
+              onPressed: () async {
+                selectedAction = await showDialog<ConfirmItemAction>(
+                  context: context,
+                  builder: (_) => ConfirmItemDialog(order: _order()),
+                );
+              },
+              child: const Text('Open confirmation'),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Open confirmation'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Raise dispute'));
+    await tester.pumpAndSettle();
+
+    expect(selectedAction, ConfirmItemAction.dispute);
   });
 
   testWidgets('order card matches the required information hierarchy', (

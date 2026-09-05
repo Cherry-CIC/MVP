@@ -2,6 +2,7 @@ import 'package:cherry_mvp/core/config/app_strings.dart';
 import 'package:cherry_mvp/core/utils/status.dart';
 import 'package:cherry_mvp/features/orders/models/order_summary.dart';
 import 'package:cherry_mvp/features/orders/orders_view_model.dart';
+import 'package:cherry_mvp/features/orders/widgets/confirm_item_dialog.dart';
 import 'package:cherry_mvp/features/orders/widgets/order_card.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -49,16 +50,16 @@ class _MyOrdersPageState extends State<MyOrdersPage> {
       return;
     }
 
-    final action = await showDialog<_ConfirmItemAction>(
+    final action = await showDialog<ConfirmItemAction>(
       context: context,
-      builder: (dialogContext) => _ConfirmItemDialog(order: order),
+      builder: (dialogContext) => ConfirmItemDialog(order: order),
     );
 
     if (!mounted || action == null) {
       return;
     }
 
-    if (action == _ConfirmItemAction.dispute) {
+    if (action == ConfirmItemAction.dispute) {
       await _openDisputeDialog(context, order);
       return;
     }
@@ -285,68 +286,6 @@ class _OrdersList extends StatelessWidget {
   }
 }
 
-enum _ConfirmItemAction { confirm, dispute }
-
-class _ConfirmItemDialog extends StatelessWidget {
-  final OrderSummary order;
-
-  const _ConfirmItemDialog({required this.order});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final orderImage = order.imageUrl.trim().isNotEmpty
-        ? ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: SizedBox(
-              height: 180,
-              width: double.infinity,
-              child: Image.network(
-                order.imageUrl,
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => const SizedBox.shrink(),
-              ),
-            ),
-          )
-        : const SizedBox.shrink();
-
-    return AlertDialog(
-      title: const Text('Confirm this item'),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (orderImage is! SizedBox || order.imageUrl.trim().isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 16),
-              child: orderImage,
-            ),
-          Text(
-            order.productName,
-            style: theme.textTheme.titleMedium,
-          ),
-          const SizedBox(height: 16),
-          const Text('Have you received your item as expected?'),
-        ],
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(false),
-          child: const Text('Cancel'),
-        ),
-        OutlinedButton(
-          onPressed: () => Navigator.of(context).pop(_ConfirmItemAction.dispute),
-          child: const Text('Raise dispute'),
-        ),
-        FilledButton(
-          onPressed: () => Navigator.of(context).pop(_ConfirmItemAction.confirm),
-          child: const Text('Yes, all good'),
-        ),
-      ],
-    );
-  }
-}
-
 class _DisputeChoice {
   final String reason;
   final String message;
@@ -435,15 +374,15 @@ class _OrdersListState {
       return;
     }
 
-    final action = await showDialog<_ConfirmItemAction>(
+    final action = await showDialog<ConfirmItemAction>(
       context: context,
-      builder: (dialogContext) => _ConfirmItemDialog(order: order),
+      builder: (dialogContext) => ConfirmItemDialog(order: order),
     );
     if (action == null) {
       return;
     }
 
-    if (action == _ConfirmItemAction.dispute) {
+    if (action == ConfirmItemAction.dispute) {
       final disputeChoice = await showDialog<_DisputeChoice>(
         context: context,
         builder: (dialogContext) => _DisputeDialog(order: order),
