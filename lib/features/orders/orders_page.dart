@@ -49,12 +49,17 @@ class _MyOrdersPageState extends State<MyOrdersPage> {
       return;
     }
 
-    final confirmed = await showDialog<bool>(
+    final action = await showDialog<_ConfirmItemAction>(
       context: context,
       builder: (dialogContext) => _ConfirmItemDialog(order: order),
     );
 
-    if (!mounted || confirmed != true) {
+    if (!mounted || action == null) {
+      return;
+    }
+
+    if (action == _ConfirmItemAction.dispute) {
+      await _openDisputeDialog(context, order);
       return;
     }
 
@@ -280,6 +285,8 @@ class _OrdersList extends StatelessWidget {
   }
 }
 
+enum _ConfirmItemAction { confirm, dispute }
+
 class _ConfirmItemDialog extends StatelessWidget {
   final OrderSummary order;
 
@@ -328,15 +335,11 @@ class _ConfirmItemDialog extends StatelessWidget {
           child: const Text('Cancel'),
         ),
         OutlinedButton(
-          onPressed: () {
-            Navigator.of(context).pop(false);
-            final pageState = context.findAncestorStateOfType<_MyOrdersPageState>();
-            pageState?._openDisputeDialog(context, order);
-          },
+          onPressed: () => Navigator.of(context).pop(_ConfirmItemAction.dispute),
           child: const Text('Raise dispute'),
         ),
         FilledButton(
-          onPressed: () => Navigator.of(context).pop(true),
+          onPressed: () => Navigator.of(context).pop(_ConfirmItemAction.confirm),
           child: const Text('Yes, all good'),
         ),
       ],
@@ -432,11 +435,42 @@ class _OrdersListState {
       return;
     }
 
-    final result = await showDialog<bool>(
+    final action = await showDialog<_ConfirmItemAction>(
       context: context,
       builder: (dialogContext) => _ConfirmItemDialog(order: order),
     );
-    if (result != true) {
+    if (action == null) {
+      return;
+    }
+
+    if (action == _ConfirmItemAction.dispute) {
+      final disputeChoice = await showDialog<_DisputeChoice>(
+        context: context,
+        builder: (dialogContext) => _DisputeDialog(order: order),
+      );
+      if (disputeChoice == null) {
+        return;
+      }
+
+      final disputeResult = await viewModel.submitOrderDispute(
+        order.id,
+        reason: disputeChoice.reason,
+        message: disputeChoice.message,
+      );
+      if (!context.mounted) {
+        return;
+      }
+      if (disputeResult.isSuccess) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Dispute submitted')),
+        );
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(disputeResult.error ?? 'Could not submit the dispute'),
+        ),
+      );
       return;
     }
 

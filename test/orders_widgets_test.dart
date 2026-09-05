@@ -21,6 +21,20 @@ class _QueuedOrdersRepository implements IOrdersRepository {
     requestCount++;
     return responses.removeAt(0);
   }
+
+  @override
+  Future<Result<dynamic>> confirmOrderReceived(String orderId) async {
+    return Result.failure('Not configured for this test');
+  }
+
+  @override
+  Future<Result<dynamic>> submitOrderDispute(
+    String orderId, {
+    required String reason,
+    String? message,
+  }) async {
+    return Result.failure('Not configured for this test');
+  }
 }
 
 OrderSummary _order({
@@ -298,6 +312,34 @@ void main() {
 
     expect(find.text('Example shirt'), findsOneWidget);
     expect(repository.requestCount, 2);
+  });
+
+  testWidgets('Raise dispute opens the dispute dialog from item confirmation', (
+    tester,
+  ) async {
+    final viewModel = OrdersViewModel(
+      repository: _QueuedOrdersRepository([
+        Result.success([
+          _order(
+            deliveryState: 'awaiting_confirmation',
+            deliveryLabel: 'Awaiting your confirmation',
+          ),
+        ]),
+      ]),
+    );
+
+    await _pumpPage(tester, viewModel: viewModel);
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Example shirt'));
+    await tester.pumpAndSettle();
+    expect(find.text('Confirm this item'), findsOneWidget);
+
+    await tester.tap(find.text('Raise dispute'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Raise dispute'), findsOneWidget);
+    expect(find.text('Tell us what went wrong'), findsOneWidget);
   });
 
   testWidgets('disposing My Orders clears cached account data', (
