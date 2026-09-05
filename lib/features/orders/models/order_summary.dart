@@ -41,12 +41,13 @@ class OrderSummary {
 
     final productId = _readString(json['productId']);
     final productName = _readString(json['productName']);
+    final imageUrl = _readString(json['imageUrl']);
 
     return OrderSummary(
       id: id,
       productId: productId,
       productName: productName.isEmpty ? fallbackProductName : productName,
-      imageUrl: '',
+      imageUrl: imageUrl,
       size: '',
       charityLogoUrl: '',
       itemPriceMinor: _readNonNegativeInteger(json['productAmount']),

@@ -63,6 +63,7 @@ void main() {
         'currency': ' gbp ',
         'deliveryState': ' shipped ',
         'deliveryLabel': ' On the way ',
+        'imageUrl': ' https://example.com/order-image.jpg ',
       });
 
       expect(order, isNotNull);
@@ -74,6 +75,7 @@ void main() {
       expect(order.currency, 'GBP');
       expect(order.deliveryState, 'shipped');
       expect(order.deliveryLabel, 'On the way');
+      expect(order.imageUrl, 'https://example.com/order-image.jpg');
     });
 
     test('retains valid ISO currencies and uses GBP only as a fallback', () {
@@ -308,6 +310,7 @@ void main() {
                   id: 'order-1',
                   productId: 'deleted-product',
                   productName: 'Purchased item',
+                  imageUrl: 'https://example.com/order-image.jpg',
                 ),
               ],
             },
@@ -322,7 +325,7 @@ void main() {
       expect(result.isSuccess, isTrue);
       final order = result.value!.single;
       expect(order.productName, 'Purchased item');
-      expect(order.imageUrl, isEmpty);
+      expect(order.imageUrl, 'https://example.com/order-image.jpg');
       expect(order.charityLogoUrl, isEmpty);
       expect(order.itemPriceMinor, 400);
     });
@@ -489,6 +492,7 @@ Map<String, dynamic> _orderJson({
   dynamic currency = 'GBP',
   dynamic deliveryState = 'preparing',
   String deliveryLabel = 'Preparing',
+  String imageUrl = '',
   String? status,
 }) {
   return {
@@ -500,6 +504,7 @@ Map<String, dynamic> _orderJson({
     'currency': currency,
     'deliveryState': deliveryState,
     'deliveryLabel': deliveryLabel,
+    'imageUrl': imageUrl,
     'status': status,
   };
 }
