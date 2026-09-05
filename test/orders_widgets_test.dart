@@ -14,11 +14,15 @@ import 'package:provider/provider.dart';
 class _QueuedOrdersRepository implements IOrdersRepository {
   final List<Result<List<OrderSummary>>> responses;
   final Result<dynamic>? confirmationResult;
+  final Result<dynamic>? disputeResult;
+  String? disputeReason;
+  String? disputeMessage;
   int requestCount = 0;
 
   _QueuedOrdersRepository(
     this.responses, {
     this.confirmationResult,
+    this.disputeResult,
   });
 
   @override
@@ -38,7 +42,9 @@ class _QueuedOrdersRepository implements IOrdersRepository {
     required String reason,
     String? message,
   }) async {
-    return Result.failure('Not configured for this test');
+    disputeReason = reason;
+    disputeMessage = message;
+    return disputeResult ?? Result.failure('Not configured for this test');
   }
 }
 
@@ -139,6 +145,25 @@ void main() {
         AppStrings.myOrdersStatusUnavailable,
       );
     });
+  });
+
+  testWidgets('ConfirmItemDialog shows item details and omits a missing image', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: ConfirmItemDialog(order: _order(imageUrl: '')),
+        ),
+      ),
+    );
+
+    expect(find.text('Confirm this item'), findsOneWidget);
+    expect(find.text('Example shirt'), findsOneWidget);
+    expect(find.text('Have you received your item as expected?'), findsOneWidget);
+    expect(find.text('Yes, all good'), findsOneWidget);
+    expect(find.text('Raise dispute'), findsOneWidget);
+    expect(find.byType(Image), findsNothing);
   });
 
   testWidgets('ConfirmItemDialog returns its selected action', (tester) async {
@@ -405,6 +430,48 @@ void main() {
     expect(find.text(AppStrings.myOrdersAwaitingConfirmation), findsNothing);
     expect(find.text(AppStrings.myOrdersOther), findsOneWidget);
     expect(find.text(AppStrings.myOrdersConfirmed), findsOneWidget);
+    expect(find.text('Receipt confirmed'), findsOneWidget);
+  });
+
+  testWidgets('failed confirmation shows an error snackbar', (tester) async {
+    final viewModel = OrdersViewModel(
+      repository: _QueuedOrdersRepository(
+        [Result.success([_order(deliveryState: 'awaiting_confirmation')])],
+        confirmationResult: Result.failure('Confirmation unavailable'),
+      ),
+    );
+
+    await _pumpPage(tester, viewModel: viewModel);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Example shirt'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Yes, all good'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Confirmation unavailable'), findsOneWidget);
+  });
+
+  testWidgets('submitting a dispute sends its reason and message', (tester) async {
+    final repository = _QueuedOrdersRepository(
+      [Result.success([_order(deliveryState: 'awaiting_confirmation')])],
+      disputeResult: Result.success({}),
+    );
+    final viewModel = OrdersViewModel(repository: repository);
+
+    await _pumpPage(tester, viewModel: viewModel);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Example shirt'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Raise dispute'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), 'Wrong size received');
+    await tester.tap(find.text('Submit'));
+    await tester.pumpAndSettle();
+
+    expect(repository.disputeReason, 'wrong_item');
+    expect(repository.disputeMessage, 'Wrong size received');
+    expect(find.text('Dispute submitted'), findsOneWidget);
+    expect(find.text(AppStrings.myOrdersDisputed), findsOneWidget);
   });
 
   testWidgets('disposing My Orders clears cached account data', (
