@@ -1,11 +1,12 @@
 import 'dart:async';
 import 'package:cherry_mvp/core/config/environment_config.dart';
+import 'package:cherry_mvp/core/services/network/safe_http_log_interceptor.dart';
+import 'package:cherry_mvp/core/services/safe_log.dart';
 import 'package:dio/dio.dart';
 import 'package:cherry_mvp/core/services/error_string.dart';
 import 'package:cherry_mvp/core/utils/result.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:logging/logging.dart';
-import 'package:pretty_dio_logger/pretty_dio_logger.dart';
+import 'package:flutter/foundation.dart';
 
 abstract class ApiService {
   Future<Result<T>> get<T>(
@@ -24,7 +25,6 @@ class DioApiService implements ApiService {
 
   late final Dio _dio;
   final FirebaseAuth _firebaseAuth;
-  final _log = Logger('DioApiService');
 
   DioApiService({FirebaseAuth? firebaseAuth}) : _firebaseAuth = firebaseAuth ?? FirebaseAuth.instance {
     final baseUrl = AppEnvironment.apiBaseUrl;
@@ -42,35 +42,49 @@ class DioApiService implements ApiService {
       ),
     );
 
-    _log.info('API initialised with base URL: ${_dio.options.baseUrl}');
+    SafeLog.event(AppLogEvent.apiInitialised);
     _setupInterceptors();
   }
 
-  void _setupInterceptors() {
+  @visibleForTesting
+  DioApiService.forTesting(
+    this._firebaseAuth, {
+    required Dio dio,
+    SafeHttpLogSink? safeHttpLogSink,
+  }) {
+    _dio = dio;
+    _setupInterceptors(safeHttpLogSink: safeHttpLogSink);
+  }
+
+  void _setupInterceptors({SafeHttpLogSink? safeHttpLogSink}) {
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
           try {
             await _attachAuthHeader(options);
-          } on TimeoutException catch (e) {
-            _log.severe(
-              'Timed out retrieving Firebase ID token for ${options.path}: $e',
+          } on TimeoutException {
+            SafeLog.event(
+              AppLogEvent.authTokenTimeout,
+              level: SafeLogLevel.severe,
             );
-          } on FirebaseAuthException catch (e) {
-            _log.severe(
-              'Firebase auth error retrieving token for ${options.path}: '
-              '${e.code}',
+          } on FirebaseAuthException {
+            SafeLog.event(
+              AppLogEvent.authTokenFirebaseFailure,
+              level: SafeLogLevel.severe,
             );
-          } catch (e) {
-            _log.warning('Auth interceptor error for ${options.path}: $e');
+          } catch (_) {
+            SafeLog.event(
+              AppLogEvent.authTokenUnexpectedFailure,
+              level: SafeLogLevel.warning,
+            );
           }
           return handler.next(options);
         },
         onError: (error, handler) async {
           if (error.response?.statusCode == 401) {
-            _log.warning(
-              'Unauthorized access to ${error.requestOptions.method} '
-              '${error.requestOptions.path}',
+            SafeLog.event(
+              AppLogEvent.unauthorisedRequest,
+              level: SafeLogLevel.warning,
             );
           }
 
@@ -84,15 +98,11 @@ class DioApiService implements ApiService {
       ),
     );
 
-    _dio.interceptors.add(
-      PrettyDioLogger(
-        requestHeader: true,
-        requestBody: true,
-        responseBody: true,
-        error: true,
-        compact: true,
-      ),
-    );
+    if (kDebugMode) {
+      _dio.interceptors.add(
+        SafeHttpLogInterceptor(sink: safeHttpLogSink),
+      );
+    }
   }
 
   @override
@@ -104,12 +114,16 @@ class DioApiService implements ApiService {
       final response = await _dio.get(
         endpoint,
         queryParameters: queryParameters,
+        options: _safeOptions('GET', endpoint),
       );
       return Result.success(response.data as T);
     } on DioException catch (e) {
       return Result.failure(_handleDioError(e));
-    } catch (e) {
-      _log.severe('Unexpected error in GET $endpoint: $e');
+    } catch (_) {
+      SafeLog.event(
+        AppLogEvent.unexpectedGetFailure,
+        level: SafeLogLevel.severe,
+      );
       return Result.failure(ErrorStrings.friendlyError);
     }
   }
@@ -117,12 +131,19 @@ class DioApiService implements ApiService {
   @override
   Future<Result<T>> post<T>(String endpoint, {dynamic data}) async {
     try {
-      final response = await _dio.post(endpoint, data: data);
+      final response = await _dio.post(
+        endpoint,
+        data: data,
+        options: _safeOptions('POST', endpoint),
+      );
       return Result.success(response.data as T);
     } on DioException catch (e) {
       return Result.failure(_handleDioError(e));
-    } catch (e) {
-      _log.severe('Unexpected error in POST $endpoint: $e');
+    } catch (_) {
+      SafeLog.event(
+        AppLogEvent.unexpectedPostFailure,
+        level: SafeLogLevel.severe,
+      );
       return Result.failure(ErrorStrings.friendlyError);
     }
   }
@@ -130,12 +151,19 @@ class DioApiService implements ApiService {
   @override
   Future<Result<T>> put<T>(String endpoint, {dynamic data}) async {
     try {
-      final response = await _dio.put(endpoint, data: data);
+      final response = await _dio.put(
+        endpoint,
+        data: data,
+        options: _safeOptions('PUT', endpoint),
+      );
       return Result.success(response.data as T);
     } on DioException catch (e) {
       return Result.failure(_handleDioError(e));
-    } catch (e) {
-      _log.severe('Unexpected error in PUT $endpoint: $e');
+    } catch (_) {
+      SafeLog.event(
+        AppLogEvent.unexpectedPutFailure,
+        level: SafeLogLevel.severe,
+      );
       return Result.failure(ErrorStrings.friendlyError);
     }
   }
@@ -143,19 +171,23 @@ class DioApiService implements ApiService {
   @override
   Future<Result<T>> delete<T>(String endpoint) async {
     try {
-      final response = await _dio.delete(endpoint);
+      final response = await _dio.delete(
+        endpoint,
+        options: _safeOptions('DELETE', endpoint),
+      );
       return Result.success(response.data as T);
     } on DioException catch (e) {
       return Result.failure(_handleDioError(e));
-    } catch (e) {
-      _log.severe('Unexpected error in DELETE $endpoint: $e');
+    } catch (_) {
+      SafeLog.event(
+        AppLogEvent.unexpectedDeleteFailure,
+        level: SafeLogLevel.severe,
+      );
       return Result.failure(ErrorStrings.friendlyError);
     }
   }
 
   String _handleDioError(DioException e) {
-    _log.warning('DioException occurred: ${e.type} - ${e.message}');
-
     switch (e.type) {
       case DioExceptionType.connectionTimeout:
       case DioExceptionType.sendTimeout:
@@ -175,9 +207,6 @@ class DioApiService implements ApiService {
 
   String _handleBadResponse(DioException e) {
     final statusCode = e.response?.statusCode;
-    final data = e.response?.data;
-
-    _log.warning('Bad response: $statusCode - $data');
 
     switch (statusCode) {
       case 400:
@@ -185,10 +214,6 @@ class DioApiService implements ApiService {
       case 404:
       case 422:
       case 429:
-        final serverMessage = _extractErrorMessage(data);
-        if (serverMessage != null) {
-          _log.info('Server validation error: $serverMessage');
-        }
         return ErrorStrings.apiError;
       case 401:
         return ErrorStrings.unauthorizedError;
@@ -199,13 +224,6 @@ class DioApiService implements ApiService {
       default:
         return ErrorStrings.friendlyError;
     }
-  }
-
-  String? _extractErrorMessage(dynamic data) {
-    if (data is Map<String, dynamic>) {
-      return data['message'] ?? data['error'] ?? data['detail'];
-    }
-    return null;
   }
 
   Future<void> _attachAuthHeader(RequestOptions options) async {
@@ -240,17 +258,14 @@ class DioApiService implements ApiService {
     }
 
     requestOptions.extra[_retryAttemptKey] = attempt + 1;
-    _log.info(
-      'Retrying ${requestOptions.method} ${requestOptions.path} '
-      '(attempt ${attempt + 1})',
-    );
+    SafeLog.event(AppLogEvent.networkRetryStarted);
 
     try {
       return await _dio.fetch<dynamic>(requestOptions);
-    } on DioException catch (retryError) {
-      _log.warning(
-        'Retry failed for ${requestOptions.method} ${requestOptions.path}: '
-        '${retryError.message}',
+    } on DioException {
+      SafeLog.event(
+        AppLogEvent.networkRetryFailed,
+        level: SafeLogLevel.warning,
       );
       return null;
     }
@@ -273,5 +288,16 @@ class DioApiService implements ApiService {
 
   bool _isRetryableMethod(String method) {
     return method.toUpperCase() == 'GET';
+  }
+
+  Options _safeOptions(String method, String endpoint) {
+    return Options(
+      extra: <String, Object>{
+        SafeHttpLogInterceptor.operationExtraKey: classifyHttpOperation(
+          method: method,
+          endpoint: endpoint,
+        ),
+      },
+    );
   }
 }

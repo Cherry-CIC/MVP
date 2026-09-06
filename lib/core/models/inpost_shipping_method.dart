@@ -39,6 +39,6 @@ class InpostShippingMethod {
 
   @override
   String toString() {
-    return 'InpostShippingMethod{id: $id, name: $name, deliveryType: $deliveryType, deliveryMethodType: $deliveryMethodType, pricePence: $pricePence, currency: $currency, checkoutIdentifier: $checkoutIdentifier}';
+    return 'InpostShippingMethod(redacted)';
   }
 }

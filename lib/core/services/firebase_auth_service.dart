@@ -1,16 +1,14 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:cherry_mvp/core/models/model.dart';
 import 'package:cherry_mvp/core/services/error_string.dart';
 import 'package:cherry_mvp/core/services/google_auth_service.dart';
+import 'package:cherry_mvp/core/services/safe_log.dart';
 import 'package:cherry_mvp/core/utils/result.dart';
 
-import 'package:logging/logging.dart';
-
 class FirebaseAuthService {
-  final _log = Logger('FirebaseAuthService');
   final FirebaseAuth firebaseAuth;
 
   FirebaseAuthService({required this.firebaseAuth});
@@ -25,10 +23,10 @@ class FirebaseAuthService {
       );
 
       return Result.success(UserCredentials.fromAuth(user.user!));
-    } on FirebaseAuthException catch (e) {
-      return Result.failure(e.message ?? ErrorStrings.registerError);
-    } catch (e) {
-      return Result.failure(e.toString());
+    } on FirebaseAuthException {
+      return Result.failure(ErrorStrings.registerError);
+    } catch (_) {
+      return Result.failure(ErrorStrings.registerError);
     }
   }
 
@@ -41,10 +39,10 @@ class FirebaseAuthService {
       return Result.success(
         UserCredentials(uid: user.user?.uid, email: user.user?.email),
       );
-    } on FirebaseAuthException catch (e) {
-      return Result.failure(e.message ?? ErrorStrings.loginError);
-    } catch (e) {
-      return Result.failure(e.toString());
+    } on FirebaseAuthException {
+      return Result.failure(ErrorStrings.loginError);
+    } catch (_) {
+      return Result.failure(ErrorStrings.loginError);
     }
   }
 
@@ -53,13 +51,19 @@ class FirebaseAuthService {
       await firebaseAuth.sendPasswordResetEmail(email: email);
       return Result.success(null);
     } on FirebaseAuthException catch (e) {
-      _log.warning('FirebaseAuthException in sendPasswordResetEmail: ${e.code} - ${e.message}');
+      SafeLog.event(
+        AppLogEvent.authenticationOperationFailed,
+        level: SafeLogLevel.warning,
+      );
       if (e.code == 'invalid-email') {
         return Result.failure('Please enter a valid email address.');
       }
       return Result.success(null);
-    } catch (e) {
-      _log.severe('Generic exception in sendPasswordResetEmail: $e');
+    } catch (_) {
+      SafeLog.event(
+        AppLogEvent.authenticationOperationFailed,
+        level: SafeLogLevel.severe,
+      );
       return Result.failure('Unable to send reset email right now. Please try again.');
     }
   }
@@ -73,10 +77,10 @@ class FirebaseAuthService {
       } else {
         return Result.failure('No user found or email already verified');
       }
-    } on FirebaseAuthException catch (e) {
-      return Result.failure(e.message ?? ErrorStrings.friendlyError);
-    } catch (e) {
-      return Result.failure(e.toString());
+    } on FirebaseAuthException {
+      return Result.failure(ErrorStrings.friendlyError);
+    } catch (_) {
+      return Result.failure(ErrorStrings.friendlyError);
     }
   }
 
@@ -91,12 +95,18 @@ class FirebaseAuthService {
       }
       // Once signed in, return the UserCredential
       return Result.success(UserCredentials.fromAuth(userCredential.user!));
-    } on FirebaseAuthException catch (e) {
-      debugPrint('FirebaseAuthException: ${e.code} ${e.message}');
-      return Result.failure(e.message ?? 'Firebase Auth error');
-    } catch (e) {
-      debugPrint('Unknown exception: $e');
-      return Result.failure('Google sign-in failed: $e');
+    } on FirebaseAuthException {
+      SafeLog.event(
+        AppLogEvent.authenticationOperationFailed,
+        level: SafeLogLevel.warning,
+      );
+      return Result.failure('Google sign-in failed');
+    } catch (_) {
+      SafeLog.event(
+        AppLogEvent.authenticationOperationFailed,
+        level: SafeLogLevel.warning,
+      );
+      return Result.failure('Google sign-in failed');
     }
   }
 
@@ -116,12 +126,18 @@ class FirebaseAuthService {
       }
       // Once signed in, return the UserCredential
       return Result.success(UserCredentials.fromAuth(userCredential.user!));
-    } on FirebaseAuthException catch (e) {
-      debugPrint('FirebaseAuthException: ${e.code} ${e.message}');
-      return Result.failure(e.message ?? 'Firebase Auth error');
-    } catch (e) {
-      debugPrint('Unknown exception: $e');
-      return Result.failure('Apple sign-in failed: $e');
+    } on FirebaseAuthException {
+      SafeLog.event(
+        AppLogEvent.authenticationOperationFailed,
+        level: SafeLogLevel.warning,
+      );
+      return Result.failure('Apple sign-in failed');
+    } catch (_) {
+      SafeLog.event(
+        AppLogEvent.authenticationOperationFailed,
+        level: SafeLogLevel.warning,
+      );
+      return Result.failure('Apple sign-in failed');
     }
   }
 
@@ -132,8 +148,8 @@ class FirebaseAuthService {
       await _googleAuthService.signOut();
 
       return Result.success(null);
-    } catch (e) {
-      return Result.failure(e.toString());
+    } catch (_) {
+      return Result.failure(ErrorStrings.friendlyError);
     }
   }
 }

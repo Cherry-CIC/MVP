@@ -1,8 +1,8 @@
 import 'package:cherry_mvp/core/services/network/api_endpoints.dart';
 import 'package:cherry_mvp/core/services/network/api_service.dart';
+import 'package:cherry_mvp/core/services/safe_log.dart';
 import 'package:cherry_mvp/core/utils/result.dart';
 import 'package:cherry_mvp/features/profile/models/seller_listing.dart';
-import 'package:logging/logging.dart';
 
 abstract class IProfileListingsRepository {
   Future<Result<ProfileListingsPage>> fetchListings({
@@ -27,7 +27,6 @@ class ProfileListingsPage {
 
 class ProfileListingsRepository implements IProfileListingsRepository {
   final ApiService _apiService;
-  final _log = Logger('ProfileListingsRepository');
 
   ProfileListingsRepository(this._apiService);
 
@@ -58,8 +57,9 @@ class ProfileListingsRepository implements IProfileListingsRepository {
 
       final rawListings = _extractListings(response);
       if (rawListings == null) {
-        _log.warning(
-          'Unexpected profile listings response: ${response.runtimeType}',
+        SafeLog.event(
+          AppLogEvent.profileListingsResponseInvalid,
+          level: SafeLogLevel.warning,
         );
         return Result.failure('Unexpected listings response');
       }
@@ -75,8 +75,11 @@ class ProfileListingsRepository implements IProfileListingsRepository {
           hasMore: meta.hasMore,
         ),
       );
-    } catch (error) {
-      _log.severe('Profile listings request failed: $error');
+    } catch (_) {
+      SafeLog.event(
+        AppLogEvent.profileListingsLoadFailed,
+        level: SafeLogLevel.severe,
+      );
       return Result.failure('Could not load your listings');
     }
   }

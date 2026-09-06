@@ -52,3 +52,11 @@ No backend, API contract, Firestore, logistics, pricing or Stripe-processing cha
 Tests intercept both the repository payment-intent boundary and the native Stripe method channel. No live payment or native-device payment-sheet check was performed. No native debug build was run: the repository's existing CI workflow checks GitHub Actions with CodeQL and does not define a Flutter build.
 
 This fix prevents failures from delivery details already known to be invalid. It does not provide payment recovery if the backend rejects an order after successful payment, nor payment/order idempotency across app restarts. Those existing concerns require separate work. Existing country and telephone validation rules were retained; no new phone-format or carrier-specific validation was introduced.
+
+## PR #489 merge verification
+
+Merged main at `b72fca0` into the PR branch. The single conflict in `createOrder()` was resolved by retaining main's sanitised error message and typed safe logging alongside this PR's `finally` block, which releases both submission guards and notifies listeners. All other main changes were retained.
+
+Added a regression for an unexpected repository exception: the buyer receives the sanitised message, checkout unlocks, entered telephone data remains intact and a subsequent order call can complete.
+
+Verification after resolving the conflict: locked dependencies resolved with `flutter pub get --offline --enforce-lockfile`; `flutter test --no-pub --reporter expanded` passed all 185 tests; `flutter analyze --no-pub` reported no issues; `bash tool/check_safe_logging.sh`, formatting checks for the two edited Dart files and `git diff --check` passed. The temporary empty `.env` was removed. No live payment or native build was performed. Main now also includes the safe-logging CI workflow, in addition to the CodeQL workflow described above.

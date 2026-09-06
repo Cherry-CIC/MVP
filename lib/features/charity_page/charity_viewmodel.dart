@@ -1,12 +1,11 @@
 import 'package:flutter/cupertino.dart';
-import 'package:logging/logging.dart';
 import 'package:cherry_mvp/core/router/nav_provider.dart';
+import 'package:cherry_mvp/core/services/safe_log.dart';
 import 'package:cherry_mvp/core/utils/utils.dart';
 import 'package:cherry_mvp/features/charity_page/charity_model.dart';
 import 'package:cherry_mvp/features/charity_page/charity_repository.dart';
 
 class CharityViewModel extends ChangeNotifier {
-  final _log = Logger('CharityViewModel');
   final ICharityRepository charityRepository;
   final NavigationProvider navigator;
 
@@ -32,11 +31,17 @@ class CharityViewModel extends ChangeNotifier {
         _status = Status.success;
       } else {
         _status = Status.failure(result.error ?? 'Failed to fetch charities');
-        _log.warning('Fetch charities failed! ${result.error}');
+        SafeLog.event(
+          AppLogEvent.charityLoadFailed,
+          level: SafeLogLevel.warning,
+        );
       }
     } catch (e) {
       _status = Status.failure(e.toString());
-      _log.severe('Fetch charities error: $e');
+      SafeLog.event(
+        AppLogEvent.charityLoadFailed,
+        level: SafeLogLevel.severe,
+      );
     }
 
     notifyListeners();

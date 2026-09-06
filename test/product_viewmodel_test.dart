@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cherry_mvp/core/config/app_images.dart';
 import 'package:cherry_mvp/core/models/product.dart';
 import 'package:cherry_mvp/core/router/nav_provider.dart';
@@ -13,16 +15,21 @@ class _LikeUpdateRepository extends ProductRepository {
     required this.likeUpdate,
     required this.unlikeUpdate,
     this.likedProductsResult,
+    this.likedProductsCompleters = const [],
   }) : super(const UnexpectedApiService());
 
   final ProductLikeUpdate likeUpdate;
   final ProductLikeUpdate unlikeUpdate;
   final Result<List<Product>>? likedProductsResult;
+  final List<Completer<Result<List<Product>>>> likedProductsCompleters;
   int fetchLikedProductsCount = 0;
 
   @override
   Future<Result<List<Product>>> fetchLikedProducts() async {
     fetchLikedProductsCount++;
+    if (fetchLikedProductsCount <= likedProductsCompleters.length) {
+      return likedProductsCompleters[fetchLikedProductsCount - 1].future;
+    }
     return likedProductsResult ?? Result.success(const <Product>[]);
   }
 
@@ -139,6 +146,120 @@ void main() {
     expect(viewModel.getLikesCount(product), 1);
   });
 
+  test('keeps overlapping hydration results within their account', () async {
+    var currentUserId = 'account-a';
+    final accountAHydration = Completer<Result<List<Product>>>();
+    final accountBHydration = Completer<Result<List<Product>>>();
+    final repository = _LikeUpdateRepository(
+      likeUpdate: const ProductLikeUpdate(liked: true, likes: 1),
+      unlikeUpdate: const ProductLikeUpdate(liked: false, likes: 0),
+      likedProductsCompleters: [accountAHydration, accountBHydration],
+    );
+    final viewModel = ProductViewModel(
+      productRepository: repository,
+      navigator: NavigationProvider(),
+      currentUserIdProvider: () => currentUserId,
+    );
+
+    final firstHydration = viewModel.hydrateLikedProducts();
+    currentUserId = 'account-b';
+    viewModel.clearUserState();
+    final secondHydration = viewModel.hydrateLikedProducts();
+
+    expect(identical(firstHydration, secondHydration), isFalse);
+    expect(repository.fetchLikedProductsCount, 2);
+
+    accountAHydration.complete(
+      Result.success([_product(id: 'account-a-product', likes: 1)]),
+    );
+    final firstResult = await firstHydration;
+
+    expect(firstResult.isSuccess, isFalse);
+    expect(viewModel.isProductLiked('account-a-product'), isFalse);
+
+    final sharedSecondHydration = viewModel.hydrateLikedProducts();
+    expect(identical(secondHydration, sharedSecondHydration), isTrue);
+    expect(repository.fetchLikedProductsCount, 2);
+
+    accountBHydration.complete(
+      Result.success([_product(id: 'account-b-product', likes: 1)]),
+    );
+    final secondResult = await secondHydration;
+
+    expect(secondResult.isSuccess, isTrue);
+    expect(viewModel.isProductLiked('account-a-product'), isFalse);
+    expect(viewModel.isProductLiked('account-b-product'), isTrue);
+  });
+
+  test('coalesces notifications for lazily detected account changes', () async {
+    var currentUserId = 'account-a';
+    final viewModel = ProductViewModel(
+      productRepository: _LikeUpdateRepository(
+        likeUpdate: const ProductLikeUpdate(liked: true, likes: 1),
+        unlikeUpdate: const ProductLikeUpdate(liked: false, likes: 0),
+      ),
+      navigator: NavigationProvider(),
+      currentUserIdProvider: () => currentUserId,
+    );
+    viewModel.isProductLiked('liked-product');
+    var notificationCount = 0;
+    viewModel.addListener(() => notificationCount++);
+
+    currentUserId = 'account-b';
+    viewModel.isProductLiked('liked-product');
+    currentUserId = 'account-c';
+    viewModel.cachedLikedProducts;
+
+    expect(notificationCount, 0);
+    await Future<void>.microtask(() {});
+    expect(notificationCount, 1);
+  });
+
+  test('explicit clearing cancels a pending account-change notification', () async {
+    var currentUserId = 'account-a';
+    final viewModel = ProductViewModel(
+      productRepository: _LikeUpdateRepository(
+        likeUpdate: const ProductLikeUpdate(liked: true, likes: 1),
+        unlikeUpdate: const ProductLikeUpdate(liked: false, likes: 0),
+      ),
+      navigator: NavigationProvider(),
+      currentUserIdProvider: () => currentUserId,
+    );
+    viewModel.isProductLiked('liked-product');
+    var notificationCount = 0;
+    viewModel.addListener(() => notificationCount++);
+
+    currentUserId = 'account-b';
+    viewModel.isProductLiked('liked-product');
+    viewModel.clearUserState();
+
+    expect(notificationCount, 1);
+    await Future<void>.microtask(() {});
+    expect(notificationCount, 1);
+  });
+
+  test('skips a pending account-change notification after disposal', () async {
+    var currentUserId = 'account-a';
+    final viewModel = ProductViewModel(
+      productRepository: _LikeUpdateRepository(
+        likeUpdate: const ProductLikeUpdate(liked: true, likes: 1),
+        unlikeUpdate: const ProductLikeUpdate(liked: false, likes: 0),
+      ),
+      navigator: NavigationProvider(),
+      currentUserIdProvider: () => currentUserId,
+    );
+    viewModel.isProductLiked('liked-product');
+    var notificationCount = 0;
+    viewModel.addListener(() => notificationCount++);
+
+    currentUserId = 'account-b';
+    viewModel.isProductLiked('liked-product');
+    viewModel.dispose();
+
+    await Future<void>.microtask(() {});
+    expect(notificationCount, 0);
+  });
+
   test('failed hydration clears stale user-specific liked state', () async {
     final product = _product(likes: 1);
     final viewModel = ProductViewModel(
@@ -159,9 +280,9 @@ void main() {
   });
 }
 
-Product _product({required int likes}) {
+Product _product({String id = 'liked-product', required int likes}) {
   return Product(
-    id: 'liked-product',
+    id: id,
     name: 'Liked item',
     description: 'A liked test product',
     quality: 'GOOD',

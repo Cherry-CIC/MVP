@@ -1,8 +1,8 @@
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
-import 'package:logging/logging.dart';
 import 'package:cherry_mvp/core/router/nav_provider.dart';
+import 'package:cherry_mvp/core/services/safe_log.dart';
 import 'package:cherry_mvp/core/utils/utils.dart';
 import 'package:cherry_mvp/features/register/register_model.dart';
 import 'package:cherry_mvp/features/register/register_repository.dart';
@@ -18,8 +18,6 @@ class RegisterViewModel extends ChangeNotifier {
 
   //public (exposed to loginpage)
   Status get status => _status;
-
-  final _log = Logger('RegisterViewModel');
 
   Future<void> register(
     String firstName,
@@ -48,7 +46,10 @@ class RegisterViewModel extends ChangeNotifier {
         navigator.goBack();
       } else {
         _status = Status.failure(result.error ?? "");
-        _log.warning('Registration failed! ${result.error}');
+        SafeLog.event(
+          AppLogEvent.registrationFailed,
+          level: SafeLogLevel.warning,
+        );
       }
     } catch (e) {
       _status = Status.failure(e.toString());

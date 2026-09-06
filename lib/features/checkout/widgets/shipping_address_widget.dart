@@ -7,6 +7,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import 'package:cherry_mvp/core/config/config.dart';
+import 'package:cherry_mvp/core/services/safe_log.dart';
 import 'package:cherry_mvp/features/checkout/checkout_view_model.dart';
 import 'package:cherry_mvp/features/checkout/constants/address_constants.dart';
 
@@ -51,7 +52,10 @@ class _ShippingAddressWidgetState extends State<ShippingAddressWidget> {
 
     // Check if API key is available
     if (_apiKey.isEmpty) {
-      debugPrint(AddressConstants.apiKeyMissingError);
+      SafeLog.event(
+        AppLogEvent.addressApiKeyMissing,
+        level: SafeLogLevel.warning,
+      );
       setState(() {
         _apiAvailable = false;
         _useManualEntry = true;
@@ -145,8 +149,9 @@ class _ShippingAddressWidgetState extends State<ShippingAddressWidget> {
             _showPredictions = false;
           });
           if (data['status'] != 'ZERO_RESULTS') {
-            debugPrint(
-              '${AddressConstants.addressSearchError}: ${data['status']}',
+            SafeLog.event(
+              AppLogEvent.addressSearchRejected,
+              level: SafeLogLevel.warning,
             );
           }
         }
@@ -155,12 +160,16 @@ class _ShippingAddressWidgetState extends State<ShippingAddressWidget> {
           _isLoading = false;
           _showPredictions = false;
         });
-        debugPrint(
-          '${AddressConstants.addressSearchError}: HTTP ${response.statusCode}',
+        SafeLog.event(
+          AppLogEvent.addressSearchRejected,
+          level: SafeLogLevel.warning,
         );
       }
-    } catch (e) {
-      debugPrint('${AddressConstants.addressSearchError}: $e');
+    } catch (_) {
+      SafeLog.event(
+        AppLogEvent.addressSearchFailed,
+        level: SafeLogLevel.warning,
+      );
       setState(() {
         _isLoading = false;
         _showPredictions = false;
@@ -172,7 +181,10 @@ class _ShippingAddressWidgetState extends State<ShippingAddressWidget> {
 
   Future<PlaceDetails?> _getPlaceDetails(String placeId) async {
     if (_apiKey.isEmpty) {
-      debugPrint(AddressConstants.apiKeyMissingError);
+      SafeLog.event(
+        AppLogEvent.addressApiKeyMissing,
+        level: SafeLogLevel.warning,
+      );
       return null;
     }
 
@@ -191,17 +203,22 @@ class _ShippingAddressWidgetState extends State<ShippingAddressWidget> {
         if (data['status'] == 'OK') {
           return PlaceDetails.fromJson(data['result']);
         } else {
-          debugPrint(
-            '${AddressConstants.placeDetailsError}: ${data['status']}',
+          SafeLog.event(
+            AppLogEvent.addressPlaceDetailsRejected,
+            level: SafeLogLevel.warning,
           );
         }
       } else {
-        debugPrint(
-          '${AddressConstants.placeDetailsError}: HTTP ${response.statusCode}',
+        SafeLog.event(
+          AppLogEvent.addressPlaceDetailsRejected,
+          level: SafeLogLevel.warning,
         );
       }
-    } catch (e) {
-      debugPrint('${AddressConstants.placeDetailsError}: $e');
+    } catch (_) {
+      SafeLog.event(
+        AppLogEvent.addressPlaceDetailsFailed,
+        level: SafeLogLevel.warning,
+      );
     }
     return null;
   }
@@ -297,7 +314,10 @@ class _ShippingAddressWidgetState extends State<ShippingAddressWidget> {
       final auth = Provider.of<FirebaseAuth>(context, listen: false);
       final user = auth.currentUser;
       if (user == null) {
-        debugPrint('No user logged in, cannot save address');
+        SafeLog.event(
+          AppLogEvent.addressSaveSkippedNoUser,
+          level: SafeLogLevel.warning,
+        );
         return false;
       }
 
@@ -324,10 +344,13 @@ class _ShippingAddressWidgetState extends State<ShippingAddressWidget> {
           .set(addressData, SetOptions(merge: true))
           .timeout(_networkTimeout);
 
-      debugPrint('Address saved to Firestore successfully');
+      SafeLog.event(AppLogEvent.addressSaveSucceeded);
       return true;
-    } catch (e) {
-      debugPrint('Error saving address to Firestore: $e');
+    } catch (_) {
+      SafeLog.event(
+        AppLogEvent.addressSaveFailed,
+        level: SafeLogLevel.warning,
+      );
       return false;
     }
   }
@@ -337,7 +360,10 @@ class _ShippingAddressWidgetState extends State<ShippingAddressWidget> {
       final auth = Provider.of<FirebaseAuth>(context, listen: false);
       final user = auth.currentUser;
       if (user == null) {
-        debugPrint('No user logged in, cannot load address');
+        SafeLog.event(
+          AppLogEvent.addressLoadSkippedNoUser,
+          level: SafeLogLevel.warning,
+        );
         return;
       }
 
@@ -380,11 +406,14 @@ class _ShippingAddressWidgetState extends State<ShippingAddressWidget> {
               _addressController.text = savedAddress.formattedAddress;
             }
           });
-          debugPrint('Address loaded from Firestore successfully');
+          SafeLog.event(AppLogEvent.addressLoadSucceeded);
         }
       }
-    } catch (e) {
-      debugPrint('Error loading address from Firestore: $e');
+    } catch (_) {
+      SafeLog.event(
+        AppLogEvent.addressLoadFailed,
+        level: SafeLogLevel.warning,
+      );
     }
   }
 

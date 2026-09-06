@@ -211,6 +211,21 @@ void main() {
     expect(fixture.viewModel.mobilePhoneNumber, '07700 900456');
   });
 
+  test('unexpected order error is sanitised and releases the submission lock', () async {
+    fixture.repository.pendingOrder = Completer<Result>();
+    expect(await fixture.viewModel.payWithPaymentSheet(), isTrue);
+    final ordering = fixture.viewModel.createOrder();
+    fixture.repository.pendingOrder!.completeError(StateError('Private error detail'));
+    await ordering;
+    expect(fixture.viewModel.createOrderStatus.message, 'Order could not be created. Please try again.');
+    expect(fixture.viewModel.isCheckoutInProgress, isFalse);
+    expect(fixture.viewModel.mobilePhoneNumber, '07700 900123');
+    fixture.repository.pendingOrder = null;
+    await fixture.viewModel.createOrder();
+    expect(fixture.repository.orders, hasLength(2));
+    expect(fixture.viewModel.createOrderStatus.type, StatusType.success);
+  });
+
   test('order failure unlocks checkout and retains entered details', () async {
     fixture.repository.pendingOrder = Completer<Result>();
     expect(await fixture.viewModel.payWithPaymentSheet(), isTrue);

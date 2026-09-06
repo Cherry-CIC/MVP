@@ -1,9 +1,9 @@
 import 'dart:io';
 
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:logging/logging.dart';
 import 'package:cherry_mvp/core/models/product.dart';
 import 'package:cherry_mvp/core/services/services.dart';
+import 'package:cherry_mvp/core/services/safe_log.dart';
 import 'package:cherry_mvp/core/utils/utils.dart';
 import 'package:cherry_mvp/core/config/config.dart';
 import 'package:cherry_mvp/features/donation/models/donation_model.dart';
@@ -18,14 +18,13 @@ class DonationRepository implements IDonationRepository {
   final ApiService _apiService;
   final StorageProvider _storageProvider;
   final FirebaseAuth _firebaseAuth;
-  final _log = Logger('DonationRepository');
 
   DonationRepository({required this._apiService, required this._storageProvider, required this._firebaseAuth});
 
   @override
   Future<Result<DonationResponse>> submitDonation(DonationRequest request) async {
     try {
-      _log.info('Starting donation submission process');
+      SafeLog.event(AppLogEvent.donationSubmissionStarted);
 
       final user = _firebaseAuth.currentUser;
       if (user == null) {
@@ -35,7 +34,10 @@ class DonationRepository implements IDonationRepository {
       List<String> imageUrls = [];
 
       if (request.localImages != null && request.localImages!.isNotEmpty) {
-        _log.info('Uploading ${request.localImages!.length} images to Firebase Storage');
+        SafeLog.count(
+          AppLogEvent.donationImageUploadStarted,
+          request.localImages!.length,
+        );
 
         final List<File> imageFiles = request.localImages!.map((xFile) => File(xFile.path)).toList();
 
@@ -44,18 +46,22 @@ class DonationRepository implements IDonationRepository {
         if (uploadResult.isSuccess) {
           imageUrls = uploadResult.value!;
         } else {
-          _log.warning('Image upload failed: ${uploadResult.error}');
-          return Result.failure('${AppStrings.failedToUploadImages}: ${uploadResult.error}');
+          SafeLog.event(
+            AppLogEvent.donationImageUploadFailed,
+            level: SafeLogLevel.warning,
+          );
+          return Result.failure(AppStrings.failedToUploadImages);
         }
-        _log.info('Successfully uploaded ${imageUrls.length} images');
+        SafeLog.count(
+          AppLogEvent.donationImageUploadSucceeded,
+          imageUrls.length,
+        );
       }
 
       final apiRequest = request.copyWith(
         productImages: imageUrls,
         localImages: null,
       );
-
-      _log.info('Submitting donation to API: ${apiRequest.toJson()}');
 
       final response = await _apiService.post(
         ApiEndpoints.products,
@@ -64,15 +70,21 @@ class DonationRepository implements IDonationRepository {
 
       if (response.isSuccess) {
         final donationResponse = DonationResponse.fromJson(response.value);
-        _log.info('Donation submitted successfully with ID: ${donationResponse.id}');
+        SafeLog.event(AppLogEvent.donationSubmissionSucceeded);
         return Result.success(donationResponse);
       } else {
-        _log.warning('API submission failed: ${response.error}');
+        SafeLog.event(
+          AppLogEvent.donationSubmissionFailed,
+          level: SafeLogLevel.warning,
+        );
         return Result.failure(response.error ?? AppStrings.failedToSubmitDonation);
       }
-    } catch (e) {
-      _log.severe('Exception during donation submission: $e');
-      return Result.failure('${AppStrings.unexpectedErrorOccurred}: ${e.toString()}');
+    } catch (_) {
+      SafeLog.event(
+        AppLogEvent.donationSubmissionFailed,
+        level: SafeLogLevel.severe,
+      );
+      return Result.failure(AppStrings.unexpectedErrorOccurred);
     }
   }
 
@@ -95,8 +107,8 @@ class DonationRepository implements IDonationRepository {
       } else {
         return Result.failure(result.error ?? 'Failed to fetch postage sizes');
       }
-    } catch (e) {
-      return Result.failure(e.toString());
+    } catch (_) {
+      return Result.failure('Failed to fetch postage sizes');
     }
   }
 
@@ -130,23 +142,21 @@ class DonationRepository implements IDonationRepository {
         if (result.isSuccess) {
           downloadUrls.add(result.value!);
         } else {
-          return Result.failure('Failed to upload image ${i + 1}: ${result.error}');
+          return Result.failure(AppStrings.failedToUploadImages);
         }
       }
 
       return Result.success(downloadUrls);
-    } catch (e) {
-      return Result.failure('Image upload error: ${e.toString()}');
+    } catch (_) {
+      return Result.failure(AppStrings.failedToUploadImages);
     }
   }
 }
 
 class MockDonationRepository implements IDonationRepository {
-  final _log = Logger('MockDonationRepository');
-
   @override
   Future<Result<DonationResponse>> submitDonation(DonationRequest request) async {
-    _log.info('Mock: Submitting donation: ${request.toJson()}');
+    SafeLog.event(AppLogEvent.donationSubmissionStarted);
 
     await Future.delayed(const Duration(seconds: 2));
 

@@ -1,18 +1,13 @@
+import 'package:cherry_mvp/core/services/safe_log.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:logging/logging.dart';
 
 class GoogleAuthService {
   final _googleSignIn = GoogleSignIn.instance;
-  final _log = Logger('GoogleAuthService');
   bool _isGoogleSignInInitialized = false;
 
   GoogleSignInAccount? _currentUser;
   GoogleSignInAccount? get currentUser => _currentUser;
-
-  GoogleAuthService() {
-    _initializeGoogleSignIn();
-  }
 
   Future<void> _initializeGoogleSignIn() async {
     try {
@@ -21,8 +16,11 @@ class GoogleAuthService {
         serverClientId: '401854471349-803q3o5vmr8m94fuvt50t1ke07h79c87.apps.googleusercontent.com',
       );
       _isGoogleSignInInitialized = true;
-    } catch (e) {
-      _log.severe('Failed to initialize Google Sign-In: $e');
+    } catch (_) {
+      SafeLog.event(
+        AppLogEvent.authProviderInitialisationFailed,
+        level: SafeLogLevel.severe,
+      );
       rethrow;
     }
   }

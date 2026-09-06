@@ -15,10 +15,14 @@ class LikedItemsViewModel extends ChangeNotifier {
   LikedItemsViewModel({
     required this.productRepository,
     required this.productViewModel,
-  });
+  }) {
+    _accountStateVersion = productViewModel.accountStateVersion;
+    productViewModel.addListener(_handleProductStateChange);
+  }
 
   final ProductRepository productRepository;
   final ProductViewModel productViewModel;
+  late int _accountStateVersion;
 
   LikedItemsStatus _status = LikedItemsStatus.initial;
   List<Product> _products = const [];
@@ -29,11 +33,18 @@ class LikedItemsViewModel extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
 
   Future<void> loadLikedProducts() async {
+    final accountStateVersion = productViewModel.accountStateVersion;
+    _accountStateVersion = accountStateVersion;
     _status = LikedItemsStatus.loading;
     _errorMessage = null;
     notifyListeners();
 
     final result = await productRepository.fetchLikedProducts();
+
+    if (!productViewModel.isAccountStateCurrent(accountStateVersion)) {
+      _clearProductsAfterAccountChange();
+      return;
+    }
 
     if (!result.isSuccess) {
       _products = const [];
@@ -58,7 +69,13 @@ class LikedItemsViewModel extends ChangeNotifier {
       return true;
     }
 
+    final accountStateVersion = productViewModel.accountStateVersion;
     final result = await productViewModel.setProductLiked(product, false);
+    if (!productViewModel.isAccountStateCurrent(accountStateVersion)) {
+      _clearProductsAfterAccountChange();
+      return false;
+    }
+
     if (!result.isSuccess) {
       _errorMessage = result.error ?? 'Unable to remove this liked item.';
       notifyListeners();
@@ -77,6 +94,20 @@ class LikedItemsViewModel extends ChangeNotifier {
     return loadLikedProducts();
   }
 
+  void _clearProductsAfterAccountChange() {
+    _accountStateVersion = productViewModel.accountStateVersion;
+    _products = const [];
+    _status = LikedItemsStatus.empty;
+    _errorMessage = null;
+    notifyListeners();
+  }
+
+  void _handleProductStateChange() {
+    if (!productViewModel.isAccountStateCurrent(_accountStateVersion)) {
+      _clearProductsAfterAccountChange();
+    }
+  }
+
   List<Product> _mergeProducts(
     List<Product> primaryProducts,
     List<Product> cachedProducts,
@@ -92,5 +123,11 @@ class LikedItemsViewModel extends ChangeNotifier {
     }
 
     return List.unmodifiable(products);
+  }
+
+  @override
+  void dispose() {
+    productViewModel.removeListener(_handleProductStateChange);
+    super.dispose();
   }
 }

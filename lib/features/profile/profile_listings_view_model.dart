@@ -1,14 +1,13 @@
+import 'package:cherry_mvp/core/services/safe_log.dart';
 import 'package:cherry_mvp/core/utils/status.dart';
 import 'package:cherry_mvp/features/profile/models/seller_listing.dart';
 import 'package:cherry_mvp/features/profile/profile_listings_repository.dart';
 import 'package:flutter/foundation.dart';
-import 'package:logging/logging.dart';
 
 class ProfileListingsViewModel extends ChangeNotifier {
   static const int defaultPageSize = 20;
 
   final IProfileListingsRepository repository;
-  final _log = Logger('ProfileListingsViewModel');
 
   ProfileListingsViewModel({
     required this.repository,
@@ -74,13 +73,19 @@ class ProfileListingsViewModel extends ChangeNotifier {
         _setPagination(page);
       } else {
         _hasLoadMoreError = true;
-        _log.warning('Loading more profile listings failed: ${result.error}');
+        SafeLog.event(
+          AppLogEvent.profileListingsLoadFailed,
+          level: SafeLogLevel.warning,
+        );
       }
-    } catch (error) {
+    } catch (_) {
       if (requestId == _requestSequence) {
         _hasLoadMoreError = true;
       }
-      _log.severe('Loading more profile listings failed: $error');
+      SafeLog.event(
+        AppLogEvent.profileListingsLoadFailed,
+        level: SafeLogLevel.severe,
+      );
     } finally {
       if (requestId == _requestSequence) {
         _isLoadingMore = false;
@@ -150,11 +155,14 @@ class ProfileListingsViewModel extends ChangeNotifier {
           result.error ?? 'Could not load your listings',
         );
       }
-    } catch (error) {
+    } catch (_) {
       if (requestId == _requestSequence && _listings.isEmpty) {
         _status = Status.failure('Could not load your listings');
       }
-      _log.severe('Loading profile listings failed: $error');
+      SafeLog.event(
+        AppLogEvent.profileListingsLoadFailed,
+        level: SafeLogLevel.severe,
+      );
     } finally {
       if (requestId == _requestSequence) {
         _isFirstPageLoading = false;

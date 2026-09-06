@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:logging/logging.dart';
 import 'package:cherry_mvp/core/config/config.dart';
 import 'package:cherry_mvp/core/models/category.dart';
 import 'package:cherry_mvp/core/router/nav_provider.dart';
 import 'package:cherry_mvp/core/router/nav_routes.dart';
+import 'package:cherry_mvp/core/services/safe_log.dart';
 import 'package:cherry_mvp/core/utils/utils.dart';
 import 'package:cherry_mvp/features/charity_page/charity_model.dart';
 import 'package:cherry_mvp/features/donation/donation_repository.dart';
@@ -14,7 +14,6 @@ import 'package:cherry_mvp/features/donation/models/postage_size_info.dart';
 class DonationViewModel extends ChangeNotifier {
   final IDonationRepository _donationRepository;
   final NavigationProvider navigator;
-  final _log = Logger('DonationViewModel');
 
   DonationViewModel({required this._donationRepository, required this.navigator});
 
@@ -30,7 +29,7 @@ class DonationViewModel extends ChangeNotifier {
   List<PostageSizeInfo> get postageSizeInfos => _postageSizeInfos;
 
   Future<void> submitDonation(DonationRequest request) async {
-    _log.info('Starting donation submission for: ${request.name}');
+    SafeLog.event(AppLogEvent.donationSubmissionStarted);
 
     _status = Status.loading;
     _submissionMessage = null;
@@ -44,16 +43,22 @@ class DonationViewModel extends ChangeNotifier {
         _status = Status.success;
         _lastSubmission = result.value!;
         _submissionMessage = AppStrings.donationSubmittedSuccessfully;
-        _log.info("Donation submitted successfully with ID: ${result.value!.id}");
+        SafeLog.event(AppLogEvent.donationSubmissionSucceeded);
       } else {
         _status = Status.failure(result.error ?? "Unknown error");
         _submissionMessage = result.error ?? "Failed to submit donation";
-        _log.warning("Donation submission failed: ${result.error}");
+        SafeLog.event(
+          AppLogEvent.donationSubmissionFailed,
+          level: SafeLogLevel.warning,
+        );
       }
     } catch (e) {
-      _status = Status.failure(e.toString());
+      _status = Status.failure(AppStrings.unexpectedErrorOccurred);
       _submissionMessage = AppStrings.unexpectedErrorOccurred;
-      _log.severe("Exception during donation submission: $e");
+      SafeLog.event(
+        AppLogEvent.donationSubmissionFailed,
+        level: SafeLogLevel.severe,
+      );
     }
 
     notifyListeners();
@@ -117,11 +122,17 @@ class DonationViewModel extends ChangeNotifier {
         _status = Status.success;
       } else {
         _status = Status.failure(result.error ?? 'Failed to fetch postage sizes');
-        _log.warning('Fetch postage sizes failed! ${result.error}');
+        SafeLog.event(
+          AppLogEvent.donationPostageSizesLoadFailed,
+          level: SafeLogLevel.warning,
+        );
       }
     } catch (e) {
       _status = Status.failure(e.toString());
-      _log.severe('Fetch postage sizes error: $e');
+      SafeLog.event(
+        AppLogEvent.donationPostageSizesLoadFailed,
+        level: SafeLogLevel.severe,
+      );
     }
 
     notifyListeners();
