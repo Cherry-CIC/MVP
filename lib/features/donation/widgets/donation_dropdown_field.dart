@@ -7,12 +7,14 @@ class DonationDropdownField extends StatefulWidget {
     required this.dropdownList,
     required this.onChanged,
     this.selectedValue,
+    this.enabled = true,
   });
 
   final String formFieldsHintText;
   final List<String> dropdownList;
   final ValueChanged<String?> onChanged;
   final String? selectedValue;
+  final bool enabled;
 
   @override
   DonationDropdownFieldState createState() => DonationDropdownFieldState();
@@ -32,6 +34,7 @@ class DonationDropdownFieldState extends State<DonationDropdownField> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: DropdownMenuFormField<String>(
+        enabled: widget.enabled,
         width: double.infinity,
         label: Text(widget.formFieldsHintText),
         hintText: widget.formFieldsHintText,

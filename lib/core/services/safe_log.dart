@@ -27,6 +27,7 @@ enum AppLogEvent {
   checkoutProfileLoadFailed,
   checkoutProfileMissing,
   checkoutShippingMethodsFailed,
+  donationDiscountPersistenceFailed,
   donationImageUploadFailed,
   donationImageUploadStarted,
   donationImageUploadSucceeded,

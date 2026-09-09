@@ -6,6 +6,7 @@ import 'package:cherry_mvp/core/router/nav_provider.dart';
 import 'package:cherry_mvp/core/router/nav_routes.dart';
 import 'package:cherry_mvp/core/services/safe_log.dart';
 import 'package:cherry_mvp/core/utils/utils.dart';
+import 'package:cherry_mvp/core/utils/donor_discount_state_store.dart';
 import 'package:cherry_mvp/features/charity_page/charity_model.dart';
 import 'package:cherry_mvp/features/donation/donation_repository.dart';
 import 'package:cherry_mvp/features/donation/models/donation_model.dart';
@@ -17,62 +18,77 @@ class DonationViewModel extends ChangeNotifier {
 
   DonationViewModel({required this._donationRepository, required this.navigator});
 
-  Status _status = Status.uninitialized;
-  DonationResponse? _lastSubmission;
-  String? _submissionMessage;
+  Status _submissionStatus = Status.uninitialized;
+  Status _postageStatus = Status.uninitialized;
+  bool _submissionInFlight = false;
+  bool _disposed = false;
 
-  Status get status => _status;
-  DonationResponse? get lastSubmission => _lastSubmission;
-  String? get submissionMessage => _submissionMessage;
+  Status get submissionStatus => _submissionStatus;
+  Status get postageStatus => _postageStatus;
+  bool get isSubmitting => _submissionInFlight;
 
   List<PostageSizeInfo> _postageSizeInfos = [];
   List<PostageSizeInfo> get postageSizeInfos => _postageSizeInfos;
 
-  Future<void> submitDonation(DonationRequest request) async {
+  /// Null means this call was ignored. Only the accepted caller owns its result.
+  /// Disposing a form or loading postage never releases the submission lock.
+  Future<Result<DonationResponse>?> submitDonation(
+    DonationRequest request, {
+    bool? donorDiscountActive,
+  }) async {
+    if (_submissionInFlight || _disposed) return null;
+    _submissionInFlight = true;
+    _submissionStatus = Status.loading;
     SafeLog.event(AppLogEvent.donationSubmissionStarted);
-
-    _status = Status.loading;
-    _submissionMessage = null;
-    _lastSubmission = null;
-    notifyListeners();
-
     try {
-      final result = await _donationRepository.submitDonation(request);
+      final submittedRequest = request.copyWith(
+        localImages: request.localImages == null ? null : List.unmodifiable(request.localImages!),
+        productImages: request.productImages == null ? null : List.unmodifiable(request.productImages!),
+      );
+      notifyListeners();
+      final result = await _donationRepository.submitDonation(submittedRequest);
 
-      if (result.isSuccess) {
-        _status = Status.success;
-        _lastSubmission = result.value!;
-        _submissionMessage = AppStrings.donationSubmittedSuccessfully;
+      if (result.isSuccess && result.value != null) {
+        // The listing already exists. Local follow-up failure must not invite a retry.
+        if (donorDiscountActive != null) {
+          try {
+            await DonorDiscountStateStore.setDonorDiscountState(result.value!.id, donorDiscountActive);
+          } catch (_) {
+            SafeLog.event(
+              AppLogEvent.donationDiscountPersistenceFailed,
+              level: SafeLogLevel.warning,
+            );
+          }
+        }
+        _submissionStatus = Status.success;
         SafeLog.event(AppLogEvent.donationSubmissionSucceeded);
-      } else {
-        _status = Status.failure(result.error ?? "Unknown error");
-        _submissionMessage = result.error ?? "Failed to submit donation";
-        SafeLog.event(
-          AppLogEvent.donationSubmissionFailed,
-          level: SafeLogLevel.warning,
-        );
+        return result;
       }
-    } catch (e) {
-      _status = Status.failure(AppStrings.unexpectedErrorOccurred);
-      _submissionMessage = AppStrings.unexpectedErrorOccurred;
+
+      final message = result.error ?? AppStrings.failedToSubmitDonation;
+      _submissionStatus = Status.failure(message);
+      SafeLog.event(
+        AppLogEvent.donationSubmissionFailed,
+        level: SafeLogLevel.warning,
+      );
+      return Result.failure(message);
+    } catch (_) {
+      _submissionStatus = Status.failure(AppStrings.unexpectedErrorOccurred);
       SafeLog.event(
         AppLogEvent.donationSubmissionFailed,
         level: SafeLogLevel.severe,
       );
+      return Result.failure(AppStrings.unexpectedErrorOccurred);
+    } finally {
+      _submissionInFlight = false;
+      if (!_disposed) notifyListeners();
     }
-
-    notifyListeners();
   }
 
-  void resetStatus() {
-    _status = Status.uninitialized;
-    _submissionMessage = null;
-    _lastSubmission = null;
-    notifyListeners();
-  }
-
-  Future<void> showDonationSuccess() async {
-    navigator.navigateTo(AppRoutes.donationSuccess);
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
   }
 
   void selectType([ImageSource? imgSource]) {
@@ -111,7 +127,8 @@ class DonationViewModel extends ChangeNotifier {
   }
 
   Future<void> fetchPostageSizes() async {
-    _status = Status.loading;
+    if (_disposed || _postageStatus.type == StatusType.loading) return;
+    _postageStatus = Status.loading;
     notifyListeners();
 
     try {
@@ -119,23 +136,23 @@ class DonationViewModel extends ChangeNotifier {
 
       if (result.isSuccess && result.value != null) {
         _postageSizeInfos = result.value!;
-        _status = Status.success;
+        _postageStatus = Status.success;
       } else {
-        _status = Status.failure(result.error ?? 'Failed to fetch postage sizes');
+        _postageStatus = Status.failure(result.error ?? 'Failed to fetch postage sizes');
         SafeLog.event(
           AppLogEvent.donationPostageSizesLoadFailed,
           level: SafeLogLevel.warning,
         );
       }
     } catch (e) {
-      _status = Status.failure(e.toString());
+      _postageStatus = Status.failure(AppStrings.postageSizeInfoError);
       SafeLog.event(
         AppLogEvent.donationPostageSizesLoadFailed,
         level: SafeLogLevel.severe,
       );
     }
 
-    notifyListeners();
+    if (!_disposed) notifyListeners();
   }
 
   void goBack([PostageSizeInfo? postageSize]) {
