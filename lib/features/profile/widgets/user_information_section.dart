@@ -11,11 +11,13 @@ import 'package:cherry_mvp/features/auth/auth_view_model.dart';
 class UserInformationSection extends StatelessWidget {
   final UserInformation userInformationSection;
   final VoidCallback onSettingsPressed;
+  final VoidCallback? onProfilePressed;
 
   const UserInformationSection({
     super.key,
     required this.userInformationSection,
     required this.onSettingsPressed,
+    this.onProfilePressed,
   });
 
   @override
@@ -52,6 +54,7 @@ class UserInformationSection extends StatelessWidget {
             const SizedBox(height: 8),
             ListTile(
               contentPadding: EdgeInsets.zero,
+              onTap: onProfilePressed,
               leading: Image.asset(
                 AppImages.profileProfileIcon,
                 height: 48,
