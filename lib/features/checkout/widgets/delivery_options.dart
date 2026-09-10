@@ -12,7 +12,10 @@ import 'package:cherry_mvp/features/checkout/widgets/shipping_address_widget.dar
 import 'package:cherry_mvp/features/checkout/widgets/shipping_list_item.dart';
 
 class DeliveryOptions extends StatefulWidget {
-  const DeliveryOptions({super.key});
+  const DeliveryOptions({super.key, this.deliveryDetailsKey, this.mobilePhoneKey});
+
+  final GlobalKey? deliveryDetailsKey;
+  final GlobalKey? mobilePhoneKey;
 
   @override
   State<DeliveryOptions> createState() => _DeliveryOptionsState();
@@ -22,20 +25,36 @@ class _DeliveryOptionsState extends State<DeliveryOptions> {
   // final TextEditingController addressController = TextEditingController();
   // final TextEditingController postcodeController = TextEditingController();
   // final TextEditingController cityController = TextEditingController();
-  final TextEditingController _mobilePhoneController = TextEditingController();
+  late final TextEditingController _mobilePhoneController;
+  late final CheckoutViewModel _viewModel;
 
   @override
   void initState() {
     super.initState();
 
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      final vm = context.read<CheckoutViewModel>();
-      final profile = await vm.fetchUserProfile();
-      if (!mounted) return;
-      final mobilePhone = profile?.phoneNumber ?? '';
-      _mobilePhoneController.text = mobilePhone;
-      vm.setMobilePhoneNumber(mobilePhone);
+    _viewModel = context.read<CheckoutViewModel>();
+    _mobilePhoneController = TextEditingController(text: _viewModel.mobilePhoneNumber);
+    _viewModel.addListener(_syncMobilePhone);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _viewModel.prefillMobilePhoneNumber();
     });
+  }
+
+  void _syncMobilePhone() {
+    final value = _viewModel.mobilePhoneNumber;
+    if (_mobilePhoneController.text != value) {
+      _mobilePhoneController.value = TextEditingValue(
+        text: value,
+        selection: TextSelection.collapsed(offset: value.length),
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _viewModel.removeListener(_syncMobilePhone);
+    _mobilePhoneController.dispose();
+    super.dispose();
   }
 
   String _paymentTypeLabel(PaymentType type) {
@@ -136,6 +155,7 @@ class _DeliveryOptionsState extends State<DeliveryOptions> {
           const Divider(height: 32),
           Text(
             AppStrings.checkoutDeliveryDetails,
+            key: widget.deliveryDetailsKey,
             style: TextStyle(
               color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
@@ -149,13 +169,15 @@ class _DeliveryOptionsState extends State<DeliveryOptions> {
                   children: [
                     const SizedBox(height: 8),
                     ListTile(
-                      onTap: () async {
-                        final pickupPointSelected = await viewModel.showPickupPointSelection();
-                        if (!mounted) return;
-                        if (pickupPointSelected && viewModel.selectedInpost != null) {
-                          await viewModel.fetchShippingMethodsForInpost();
-                        }
-                      },
+                      onTap: viewModel.isCheckoutInProgress
+                          ? null
+                          : () async {
+                              final pickupPointSelected = await viewModel.showPickupPointSelection();
+                              if (!mounted) return;
+                              if (pickupPointSelected && viewModel.selectedInpost != null) {
+                                await viewModel.fetchShippingMethodsForInpost();
+                              }
+                            },
                       leading: const Icon(Icons.map),
                       title: selectedInpost != null
                           ? Row(
@@ -228,6 +250,17 @@ class _DeliveryOptionsState extends State<DeliveryOptions> {
               ),
             ],
           ),
+          if (viewModel.deliveryError != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Semantics(
+                liveRegion: true,
+                child: Text(
+                  viewModel.deliveryError!,
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                ),
+              ),
+            ),
           const Divider(height: 32),
           Text(
             AppStrings.mobilePhoneNumber,
@@ -237,10 +270,13 @@ class _DeliveryOptionsState extends State<DeliveryOptions> {
           ),
           const SizedBox(height: 8),
           TextField(
+            key: widget.mobilePhoneKey,
             controller: _mobilePhoneController,
+            enabled: !viewModel.isCheckoutInProgress,
             keyboardType: TextInputType.phone,
             decoration: InputDecoration(
               hintText: AddressConstants.mobilePhoneHintText,
+              errorText: viewModel.mobilePhoneError,
               border: OutlineInputBorder(
                 borderSide: BorderSide(
                   color: Theme.of(context).colorScheme.outline,
@@ -252,11 +288,8 @@ class _DeliveryOptionsState extends State<DeliveryOptions> {
                 ),
               ),
             ),
-            onTapUpOutside: (_) {
-              viewModel.setMobilePhoneNumber(_mobilePhoneController.text);
-              FocusManager.instance.primaryFocus?.unfocus();
-            },
-            onSubmitted: (value) => viewModel.setMobilePhoneNumber(value),
+            onChanged: viewModel.setMobilePhoneNumber,
+            onTapUpOutside: (_) => FocusManager.instance.primaryFocus?.unfocus(),
           ),
           // Show address input field when home delivery is selected
           if (viewModel.deliveryChoice == DeliveryType.home) ...[
@@ -300,13 +333,15 @@ class _DeliveryOptionsState extends State<DeliveryOptions> {
                         )
                       : null,
                   trailing: const Icon(Icons.chevron_right),
-                  onTap: () async {
-                    await showModalBottomSheet<PaymentType>(
-                      context: context,
-                      isScrollControlled: true,
-                      builder: (context) => const SelectPaymentTypeBottomSheet(),
-                    );
-                  },
+                  onTap: model.isCheckoutInProgress
+                      ? null
+                      : () async {
+                          await showModalBottomSheet<PaymentType>(
+                            context: context,
+                            isScrollControlled: true,
+                            builder: (context) => const SelectPaymentTypeBottomSheet(),
+                          );
+                        },
                 ),
               );
             },

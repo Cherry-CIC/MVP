@@ -274,7 +274,9 @@ class AppStrings {
   static const checkoutPickupLockerRequired = 'Please select a pick-up locker';
   static const checkoutPaymentMethodRequired = 'Please select a payment method';
   static const checkoutShippingMethodRequired = 'Please choose a valid shipping method';
-  static const checkoutPickupDetailsIncomplete = 'Selected pick-up point is missing address details';
+  static const checkoutPickupDetailsIncomplete =
+      'This pick-up point has incomplete address details. Please choose another.';
+  static const checkoutShippingAddressRequired = 'Please enter and confirm a complete delivery address';
   static const checkoutFindNearestPickupPoints = 'Find pick-up points';
   static const checkoutNearestPickupPoints = 'Nearest pick-up points';
   static const checkoutMobilePhoneRequired = 'A mobile phone number is required for InPost pickup';
