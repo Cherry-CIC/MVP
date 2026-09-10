@@ -8,12 +8,20 @@ import 'package:cherry_mvp/features/orders/orders_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 typedef _GetHandler = FutureOr<Result<dynamic>> Function(String endpoint);
+typedef _PostHandler = FutureOr<Result<dynamic>> Function(
+  String endpoint,
+  dynamic data,
+);
 
 class _FakeApiService implements ApiService {
   final _GetHandler _handler;
+  final _PostHandler? _postHandler;
   final List<String> requestedEndpoints = [];
+  String? postedEndpoint;
+  dynamic postedData;
 
-  _FakeApiService(this._handler);
+  _FakeApiService(this._handler, { _PostHandler? postHandler })
+      : _postHandler = postHandler;
 
   @override
   Future<Result<T>> get<T>(
@@ -22,6 +30,17 @@ class _FakeApiService implements ApiService {
   }) async {
     requestedEndpoints.add(endpoint);
     final result = await _handler(endpoint);
+    if (!result.isSuccess) {
+      return Result.failure(result.error);
+    }
+    return Result.success(result.value as T);
+  }
+
+  @override
+  Future<Result<T>> post<T>(String endpoint, {dynamic data}) async {
+    postedEndpoint = endpoint;
+    postedData = data;
+    final result = await _postHandler?.call(endpoint, data) ?? Result.failure('Unexpected POST');
     if (!result.isSuccess) {
       return Result.failure(result.error);
     }
@@ -44,6 +63,7 @@ void main() {
         'currency': ' gbp ',
         'deliveryState': ' shipped ',
         'deliveryLabel': ' On the way ',
+        'imageUrl': ' https://example.com/order-image.jpg ',
       });
 
       expect(order, isNotNull);
@@ -55,6 +75,7 @@ void main() {
       expect(order.currency, 'GBP');
       expect(order.deliveryState, 'shipped');
       expect(order.deliveryLabel, 'On the way');
+      expect(order.imageUrl, 'https://example.com/order-image.jpg');
     });
 
     test('retains valid ISO currencies and uses GBP only as a fallback', () {
@@ -111,6 +132,54 @@ void main() {
   });
 
   group('OrdersRepository', () {
+    test('posts receipt confirmation without a request body', () async {
+      final apiService = _FakeApiService(
+        (_) => Result.failure('Unexpected GET'),
+        postHandler: (_, __) => Result.success({}),
+      );
+
+      final result = await OrdersRepository(apiService).confirmOrderReceived('order / one');
+
+      expect(result.isSuccess, isTrue);
+      expect(apiService.postedEndpoint, ApiEndpoints.confirmOrderReceived('order / one'));
+      expect(apiService.postedData, isNull);
+    });
+
+    test('posts a trimmed dispute message and required reason', () async {
+      final apiService = _FakeApiService(
+        (_) => Result.failure('Unexpected GET'),
+        postHandler: (_, __) => Result.success({}),
+      );
+
+      final result = await OrdersRepository(apiService).submitOrderDispute(
+        'order-1',
+        reason: 'item_arrived_damaged',
+        message: '  Damaged sleeve.  ',
+      );
+
+      expect(result.isSuccess, isTrue);
+      expect(apiService.postedEndpoint, ApiEndpoints.disputeOrder('order-1'));
+      expect(apiService.postedData, {
+        'reason': 'item_arrived_damaged',
+        'message': 'Damaged sleeve.',
+      });
+    });
+
+    test('omits a blank optional dispute message', () async {
+      final apiService = _FakeApiService(
+        (_) => Result.failure('Unexpected GET'),
+        postHandler: (_, __) => Result.success({}),
+      );
+
+      await OrdersRepository(apiService).submitOrderDispute(
+        'order-1',
+        reason: 'something_else',
+        message: '   ',
+      );
+
+      expect(apiService.postedData, {'reason': 'something_else'});
+    });
+
     test('enriches order metadata without replacing its purchase price', () async {
       final apiService = _FakeApiService((endpoint) {
         if (endpoint == ApiEndpoints.myOrders) {
@@ -241,6 +310,7 @@ void main() {
                   id: 'order-1',
                   productId: 'deleted-product',
                   productName: 'Purchased item',
+                  imageUrl: 'https://example.com/order-image.jpg',
                 ),
               ],
             },
@@ -255,7 +325,7 @@ void main() {
       expect(result.isSuccess, isTrue);
       final order = result.value!.single;
       expect(order.productName, 'Purchased item');
-      expect(order.imageUrl, isEmpty);
+      expect(order.imageUrl, 'https://example.com/order-image.jpg');
       expect(order.charityLogoUrl, isEmpty);
       expect(order.itemPriceMinor, 400);
     });
@@ -422,6 +492,7 @@ Map<String, dynamic> _orderJson({
   dynamic currency = 'GBP',
   dynamic deliveryState = 'preparing',
   String deliveryLabel = 'Preparing',
+  String imageUrl = '',
   String? status,
 }) {
   return {
@@ -433,6 +504,7 @@ Map<String, dynamic> _orderJson({
     'currency': currency,
     'deliveryState': deliveryState,
     'deliveryLabel': deliveryLabel,
+    'imageUrl': imageUrl,
     'status': status,
   };
 }

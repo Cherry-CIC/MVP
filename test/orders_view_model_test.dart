@@ -9,12 +9,41 @@ import 'package:flutter_test/flutter_test.dart';
 
 class _QueuedOrdersRepository implements IOrdersRepository {
   final List<Future<Result<List<OrderSummary>>>> responses;
+  final List<Future<Result<dynamic>>> confirmationResponses;
+  final List<Future<Result<dynamic>>> disputeResponses;
+  String? confirmedOrderId;
+  String? disputedOrderId;
+  String? disputeReason;
+  String? disputeMessage;
 
-  _QueuedOrdersRepository(this.responses);
+  _QueuedOrdersRepository(
+    this.responses, {
+    List<Future<Result<dynamic>>>? confirmationResponses,
+    List<Future<Result<dynamic>>>? disputeResponses,
+  })  : confirmationResponses = confirmationResponses ?? [],
+        disputeResponses = disputeResponses ?? [];
 
   @override
   Future<Result<List<OrderSummary>>> fetchOrders() {
     return responses.removeAt(0);
+  }
+
+  @override
+  Future<Result<dynamic>> confirmOrderReceived(String orderId) {
+    confirmedOrderId = orderId;
+    return confirmationResponses.removeAt(0);
+  }
+
+  @override
+  Future<Result<dynamic>> submitOrderDispute(
+    String orderId, {
+    required String reason,
+    String? message,
+  }) {
+    disputedOrderId = orderId;
+    disputeReason = reason;
+    disputeMessage = message;
+    return disputeResponses.removeAt(0);
   }
 }
 
@@ -173,6 +202,81 @@ void main() {
       expect(viewModel.status.type, StatusType.uninitialized);
       expect(viewModel.orders, isEmpty);
       expect(notifications, 1);
+    });
+
+    test('confirms an order and updates its delivery state', () async {
+      final repository = _QueuedOrdersRepository(
+        [Future.value(Result.success([_order('order-1')]))],
+        confirmationResponses: [Future.value(Result.success({}))],
+      );
+      final viewModel = OrdersViewModel(repository: repository);
+      await viewModel.loadOrders();
+
+      final result = await viewModel.confirmOrderReceived('order-1');
+
+      expect(result.isSuccess, isTrue);
+      expect(repository.confirmedOrderId, 'order-1');
+      expect(viewModel.orders.single.deliveryState, 'confirmed');
+      expect(viewModel.orders.single.deliveryLabel, 'Confirmed');
+    });
+
+    test('preserves an order state when confirmation fails', () async {
+      final viewModel = OrdersViewModel(
+        repository: _QueuedOrdersRepository(
+          [Future.value(Result.success([_order('order-1')]))],
+          confirmationResponses: [
+            Future.value(Result.failure('Could not confirm this item')),
+          ],
+        ),
+      );
+      await viewModel.loadOrders();
+
+      final result = await viewModel.confirmOrderReceived('order-1');
+
+      expect(result.isSuccess, isFalse);
+      expect(viewModel.orders.single.deliveryState, 'preparing');
+    });
+
+    test('submits a dispute and updates its delivery state', () async {
+      final repository = _QueuedOrdersRepository(
+        [Future.value(Result.success([_order('order-1')]))],
+        disputeResponses: [Future.value(Result.success({}))],
+      );
+      final viewModel = OrdersViewModel(repository: repository);
+      await viewModel.loadOrders();
+
+      final result = await viewModel.submitOrderDispute(
+        'order-1',
+        reason: 'wrong_item',
+        message: 'I received something else.',
+      );
+
+      expect(result.isSuccess, isTrue);
+      expect(repository.disputedOrderId, 'order-1');
+      expect(repository.disputeReason, 'wrong_item');
+      expect(repository.disputeMessage, 'I received something else.');
+      expect(viewModel.orders.single.deliveryState, 'disputed');
+      expect(viewModel.orders.single.deliveryLabel, 'Disputed');
+    });
+
+    test('preserves an order state when dispute submission fails', () async {
+      final viewModel = OrdersViewModel(
+        repository: _QueuedOrdersRepository(
+          [Future.value(Result.success([_order('order-1')]))],
+          disputeResponses: [
+            Future.value(Result.failure('Could not submit the dispute')),
+          ],
+        ),
+      );
+      await viewModel.loadOrders();
+
+      final result = await viewModel.submitOrderDispute(
+        'order-1',
+        reason: 'item_arrived_damaged',
+      );
+
+      expect(result.isSuccess, isFalse);
+      expect(viewModel.orders.single.deliveryState, 'preparing');
     });
   });
 }
