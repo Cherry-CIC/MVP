@@ -26,11 +26,13 @@ class CheckoutViewModel extends ChangeNotifier {
   final String? Function() _currentUserIdProvider;
 
   CheckoutViewModel({
-    required this._donationRepository,
+    required IDonationRepository donationRepository,
     required this.checkoutRepository,
     required this.navigator,
     String? Function()? currentUserIdProvider,
-  }) : _currentUserIdProvider = currentUserIdProvider ?? (() => null);
+    // ignore: prefer_initializing_formals - `this._x` named params need an experimental feature
+  }) : _donationRepository = donationRepository,
+       _currentUserIdProvider = currentUserIdProvider ?? (() => null);
 
   Status _status = Status.uninitialized;
 
