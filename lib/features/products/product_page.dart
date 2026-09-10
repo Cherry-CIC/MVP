@@ -1,3 +1,4 @@
+import 'package:cherry_mvp/features/shared_widgets/bottom_cta.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cherry_mvp/core/config/feature_flags.dart';
@@ -35,6 +36,19 @@ class ProductPage extends StatelessWidget {
     final isOwnListing = checkoutViewModel.isOwnProduct(product);
 
     return Scaffold(
+      bottomNavigationBar: BottomCta(
+        enabled: !isOwnListing,
+        text: isOwnListing ? AppStrings.productPageYourListing : AppStrings.productPageBuyNow,
+        onPressed: () {
+          checkoutViewModel.clearBasket();
+          if (!checkoutViewModel.addItem(product)) {
+            return;
+          }
+          context.read<NavigationProvider>().navigateTo(
+            AppRoutes.checkout,
+          );
+        },
+      ),
       body: CustomScrollView(
         slivers: [
           ProductHeaderCarousel(product),
@@ -137,30 +151,6 @@ class ProductPage extends StatelessWidget {
                       ),
                       const SizedBox(width: 16),
                     ],
-                    Expanded(
-                      child: SizedBox(
-                        height: 56,
-                        child: FilledButton(
-                          onPressed: isOwnListing
-                              ? null
-                              : () {
-                                  checkoutViewModel.clearBasket();
-                                  if (!checkoutViewModel.addItem(product)) {
-                                    return;
-                                  }
-                                  context.read<NavigationProvider>().navigateTo(
-                                    AppRoutes.checkout,
-                                  );
-                                },
-                          child: Text(
-                            isOwnListing
-                                ? AppStrings.productPageYourListing
-                                : AppStrings.productPageBuyNow,
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                      ),
-                    ),
                   ],
                 ),
               ),
