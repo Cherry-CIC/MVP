@@ -6,7 +6,6 @@ import 'package:provider/provider.dart';
 import 'package:cherry_mvp/core/config/app_colors.dart';
 import 'package:cherry_mvp/core/config/feature_flags.dart';
 import 'package:cherry_mvp/core/config/app_strings.dart';
-import 'package:cherry_mvp/core/utils/donor_discount_state_store.dart';
 import 'package:cherry_mvp/core/utils/utils.dart';
 import 'package:cherry_mvp/core/models/category.dart';
 import 'package:cherry_mvp/core/router/router.dart';
@@ -23,9 +22,8 @@ import 'package:cherry_mvp/features/donation/widgets/donation_dropdown_field.dar
 
 class DonationForm extends StatefulWidget {
   final List<XFile>? selectedImages;
-  final VoidCallback? onClearImages;
 
-  const DonationForm({super.key, this.selectedImages, this.onClearImages});
+  const DonationForm({super.key, this.selectedImages});
 
   @override
   DonationFormState createState() => DonationFormState();
@@ -51,6 +49,10 @@ class DonationFormState extends State<DonationForm> {
 
   Charity? selectedCharity;
   bool _hasInitialized = false;
+  bool _handlingSubmission = false;
+  int _draftGeneration = 0;
+
+  bool get _canEdit => mounted && !_handlingSubmission && !context.read<DonationViewModel>().isSubmitting;
   final _hideUnimplementedFeatures = true;
 
   @override
@@ -59,6 +61,7 @@ class DonationFormState extends State<DonationForm> {
     if (!_hasInitialized) {
       _hasInitialized = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
         context.read<CharityViewModel>().fetchCharities();
         context.read<CategoryViewModel>().fetchCategories();
       });
@@ -66,14 +69,17 @@ class DonationFormState extends State<DonationForm> {
   }
 
   void toggleSwitchOpenToOtherCharity(bool value) {
+    if (!_canEdit) return;
     setState(() => isSwitchedOpenToOtherCharity = value);
   }
 
   void toggleSwitchOpenToOffer(bool value) {
+    if (!_canEdit) return;
     setState(() => isSwitchedOpenToOffer = value);
   }
 
   void toggleSwitchApplicableBuyerDiscounts(bool value) {
+    if (!_canEdit) return;
     setState(() => isSwitchedApplicableBuyerDiscounts = value);
   }
 
@@ -103,24 +109,77 @@ class DonationFormState extends State<DonationForm> {
     );
   }
 
-  void _clearForm() {
-    _titleController.clear();
-    _descriptionController.clear();
-    _addToCollectionController.clear();
-    _priceController.clear();
-    setState(() {
-      selectedCategory = '';
-      selectedCategoryId = '';
-      selectedCondition = '';
-      selectedQuality = '';
-      selectedSize = '';
-      selectedPostageSize = null;
-      selectedCharity = null;
-      isSwitchedOpenToOtherCharity = false;
-      isSwitchedOpenToOffer = false;
-      isSwitchedApplicableBuyerDiscounts = false;
-    });
-    widget.onClearImages?.call();
+  Future<void> _submitDonation() async {
+    if (!_canEdit) return;
+    if (_formKey.currentState!.validate()) {
+      final priceText = _priceController.text.trim();
+
+      // Validate required dropdowns
+      if (priceText.isEmpty || selectedQuality.isEmpty || selectedSize.isEmpty) {
+        Fluttertoast.showToast(
+          msg: AppStrings.pleaseSelectAllDropdowns,
+        );
+        return;
+      }
+      if (selectedCategoryId.trim().isEmpty) {
+        Fluttertoast.showToast(
+          msg: AppStrings.pleaseSelectCategory,
+        );
+        return;
+      }
+      if (selectedCharity == null) {
+        Fluttertoast.showToast(
+          msg: AppStrings.pleaseSelectCharity,
+        );
+        return;
+      }
+      if (selectedPostageSize == null) {
+        Fluttertoast.showToast(
+          msg: AppStrings.pleaseChoosePostageSize,
+        );
+        return;
+      }
+      if (widget.selectedImages == null || widget.selectedImages!.isEmpty) {
+        Fluttertoast.showToast(msg: AppStrings.pleaseAddPhoto);
+        return;
+      }
+      final donationViewModel = context.read<DonationViewModel>();
+      final route = ModalRoute.of(context);
+      if (route == null || !route.isCurrent) return;
+      final navigator = Navigator.of(context);
+      final request = _buildDonationRequest();
+      FocusScope.of(context).unfocus();
+      setState(() {
+        _handlingSubmission = true;
+        _draftGeneration++;
+      });
+      final result = await donationViewModel.submitDonation(
+        request,
+        donorDiscountActive: FeatureFlags.showDonorDiscounts ? isSwitchedApplicableBuyerDiscounts : null,
+      );
+      if (!mounted) return;
+      // A forced route change makes this completion obsolete, even during exit animation.
+      if (!route.isActive) return;
+      if (result != null && result.isSuccess) {
+        if (!route.isCurrent) {
+          // A newer route stays visible. Only discard this completed draft.
+          navigator.removeRoute(route);
+          return;
+        }
+        // Replace this exact form, whether it came from a dialog or a named route.
+        // Keep the form locked until replacement disposes its draft and photos.
+        navigator.pushReplacementNamed(AppRoutes.donationSuccess);
+        return;
+      }
+      setState(() => _handlingSubmission = false);
+      if (route.isCurrent && result != null) {
+        Fluttertoast.showToast(
+          msg: result.error ?? AppStrings.unexpectedErrorOccurred,
+          backgroundColor: Colors.red,
+          textColor: Colors.white,
+        );
+      }
+    }
   }
 
   @override
@@ -136,45 +195,22 @@ class DonationFormState extends State<DonationForm> {
   Widget build(BuildContext context) {
     return Consumer<DonationViewModel>(
       builder: (context, donationViewModel, child) {
-        WidgetsBinding.instance.addPostFrameCallback((_) async {
-          if (donationViewModel.status.type == StatusType.success && donationViewModel.lastSubmission != null) {
-            final navigator = Navigator.of(context);
-            final navigationProvider = Provider.of<NavigationProvider>(
-              context,
-              listen: false,
-            );
-            if (FeatureFlags.showDonorDiscounts) {
-              await DonorDiscountStateStore.setDonorDiscountState(
-                donationViewModel.lastSubmission!.id,
-                isSwitchedApplicableBuyerDiscounts,
-              );
-            }
-            if (!mounted) return;
-            _clearForm();
-            donationViewModel.resetStatus();
-            navigator.pop();
-            navigationProvider.navigateTo(AppRoutes.donationSuccess);
-          } else if (donationViewModel.status.type == StatusType.failure) {
-            final errorMessage = donationViewModel.submissionMessage ?? AppStrings.unexpectedErrorOccurred;
-            Fluttertoast.showToast(
-              msg: errorMessage,
-              backgroundColor: Colors.red,
-              textColor: Colors.white,
-            );
-          }
-        });
+        final busy = _handlingSubmission || donationViewModel.isSubmitting;
 
         return Form(
           key: _formKey,
+          canPop: !busy,
           child: Column(
             children: [
               DonationFormField(
+                enabled: !busy,
                 controller: _titleController,
                 hintText: titleHintText,
                 title: AppStrings.titleText,
                 hintIcon: Icons.add_circle_outline,
               ),
               DonationFormField(
+                enabled: !busy,
                 controller: _descriptionController,
                 hintText: descriptionHintText,
                 title: AppStrings.descriptionText,
@@ -221,24 +257,33 @@ class DonationFormState extends State<DonationForm> {
                     );
                   } else if (categories.isEmpty) {
                     return DonationDropdownField(
+                      enabled: !busy,
                       formFieldsHintText: categoryHintText,
                       dropdownList: categoryDropdownList,
-                      onChanged: (val) => setState(() => selectedCategory = val!),
+                      onChanged: (val) {
+                        if (_canEdit) setState(() => selectedCategory = val!);
+                      },
                     );
                   } else {
                     return _SelectionField(
                       label: categoryHintText,
                       value: selectedCategory.isNotEmpty ? selectedCategory : null,
-                      onTap: () async {
-                        final Category? result = await donationViewModel.navigateToCategoryPage(selectedCategoryId);
+                      onTap: busy
+                          ? null
+                          : () async {
+                              if (!_canEdit) return;
+                              final generation = _draftGeneration;
+                              final Category? result = await donationViewModel.navigateToCategoryPage(
+                                selectedCategoryId,
+                              );
 
-                        if (result != null) {
-                          setState(() {
-                            selectedCategory = result.name;
-                            selectedCategoryId = result.id;
-                          });
-                        }
-                      },
+                              if (_canEdit && generation == _draftGeneration && result != null) {
+                                setState(() {
+                                  selectedCategory = result.name;
+                                  selectedCategoryId = result.id;
+                                });
+                              }
+                            },
                     );
                   }
                 },
@@ -290,13 +335,19 @@ class DonationFormState extends State<DonationForm> {
                     return _SelectionField(
                       label: AppStrings.charityText,
                       value: selectedCharity?.name,
-                      onTap: () async {
-                        final Charity? result = await donationViewModel.navigateToCharityPage(selectedCharity?.id);
+                      onTap: busy
+                          ? null
+                          : () async {
+                              if (!_canEdit) return;
+                              final generation = _draftGeneration;
+                              final Charity? result = await donationViewModel.navigateToCharityPage(
+                                selectedCharity?.id,
+                              );
 
-                        if (result != null) {
-                          setState(() => selectedCharity = result);
-                        }
-                      },
+                              if (_canEdit && generation == _draftGeneration && result != null) {
+                                setState(() => selectedCharity = result);
+                              }
+                            },
                     );
                   }
                 },
@@ -308,6 +359,7 @@ class DonationFormState extends State<DonationForm> {
                   vertical: 8.0,
                 ),
                 child: TextFormField(
+                  enabled: !busy,
                   controller: _priceController,
                   decoration: InputDecoration(
                     labelText: AppStrings.priceText,
@@ -343,34 +395,45 @@ class DonationFormState extends State<DonationForm> {
                 ),
               ),
               DonationDropdownField(
+                enabled: !busy,
                 formFieldsHintText: qualityHintText,
                 dropdownList: qualityDropdownList,
-                onChanged: (val) => setState(() => selectedQuality = val!),
+                onChanged: (val) {
+                  if (_canEdit) setState(() => selectedQuality = val!);
+                },
                 selectedValue: selectedQuality.isNotEmpty ? selectedQuality : null,
               ),
 
               DonationDropdownField(
+                enabled: !busy,
                 formFieldsHintText: sizeHintText,
                 dropdownList: sizeDropdownList,
-                onChanged: (val) => setState(() => selectedSize = val!),
+                onChanged: (val) {
+                  if (_canEdit) setState(() => selectedSize = val!);
+                },
                 selectedValue: selectedSize.isNotEmpty ? selectedSize : null,
               ),
 
               _SelectionField(
                 label: postageSizeHintText,
                 value: selectedPostageSize?.size.label,
-                onTap: () async {
-                  final PostageSizeInfo? result = await donationViewModel.navigateToPostageSizePage(
-                    selectedPostageSize,
-                  );
+                onTap: busy
+                    ? null
+                    : () async {
+                        if (!_canEdit) return;
+                        final generation = _draftGeneration;
+                        final PostageSizeInfo? result = await donationViewModel.navigateToPostageSizePage(
+                          selectedPostageSize,
+                        );
 
-                  if (result != null) {
-                    setState(() => selectedPostageSize = result);
-                  }
-                },
+                        if (_canEdit && generation == _draftGeneration && result != null) {
+                          setState(() => selectedPostageSize = result);
+                        }
+                      },
               ),
               if (!_hideUnimplementedFeatures) ...[
                 DonationFormField(
+                  enabled: !busy,
                   controller: _addToCollectionController,
                   hintText: addToCollectionHintText,
                   title: addToCollectionText,
@@ -423,64 +486,13 @@ class DonationFormState extends State<DonationForm> {
 
               Padding(
                 padding: const EdgeInsets.all(16),
-                child: donationViewModel.status.type == StatusType.loading
+                child: busy
                     ? const Center(child: CircularProgressIndicator())
                     : SizedBox(
                         height: 56,
                         width: double.infinity,
                         child: FilledButton(
-                          onPressed: () async {
-                            if (_formKey.currentState!.validate()) {
-                              final priceText = _priceController.text.trim();
-
-                              // Validate required dropdowns
-                              if (priceText.isEmpty || selectedQuality.isEmpty || selectedSize.isEmpty) {
-                                Fluttertoast.showToast(
-                                  msg: AppStrings.pleaseSelectAllDropdowns,
-                                );
-                                return;
-                              }
-                              if (selectedCategoryId.trim().isEmpty) {
-                                Fluttertoast.showToast(
-                                  msg: AppStrings.pleaseSelectCategory,
-                                );
-                                return;
-                              }
-                              if (selectedCharity == null) {
-                                Fluttertoast.showToast(
-                                  msg: AppStrings.pleaseSelectCharity,
-                                );
-                                return;
-                              }
-                              if (selectedPostageSize == null) {
-                                Fluttertoast.showToast(
-                                  msg: AppStrings.pleaseChoosePostageSize,
-                                );
-                                return;
-                              }
-                              if (widget.selectedImages == null || widget.selectedImages!.isEmpty) {
-                                Fluttertoast.showToast(msg: AppStrings.pleaseAddPhoto);
-                                return;
-                              }
-                              final request = _buildDonationRequest();
-                              await donationViewModel.submitDonation(request);
-
-                              if (donationViewModel.status.type == StatusType.success &&
-                                  donationViewModel.lastSubmission != null) {
-                                _clearForm();
-                                donationViewModel.resetStatus();
-                                donationViewModel.showDonationSuccess();
-                              } else if (donationViewModel.status.type == StatusType.failure) {
-                                final errorMessage =
-                                    donationViewModel.submissionMessage ?? AppStrings.unexpectedErrorOccurred;
-                                Fluttertoast.showToast(
-                                  msg: errorMessage,
-                                  backgroundColor: Colors.red,
-                                  textColor: Colors.white,
-                                );
-                              }
-                            }
-                          },
+                          onPressed: _submitDonation,
                           child: const Text(AppStrings.submitDonation),
                         ),
                       ),
@@ -502,7 +514,7 @@ class _SelectionField extends StatelessWidget {
 
   final String label;
   final String? value;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -518,6 +530,7 @@ class _SelectionField extends StatelessWidget {
         child: InputDecorator(
           decoration: InputDecoration(
             labelText: label,
+            enabled: onTap != null,
             suffixIcon: const Icon(Icons.chevron_right),
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
             enabledBorder: OutlineInputBorder(

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:cherry_mvp/core/config/app_strings.dart';
+import 'package:cherry_mvp/features/donation/donation_view_model.dart';
 import 'package:cherry_mvp/features/donation/widgets/photo_tips_dialog.dart';
 
 class PhotoTipsBar extends StatelessWidget {
@@ -7,6 +9,7 @@ class PhotoTipsBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isSubmitting = context.watch<DonationViewModel>().isSubmitting;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Material(
@@ -14,12 +17,15 @@ class PhotoTipsBar extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
         child: InkWell(
           borderRadius: BorderRadius.circular(8),
-          onTap: () {
-            showDialog(
-              context: context,
-              builder: (context) => const PhotoTipsDialog(),
-            );
-          },
+          onTap: isSubmitting
+              ? null
+              : () {
+                  if (context.read<DonationViewModel>().isSubmitting) return;
+                  showDialog(
+                    context: context,
+                    builder: (context) => const PhotoTipsDialog(),
+                  );
+                },
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
             child: Row(

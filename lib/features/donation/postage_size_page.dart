@@ -38,7 +38,7 @@ class PostageSizePageState extends State<PostageSizePage> {
     return Consumer<DonationViewModel>(
       builder: (context, viewModel, child) {
         final postageSizeInfos = viewModel.postageSizeInfos;
-        final status = viewModel.status;
+        final status = viewModel.postageStatus;
 
         return Scaffold(
           appBar: AppBar(

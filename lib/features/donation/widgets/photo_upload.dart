@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
@@ -12,8 +13,9 @@ import 'package:cherry_mvp/features/donation/donation_view_model.dart';
 class PhotoUpload extends StatefulWidget {
   final Function(List<XFile>)? onImagesChanged;
   final List<XFile>? initialImages;
+  final bool enabled;
 
-  const PhotoUpload({super.key, this.onImagesChanged, this.initialImages});
+  const PhotoUpload({super.key, this.onImagesChanged, this.initialImages, this.enabled = true});
 
   @override
   State<PhotoUpload> createState() => _PhotoUploadState();
@@ -26,6 +28,9 @@ class _PhotoUploadState extends State<PhotoUpload> {
   List<XFile> selectedImages = [];
   final PageController _pageController = PageController();
   int _currentImageIndex = 0;
+  int _pickGeneration = 0;
+
+  bool get _canEdit => mounted && widget.enabled && !context.read<DonationViewModel>().isSubmitting;
 
   bool _shouldRetryWithoutTransforms(PlatformException error) {
     final message = (error.message ?? '').toLowerCase();
@@ -96,8 +101,9 @@ class _PhotoUploadState extends State<PhotoUpload> {
   @override
   void didUpdateWidget(PhotoUpload oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (!widget.enabled && oldWidget.enabled) _pickGeneration++;
     // Update selected images if initialImages changed
-    if (widget.initialImages != oldWidget.initialImages) {
+    if (widget.initialImages != oldWidget.initialImages && !listEquals(widget.initialImages, selectedImages)) {
       if (widget.initialImages != null && widget.initialImages!.isNotEmpty) {
         setState(() {
           selectedImages = List.from(widget.initialImages!);
@@ -113,12 +119,15 @@ class _PhotoUploadState extends State<PhotoUpload> {
   }
 
   Future<void> pickImages(ImageSource source) async {
+    if (!_canEdit) return;
+    final generation = _pickGeneration;
     try {
       final picker = ImagePicker();
       if (source == ImageSource.gallery) {
         // Allow multiple selection from gallery
         final List<XFile> picked = await _pickGalleryImages(picker);
 
+        if (!_canEdit || generation != _pickGeneration) return;
         if (picked.isNotEmpty) {
           // Filter out duplicates based on file path
           final List<XFile> newImages = [];
@@ -136,12 +145,12 @@ class _PhotoUploadState extends State<PhotoUpload> {
               selectedImages.addAll(newImages);
               _currentImageIndex = selectedImages.length - 1;
             });
-            widget.onImagesChanged?.call(selectedImages);
+            widget.onImagesChanged?.call(List.of(selectedImages));
 
             // Animate to the last added image
             if (selectedImages.length > 1) {
               WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (_pageController.hasClients) {
+                if (mounted && _pageController.hasClients) {
                   _pageController.animateToPage(
                     _currentImageIndex,
                     duration: const Duration(milliseconds: 300),
@@ -156,6 +165,7 @@ class _PhotoUploadState extends State<PhotoUpload> {
         // Single image from camera
         final XFile? picked = await _pickCameraImage(picker);
 
+        if (!_canEdit || generation != _pickGeneration) return;
         if (picked != null) {
           // Check for duplicates
           final isDuplicate = selectedImages.any(
@@ -167,12 +177,12 @@ class _PhotoUploadState extends State<PhotoUpload> {
               selectedImages.add(picked);
               _currentImageIndex = selectedImages.length - 1;
             });
-            widget.onImagesChanged?.call(selectedImages);
+            widget.onImagesChanged?.call(List.of(selectedImages));
 
             // Animate to the newly added image
             if (selectedImages.length > 1) {
               WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (_pageController.hasClients) {
+                if (mounted && _pageController.hasClients) {
                   _pageController.animateToPage(
                     _currentImageIndex,
                     duration: const Duration(milliseconds: 300),
@@ -185,13 +195,13 @@ class _PhotoUploadState extends State<PhotoUpload> {
         }
       }
     } on PlatformException catch (error) {
-      if (mounted) {
+      if (mounted && _canEdit && generation == _pickGeneration) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(_platformImageErrorMessage(error))),
         );
       }
     } catch (e) {
-      if (mounted) {
+      if (mounted && _canEdit && generation == _pickGeneration) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('${AppStrings.errorPickingImage}: $e')),
         );
@@ -200,6 +210,7 @@ class _PhotoUploadState extends State<PhotoUpload> {
   }
 
   void _removeImage(int index) {
+    if (!_canEdit) return;
     setState(() {
       selectedImages.removeAt(index);
       if (_currentImageIndex >= selectedImages.length && selectedImages.isNotEmpty) {
@@ -208,12 +219,12 @@ class _PhotoUploadState extends State<PhotoUpload> {
         _currentImageIndex = 0;
       }
     });
-    widget.onImagesChanged?.call(selectedImages);
+    widget.onImagesChanged?.call(List.of(selectedImages));
 
     // Animate to valid page if needed
     if (selectedImages.isNotEmpty && _currentImageIndex < selectedImages.length) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (_pageController.hasClients) {
+        if (mounted && _pageController.hasClients) {
           _pageController.animateToPage(
             _currentImageIndex,
             duration: const Duration(milliseconds: 300),
@@ -225,6 +236,8 @@ class _PhotoUploadState extends State<PhotoUpload> {
   }
 
   void _pickProductImage() async {
+    if (!_canEdit) return;
+    final generation = _pickGeneration;
     final source = await showModalBottomSheet<ImageSource>(
       context: context,
       builder: (context) => SafeArea(
@@ -246,17 +259,17 @@ class _PhotoUploadState extends State<PhotoUpload> {
         ),
       ),
     );
-    if (source == null) return;
+    if (!_canEdit || generation != _pickGeneration || source == null) return;
     await pickImages(source);
   }
 
   void _openImageViewer(int initialIndex) {
-    if (selectedImages.isEmpty) return;
+    if (!_canEdit || selectedImages.isEmpty) return;
 
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => _PhotoViewerPage(
-          images: selectedImages,
+          images: List.of(selectedImages),
           initialIndex: initialIndex,
         ),
       ),
@@ -287,7 +300,7 @@ class _PhotoUploadState extends State<PhotoUpload> {
             itemCount: selectedImages.length,
             itemBuilder: (context, index) {
               return GestureDetector(
-                onTap: () => _openImageViewer(index),
+                onTap: widget.enabled ? () => _openImageViewer(index) : null,
                 child: Container(
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(20),
@@ -312,7 +325,7 @@ class _PhotoUploadState extends State<PhotoUpload> {
               ),
               child: IconButton(
                 icon: const Icon(Icons.close, color: Colors.white),
-                onPressed: () => _removeImage(_currentImageIndex),
+                onPressed: widget.enabled ? () => _removeImage(_currentImageIndex) : null,
               ),
             ),
           ),
@@ -328,7 +341,7 @@ class _PhotoUploadState extends State<PhotoUpload> {
               ),
               child: IconButton(
                 icon: const Icon(Icons.add_a_photo, color: Colors.white),
-                onPressed: _pickProductImage,
+                onPressed: widget.enabled ? _pickProductImage : null,
               ),
             ),
           ),
@@ -392,7 +405,7 @@ class _PhotoUploadState extends State<PhotoUpload> {
       color: AppColors.pinkBackground,
       borderRadius: BorderRadius.circular(20),
       child: InkWell(
-        onTap: _pickProductImage,
+        onTap: widget.enabled ? _pickProductImage : null,
         borderRadius: BorderRadius.circular(20),
         child: CustomPaint(
           painter: _DashedBorderPainter(

@@ -3,6 +3,7 @@ import 'package:cherry_mvp/core/utils/utils.dart';
 
 class DonationFormField extends StatelessWidget {
   final TextEditingController controller;
+  final bool enabled;
   final String hintText;
   final String? title;
   final IconData? hintIcon;
@@ -12,6 +13,7 @@ class DonationFormField extends StatelessWidget {
 
   const DonationFormField({
     super.key,
+    this.enabled = true,
     required this.controller,
     required this.hintText,
     this.hintIcon,
@@ -40,6 +42,7 @@ class DonationFormField extends StatelessWidget {
           Padding(
             padding: EdgeInsets.only(bottom: 10),
             child: TextFormField(
+              enabled: enabled,
               maxLines: null,
               controller: controller,
               minLines: minLines,
