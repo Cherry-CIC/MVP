@@ -188,17 +188,10 @@ class DonationFormState extends State<DonationForm> {
                   final categories = categoryViewModel.categories;
 
                   if (status.type == StatusType.loading) {
-                    return const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 16.0),
-                      child: Center(
-                        child: Column(
-                          children: [
-                            CircularProgressIndicator(),
-                            SizedBox(height: 8),
-                            Text('Loading categories...'),
-                          ],
-                        ),
-                      ),
+                    return _SelectionField(
+                      label: AppStrings.charityText,
+                      value: null,
+                      onTap: null,
                     );
                   } else if (status.type == StatusType.failure) {
                     return Padding(
@@ -213,7 +206,7 @@ class DonationFormState extends State<DonationForm> {
                           ),
                           const SizedBox(height: 8),
                           ElevatedButton(
-                            onPressed: () => categoryViewModel.fetchCategories(),
+                            onPressed: () => categoryViewModel.fetchCategories(forceRefresh: true),
                             child: const Text(AppStrings.retry),
                           ),
                         ],
@@ -250,17 +243,10 @@ class DonationFormState extends State<DonationForm> {
                   final charities = charityViewModel.charities;
 
                   if (status.type == StatusType.loading) {
-                    return const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 16.0),
-                      child: Center(
-                        child: Column(
-                          children: [
-                            CircularProgressIndicator(),
-                            SizedBox(height: 8),
-                            Text(AppStrings.loadCharities),
-                          ],
-                        ),
-                      ),
+                    return _SelectionField(
+                      label: categoryHintText,
+                      value: null,
+                      onTap: null,
                     );
                   } else if (status.type == StatusType.failure) {
                     return Padding(
@@ -275,7 +261,7 @@ class DonationFormState extends State<DonationForm> {
                           ),
                           const SizedBox(height: 8),
                           ElevatedButton(
-                            onPressed: () => charityViewModel.fetchCharities(),
+                            onPressed: () => charityViewModel.fetchCharities(forceRefresh: true),
                             child: const Text(AppStrings.retry),
                           ),
                         ],
@@ -502,7 +488,7 @@ class _SelectionField extends StatelessWidget {
 
   final String label;
   final String? value;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {

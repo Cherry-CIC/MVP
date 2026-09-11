@@ -49,7 +49,11 @@ class CategoryViewModel extends ChangeNotifier {
     });
   }
 
-  Future<void> fetchCategories() async {
+  Future<void> fetchCategories({bool forceRefresh = false}) async {
+    if (!forceRefresh && _categories.isNotEmpty && _status.type == StatusType.success) {
+      return;
+    }
+
     _status = Status.loading;
     notifyListeners();
 
