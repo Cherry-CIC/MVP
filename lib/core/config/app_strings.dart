@@ -161,6 +161,13 @@ class AppStrings {
   static const takePhotoInstruction =
       'Upload clear, high-quality images to help your items shine. The more angles the better.';
   static const errorPickingImage = 'Error picking image';
+  static const cameraPermissionTitle = 'Camera Access Required';
+  static const cameraPermissionRationale =
+      'Cherry requires access to your camera so you can capture photos of items to list or donate on the marketplace.';
+  static const cameraPermissionDeniedTitle = 'Camera Permission Denied';
+  static const cameraPermissionDeniedMessage =
+      'Camera permission is required to take photos of your item. Please grant camera permission in your device settings to use this feature.';
+  static const ok = 'OK';
   static const tapToAddPhotos = 'Tap to add photos (multiple allowed)';
   static const catchEyesText = "Catch eyes by using quality photos!";
   static const photosTipPopupHeading = "Your photos should...";
