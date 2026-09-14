@@ -19,7 +19,13 @@ class DonationRepository implements IDonationRepository {
   final StorageProvider _storageProvider;
   final FirebaseAuth _firebaseAuth;
 
-  DonationRepository({required this._apiService, required this._storageProvider, required this._firebaseAuth});
+  DonationRepository({
+    required ApiService apiService,
+    required StorageProvider storageProvider,
+    required FirebaseAuth firebaseAuth,
+  }) : _apiService = apiService,
+       _storageProvider = storageProvider,
+       _firebaseAuth = firebaseAuth;
 
   @override
   Future<Result<DonationResponse>> submitDonation(DonationRequest request) async {

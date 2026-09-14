@@ -1,6 +1,8 @@
 import 'package:cherry_mvp/core/config/app_strings.dart';
 import 'package:cherry_mvp/core/utils/status.dart';
+import 'package:cherry_mvp/features/orders/models/order_summary.dart';
 import 'package:cherry_mvp/features/orders/orders_view_model.dart';
+import 'package:cherry_mvp/features/orders/widgets/confirm_item_dialog.dart';
 import 'package:cherry_mvp/features/orders/widgets/order_card.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -40,6 +42,74 @@ class _MyOrdersPageState extends State<MyOrdersPage> {
   void dispose() {
     _viewModel?.clearOrders(notify: false);
     super.dispose();
+  }
+
+  Future<void> _handleOrderTap(BuildContext context, OrderSummary order) async {
+    final state = order.deliveryState.trim().toLowerCase();
+    if (state != 'awaiting_confirmation' && state != 'delivered') {
+      return;
+    }
+
+    final action = await showDialog<ConfirmItemAction>(
+      context: context,
+      builder: (dialogContext) => ConfirmItemDialog(order: order),
+    );
+
+    if (!mounted || action == null) {
+      return;
+    }
+
+    if (action == ConfirmItemAction.dispute) {
+      await _openDisputeDialog(context, order);
+      return;
+    }
+
+    final result = await _viewModel?.confirmOrderReceived(order.id);
+    if (!mounted) {
+      return;
+    }
+
+    if (result?.isSuccess == true) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Receipt confirmed')),
+      );
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(result?.error ?? 'Could not confirm this item')),
+    );
+  }
+
+  Future<void> _openDisputeDialog(BuildContext context, OrderSummary order) async {
+    final result = await showDialog<_DisputeChoice>(
+      context: context,
+      builder: (dialogContext) => _DisputeDialog(order: order),
+    );
+
+    if (!mounted || result == null) {
+      return;
+    }
+
+    final submitResult = await _viewModel?.submitOrderDispute(
+      order.id,
+      reason: result.reason,
+      message: result.message,
+    );
+    if (!mounted) {
+      return;
+    }
+
+    if (submitResult?.isSuccess == true) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Dispute submitted')),
+      );
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(submitResult?.error ?? 'Could not submit the dispute')),
+    );
   }
 
   @override
@@ -190,26 +260,210 @@ class _OrdersList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final hasRefreshError = viewModel.refreshError != null;
+    final awaitingConfirmationOrders = viewModel.orders
+        .where((order) => order.deliveryState.trim().toLowerCase() == 'awaiting_confirmation')
+        .toList(growable: false);
+    final otherOrders = viewModel.orders
+        .where((order) => order.deliveryState.trim().toLowerCase() != 'awaiting_confirmation')
+        .toList(growable: false);
+    final children = <Widget>[
+      if (hasRefreshError) _RefreshFailure(onRetry: viewModel.refreshOrders),
+      if (awaitingConfirmationOrders.isNotEmpty) ...[
+        const _OrderSectionHeader(title: AppStrings.myOrdersAwaitingConfirmation),
+        ...awaitingConfirmationOrders.map(
+          (order) => _OrderListItem(order: order, viewModel: viewModel),
+        ),
+      ],
+      if (otherOrders.isNotEmpty) ...[
+        const _OrderSectionHeader(title: AppStrings.myOrdersOther),
+        ...otherOrders.map(
+          (order) => _OrderListItem(order: order, viewModel: viewModel),
+        ),
+      ],
+    ];
 
     return RefreshIndicator(
       onRefresh: viewModel.refreshOrders,
       child: ListView.separated(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-        itemCount: viewModel.orders.length + (hasRefreshError ? 1 : 0),
+        itemCount: children.length,
         separatorBuilder: (_, _) => const SizedBox(height: 24),
-        itemBuilder: (context, index) {
-          if (hasRefreshError && index == 0) {
-            return _RefreshFailure(onRetry: viewModel.refreshOrders);
-          }
-
-          final orderIndex = index - (hasRefreshError ? 1 : 0);
-          return OrderCard(
-            key: ValueKey(viewModel.orders[orderIndex].id),
-            order: viewModel.orders[orderIndex],
-          );
-        },
+        itemBuilder: (_, index) => children[index],
       ),
+    );
+  }
+}
+
+class _OrderSectionHeader extends StatelessWidget {
+  final String title;
+
+  const _OrderSectionHeader({required this.title});
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(title, style: Theme.of(context).textTheme.titleMedium);
+  }
+}
+
+class _OrderListItem extends StatelessWidget {
+  final OrderSummary order;
+  final OrdersViewModel viewModel;
+
+  const _OrderListItem({
+    required this.order,
+    required this.viewModel,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return OrderCard(
+      key: ValueKey(order.id),
+      order: order,
+      onTap: () => _OrdersListState.handleOrderAction(context, order, viewModel),
+    );
+  }
+}
+
+class _DisputeChoice {
+  final String reason;
+  final String message;
+
+  const _DisputeChoice({required this.reason, required this.message});
+}
+
+class _DisputeDialog extends StatefulWidget {
+  final OrderSummary order;
+
+  const _DisputeDialog({required this.order});
+
+  @override
+  State<_DisputeDialog> createState() => _DisputeDialogState();
+}
+
+class _DisputeDialogState extends State<_DisputeDialog> {
+  String _reason = 'wrong_item';
+  final TextEditingController _messageController = TextEditingController();
+
+  @override
+  void dispose() {
+    _messageController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Raise dispute'),
+      content: SizedBox(
+        width: 420,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            DropdownButtonFormField<String>(
+              value: _reason,
+              items: const [
+                DropdownMenuItem(value: 'wrong_item', child: Text('Wrong item')),
+                DropdownMenuItem(value: 'item_not_as_described', child: Text('Item not as described')),
+                DropdownMenuItem(value: 'item_arrived_damaged', child: Text('Item arrived damaged')),
+                DropdownMenuItem(value: 'something_else', child: Text('Something else')),
+              ],
+              onChanged: (value) => setState(() => _reason = value ?? _reason),
+              decoration: const InputDecoration(labelText: 'Reason'),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _messageController,
+              maxLines: 4,
+              decoration: const InputDecoration(
+                labelText: 'Tell us what went wrong',
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.of(context).pop(
+            _DisputeChoice(
+              reason: _reason,
+              message: _messageController.text,
+            ),
+          ),
+          child: const Text('Submit'),
+        ),
+      ],
+    );
+  }
+}
+
+class _OrdersListState {
+  static Future<void> handleOrderAction(
+    BuildContext context,
+    OrderSummary order,
+    OrdersViewModel viewModel,
+  ) async {
+    final state = order.deliveryState.trim().toLowerCase();
+    if (state != 'awaiting_confirmation' && state != 'delivered') {
+      return;
+    }
+
+    final action = await showDialog<ConfirmItemAction>(
+      context: context,
+      builder: (dialogContext) => ConfirmItemDialog(order: order),
+    );
+    if (action == null) {
+      return;
+    }
+
+    if (action == ConfirmItemAction.dispute) {
+      final disputeChoice = await showDialog<_DisputeChoice>(
+        context: context,
+        builder: (dialogContext) => _DisputeDialog(order: order),
+      );
+      if (disputeChoice == null) {
+        return;
+      }
+
+      final disputeResult = await viewModel.submitOrderDispute(
+        order.id,
+        reason: disputeChoice.reason,
+        message: disputeChoice.message,
+      );
+      if (!context.mounted) {
+        return;
+      }
+      if (disputeResult.isSuccess) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Dispute submitted')),
+        );
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(disputeResult.error ?? 'Could not submit the dispute'),
+        ),
+      );
+      return;
+    }
+
+    final confirmResult = await viewModel.confirmOrderReceived(order.id);
+    if (!context.mounted) {
+      return;
+    }
+    if (confirmResult.isSuccess) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Receipt confirmed')),
+      );
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(confirmResult.error ?? 'Could not confirm this item')),
     );
   }
 }

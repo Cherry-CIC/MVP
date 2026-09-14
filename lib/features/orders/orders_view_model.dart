@@ -1,3 +1,4 @@
+import 'package:cherry_mvp/core/utils/result.dart';
 import 'package:cherry_mvp/core/utils/status.dart';
 import 'package:cherry_mvp/features/orders/models/order_summary.dart';
 import 'package:cherry_mvp/features/orders/orders_repository.dart';
@@ -32,6 +33,52 @@ class OrdersViewModel extends ChangeNotifier {
 
   Future<void> retryLoad() async {
     await _fetchOrders(clearExistingOrders: true);
+  }
+
+  Future<Result<dynamic>> confirmOrderReceived(String orderId) async {
+    final result = await repository.confirmOrderReceived(orderId);
+    if (result.isSuccess) {
+      _orders = _orders
+          .map((order) {
+            if (order.id != orderId) {
+              return order;
+            }
+            return order.copyWith(
+              deliveryState: 'confirmed',
+              deliveryLabel: 'Confirmed',
+            );
+          })
+          .toList(growable: false);
+      _notifyIfActive();
+    }
+    return result;
+  }
+
+  Future<Result<dynamic>> submitOrderDispute(
+    String orderId, {
+    required String reason,
+    String? message,
+  }) async {
+    final result = await repository.submitOrderDispute(
+      orderId,
+      reason: reason,
+      message: message,
+    );
+    if (result.isSuccess) {
+      _orders = _orders
+          .map((order) {
+            if (order.id != orderId) {
+              return order;
+            }
+            return order.copyWith(
+              deliveryState: 'disputed',
+              deliveryLabel: 'Disputed',
+            );
+          })
+          .toList(growable: false);
+      _notifyIfActive();
+    }
+    return result;
   }
 
   void clearOrders({bool notify = true}) {
