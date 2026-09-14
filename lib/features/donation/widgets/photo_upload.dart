@@ -83,6 +83,67 @@ class _PhotoUploadState extends State<PhotoUpload> {
     return '${AppStrings.errorPickingImage}: ${error.message ?? error.code}';
   }
 
+  Future<bool> _showCameraPermissionRationaleDialog() async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.camera_alt, color: AppColors.primaryAction),
+            SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                AppStrings.cameraPermissionTitle,
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        ),
+        content: const Text(AppStrings.cameraPermissionRationale),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text(AppStrings.cancel),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text(AppStrings.continueText),
+          ),
+        ],
+      ),
+    );
+    return result ?? false;
+  }
+
+  void _showCameraPermissionDeniedDialog() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text(AppStrings.cameraPermissionDeniedTitle),
+        content: const Text(AppStrings.cameraPermissionDeniedMessage),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text(AppStrings.ok),
+          ),
+        ],
+      ),
+    );
+  }
+
+  bool _isPermissionDeniedError(PlatformException error) {
+    final code = error.code.toLowerCase();
+    final message = (error.message ?? '').toLowerCase();
+    final details = (error.details?.toString() ?? '').toLowerCase();
+    return code.contains('denied') ||
+        code.contains('permission') ||
+        code.contains('restricted') ||
+        message.contains('denied') ||
+        message.contains('permission') ||
+        details.contains('denied') ||
+        details.contains('permission');
+  }
+
   @override
   void initState() {
     super.initState();
@@ -153,7 +214,10 @@ class _PhotoUploadState extends State<PhotoUpload> {
           }
         }
       } else {
-        // Single image from camera
+        // Single image from camera - show pre-permission rationale dialog
+        final bool userConfirmed = await _showCameraPermissionRationaleDialog();
+        if (!userConfirmed) return;
+
         final XFile? picked = await _pickCameraImage(picker);
 
         if (picked != null) {
@@ -186,9 +250,13 @@ class _PhotoUploadState extends State<PhotoUpload> {
       }
     } on PlatformException catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(_platformImageErrorMessage(error))),
-        );
+        if (_isPermissionDeniedError(error)) {
+          _showCameraPermissionDeniedDialog();
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(_platformImageErrorMessage(error))),
+          );
+        }
       }
     } catch (e) {
       if (mounted) {
