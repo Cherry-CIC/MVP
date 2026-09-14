@@ -38,7 +38,9 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string>To scan cards</string>
+	<string>cherry uses your camera so you can take photos to add to cherry.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>cherry uses the photos you choose for your listings and profile.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

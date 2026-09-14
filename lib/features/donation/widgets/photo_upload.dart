@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import 'package:cherry_mvp/core/config/app_colors.dart';
 import 'package:cherry_mvp/core/config/app_strings.dart';
 import 'package:cherry_mvp/features/donation/donation_view_model.dart';
+import 'package:cherry_mvp/features/shared_widgets/photo_picker_feedback.dart';
 
 class PhotoUpload extends StatefulWidget {
   final Function(List<XFile>)? onImagesChanged;
@@ -26,6 +27,7 @@ class _PhotoUploadState extends State<PhotoUpload> {
   List<XFile> selectedImages = [];
   final PageController _pageController = PageController();
   int _currentImageIndex = 0;
+  bool _isPickingImage = false;
 
   bool _shouldRetryWithoutTransforms(PlatformException error) {
     final message = (error.message ?? '').toLowerCase();
@@ -46,7 +48,7 @@ class _PhotoUploadState extends State<PhotoUpload> {
         requestFullMetadata: false,
       );
     } on PlatformException catch (error) {
-      if (!_shouldRetryWithoutTransforms(error)) {
+      if (!mounted || !_shouldRetryWithoutTransforms(error)) {
         rethrow;
       }
 
@@ -63,7 +65,7 @@ class _PhotoUploadState extends State<PhotoUpload> {
         requestFullMetadata: false,
       );
     } on PlatformException catch (error) {
-      if (!_shouldRetryWithoutTransforms(error)) {
+      if (!mounted || !_shouldRetryWithoutTransforms(error)) {
         rethrow;
       }
 
@@ -72,15 +74,6 @@ class _PhotoUploadState extends State<PhotoUpload> {
         requestFullMetadata: false,
       );
     }
-  }
-
-  String _platformImageErrorMessage(PlatformException error) {
-    if (_shouldRetryWithoutTransforms(error)) {
-      return 'Some selected photos could not be loaded. '
-          'Please try different photos or add them one at a time.';
-    }
-
-    return '${AppStrings.errorPickingImage}: ${error.message ?? error.code}';
   }
 
   @override
@@ -118,6 +111,7 @@ class _PhotoUploadState extends State<PhotoUpload> {
       if (source == ImageSource.gallery) {
         // Allow multiple selection from gallery
         final List<XFile> picked = await _pickGalleryImages(picker);
+        if (!mounted) return;
 
         if (picked.isNotEmpty) {
           // Filter out duplicates based on file path
@@ -141,7 +135,7 @@ class _PhotoUploadState extends State<PhotoUpload> {
             // Animate to the last added image
             if (selectedImages.length > 1) {
               WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (_pageController.hasClients) {
+                if (mounted && _pageController.hasClients) {
                   _pageController.animateToPage(
                     _currentImageIndex,
                     duration: const Duration(milliseconds: 300),
@@ -155,6 +149,7 @@ class _PhotoUploadState extends State<PhotoUpload> {
       } else {
         // Single image from camera
         final XFile? picked = await _pickCameraImage(picker);
+        if (!mounted) return;
 
         if (picked != null) {
           // Check for duplicates
@@ -172,7 +167,7 @@ class _PhotoUploadState extends State<PhotoUpload> {
             // Animate to the newly added image
             if (selectedImages.length > 1) {
               WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (_pageController.hasClients) {
+                if (mounted && _pageController.hasClients) {
                   _pageController.animateToPage(
                     _currentImageIndex,
                     duration: const Duration(milliseconds: 300),
@@ -186,15 +181,11 @@ class _PhotoUploadState extends State<PhotoUpload> {
       }
     } on PlatformException catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(_platformImageErrorMessage(error))),
-        );
+        showPhotoPickerError(context, error);
       }
-    } catch (e) {
+    } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${AppStrings.errorPickingImage}: $e')),
-        );
+        showPhotoPickerError(context);
       }
     }
   }
@@ -213,7 +204,7 @@ class _PhotoUploadState extends State<PhotoUpload> {
     // Animate to valid page if needed
     if (selectedImages.isNotEmpty && _currentImageIndex < selectedImages.length) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (_pageController.hasClients) {
+        if (mounted && _pageController.hasClients) {
           _pageController.animateToPage(
             _currentImageIndex,
             duration: const Duration(milliseconds: 300),
@@ -225,29 +216,42 @@ class _PhotoUploadState extends State<PhotoUpload> {
   }
 
   void _pickProductImage() async {
-    final source = await showModalBottomSheet<ImageSource>(
-      context: context,
-      builder: (context) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const SizedBox(height: 16),
-            ListTile(
-              leading: const Icon(Icons.camera_alt),
-              title: const Text(AppStrings.cameraPhoto),
-              onTap: () => context.read<DonationViewModel>().selectType(ImageSource.camera),
-            ),
-            ListTile(
-              leading: const Icon(Icons.photo_library),
-              title: const Text(AppStrings.galleryPhotoMultiple),
-              onTap: () => context.read<DonationViewModel>().selectType(ImageSource.gallery),
-            ),
-          ],
+    if (_isPickingImage) return;
+    _isPickingImage = true;
+    var sourceChosen = false;
+    void chooseSource(ImageSource source) {
+      if (sourceChosen || !mounted) return;
+      sourceChosen = true;
+      context.read<DonationViewModel>().selectType(source);
+    }
+
+    try {
+      final source = await showModalBottomSheet<ImageSource>(
+        context: context,
+        builder: (context) => SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 16),
+              ListTile(
+                leading: const Icon(Icons.camera_alt),
+                title: const Text(AppStrings.cameraPhoto),
+                onTap: () => chooseSource(ImageSource.camera),
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library),
+                title: const Text(AppStrings.galleryPhotoMultiple),
+                onTap: () => chooseSource(ImageSource.gallery),
+              ),
+            ],
+          ),
         ),
-      ),
-    );
-    if (source == null) return;
-    await pickImages(source);
+      );
+      if (!mounted || source == null) return;
+      await pickImages(source);
+    } finally {
+      _isPickingImage = false;
+    }
   }
 
   void _openImageViewer(int initialIndex) {

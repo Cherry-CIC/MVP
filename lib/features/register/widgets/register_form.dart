@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
@@ -8,6 +9,7 @@ import 'package:cherry_mvp/core/router/router.dart';
 import 'package:cherry_mvp/core/utils/utils.dart';
 import 'package:cherry_mvp/features/register/register_viewmodel.dart';
 import 'package:cherry_mvp/features/shared_widgets/labeled_input_field.dart';
+import 'package:cherry_mvp/features/shared_widgets/photo_picker_feedback.dart';
 import 'package:cherry_mvp/features/welcome/widgets/auth_form_shell.dart';
 
 class RegisterForm extends StatefulWidget {
@@ -45,6 +47,7 @@ class _RegisterFormState extends State<RegisterForm> {
   // Image picker controller
   final ImagePicker _picker = ImagePicker();
   File? _selectedImage;
+  bool _isPickingImage = false;
 
   @override
   void initState() {
@@ -100,13 +103,21 @@ class _RegisterFormState extends State<RegisterForm> {
   }
 
   Future<void> _pickImage() async {
-    final XFile? pickedFile = await _picker.pickImage(
-      source: ImageSource.gallery,
-    );
-    if (pickedFile != null) {
-      setState(() {
-        _selectedImage = File(pickedFile.path);
-      });
+    if (_isPickingImage) return;
+    _isPickingImage = true;
+    try {
+      final pickedFile = await _picker.pickImage(
+        source: ImageSource.gallery,
+        requestFullMetadata: false,
+      );
+      if (!mounted || pickedFile == null) return;
+      setState(() => _selectedImage = File(pickedFile.path));
+    } on PlatformException catch (error) {
+      if (mounted) showPhotoPickerError(context, error);
+    } catch (_) {
+      if (mounted) showPhotoPickerError(context);
+    } finally {
+      _isPickingImage = false;
     }
   }
 
