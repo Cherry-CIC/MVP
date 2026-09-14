@@ -40,8 +40,17 @@ This guide details the exact responses required in the Google Play Console **Dat
 
 ---
 
+### 4. Microphone / Audio Data Declaration
+
+* **Does your app collect or process audio / microphone data?**
+  * **Answer**: **No**. Microphone access is not needed or requested by Cherry MVP.
+  * **Policy Enforcement**: `android.permission.RECORD_AUDIO` is explicitly prohibited and removed via `tools:node="remove"` in `AndroidManifest.xml`. `NSMicrophoneUsageDescription` is omitted from iOS `Info.plist`.
+
+---
+
 ## Verification & Compliance Checklist
 - [x] `android.permission.CAMERA` declared in `AndroidManifest.xml` with `android.hardware.camera` feature flag set to `required="false"`.
+- [x] `android.permission.RECORD_AUDIO` explicitly disallowed and removed via `tools:node="remove"` in `AndroidManifest.xml`.
 - [x] In-app pre-permission dialog explaining camera access before launching system camera picker.
 - [x] User camera usage description updated in iOS `Info.plist`.
 - [x] Data Safety declarations filled out on Google Play Console as detailed above.
