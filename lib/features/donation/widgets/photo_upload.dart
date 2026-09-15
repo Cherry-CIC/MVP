@@ -117,25 +117,15 @@ class _PhotoUploadState extends State<PhotoUpload> {
     return result ?? false;
   }
 
-  Future<bool> _showPermissionDeniedDialog({
-    required Permission permission,
-    required bool permanentlyDenied,
-  }) async {
-    final isMicrophone = permission == Permission.microphone;
+    Future<bool> _showPermissionDeniedDialog({
+      required bool permanentlyDenied,
+    }) async {
     final title = permanentlyDenied
-        ? (isMicrophone
-              ? AppStrings.microphonePermissionPermanentlyDeniedTitle
-              : AppStrings.cameraPermissionPermanentlyDeniedTitle)
-        : (isMicrophone
-              ? AppStrings.microphonePermissionPermanentlyDeniedTitle
-              : AppStrings.cameraPermissionDeniedTitle);
+      ? AppStrings.cameraPermissionPermanentlyDeniedTitle
+      : AppStrings.cameraPermissionDeniedTitle;
     final message = permanentlyDenied
-        ? (isMicrophone
-              ? AppStrings.microphonePermissionPermanentlyDeniedMessage
-              : AppStrings.cameraPermissionPermanentlyDeniedMessage)
-          : (isMicrophone
-            ? AppStrings.microphonePermissionDeniedMessage
-            : AppStrings.cameraPermissionDeniedMessage);
+      ? AppStrings.cameraPermissionPermanentlyDeniedMessage
+      : AppStrings.cameraPermissionDeniedMessage;
 
     final openSettings = await showDialog<bool>(
       context: context,
@@ -163,35 +153,22 @@ class _PhotoUploadState extends State<PhotoUpload> {
     return openSettings == true;
   }
 
-  Future<bool> _ensureMediaPermission({required bool needsMicrophone}) async {
-    final permissions = <Permission>[Permission.camera];
-    if (needsMicrophone) {
-      permissions.add(Permission.microphone);
-    }
+  Future<bool> _ensureCameraPermission() async {
+    var status = await Permission.camera.status;
+    if (status.isGranted) return true;
 
-    for (final permission in permissions) {
-      var status = await permission.status;
-      if (status.isGranted) continue;
-
-      if (status.isPermanentlyDenied || status.isRestricted) {
-        await _showPermissionDeniedDialog(
-          permission: permission,
-          permanentlyDenied: true,
-        );
-        return false;
-      }
-
-      status = await permission.request();
-      if (status.isGranted) continue;
-
-      await _showPermissionDeniedDialog(
-        permission: permission,
-        permanentlyDenied: status.isPermanentlyDenied || status.isRestricted,
-      );
+    if (status.isPermanentlyDenied || status.isRestricted) {
+      await _showPermissionDeniedDialog(permanentlyDenied: true);
       return false;
     }
 
-    return true;
+    status = await Permission.camera.request();
+    if (status.isGranted) return true;
+
+    await _showPermissionDeniedDialog(
+      permanentlyDenied: status.isPermanentlyDenied || status.isRestricted,
+    );
+    return false;
   }
 
   @override
@@ -268,7 +245,7 @@ class _PhotoUploadState extends State<PhotoUpload> {
         final bool userConfirmed = await _showCameraPermissionRationaleDialog();
         if (!userConfirmed) return;
 
-        if (!await _ensureMediaPermission(needsMicrophone: false)) return;
+        if (!await _ensureCameraPermission()) return;
 
         final XFile? picked = await _pickCameraImage(picker);
 

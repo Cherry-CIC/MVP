@@ -11,8 +11,6 @@ void main() {
     expect(AppStrings.cameraPermissionDeniedMessage, isNot(contains('microphone')));
     expect(AppStrings.cameraPermissionDeniedMessage, isNot(contains('video')));
     expect(AppStrings.cameraPermissionPermanentlyDeniedMessage, contains('Settings'));
-    expect(AppStrings.microphonePermissionDeniedMessage, contains('microphone'));
-    expect(AppStrings.microphonePermissionPermanentlyDeniedMessage, contains('Settings'));
     expect(AppStrings.permissionTryAgain, 'Try Again');
   });
 }
