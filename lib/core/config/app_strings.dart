@@ -167,6 +167,17 @@ class AppStrings {
   static const cameraPermissionDeniedTitle = 'Camera Access Needed';
   static const cameraPermissionDeniedMessage =
       'Camera permission is required to take photos for your item listing. Please allow camera access in your device settings to continue.';
+  static const cameraPermissionPermanentlyDeniedTitle =
+      'Camera Permission Disabled';
+  static const cameraPermissionPermanentlyDeniedMessage =
+      'Camera access has been disabled for Cherry. Open Settings and allow camera access, then try again.';
+  static const microphonePermissionDeniedMessage =
+      'Microphone permission is required to record media with audio. Please allow microphone access in your device settings to continue.';
+  static const microphonePermissionPermanentlyDeniedTitle =
+      'Microphone Permission Disabled';
+  static const microphonePermissionPermanentlyDeniedMessage =
+      'Microphone access has been disabled for Cherry. Open Settings and allow microphone access, then try again.';
+  static const permissionTryAgain = 'Try Again';
   static const ok = 'OK';
   static const openSettings = 'Open Settings';
   static const tapToAddPhotos = 'Tap to add photos (multiple allowed)';

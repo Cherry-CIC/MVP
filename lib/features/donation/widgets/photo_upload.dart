@@ -5,6 +5,7 @@ import 'package:app_settings/app_settings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:cherry_mvp/core/config/app_colors.dart';
 import 'package:cherry_mvp/core/config/app_strings.dart';
@@ -116,40 +117,81 @@ class _PhotoUploadState extends State<PhotoUpload> {
     return result ?? false;
   }
 
-  void _showCameraPermissionDeniedDialog() {
-    showDialog(
+  Future<bool> _showPermissionDeniedDialog({
+    required Permission permission,
+    required bool permanentlyDenied,
+  }) async {
+    final isMicrophone = permission == Permission.microphone;
+    final title = permanentlyDenied
+        ? (isMicrophone
+              ? AppStrings.microphonePermissionPermanentlyDeniedTitle
+              : AppStrings.cameraPermissionPermanentlyDeniedTitle)
+        : (isMicrophone
+              ? AppStrings.microphonePermissionPermanentlyDeniedTitle
+              : AppStrings.cameraPermissionDeniedTitle);
+    final message = permanentlyDenied
+        ? (isMicrophone
+              ? AppStrings.microphonePermissionPermanentlyDeniedMessage
+              : AppStrings.cameraPermissionPermanentlyDeniedMessage)
+          : (isMicrophone
+            ? AppStrings.microphonePermissionDeniedMessage
+            : AppStrings.cameraPermissionDeniedMessage);
+
+    final openSettings = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text(AppStrings.cameraPermissionDeniedTitle),
-        content: const Text(AppStrings.cameraPermissionDeniedMessage),
+        title: Text(title),
+        content: Text(message),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text(AppStrings.ok),
+            child: Text(
+              permanentlyDenied ? AppStrings.ok : AppStrings.permissionTryAgain,
+            ),
           ),
           TextButton(
-            onPressed: () {
-              Navigator.of(ctx).pop();
-              AppSettings.openAppSettings();
-            },
+            onPressed: () => Navigator.of(ctx).pop(true),
             child: const Text(AppStrings.openSettings),
           ),
         ],
       ),
     );
+
+    if (openSettings == true) {
+      await AppSettings.openAppSettings();
+    }
+    return openSettings == true;
   }
 
-  bool _isPermissionDeniedError(PlatformException error) {
-    final code = error.code.toLowerCase();
-    final message = (error.message ?? '').toLowerCase();
-    final details = (error.details?.toString() ?? '').toLowerCase();
-    return code.contains('denied') ||
-        code.contains('permission') ||
-        code.contains('restricted') ||
-        message.contains('denied') ||
-        message.contains('permission') ||
-        details.contains('denied') ||
-        details.contains('permission');
+  Future<bool> _ensureMediaPermission({required bool needsMicrophone}) async {
+    final permissions = <Permission>[Permission.camera];
+    if (needsMicrophone) {
+      permissions.add(Permission.microphone);
+    }
+
+    for (final permission in permissions) {
+      var status = await permission.status;
+      if (status.isGranted) continue;
+
+      if (status.isPermanentlyDenied || status.isRestricted) {
+        await _showPermissionDeniedDialog(
+          permission: permission,
+          permanentlyDenied: true,
+        );
+        return false;
+      }
+
+      status = await permission.request();
+      if (status.isGranted) continue;
+
+      await _showPermissionDeniedDialog(
+        permission: permission,
+        permanentlyDenied: status.isPermanentlyDenied || status.isRestricted,
+      );
+      return false;
+    }
+
+    return true;
   }
 
   @override
@@ -226,6 +268,8 @@ class _PhotoUploadState extends State<PhotoUpload> {
         final bool userConfirmed = await _showCameraPermissionRationaleDialog();
         if (!userConfirmed) return;
 
+        if (!await _ensureMediaPermission(needsMicrophone: false)) return;
+
         final XFile? picked = await _pickCameraImage(picker);
 
         if (picked != null) {
@@ -258,13 +302,9 @@ class _PhotoUploadState extends State<PhotoUpload> {
       }
     } on PlatformException catch (error) {
       if (mounted) {
-        if (_isPermissionDeniedError(error)) {
-          _showCameraPermissionDeniedDialog();
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(_platformImageErrorMessage(error))),
-          );
-        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(_platformImageErrorMessage(error))),
+        );
       }
     } catch (e) {
       if (mounted) {
