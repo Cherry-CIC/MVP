@@ -163,11 +163,12 @@ class AppStrings {
   static const errorPickingImage = 'Error picking image';
   static const cameraPermissionTitle = 'Camera Access Required';
   static const cameraPermissionRationale =
-      'Cherry requires access to your camera so you can capture photos of items to list or donate on the marketplace.';
-  static const cameraPermissionDeniedTitle = 'Camera Permission Denied';
+      'Cherry requires access to your camera and microphone so you can capture photos or short videos of items to list or donate on the marketplace.';
+  static const cameraPermissionDeniedTitle = 'Camera & Microphone Access Needed';
   static const cameraPermissionDeniedMessage =
-      'Camera permission is required to take photos of your item. Please grant camera permission in your device settings to use this feature.';
+      'Camera and microphone permissions are required to take photos or record videos for your item listing. Please allow both in your device settings to continue.';
   static const ok = 'OK';
+  static const openSettings = 'Open Settings';
   static const tapToAddPhotos = 'Tap to add photos (multiple allowed)';
   static const catchEyesText = "Catch eyes by using quality photos!";
   static const photosTipPopupHeading = "Your photos should...";

@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:ui';
 
+import 'package:app_settings/app_settings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
@@ -125,6 +126,13 @@ class _PhotoUploadState extends State<PhotoUpload> {
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
             child: const Text(AppStrings.ok),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(ctx).pop();
+              AppSettings.openAppSettings();
+            },
+            child: const Text(AppStrings.openSettings),
           ),
         ],
       ),

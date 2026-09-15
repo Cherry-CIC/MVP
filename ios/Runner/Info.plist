@@ -38,7 +38,9 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string>Cherry requires camera access so you can take photos of items to donate or list on the marketplace, and set profile pictures.</string>
+	<string>Cherry requires camera access so you can take photos or record videos of items to donate or list on the marketplace, and set profile pictures.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Cherry requires microphone access so you can record video content for item listings and profile media.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
