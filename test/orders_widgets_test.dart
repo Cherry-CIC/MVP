@@ -5,6 +5,7 @@ import 'package:cherry_mvp/features/orders/order_currency_formatter.dart';
 import 'package:cherry_mvp/features/orders/orders_page.dart';
 import 'package:cherry_mvp/features/orders/orders_repository.dart';
 import 'package:cherry_mvp/features/orders/orders_view_model.dart';
+import 'package:cherry_mvp/features/orders/widgets/confirm_item_dialog.dart';
 import 'package:cherry_mvp/features/orders/widgets/order_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -12,14 +13,38 @@ import 'package:provider/provider.dart';
 
 class _QueuedOrdersRepository implements IOrdersRepository {
   final List<Result<List<OrderSummary>>> responses;
+  final Result<dynamic>? confirmationResult;
+  final Result<dynamic>? disputeResult;
+  String? disputeReason;
+  String? disputeMessage;
   int requestCount = 0;
 
-  _QueuedOrdersRepository(this.responses);
+  _QueuedOrdersRepository(
+    this.responses, {
+    this.confirmationResult,
+    this.disputeResult,
+  });
 
   @override
   Future<Result<List<OrderSummary>>> fetchOrders() async {
     requestCount++;
     return responses.removeAt(0);
+  }
+
+  @override
+  Future<Result<dynamic>> confirmOrderReceived(String orderId) async {
+    return confirmationResult ?? Result.failure('Not configured for this test');
+  }
+
+  @override
+  Future<Result<dynamic>> submitOrderDispute(
+    String orderId, {
+    required String reason,
+    String? message,
+  }) async {
+    disputeReason = reason;
+    disputeMessage = message;
+    return disputeResult ?? Result.failure('Not configured for this test');
   }
 }
 
@@ -120,6 +145,54 @@ void main() {
         AppStrings.myOrdersStatusUnavailable,
       );
     });
+  });
+
+  testWidgets('ConfirmItemDialog shows item details and omits a missing image', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: ConfirmItemDialog(order: _order(imageUrl: '')),
+        ),
+      ),
+    );
+
+    expect(find.text('Confirm this item'), findsOneWidget);
+    expect(find.text('Example shirt'), findsOneWidget);
+    expect(find.text('Have you received your item as expected?'), findsOneWidget);
+    expect(find.text('Yes, all good'), findsOneWidget);
+    expect(find.text('Raise dispute'), findsOneWidget);
+    expect(find.byType(Image), findsNothing);
+  });
+
+  testWidgets('ConfirmItemDialog returns its selected action', (tester) async {
+    ConfirmItemAction? selectedAction;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) => Scaffold(
+            body: TextButton(
+              onPressed: () async {
+                selectedAction = await showDialog<ConfirmItemAction>(
+                  context: context,
+                  builder: (_) => ConfirmItemDialog(order: _order()),
+                );
+              },
+              child: const Text('Open confirmation'),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Open confirmation'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Raise dispute'));
+    await tester.pumpAndSettle();
+
+    expect(selectedAction, ConfirmItemAction.dispute);
   });
 
   testWidgets('order card matches the required information hierarchy', (
@@ -298,6 +371,107 @@ void main() {
 
     expect(find.text('Example shirt'), findsOneWidget);
     expect(repository.requestCount, 2);
+  });
+
+  testWidgets('Raise dispute opens the dispute dialog from item confirmation', (
+    tester,
+  ) async {
+    final viewModel = OrdersViewModel(
+      repository: _QueuedOrdersRepository([
+        Result.success([
+          _order(
+            deliveryState: 'awaiting_confirmation',
+            deliveryLabel: 'Awaiting your confirmation',
+          ),
+        ]),
+      ]),
+    );
+
+    await _pumpPage(tester, viewModel: viewModel);
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Example shirt'));
+    await tester.pumpAndSettle();
+    expect(find.text('Confirm this item'), findsOneWidget);
+
+    await tester.tap(find.text('Raise dispute'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Raise dispute'), findsOneWidget);
+    expect(find.text('Tell us what went wrong'), findsOneWidget);
+  });
+
+  testWidgets('confirmation removes an order from Awaiting confirmation', (
+    tester,
+  ) async {
+    final viewModel = OrdersViewModel(
+      repository: _QueuedOrdersRepository(
+        [
+          Result.success([
+            _order(
+              deliveryState: 'awaiting_confirmation',
+              deliveryLabel: 'Awaiting your confirmation',
+            ),
+          ]),
+        ],
+        confirmationResult: Result.success({}),
+      ),
+    );
+
+    await _pumpPage(tester, viewModel: viewModel);
+    await tester.pumpAndSettle();
+    expect(find.text(AppStrings.myOrdersAwaitingConfirmation), findsOneWidget);
+
+    await tester.tap(find.text('Example shirt'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Yes, all good'));
+    await tester.pumpAndSettle();
+
+    expect(find.text(AppStrings.myOrdersAwaitingConfirmation), findsNothing);
+    expect(find.text(AppStrings.myOrdersOther), findsOneWidget);
+    expect(find.text(AppStrings.myOrdersConfirmed), findsOneWidget);
+    expect(find.text('Receipt confirmed'), findsOneWidget);
+  });
+
+  testWidgets('failed confirmation shows an error snackbar', (tester) async {
+    final viewModel = OrdersViewModel(
+      repository: _QueuedOrdersRepository(
+        [Result.success([_order(deliveryState: 'awaiting_confirmation')])],
+        confirmationResult: Result.failure('Confirmation unavailable'),
+      ),
+    );
+
+    await _pumpPage(tester, viewModel: viewModel);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Example shirt'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Yes, all good'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Confirmation unavailable'), findsOneWidget);
+  });
+
+  testWidgets('submitting a dispute sends its reason and message', (tester) async {
+    final repository = _QueuedOrdersRepository(
+      [Result.success([_order(deliveryState: 'awaiting_confirmation')])],
+      disputeResult: Result.success({}),
+    );
+    final viewModel = OrdersViewModel(repository: repository);
+
+    await _pumpPage(tester, viewModel: viewModel);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Example shirt'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Raise dispute'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), 'Wrong size received');
+    await tester.tap(find.text('Submit'));
+    await tester.pumpAndSettle();
+
+    expect(repository.disputeReason, 'wrong_item');
+    expect(repository.disputeMessage, 'Wrong size received');
+    expect(find.text('Dispute submitted'), findsOneWidget);
+    expect(find.text(AppStrings.myOrdersDisputed), findsOneWidget);
   });
 
   testWidgets('disposing My Orders clears cached account data', (

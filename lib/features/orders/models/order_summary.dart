@@ -41,12 +41,13 @@ class OrderSummary {
 
     final productId = _readString(json['productId']);
     final productName = _readString(json['productName']);
+    final imageUrl = _readString(json['imageUrl']);
 
     return OrderSummary(
       id: id,
       productId: productId,
       productName: productName.isEmpty ? fallbackProductName : productName,
-      imageUrl: '',
+      imageUrl: imageUrl,
       size: '',
       charityLogoUrl: '',
       itemPriceMinor: _readNonNegativeInteger(json['productAmount']),
@@ -70,6 +71,8 @@ class OrderSummary {
     String? imageUrl,
     String? size,
     String? charityLogoUrl,
+    String? deliveryState,
+    String? deliveryLabel,
   }) {
     return OrderSummary(
       id: id,
@@ -81,8 +84,8 @@ class OrderSummary {
       itemPriceMinor: itemPriceMinor,
       totalAmountMinor: totalAmountMinor,
       currency: currency,
-      deliveryState: deliveryState,
-      deliveryLabel: deliveryLabel,
+      deliveryState: deliveryState ?? this.deliveryState,
+      deliveryLabel: deliveryLabel ?? this.deliveryLabel,
     );
   }
 
