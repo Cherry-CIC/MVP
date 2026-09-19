@@ -40,7 +40,8 @@ class _HomeRepositoryStub implements IHomeRepository {
   }
 }
 
-class _OrdersRepositoryStub implements IOrdersRepository {
+// Navigation only fetches orders; Fake throws for unexpected repository calls.
+class _OrdersRepositoryStub extends Fake implements IOrdersRepository {
   @override
   Future<Result<List<OrderSummary>>> fetchOrders() async {
     return Result.success(const []);
