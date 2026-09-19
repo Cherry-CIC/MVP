@@ -35,7 +35,7 @@ class CategoryPageState extends State<CategoryPage> {
         listen: false,
       );
       if (categoryViewModel.categories.isEmpty) {
-        categoryViewModel.fetchCategories();
+        categoryViewModel.fetchCategories(forceRefresh: true);
       }
     }
   }

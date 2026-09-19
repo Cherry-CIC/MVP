@@ -19,7 +19,11 @@ class CharityViewModel extends ChangeNotifier {
   Status get status => _status;
   List<Charity> get charities => _charities;
 
-  Future<void> fetchCharities() async {
+  Future<void> fetchCharities({bool forceRefresh = false}) async {
+    if (!forceRefresh && _charities.isNotEmpty && _status.type == StatusType.success) {
+      return;
+    }
+
     _status = Status.loading;
     notifyListeners();
 
