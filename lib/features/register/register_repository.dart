@@ -1,6 +1,7 @@
 import 'package:cherry_mvp/core/config/config.dart';
 import 'package:cherry_mvp/core/models/model.dart';
 import 'package:cherry_mvp/core/services/services.dart';
+import 'package:cherry_mvp/core/services/safe_log.dart';
 import 'package:cherry_mvp/core/utils/result.dart';
 import 'package:cherry_mvp/features/register/register_model.dart';
 
@@ -51,6 +52,13 @@ class RegisterRepository {
       );
 
       if (firestoreResult.isSuccess) {
+        final verificationResult = await _authService.sendVerificationEmail();
+        if (!verificationResult.isSuccess) {
+          SafeLog.event(
+            AppLogEvent.authenticationOperationFailed,
+            level: SafeLogLevel.warning,
+          );
+        }
         return Result.success(userCredentials);
       } else {
         return Result.failure(firestoreResult.error);
@@ -97,7 +105,6 @@ class RegisterRepository {
 
     if (result.isSuccess) {
       await _firestoreService.fetchUser(uid);
-      // await _authService.sendVerificationEmail();
       return Result.success(null);
     } else {
       return Result.failure(result.error);
