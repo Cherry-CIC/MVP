@@ -23,6 +23,8 @@ class AppStrings {
   static const continueWithApple = 'Continue with Apple';
   static const continueWithGoogle = 'Continue with Google';
   static const forgotPassword = 'Forgot Password?';
+  static String showPassword(String fieldLabel) => 'Show ${fieldLabel.toLowerCase()}';
+  static String hidePassword(String fieldLabel) => 'Hide ${fieldLabel.toLowerCase()}';
   static const forgotPasswordInstruction = 'Please type your email and we’ll get in touch';
   static const usernameSetupTitle = 'Who is this?';
   static const usernameSetupSubtitle = 'Enter the name you will like to go by.';
