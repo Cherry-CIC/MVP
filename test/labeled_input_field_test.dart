@@ -28,6 +28,7 @@ void main() {
     await tester.pump();
     final originalValue = controller.value;
     expect(tester.widget<EditableText>(field).obscureText, isTrue);
+    expect(tester.testTextInput.setClientArgs!['enableIMEPersonalizedLearning'], isFalse);
 
     for (final visible in [true, false]) {
       await tester.tap(find.byTooltip(visible ? 'Show password' : 'Hide password'));
@@ -36,6 +37,8 @@ void main() {
       expect(editable.obscureText, !visible);
       expect(editable.autocorrect, isFalse);
       expect(editable.enableSuggestions, isFalse);
+      expect(editable.enableIMEPersonalizedLearning, isFalse);
+      expect(tester.testTextInput.setClientArgs!['enableIMEPersonalizedLearning'], isFalse);
       expect(editable.smartDashesType, SmartDashesType.disabled);
       expect(editable.smartQuotesType, SmartQuotesType.disabled);
       expect(editable.textInputAction, TextInputAction.done);
@@ -83,6 +86,7 @@ void main() {
     await tester.pump();
     await tester.pumpWidget(buildField(replacement, obscureText: false));
     expect(find.byType(IconButton), findsNothing);
+    expect(tester.widget<EditableText>(find.byType(EditableText)).enableIMEPersonalizedLearning, isTrue);
     await tester.pumpWidget(buildField(replacement));
     expect(tester.widget<EditableText>(find.byType(EditableText)).obscureText, isTrue);
   });

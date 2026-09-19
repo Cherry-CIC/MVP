@@ -59,6 +59,7 @@ class _LabeledInputFieldState extends State<LabeledInputField> {
           // Keep password keyboard protections active when the text is visible.
           autocorrect: !widget.obscureText,
           enableSuggestions: !widget.obscureText,
+          enableIMEPersonalizedLearning: !widget.obscureText,
           smartDashesType: widget.obscureText ? SmartDashesType.disabled : null,
           smartQuotesType: widget.obscureText ? SmartQuotesType.disabled : null,
           validator: widget.validator,
