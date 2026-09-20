@@ -11,6 +11,7 @@ class SellerInformation extends StatelessWidget {
   final Widget charity;
   final EdgeInsets? padding;
   final VoidCallback? onAskSeller;
+  final VoidCallback? onViewProfile;
 
   const SellerInformation({
     super.key,
@@ -19,6 +20,7 @@ class SellerInformation extends StatelessWidget {
     required this.charity,
     this.padding,
     this.onAskSeller,
+    this.onViewProfile,
   });
 
   @override
@@ -30,64 +32,74 @@ class SellerInformation extends StatelessWidget {
         children: [
           Expanded(
             flex: 5,
-            child: Row(
-              spacing: 8,
-              children: [
-                CircleAvatar(
-                  radius: 16,
-                  backgroundImage: AssetImage(AppImages.icProfile),
-                  foregroundImage: profileImage,
-                ),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+            child: Semantics(
+              button: onViewProfile != null,
+              label: onViewProfile == null ? user.username : 'View ${user.username}’s public profile',
+              child: InkWell(
+                key: const ValueKey('seller-public-profile'),
+                onTap: onViewProfile,
+                borderRadius: BorderRadius.circular(8),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(minHeight: 48, minWidth: 48),
+                  child: Row(
+                    spacing: 8,
                     children: [
-                      Text(user.username, style: TextStyle(height: 1, fontSize: 14)),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        spacing: 0,
-                        children: [
-                          Expanded(
-                            child: Wrap(
-                              crossAxisAlignment: WrapCrossAlignment.center,
-                              spacing: 4,
-                              runSpacing: 2,
-                              children: [
-                                if (FeatureFlags.showRatings) ...[
+                      CircleAvatar(
+                        radius: 16,
+                        backgroundImage: AssetImage(AppImages.icProfile),
+                        foregroundImage: profileImage,
+                        onForegroundImageError: profileImage == null ? null : (_, _) {},
+                      ),
+                      Expanded(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            ExcludeSemantics(
+                              child: Text(
+                                user.username,
+                                style: const TextStyle(height: 1, fontSize: 14),
+                              ),
+                            ),
+                            if (FeatureFlags.showRatings)
+                              Wrap(
+                                crossAxisAlignment: WrapCrossAlignment.center,
+                                spacing: 4,
+                                runSpacing: 2,
+                                children: [
                                   StarRating(userInformation: user, starSize: 12),
                                   Text(
                                     '(${user.reviewsCount})',
                                     style: Theme.of(context).textTheme.labelSmall,
                                   ),
                                 ],
-                              ],
-                            ),
-                          ),
-                          if (charity is Image)
-                            Container(
-                              clipBehavior: Clip.antiAlias,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(8),
-                                color: Theme.of(context).colorScheme.surface,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.grey.withAlpha(150),
-                                    spreadRadius: 1,
-                                    blurRadius: 2,
-                                    offset: Offset(0, 4),
-                                  ),
-                                ],
                               ),
-                              child: SizedBox(width: 42, height: 42, child: charity),
-                            ),
-                        ],
+                          ],
+                        ),
                       ),
                     ],
                   ),
                 ),
-              ],
+              ),
             ),
           ),
+          if (charity is Image)
+            Container(
+              clipBehavior: Clip.antiAlias,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                color: Theme.of(context).colorScheme.surface,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.grey.withAlpha(150),
+                    spreadRadius: 1,
+                    blurRadius: 2,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: SizedBox(width: 42, height: 42, child: charity),
+            ),
           if (FeatureFlags.showAskSeller)
             Expanded(
               flex: 3,

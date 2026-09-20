@@ -32,6 +32,7 @@ import 'package:cherry_mvp/features/products/product_repository.dart';
 import 'package:cherry_mvp/features/products/product_viewmodel.dart';
 import 'package:cherry_mvp/features/profile/profile_listings_repository.dart';
 import 'package:cherry_mvp/features/profile/profile_listings_view_model.dart';
+import 'package:cherry_mvp/features/profile/public_user_profile_repository.dart';
 import 'package:cherry_mvp/features/register/register_repository.dart';
 import 'package:cherry_mvp/features/register/register_viewmodel.dart';
 import 'package:cherry_mvp/features/search/search_repository.dart';
@@ -108,8 +109,7 @@ List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
     ),
     Provider<DiscoverRepository>(create: (context) => DiscoverRepository()),
     Provider<ProductRepository>(
-      create: (context) =>
-          ProductRepository(Provider.of<ApiService>(context, listen: false)),
+      create: (context) => ProductRepository(Provider.of<ApiService>(context, listen: false)),
     ),
     Provider<IDonationRepository>(
       create: (context) {
@@ -142,11 +142,15 @@ List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
       },
     ),
     Provider<IOrdersRepository>(
-      create: (context) =>
-          OrdersRepository(Provider.of<ApiService>(context, listen: false)),
+      create: (context) => OrdersRepository(Provider.of<ApiService>(context, listen: false)),
     ),
     Provider<IProfileListingsRepository>(
       create: (context) => ProfileListingsRepository(
+        Provider.of<ApiService>(context, listen: false),
+      ),
+    ),
+    Provider<IPublicUserProfileRepository>(
+      create: (context) => PublicUserProfileRepository(
         Provider.of<ApiService>(context, listen: false),
       ),
     ),
@@ -192,8 +196,7 @@ List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
           listen: false,
         ),
         navigator: Provider.of<NavigationProvider>(context, listen: false),
-        currentUserIdProvider: () =>
-            Provider.of<FirebaseAuth>(context, listen: false).currentUser?.uid,
+        currentUserIdProvider: () => Provider.of<FirebaseAuth>(context, listen: false).currentUser?.uid,
       ),
     ),
     ChangeNotifierProvider<HomeViewModel>(
@@ -252,8 +255,7 @@ List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
           context,
           listen: false,
         ),
-        currentUserIdProvider: () =>
-            Provider.of<FirebaseAuth>(context, listen: false).currentUser?.uid,
+        currentUserIdProvider: () => Provider.of<FirebaseAuth>(context, listen: false).currentUser?.uid,
       ),
     ),
     ChangeNotifierProvider<CharityViewModel>(
