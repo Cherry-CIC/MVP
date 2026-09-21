@@ -18,6 +18,46 @@ class ProductRepository {
 
   final ApiService _apiService;
 
+  Future<Result<Product>> fetchProduct(String productId) async {
+    final validationError = _validateProductId(productId);
+    if (validationError != null) {
+      return Result.failure(validationError);
+    }
+
+    const failureMessage = 'We couldn’t load this listing.';
+
+    try {
+      final result = await _apiService.get<dynamic>(
+        ApiEndpoints.productWithDetailsById(productId),
+      );
+      if (!result.isSuccess) {
+        return Result.failure(result.error ?? failureMessage);
+      }
+
+      final response = result.value;
+      if (response is! Map || response['success'] != true) {
+        return Result.failure(failureMessage);
+      }
+
+      final productData = response['data'];
+      if (productData is! Map) {
+        return Result.failure(failureMessage);
+      }
+
+      final json = Map<String, dynamic>.from(productData);
+      // The API permits listings without a description.
+      json['description'] ??= '';
+      final product = Product.fromJson(json);
+      if (product.id != productId) {
+        return Result.failure(failureMessage);
+      }
+
+      return Result.success(product);
+    } catch (_) {
+      return Result.failure(failureMessage);
+    }
+  }
+
   Future<Result<ProductLikeUpdate>> likeProduct(Product product) async {
     return _setProductLiked(product.id, liked: true);
   }

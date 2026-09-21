@@ -10,12 +10,14 @@ class _RecordingApiService implements ApiService {
   _RecordingApiService({
     this.getValue,
     this.getError,
+    this.getException,
     this.postValue,
     this.postError,
   });
 
   final dynamic getValue;
   final String? getError;
+  final Object? getException;
   final dynamic postValue;
   final String? postError;
 
@@ -32,6 +34,9 @@ class _RecordingApiService implements ApiService {
   }) async {
     lastGetEndpoint = endpoint;
     lastQueryParameters = queryParameters;
+    if (getException != null) {
+      throw getException!;
+    }
     if (getError != null) {
       return Result.failure(getError);
     }
@@ -54,6 +59,158 @@ class _RecordingApiService implements ApiService {
 }
 
 void main() {
+  group('ProductRepository.fetchProduct', () {
+    test(
+      'loads the requested listing with its owner and full details',
+      () async {
+        final categoryJson = {
+          'id': 'category-1',
+          'name': 'Tops',
+          'imageUrl': 'https://example.com/category.jpg',
+          'createdAt': '2026-09-01T00:00:00.000Z',
+          'updatedAt': '2026-09-02T00:00:00.000Z',
+        };
+        final charityJson = {
+          'id': 'charity-1',
+          'name': 'Test charity',
+          'imageUrl': 'https://example.com/charity.jpg',
+          'description': 'The chosen charity',
+          'website': 'https://example.com/charity',
+          'createdAt': '2026-09-01T00:00:00.000Z',
+          'updatedAt': '2026-09-02T00:00:00.000Z',
+        };
+        final apiService = _RecordingApiService(
+          getValue: {
+            'success': true,
+            'data': {
+              ..._productJson(id: 'requested-product'),
+              'user_id': 'listing-owner',
+              'category': categoryJson,
+              'charity': charityJson,
+              'createdAt': '2026-09-01T00:00:00.000Z',
+              'updatedAt': '2026-09-02T00:00:00.000Z',
+            },
+          },
+        );
+        final repository = ProductRepository(apiService);
+
+        final result = await repository.fetchProduct('requested-product');
+
+        expect(result.isSuccess, isTrue);
+        final product = result.value!;
+        expect(product.id, 'requested-product');
+        expect(product.userId, 'listing-owner');
+        expect(product.name, 'Liked item');
+        expect(product.description, 'A liked test product');
+        expect(product.quality, 'GOOD');
+        expect(product.productImages, ['https://example.com/liked-item.jpg']);
+        expect(product.donation, 7);
+        expect(product.price, 7);
+        expect(product.securityFee, 1);
+        expect(product.likes, 1);
+        expect(product.number, 1);
+        expect(product.size, 'M');
+        expect(product.postageSizeId, 'small');
+        expect(product.categoryId, 'category-1');
+        expect(product.charityId, 'charity-1');
+        expect(product.category!.toJson(), categoryJson);
+        expect(product.charity!.toJson(), charityJson);
+        expect(product.createdAt, '2026-09-01T00:00:00.000Z');
+        expect(product.updatedAt, '2026-09-02T00:00:00.000Z');
+        expect(
+          apiService.lastGetEndpoint,
+          ApiEndpoints.productWithDetailsById('requested-product'),
+        );
+        expect(apiService.lastQueryParameters, isNull);
+      },
+    );
+
+    test('loads a listing when its optional description is absent', () async {
+      final json = _productJson(id: 'requested-product')..remove('description');
+      final repository = ProductRepository(
+        _RecordingApiService(getValue: {'success': true, 'data': json}),
+      );
+
+      final result = await repository.fetchProduct('requested-product');
+
+      expect(result.isSuccess, isTrue);
+      expect(result.value!.id, 'requested-product');
+      expect(result.value!.description, isEmpty);
+    });
+
+    for (final productId in ['', '   ', 'invalid/id']) {
+      test('does not request an invalid listing ID "$productId"', () async {
+        final apiService = _RecordingApiService();
+        final repository = ProductRepository(apiService);
+
+        final result = await repository.fetchProduct(productId);
+
+        expect(result.isSuccess, isFalse);
+        expect(result.error, 'Invalid product ID.');
+        expect(apiService.lastGetEndpoint, isNull);
+      });
+    }
+
+    test('propagates API service failures', () async {
+      final repository = ProductRepository(
+        _RecordingApiService(getError: 'Network unavailable'),
+      );
+
+      final result = await repository.fetchProduct('requested-product');
+
+      expect(result.isSuccess, isFalse);
+      expect(result.error, 'Network unavailable');
+    });
+
+    test('returns a safe failure when the API service throws', () async {
+      final repository = ProductRepository(
+        _RecordingApiService(getException: StateError('Request failed')),
+      );
+
+      final result = await repository.fetchProduct('requested-product');
+
+      expect(result.isSuccess, isFalse);
+      expect(result.error, 'We couldn’t load this listing.');
+    });
+
+    final invalidResponses = <String, dynamic>{
+      'failed response': {'success': false},
+      'missing success confirmation': {
+        'data': _productJson(id: 'requested-product'),
+      },
+      'missing response': null,
+      'non-map response': 'invalid',
+      'missing product': {'success': true},
+      'non-map product': {'success': true, 'data': <dynamic>[]},
+      'malformed product': {
+        'success': true,
+        'data': {'id': 'requested-product'},
+      },
+      'non-text description': {
+        'success': true,
+        'data': {..._productJson(id: 'requested-product'), 'description': 123},
+      },
+      'different listing': {
+        'success': true,
+        'data': _productJson(id: 'different-product'),
+      },
+    };
+
+    for (final response in invalidResponses.entries) {
+      test('rejects a ${response.key}', () async {
+        final repository = ProductRepository(
+          _RecordingApiService(getValue: response.value),
+        );
+
+        final result = await repository.fetchProduct('requested-product');
+
+        expect(result.isSuccess, isFalse);
+        expect(result.value, isNull);
+        expect(result.error, 'We couldn’t load this listing.');
+      });
+    }
+  });
+
   group('ProductRepository.fetchLikedProducts', () {
     test('uses the authenticated liked-products endpoint and parses products', () async {
       final apiService = _RecordingApiService(
