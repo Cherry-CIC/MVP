@@ -37,6 +37,9 @@ class ProductHeaderCarousel extends StatelessWidget {
                 bottom: 16,
                 child: Consumer<ProductViewModel>(
                   builder: (context, viewModel, child) {
+                    if (viewModel.isOwnProduct(product)) {
+                      return const SizedBox.shrink();
+                    }
                     final bool isLiked = viewModel.isProductLiked(product.id);
                     final int count = viewModel.getLikesCount(product);
 
