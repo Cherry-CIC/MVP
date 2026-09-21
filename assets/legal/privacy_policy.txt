@@ -99,7 +99,11 @@ Photos and metadata (e.g., geolocation, device ID, date, and time);
 Price, discount, and shipping options;
 ISBN for books, if applicable.
 
-This data is required to create, publish, and manage your listings. Data collection and use are based on your consent (Art. 6 (1) (a) GDPR).
+Photos are optional and are collected only when you choose photos from your device or take item photos with the camera. We use these photos to create and display marketplace listings and, where applicable, profile images. Photos are transferred over encrypted connections and stored in our cloud storage for as long as needed to provide the relevant listing or profile feature, subject to the retention and deletion rules in this Privacy Policy. The app requests camera access only when you choose to take a photo; selecting existing photos from the gallery does not require microphone access.
+
+The current MVP does not record video, capture audio, or collect microphone data. It does not request microphone permission. Any future audio or video feature would require an update to this Privacy Policy and the applicable store disclosures before it is enabled.
+
+The listing information is required to create, publish, and manage your listings; photos are optional. Data collection and use are based on your consent (Art. 6 (1) (a) GDPR).
 
 2.1.6. To enable notifications on the Platform for you
 
