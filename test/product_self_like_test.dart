@@ -91,7 +91,6 @@ void main() {
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
-      currentUserId = 'viewer';
       await tester.pumpWidget(
         ChangeNotifierProvider<ProductViewModel>.value(
           value: viewModel,
@@ -108,6 +107,12 @@ void main() {
       );
       await tester.pumpAndSettle();
 
+      expect(find.byIcon(Icons.favorite_outline), findsNothing);
+      expect(find.byKey(const ValueKey('product-like-product-1')), findsNothing);
+
+      currentUserId = 'viewer';
+      viewModel.clearUserState();
+      await tester.pump();
       expect(find.byIcon(Icons.favorite_outline), findsOneWidget);
       await tester.tap(find.byIcon(Icons.favorite_outline));
       await tester.pump();
