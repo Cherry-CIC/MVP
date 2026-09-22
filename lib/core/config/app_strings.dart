@@ -23,6 +23,8 @@ class AppStrings {
   static const continueWithApple = 'Continue with Apple';
   static const continueWithGoogle = 'Continue with Google';
   static const forgotPassword = 'Forgot Password?';
+  static String showPassword(String fieldLabel) => 'Show ${fieldLabel.toLowerCase()}';
+  static String hidePassword(String fieldLabel) => 'Hide ${fieldLabel.toLowerCase()}';
   static const forgotPasswordInstruction = 'Please type your email and we’ll get in touch';
   static const usernameSetupTitle = 'Who is this?';
   static const usernameSetupSubtitle = 'Enter the name you will like to go by.';
@@ -161,6 +163,19 @@ class AppStrings {
   static const takePhotoInstruction =
       'Upload clear, high-quality images to help your items shine. The more angles the better.';
   static const errorPickingImage = 'Error picking image';
+  static const cameraPermissionTitle = 'Camera Access Required';
+  static const cameraPermissionRationale =
+      'Cherry needs camera access so you can take photos of items to list or donate on the marketplace.';
+  static const cameraPermissionDeniedTitle = 'Camera Access Needed';
+  static const cameraPermissionDeniedMessage =
+      'Camera permission is required to take photos for your item listing. Please allow camera access in your device settings to continue.';
+  static const cameraPermissionPermanentlyDeniedTitle =
+      'Camera Permission Disabled';
+  static const cameraPermissionPermanentlyDeniedMessage =
+      'Camera access has been disabled for Cherry. Open Settings and allow camera access, then try again.';
+  static const permissionTryAgain = 'Try Again';
+  static const ok = 'OK';
+  static const openSettings = 'Open Settings';
   static const tapToAddPhotos = 'Tap to add photos (multiple allowed)';
   static const catchEyesText = "Catch eyes by using quality photos!";
   static const photosTipPopupHeading = "Your photos should...";

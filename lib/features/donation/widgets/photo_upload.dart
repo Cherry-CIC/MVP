@@ -1,9 +1,11 @@
 import 'dart:io';
 import 'dart:ui';
 
+import 'package:app_settings/app_settings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:cherry_mvp/core/config/app_colors.dart';
 import 'package:cherry_mvp/core/config/app_strings.dart';
@@ -83,6 +85,92 @@ class _PhotoUploadState extends State<PhotoUpload> {
     return '${AppStrings.errorPickingImage}: ${error.message ?? error.code}';
   }
 
+  Future<bool> _showCameraPermissionRationaleDialog() async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.camera_alt, color: AppColors.primaryAction),
+            SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                AppStrings.cameraPermissionTitle,
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        ),
+        content: const Text(AppStrings.cameraPermissionRationale),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text(AppStrings.cancel),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text(AppStrings.continueText),
+          ),
+        ],
+      ),
+    );
+    return result ?? false;
+  }
+
+    Future<bool> _showPermissionDeniedDialog({
+      required bool permanentlyDenied,
+    }) async {
+    final title = permanentlyDenied
+      ? AppStrings.cameraPermissionPermanentlyDeniedTitle
+      : AppStrings.cameraPermissionDeniedTitle;
+    final message = permanentlyDenied
+      ? AppStrings.cameraPermissionPermanentlyDeniedMessage
+      : AppStrings.cameraPermissionDeniedMessage;
+
+    final openSettings = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text(
+              permanentlyDenied ? AppStrings.ok : AppStrings.permissionTryAgain,
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text(AppStrings.openSettings),
+          ),
+        ],
+      ),
+    );
+
+    if (openSettings == true) {
+      await AppSettings.openAppSettings();
+    }
+    return openSettings == true;
+  }
+
+  Future<bool> _ensureCameraPermission() async {
+    var status = await Permission.camera.status;
+    if (status.isGranted) return true;
+
+    if (status.isPermanentlyDenied || status.isRestricted) {
+      await _showPermissionDeniedDialog(permanentlyDenied: true);
+      return false;
+    }
+
+    status = await Permission.camera.request();
+    if (status.isGranted) return true;
+
+    await _showPermissionDeniedDialog(
+      permanentlyDenied: status.isPermanentlyDenied || status.isRestricted,
+    );
+    return false;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -153,7 +241,12 @@ class _PhotoUploadState extends State<PhotoUpload> {
           }
         }
       } else {
-        // Single image from camera
+        // Single image from camera - show pre-permission rationale dialog
+        final bool userConfirmed = await _showCameraPermissionRationaleDialog();
+        if (!userConfirmed) return;
+
+        if (!await _ensureCameraPermission()) return;
+
         final XFile? picked = await _pickCameraImage(picker);
 
         if (picked != null) {
