@@ -63,6 +63,11 @@ class _ProfileListingsRepositoryStub implements IProfileListingsRepository {
       ),
     );
   }
+
+  @override
+  Future<Result<Product>> fetchListingProduct(String productId) async {
+    throw UnimplementedError();
+  }
 }
 
 class _ApiServiceMock extends Mock implements ApiService {}

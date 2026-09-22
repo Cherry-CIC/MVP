@@ -1,6 +1,7 @@
 import 'package:cherry_mvp/core/config/app_strings.dart';
 import 'package:cherry_mvp/core/models/user_section.dart';
 import 'package:cherry_mvp/core/router/nav_provider.dart';
+import 'package:cherry_mvp/core/models/product.dart';
 import 'package:cherry_mvp/core/utils/result.dart';
 import 'package:cherry_mvp/features/auth/auth_view_model.dart';
 import 'package:cherry_mvp/features/login/login_repository.dart';
@@ -40,6 +41,11 @@ class _ProfileListingsRepositoryStub implements IProfileListingsRepository {
         hasMore: false,
       ),
     );
+  }
+
+  @override
+  Future<Result<Product>> fetchListingProduct(String productId) async {
+    throw UnimplementedError();
   }
 }
 

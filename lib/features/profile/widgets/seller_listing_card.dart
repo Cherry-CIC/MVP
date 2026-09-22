@@ -5,10 +5,14 @@ import 'package:flutter/material.dart';
 
 class SellerListingCard extends StatelessWidget {
   final SellerListing listing;
+  final VoidCallback? onTap;
+  final bool isLoading;
 
   const SellerListingCard({
     super.key,
     required this.listing,
+    this.onTap,
+    this.isLoading = false,
   });
 
   @override
@@ -17,51 +21,85 @@ class SellerListingCard extends StatelessWidget {
     final priceLabel = listing.price == null
         ? AppStrings.profileListingPriceUnavailable
         : '£${listing.price!.toStringAsFixed(2)}';
+    final isTappable = onTap != null;
+
+    final card = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        AspectRatio(
+          aspectRatio: 1,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: Theme.of(
+                context,
+              ).colorScheme.surfaceContainerHighest,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: Theme.of(context).colorScheme.outlineVariant,
+              ),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(7),
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  _ListingImage(imageUrls: listing.imageUrls),
+                  if (isLoading)
+                    ColoredBox(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.scrim.withValues(alpha: 0.4),
+                      child: const Center(
+                        child: SizedBox.square(
+                          dimension: 28,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          displayName,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: Theme.of(context).textTheme.bodyMedium,
+        ),
+        const SizedBox(height: 4),
+        Text(
+          priceLabel,
+          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+            color: listing.price == null
+                ? Theme.of(context).colorScheme.onSurfaceVariant
+                : Theme.of(context).colorScheme.onSurface,
+          ),
+        ),
+      ],
+    );
 
     return Semantics(
       container: true,
+      button: isTappable,
+      enabled: isTappable ? !isLoading : null,
       label: '$displayName. $priceLabel.',
+      hint: isTappable ? AppStrings.profileListingViewDetailsHint : null,
+      onTap: isTappable && !isLoading ? onTap : null,
       child: ExcludeSemantics(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            AspectRatio(
-              aspectRatio: 1,
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.surfaceContainerHighest,
+        child: isTappable
+            ? Material(
+                type: MaterialType.transparency,
+                borderRadius: BorderRadius.circular(8),
+                child: InkWell(
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: Theme.of(context).colorScheme.outlineVariant,
-                  ),
+                  onTap: isLoading ? null : onTap,
+                  child: card,
                 ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(7),
-                  child: _ListingImage(imageUrls: listing.imageUrls),
-                ),
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              displayName,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-            const SizedBox(height: 4),
-            Text(
-              priceLabel,
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                color: listing.price == null
-                    ? Theme.of(context).colorScheme.onSurfaceVariant
-                    : Theme.of(context).colorScheme.onSurface,
-              ),
-            ),
-          ],
-        ),
+              )
+            : card,
       ),
     );
   }

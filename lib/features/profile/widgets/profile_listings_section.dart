@@ -2,6 +2,7 @@ import 'package:cherry_mvp/core/config/app_strings.dart';
 import 'package:cherry_mvp/core/utils/status.dart';
 import 'package:cherry_mvp/features/profile/profile_listings_view_model.dart';
 import 'package:cherry_mvp/features/profile/widgets/seller_listing_card.dart';
+import 'package:cherry_mvp/features/products/product_viewmodel.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -48,6 +49,36 @@ class ProfileListingsSection extends StatelessWidget {
     );
   }
 
+  /// Opens the seller's own listing in the shared product details page.
+  ///
+  /// The listings endpoint only returns a summary, so the full product is
+  /// fetched first; the details page then hides purchase actions because the
+  /// signed-in user owns the listing.
+  Future<void> _openListing(
+    BuildContext context,
+    ProfileListingsViewModel viewModel,
+    String listingId,
+  ) async {
+    final productViewModel = context.read<ProductViewModel>();
+    final messenger = ScaffoldMessenger.maybeOf(context);
+
+    final product = await viewModel.openListing(listingId);
+
+    if (product == null) {
+      messenger?.showSnackBar(
+        SnackBar(
+          content: Text(
+            viewModel.openListingError ?? AppStrings.profileListingOpenFailed,
+          ),
+        ),
+      );
+      viewModel.clearOpenListingError();
+      return;
+    }
+
+    productViewModel.goToProductPage(product);
+  }
+
   Widget _buildContent(
     BuildContext context,
     ProfileListingsViewModel viewModel,
@@ -84,7 +115,11 @@ class ProfileListingsSection extends StatelessWidget {
                   SizedBox(
                     key: ValueKey(listing.id),
                     width: cardWidth,
-                    child: SellerListingCard(listing: listing),
+                    child: SellerListingCard(
+                      listing: listing,
+                      isLoading: viewModel.isOpeningListing(listing.id),
+                      onTap: () => _openListing(context, viewModel, listing.id),
+                    ),
                   ),
               ],
             );
