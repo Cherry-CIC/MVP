@@ -111,7 +111,8 @@ class UserInformationSection extends StatelessWidget {
                         ),
                         IconTextRow(
                           assetPath: AppImages.profileemail,
-                          text: AppStrings.email,
+                          text: userInformationSection.email ?? AppStrings.email,
+
                         ),
                       ],
                       if (FeatureFlags.showDonorDiscounts && userInformationSection.hasBuyerDiscounts)
