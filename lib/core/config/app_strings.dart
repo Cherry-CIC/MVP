@@ -23,6 +23,8 @@ class AppStrings {
   static const continueWithApple = 'Continue with Apple';
   static const continueWithGoogle = 'Continue with Google';
   static const forgotPassword = 'Forgot Password?';
+  static String showPassword(String fieldLabel) => 'Show ${fieldLabel.toLowerCase()}';
+  static String hidePassword(String fieldLabel) => 'Hide ${fieldLabel.toLowerCase()}';
   static const forgotPasswordInstruction = 'Please type your email and we’ll get in touch';
   static const usernameSetupTitle = 'Who is this?';
   static const usernameSetupSubtitle = 'Enter the name you will like to go by.';
@@ -68,6 +70,19 @@ class AppStrings {
   static const profileListingsEmpty = 'You have not listed anything yet.';
   static const profileListingsCreate = 'List an item';
   static const profileListingsLoadMore = 'Load more listings';
+
+  // Edit profile
+  static const editProfileTitle = 'Edit profile';
+  static const editProfileFirstNameLabel = 'First name';
+  static const editProfileUsernameLabel = 'Username';
+  static const editProfilePhoneLabel = 'Phone number';
+  static const editProfileEmailHelper = 'Email cannot be changed here';
+  static const editProfileSave = 'Save changes';
+  static const editProfileSaveSuccess = 'Profile updated';
+  static const editProfileSaveFailed =
+      'Could not update profile. Please try again.';
+  static const editProfileUsernameNotSaved =
+      'Your details were saved, but the username could not be updated. Please try the username again.';
   static const profileListingsLoadMoreFailed = 'We could not load more listings.';
   static const profileListingUntitled = 'Untitled listing';
   static const profileListingPriceUnavailable = 'Price unavailable';
@@ -78,6 +93,10 @@ class AppStrings {
   static const myOrdersLoadFailed = 'We could not load your orders. Please try again.';
   static const myOrdersRefreshFailed = 'We could not refresh your orders.';
   static const myOrdersStatusUnavailable = 'Status unavailable';
+  static const myOrdersAwaitingConfirmation = 'Awaiting confirmation';
+    static const myOrdersOther = 'Other orders';
+  static const myOrdersConfirmed = 'Confirmed';
+  static const myOrdersDisputed = 'Disputed';
   static const myOrdersPriceUnavailable = 'Price unavailable';
   static const myOrdersSizeUnavailable = 'Size unavailable';
   static const likedItemsTitle = 'Liked Items ❤️';
@@ -144,6 +163,19 @@ class AppStrings {
   static const takePhotoInstruction =
       'Upload clear, high-quality images to help your items shine. The more angles the better.';
   static const errorPickingImage = 'Error picking image';
+  static const cameraPermissionTitle = 'Camera Access Required';
+  static const cameraPermissionRationale =
+      'Cherry needs camera access so you can take photos of items to list or donate on the marketplace.';
+  static const cameraPermissionDeniedTitle = 'Camera Access Needed';
+  static const cameraPermissionDeniedMessage =
+      'Camera permission is required to take photos for your item listing. Please allow camera access in your device settings to continue.';
+  static const cameraPermissionPermanentlyDeniedTitle =
+      'Camera Permission Disabled';
+  static const cameraPermissionPermanentlyDeniedMessage =
+      'Camera access has been disabled for Cherry. Open Settings and allow camera access, then try again.';
+  static const permissionTryAgain = 'Try Again';
+  static const ok = 'OK';
+  static const openSettings = 'Open Settings';
   static const tapToAddPhotos = 'Tap to add photos (multiple allowed)';
   static const catchEyesText = "Catch eyes by using quality photos!";
   static const photosTipPopupHeading = "Your photos should...";

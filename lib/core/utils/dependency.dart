@@ -30,6 +30,8 @@ import 'package:cherry_mvp/features/orders/orders_repository.dart';
 import 'package:cherry_mvp/features/orders/orders_view_model.dart';
 import 'package:cherry_mvp/features/products/product_repository.dart';
 import 'package:cherry_mvp/features/products/product_viewmodel.dart';
+import 'package:cherry_mvp/features/profile/edit_profile_repository.dart';
+import 'package:cherry_mvp/features/profile/edit_profile_view_model.dart';
 import 'package:cherry_mvp/features/profile/profile_listings_repository.dart';
 import 'package:cherry_mvp/features/profile/profile_listings_view_model.dart';
 import 'package:cherry_mvp/features/profile/public_user_profile_repository.dart';
@@ -151,6 +153,11 @@ List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
     ),
     Provider<IPublicUserProfileRepository>(
       create: (context) => PublicUserProfileRepository(
+        Provider.of<ApiService>(context, listen: false),
+      ),
+    ),
+    Provider<IEditProfileRepository>(
+      create: (context) => EditProfileRepository(
         Provider.of<ApiService>(context, listen: false),
       ),
     ),
@@ -278,6 +285,11 @@ List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
           context,
           listen: false,
         ),
+      ),
+    ),
+    ChangeNotifierProvider<EditProfileViewModel>(
+      create: (context) => EditProfileViewModel(
+        repository: Provider.of<IEditProfileRepository>(context, listen: false),
       ),
     ),
     // Logout provider

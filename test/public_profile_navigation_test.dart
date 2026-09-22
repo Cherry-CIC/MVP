@@ -1,4 +1,5 @@
 import 'package:cherry_mvp/core/config/app_images.dart';
+import 'package:cherry_mvp/core/config/app_strings.dart';
 import 'package:cherry_mvp/core/models/product.dart';
 import 'package:cherry_mvp/core/models/user_section.dart';
 import 'package:cherry_mvp/core/router/nav_provider.dart';
@@ -13,6 +14,7 @@ import 'package:cherry_mvp/features/products/widgets/seller_information.dart';
 import 'package:cherry_mvp/features/profile/widgets/seller_listing_card.dart';
 import 'package:cherry_mvp/features/profile/public_user_profile.dart';
 import 'package:cherry_mvp/features/profile/public_user_profile_repository.dart';
+import 'package:cherry_mvp/features/shared_widgets/bottom_cta.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
@@ -84,7 +86,7 @@ Product _product({
   postageSizeId: 'small',
 );
 
-Future<({NavigationProvider navigator, ProductViewModel products})> _pumpApp(
+Future<({NavigationProvider navigator, ProductViewModel products, CheckoutViewModel checkout})> _pumpApp(
   WidgetTester tester, {
   required _PublicProfileRepository repository,
   Widget home = const Scaffold(body: Text('Home')),
@@ -115,12 +117,14 @@ Future<({NavigationProvider navigator, ProductViewModel products})> _pumpApp(
       ],
       child: MaterialApp(
         navigatorKey: navigator.navigatorKey,
-        onGenerateRoute: AppRoutes.generateRoute,
+        onGenerateRoute: (settings) => settings.name == AppRoutes.checkout
+            ? MaterialPageRoute(builder: (_) => const Scaffold(body: Text('Checkout destination')))
+            : AppRoutes.generateRoute(settings),
         home: home,
       ),
     ),
   );
-  return (navigator: navigator, products: products);
+  return (navigator: navigator, products: products, checkout: checkout);
 }
 
 void main() {
@@ -244,10 +248,11 @@ void main() {
   });
 
   testWidgets('nested listing navigation preserves the original detail and seller', (tester) async {
+    final firstProduct = _product();
     final secondProduct = _product(id: 'second-listing', name: 'Second coat');
     final repository = _PublicProfileRepository(products: [secondProduct]);
     final app = await _pumpApp(tester, repository: repository);
-    app.products.goToProductPage(_product());
+    app.products.goToProductPage(firstProduct);
     await tester.pumpAndSettle();
     expect(find.text('First jumper'), findsOneWidget);
 
@@ -272,6 +277,16 @@ void main() {
       hasLength(2),
       reason: 'Each detail route should fetch its identity only once.',
     );
+
+    // The sticky buy button must purchase this route's listing after returning,
+    // even though the shared viewmodel still points at the second listing.
+    expect(find.byType(BottomCta), findsOneWidget);
+    final buyButton = find.widgetWithText(FilledButton, AppStrings.productPageBuyNow);
+    expect(buyButton, findsOneWidget);
+    await tester.tap(buyButton);
+    await tester.pumpAndSettle();
+    expect(app.checkout.basketItems, [same(firstProduct)]);
+    expect(find.text('Checkout destination'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
