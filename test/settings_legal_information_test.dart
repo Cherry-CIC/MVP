@@ -40,6 +40,7 @@ void main() {
 
     expect(find.text(AppStrings.privacyPolicyText), findsOneWidget);
     expect(find.text(AppStrings.termsAndConditionsText), findsOneWidget);
+    expect(find.text(AppStrings.communityRulesText), findsOneWidget);
 
     await tester.tap(find.text(AppStrings.privacyPolicyText));
     for (var i = 0; i < 10; i++) {
@@ -64,5 +65,17 @@ void main() {
       findsOneWidget,
     );
     expect(find.text('1. About You and Us'), findsOneWidget);
+
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text(AppStrings.communityRulesText));
+    for (var i = 0; i < 10; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+
+    expect(find.text(AppStrings.communityRulesText), findsWidgets);
+    expect(find.text('Date last updated: 19.09.2026'), findsOneWidget);
+    expect(find.text('1. Acceptance and scope'), findsOneWidget);
   });
 }
