@@ -25,8 +25,7 @@ class _HomePageState extends State<HomePage> {
   static const int _inboxNavIndex = 1;
   static const int _giveNavIndex = FeatureFlags.showInbox ? 2 : 1;
   static const int _searchNavIndex = _giveNavIndex + 1;
-  static const int _profileNavIndex =
-      _giveNavIndex + (FeatureFlags.showSearchNavigation ? 2 : 1);
+  static const int _profileNavIndex = _giveNavIndex + (FeatureFlags.showSearchNavigation ? 2 : 1);
 
   int _selectedIndex = 0;
   bool _showOrders = false;
@@ -44,7 +43,7 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  void _onItemTapped(int index) {
+  void _onItemTapped(int index) async {
     if (index == _homeNavIndex) {
       _showProfileRoot();
       _pageController.jumpToPage(_homePageIndex);
@@ -58,10 +57,13 @@ class _HomePageState extends State<HomePage> {
     }
 
     if (index == _giveNavIndex) {
-      showDialog(
+      final posted = await showDialog<bool>(
         context: context,
         builder: (context) => Dialog.fullscreen(child: DonationPage()),
       );
+      if (posted == true && mounted) {
+        _onItemTapped(_profileNavIndex);
+      }
       return;
     }
 

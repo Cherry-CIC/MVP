@@ -73,7 +73,7 @@ class DonationViewModel extends ChangeNotifier {
   }
 
   Future<void> showDonationSuccess() async {
-    navigator.navigateTo(AppRoutes.donationSuccess);
+    await navigator.navigateTo(AppRoutes.donationSuccess);
   }
 
   void selectType([ImageSource? imgSource]) {
