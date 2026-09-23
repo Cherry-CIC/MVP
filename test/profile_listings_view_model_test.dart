@@ -64,6 +64,47 @@ void main() {
       expect(viewModel.listings, isEmpty);
     });
 
+    for (final oldRequestCompletesFirst in [true, false]) {
+      test(
+        'refresh supersedes an in-flight initial load, old request completes first: $oldRequestCompletesFirst',
+        () async {
+          final initialResponse = Completer<Result<ProfileListingsPage>>();
+          final refreshResponse = Completer<Result<ProfileListingsPage>>();
+          final repository = _QueuedProfileListingsRepository([
+            initialResponse.future,
+            refreshResponse.future,
+          ]);
+          final viewModel = ProfileListingsViewModel(repository: repository);
+
+          final initialRequest = viewModel.loadInitialListings();
+          final refreshRequest = viewModel.refreshListings();
+          await viewModel.loadInitialListings();
+
+          // Rebuilding Profile must not add a third request during the refresh.
+          expect(repository.requestedCursors, [null, null]);
+
+          if (oldRequestCompletesFirst) {
+            initialResponse.complete(Result.success(_page([_listing('stale-listing')])));
+            await initialRequest;
+            expect(viewModel.status.type, StatusType.loading);
+            expect(viewModel.listings, isEmpty);
+          }
+
+          refreshResponse.complete(Result.success(_page([_listing('new-listing')])));
+          await refreshRequest;
+
+          if (!oldRequestCompletesFirst) {
+            initialResponse.complete(Result.success(_page([_listing('stale-listing')])));
+            await initialRequest;
+          }
+
+          expect(viewModel.status.type, StatusType.success);
+          expect(viewModel.listings.single.id, 'new-listing');
+          expect(viewModel.isRefreshing, isFalse);
+        },
+      );
+    }
+
     test('refresh replaces listings and resets first-page pagination', () async {
       final repository = _QueuedProfileListingsRepository([
         Future.value(
