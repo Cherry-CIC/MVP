@@ -34,6 +34,10 @@ class ApiEndpoints {
     return '$products/${Uri.encodeComponent(productId)}';
   }
 
+  static String productWithDetailsById(String productId) {
+    return '${productById(productId)}/with-details';
+  }
+
   // Auth related
   static const String deleteAccount = '$_apiPrefix/auth/account';
   static const String profile = '$_apiPrefix/auth/profile';

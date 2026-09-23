@@ -60,7 +60,10 @@ class AppRoutes {
       case register:
         return MaterialPageRoute(builder: (_) => RegisterPage());
       case product:
-        return MaterialPageRoute(builder: (_) => ProductPage());
+        final args = settings.arguments as Map<String, dynamic>?;
+        return MaterialPageRoute(
+          builder: (_) => ProductPage(productId: args?['productId']),
+        );
       case home:
         return MaterialPageRoute(builder: (_) => const PostAuthUsernameGate());
       case discover:

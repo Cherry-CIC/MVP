@@ -12,4 +12,11 @@ void main() {
       '/api/products/product%2Fwith%20spaces',
     );
   });
+
+  test('encodes product identifiers in enriched product detail routes', () {
+    expect(
+      ApiEndpoints.productWithDetailsById('product/with spaces'),
+      '/api/products/product%2Fwith%20spaces/with-details',
+    );
+  });
 }

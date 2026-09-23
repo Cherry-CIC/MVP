@@ -11,6 +11,7 @@ class SellerInformation extends StatelessWidget {
   final Widget charity;
   final EdgeInsets? padding;
   final VoidCallback? onAskSeller;
+  final bool showAskSeller;
 
   const SellerInformation({
     super.key,
@@ -19,6 +20,7 @@ class SellerInformation extends StatelessWidget {
     required this.charity,
     this.padding,
     this.onAskSeller,
+    this.showAskSeller = true,
   });
 
   @override
@@ -88,7 +90,7 @@ class SellerInformation extends StatelessWidget {
               ],
             ),
           ),
-          if (FeatureFlags.showAskSeller)
+          if (FeatureFlags.showAskSeller && showAskSeller)
             Expanded(
               flex: 3,
               child: OutlinedButton(
