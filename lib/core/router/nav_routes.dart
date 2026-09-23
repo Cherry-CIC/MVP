@@ -19,7 +19,7 @@ import 'package:cherry_mvp/features/settings/legal_information_page.dart';
 import 'package:cherry_mvp/features/settings/privacy_policy_page.dart';
 import 'package:cherry_mvp/features/settings/settings_page.dart';
 import 'package:cherry_mvp/features/settings/terms_and_conditions_page.dart';
-import 'package:cherry_mvp/features/welcome/welcome_page.dart';
+import 'package:cherry_mvp/features/welcome/widgets/auth_gate.dart';
 import 'package:cherry_mvp/features/welcome/widgets/post_auth_username_gate.dart';
 
 class AppRoutes {
@@ -50,7 +50,8 @@ class AppRoutes {
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
       case welcome:
-        return MaterialPageRoute(builder: (_) => const WelcomePage());
+        // Keep listening for authentication changes after a navigation reset.
+        return MaterialPageRoute(builder: (_) => const AuthGate());
       case login:
         return MaterialPageRoute(builder: (_) => const LoginPage());
       case forgotPassword:

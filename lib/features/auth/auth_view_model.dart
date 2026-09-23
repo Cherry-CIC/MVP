@@ -63,6 +63,8 @@ class AuthViewModel extends ChangeNotifier {
   // TODO: ideally, instead of passing context and handling SnackBars here, they should be handled in the
   // TODO: calling view. Need to refactor.
   Future<void> logout(BuildContext context) async {
+    if (_status.type == StatusType.loading) return;
+
     _status = Status.loading;
     notifyListeners();
 
@@ -71,7 +73,12 @@ class AuthViewModel extends ChangeNotifier {
 
       if (result.isSuccess) {
         _status = Status.success;
-        navigator.goBack();
+        unawaited(
+          navigator.navigateToAndRemoveUntil(
+            AppRoutes.welcome,
+            (_) => false,
+          ),
+        );
       } else {
         _status = Status.failure(result.error ?? "Logout failed");
         if (context.mounted) {
