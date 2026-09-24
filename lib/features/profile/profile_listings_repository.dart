@@ -99,8 +99,10 @@ class ProfileListingsRepository implements IProfileListingsRepository {
     }
 
     try {
+      // The details page renders the charity badge from the populated relation,
+      // which only the with-details variant returns.
       final result = await _apiService.get<dynamic>(
-        ApiEndpoints.productById(trimmedId),
+        ApiEndpoints.productByIdWithDetails(trimmedId),
       );
 
       if (!result.isSuccess || result.value == null) {

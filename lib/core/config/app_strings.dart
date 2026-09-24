@@ -87,7 +87,6 @@ class AppStrings {
   static const profileListingUntitled = 'Untitled listing';
   static const profileListingPriceUnavailable = 'Price unavailable';
   static const profileListingViewDetailsHint = 'View listing details';
-  static const profileListingOpenFailed = 'We could not open this listing.';
   static const profileUserBuyerDisc = "Donor discounts";
   static const myOrdersTitle = 'My Orders';
   static const myOrdersLoading = 'Loading your orders';

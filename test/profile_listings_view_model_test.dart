@@ -352,6 +352,57 @@ void main() {
         expect((await first)?.id, 'product-1');
       });
 
+      test('a refresh in flight does not discard the listing response', () async {
+        final refresh = Completer<Result<ProfileListingsPage>>();
+        final repository = _QueuedProfileListingsRepository([refresh.future]);
+        final product = Completer<Result<Product>>();
+        repository.productResponse = (_) => product.future;
+        final viewModel = ProfileListingsViewModel(repository: repository);
+
+        final open = viewModel.openListing('listing-1');
+        // Profile refreshes (e.g. pull-to-refresh) while the details load.
+        final refreshing = viewModel.refreshListings();
+
+        product.complete(Result.success(_product));
+        final opened = await open;
+
+        expect(opened?.id, 'product-1');
+        expect(viewModel.openListingError, isNull);
+
+        refresh.complete(Result.success(_page(const [])));
+        await refreshing;
+      });
+
+      test('clearing listings cancels an in-flight open', () async {
+        final repository = _QueuedProfileListingsRepository([]);
+        final product = Completer<Result<Product>>();
+        repository.productResponse = (_) => product.future;
+        final viewModel = ProfileListingsViewModel(repository: repository);
+
+        final open = viewModel.openListing('listing-1');
+        viewModel.clearListings(notify: false);
+
+        product.complete(Result.success(_product));
+
+        expect(await open, isNull);
+        expect(viewModel.openListingError, isNull);
+      });
+
+      test('a suppressed concurrent tap records no error', () async {
+        final repository = _QueuedProfileListingsRepository([]);
+        final product = Completer<Result<Product>>();
+        repository.productResponse = (_) => product.future;
+        final viewModel = ProfileListingsViewModel(repository: repository);
+
+        final first = viewModel.openListing('listing-1');
+
+        expect(await viewModel.openListing('listing-2'), isNull);
+        expect(viewModel.openListingError, isNull);
+
+        product.complete(Result.success(_product));
+        expect((await first)?.id, 'product-1');
+      });
+
       test('ignores a blank listing id', () async {
         final repository = _QueuedProfileListingsRepository([]);
         final viewModel = ProfileListingsViewModel(repository: repository);

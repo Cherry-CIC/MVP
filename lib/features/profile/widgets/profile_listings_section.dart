@@ -61,18 +61,24 @@ class ProfileListingsSection extends StatelessWidget {
   ) async {
     final productViewModel = context.read<ProductViewModel>();
     final messenger = ScaffoldMessenger.maybeOf(context);
+    final route = ModalRoute.of(context);
 
     final product = await viewModel.openListing(listingId);
 
     if (product == null) {
-      messenger?.showSnackBar(
-        SnackBar(
-          content: Text(
-            viewModel.openListingError ?? AppStrings.profileListingOpenFailed,
-          ),
-        ),
-      );
-      viewModel.clearOpenListingError();
+      // A tap suppressed by the concurrency guard reports no error, so it must
+      // stay silent rather than look like a failed load.
+      final error = viewModel.openListingError;
+      if (error != null) {
+        messenger?.showSnackBar(SnackBar(content: Text(error)));
+        viewModel.clearOpenListingError();
+      }
+      return;
+    }
+
+    // The user may have navigated elsewhere while the product loaded; pushing
+    // the details page now would cover whatever they opened instead.
+    if (route != null && !route.isCurrent) {
       return;
     }
 

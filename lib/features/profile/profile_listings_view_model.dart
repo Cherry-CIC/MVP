@@ -23,6 +23,12 @@ class ProfileListingsViewModel extends ChangeNotifier {
   bool _isLoadingMore = false;
   bool _hasLoadMoreError = false;
   int _requestSequence = 0;
+
+  /// Tracks cancellation of in-flight listing opens only.
+  ///
+  /// Kept separate from [_requestSequence] so a refresh or a pagination request
+  /// cannot discard a listing-details response that is still wanted.
+  int _openSequence = 0;
   String? _openingListingId;
   String? _openListingError;
 
@@ -115,7 +121,7 @@ class ProfileListingsViewModel extends ChangeNotifier {
       return null;
     }
 
-    final requestId = _requestSequence;
+    final openId = _openSequence;
     _openingListingId = trimmedId;
     _openListingError = null;
     notifyListeners();
@@ -123,7 +129,7 @@ class ProfileListingsViewModel extends ChangeNotifier {
     try {
       final result = await repository.fetchListingProduct(trimmedId);
 
-      if (requestId != _requestSequence) {
+      if (openId != _openSequence) {
         return null;
       }
 
@@ -138,7 +144,7 @@ class ProfileListingsViewModel extends ChangeNotifier {
       );
       return null;
     } catch (_) {
-      if (requestId == _requestSequence) {
+      if (openId == _openSequence) {
         _openListingError = 'We could not open this listing.';
       }
       SafeLog.event(
@@ -177,6 +183,7 @@ class ProfileListingsViewModel extends ChangeNotifier {
     _isRefreshing = false;
     _isLoadingMore = false;
     _hasLoadMoreError = false;
+    _openSequence++;
     _openingListingId = null;
     _openListingError = null;
 

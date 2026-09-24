@@ -197,13 +197,51 @@ void main() {
 
         final result = await repository.fetchListingProduct(' listing-1 ');
 
-        expect(apiService.lastEndpoint, ApiEndpoints.productById('listing-1'));
+        expect(
+          apiService.lastEndpoint,
+          ApiEndpoints.productByIdWithDetails('listing-1'),
+        );
         expect(result.isSuccess, isTrue);
         final product = result.value!;
         expect(product.id, 'listing-1');
         expect(product.userId, 'seller-1');
         expect(product.price, 12.5);
         expect(product.productImages, ['https://example.com/item.jpg']);
+      });
+
+      test('keeps the populated charity used by the details page', () async {
+        final repository = ProfileListingsRepository(
+          _FakeApiService.success({
+            'success': true,
+            'data': {
+              'id': 'listing-1',
+              'user_id': 'seller-1',
+              'name': 'Example shirt',
+              'description': 'Barely worn',
+              'quality': 'Good',
+              'images': ['https://example.com/item.jpg'],
+              'donation': 1,
+              'price': 12.5,
+              'securityFee': 1,
+              'likes': 0,
+              'number': 1,
+              'size': 'M',
+              'postageSize': 'small',
+              'charity': {
+                'id': 'charity-1',
+                'name': 'Example charity',
+                'imageUrl': 'https://example.com/charity.png',
+                'createdAt': '2026-01-01T00:00:00.000Z',
+                'updatedAt': '2026-01-01T00:00:00.000Z',
+              },
+            },
+          }),
+        );
+
+        final result = await repository.fetchListingProduct('listing-1');
+
+        expect(result.isSuccess, isTrue);
+        expect(result.value!.charityImage, 'https://example.com/charity.png');
       });
 
       test('fails without calling the API for a blank id', () async {

@@ -429,6 +429,118 @@ void main() {
     expect(find.byType(CircularProgressIndicator), findsNothing);
   });
 
+
+  testWidgets('a tap suppressed while another listing loads shows no error', (tester) async {
+    final response = Completer<Result<Product>>();
+    final repository = _ProfileListingsRepositoryStub(
+      Result.success(
+        const ProfileListingsPage(
+          listings: [
+            SellerListing(
+              id: 'listing-1',
+              name: 'First listing',
+              imageUrls: [],
+              price: 10,
+            ),
+            SellerListing(
+              id: 'listing-2',
+              name: 'Second listing',
+              imageUrls: [],
+              price: 20,
+            ),
+          ],
+          limit: 20,
+          nextCursor: null,
+          hasMore: false,
+        ),
+      ),
+      onFetchProduct: (_) => response.future,
+    );
+    final viewModel = ProfileListingsViewModel(repository: repository);
+    await viewModel.loadInitialListings();
+
+    final navigator = NavigationProvider();
+    final productViewModel = ProductViewModel(
+      productRepository: ProductRepository(const UnexpectedApiService()),
+      navigator: navigator,
+    );
+
+    await _pumpSection(
+      tester,
+      viewModel: viewModel,
+      productViewModel: productViewModel,
+      navigator: navigator,
+    );
+
+    await tester.tap(find.text('First listing'));
+    await tester.pump();
+
+    // Tapping a different card while the first is still loading must stay
+    // silent: nothing failed.
+    await tester.tap(find.text('Second listing'));
+    await tester.pump();
+
+    expect(find.byType(SnackBar), findsNothing);
+    expect(repository.requestedProductIds, ['listing-1']);
+
+    response.complete(Result.success(_product));
+    await tester.pumpAndSettle();
+  });
+
+  testWidgets('a slow listing does not push over a screen opened meanwhile', (tester) async {
+    final response = Completer<Result<Product>>();
+    final repository = _ProfileListingsRepositoryStub(
+      Result.success(
+        const ProfileListingsPage(
+          listings: [
+            SellerListing(
+              id: 'listing-1',
+              name: 'First listing',
+              imageUrls: [],
+              price: 10,
+            ),
+          ],
+          limit: 20,
+          nextCursor: null,
+          hasMore: false,
+        ),
+      ),
+      onFetchProduct: (_) => response.future,
+    );
+    final viewModel = ProfileListingsViewModel(repository: repository);
+    await viewModel.loadInitialListings();
+
+    final navigator = NavigationProvider();
+    final productViewModel = ProductViewModel(
+      productRepository: ProductRepository(const UnexpectedApiService()),
+      navigator: navigator,
+    );
+    final pushedRoutes = <String>[];
+
+    await _pumpSection(
+      tester,
+      viewModel: viewModel,
+      productViewModel: productViewModel,
+      navigator: navigator,
+      pushedRoutes: pushedRoutes,
+    );
+
+    await tester.tap(find.text('First listing'));
+    await tester.pump();
+
+    // The user opens Settings before the listing finishes loading.
+    unawaited(navigator.navigateTo(AppRoutes.settingspage));
+    await tester.pumpAndSettle();
+    expect(pushedRoutes, [AppRoutes.settingspage]);
+
+    response.complete(Result.success(_product));
+    await tester.pumpAndSettle();
+
+    // The product page must not be stacked on top of Settings.
+    expect(pushedRoutes, [AppRoutes.settingspage]);
+    expect(find.text('route: ${AppRoutes.settingspage}'), findsOneWidget);
+  });
+
 }
 
 const _product = Product(
