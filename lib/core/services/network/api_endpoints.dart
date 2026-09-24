@@ -34,6 +34,14 @@ class ApiEndpoints {
     return '$products/${Uri.encodeComponent(productId)}';
   }
 
+  /// Product by id with `category`, `charity` and postage size populated.
+  ///
+  /// The plain [productById] response leaves those relations unresolved, so the
+  /// product details page needs this variant to render the charity badge.
+  static String productByIdWithDetails(String productId) {
+    return '$products/${Uri.encodeComponent(productId)}/with-details';
+  }
+
   // Auth related
   static const String deleteAccount = '$_apiPrefix/auth/account';
   static const String profile = '$_apiPrefix/auth/profile';

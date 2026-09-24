@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:cherry_mvp/core/models/product.dart';
 import 'package:cherry_mvp/core/utils/result.dart';
 import 'package:cherry_mvp/core/utils/status.dart';
 import 'package:cherry_mvp/features/profile/models/seller_listing.dart';
@@ -10,6 +11,8 @@ import 'package:flutter_test/flutter_test.dart';
 class _QueuedProfileListingsRepository implements IProfileListingsRepository {
   final List<Future<Result<ProfileListingsPage>>> responses;
   final List<String?> requestedCursors = [];
+  final List<String> requestedProductIds = [];
+  Future<Result<Product>> Function(String productId)? productResponse;
 
   _QueuedProfileListingsRepository(this.responses);
 
@@ -20,6 +23,16 @@ class _QueuedProfileListingsRepository implements IProfileListingsRepository {
   }) {
     requestedCursors.add(cursor);
     return responses.removeAt(0);
+  }
+
+  @override
+  Future<Result<Product>> fetchListingProduct(String productId) {
+    requestedProductIds.add(productId);
+    final response = productResponse;
+    if (response == null) {
+      throw StateError('No product response configured');
+    }
+    return response(productId);
   }
 }
 
@@ -274,8 +287,148 @@ void main() {
       expect(viewModel.status.type, StatusType.uninitialized);
       expect(viewModel.listings, isEmpty);
     });
+
+    group('openListing', () {
+      test('returns the full product and clears the pending state', () async {
+        final repository = _QueuedProfileListingsRepository([]);
+        final response = Completer<Result<Product>>();
+        repository.productResponse = (_) => response.future;
+        final viewModel = ProfileListingsViewModel(repository: repository);
+
+        final request = viewModel.openListing('listing-1');
+
+        expect(viewModel.isOpeningListing('listing-1'), isTrue);
+        expect(viewModel.isOpeningListing('listing-2'), isFalse);
+
+        response.complete(Result.success(_product));
+        final product = await request;
+
+        expect(product?.id, 'product-1');
+        expect(repository.requestedProductIds, ['listing-1']);
+        expect(viewModel.isOpeningListing('listing-1'), isFalse);
+        expect(viewModel.openListingError, isNull);
+      });
+
+      test('surfaces a message when the product cannot be loaded', () async {
+        final repository = _QueuedProfileListingsRepository([]);
+        repository.productResponse = (_) async => Result.failure('Listing is gone.');
+        final viewModel = ProfileListingsViewModel(repository: repository);
+
+        final product = await viewModel.openListing('listing-1');
+
+        expect(product, isNull);
+        expect(viewModel.openListingError, 'Listing is gone.');
+        expect(viewModel.isOpeningListing('listing-1'), isFalse);
+
+        viewModel.clearOpenListingError();
+        expect(viewModel.openListingError, isNull);
+      });
+
+      test('recovers from a thrown repository error', () async {
+        final repository = _QueuedProfileListingsRepository([]);
+        repository.productResponse = (_) => Future<Result<Product>>.error(
+          StateError('boom'),
+        );
+        final viewModel = ProfileListingsViewModel(repository: repository);
+
+        final product = await viewModel.openListing('listing-1');
+
+        expect(product, isNull);
+        expect(viewModel.openListingError, isNotNull);
+        expect(viewModel.isOpeningListing('listing-1'), isFalse);
+      });
+
+      test('ignores a second request while one is in flight', () async {
+        final repository = _QueuedProfileListingsRepository([]);
+        final response = Completer<Result<Product>>();
+        repository.productResponse = (_) => response.future;
+        final viewModel = ProfileListingsViewModel(repository: repository);
+
+        final first = viewModel.openListing('listing-1');
+        expect(await viewModel.openListing('listing-2'), isNull);
+        expect(repository.requestedProductIds, ['listing-1']);
+
+        response.complete(Result.success(_product));
+        expect((await first)?.id, 'product-1');
+      });
+
+      test('a refresh in flight does not discard the listing response', () async {
+        final refresh = Completer<Result<ProfileListingsPage>>();
+        final repository = _QueuedProfileListingsRepository([refresh.future]);
+        final product = Completer<Result<Product>>();
+        repository.productResponse = (_) => product.future;
+        final viewModel = ProfileListingsViewModel(repository: repository);
+
+        final open = viewModel.openListing('listing-1');
+        // Profile refreshes (e.g. pull-to-refresh) while the details load.
+        final refreshing = viewModel.refreshListings();
+
+        product.complete(Result.success(_product));
+        final opened = await open;
+
+        expect(opened?.id, 'product-1');
+        expect(viewModel.openListingError, isNull);
+
+        refresh.complete(Result.success(_page(const [])));
+        await refreshing;
+      });
+
+      test('clearing listings cancels an in-flight open', () async {
+        final repository = _QueuedProfileListingsRepository([]);
+        final product = Completer<Result<Product>>();
+        repository.productResponse = (_) => product.future;
+        final viewModel = ProfileListingsViewModel(repository: repository);
+
+        final open = viewModel.openListing('listing-1');
+        viewModel.clearListings(notify: false);
+
+        product.complete(Result.success(_product));
+
+        expect(await open, isNull);
+        expect(viewModel.openListingError, isNull);
+      });
+
+      test('a suppressed concurrent tap records no error', () async {
+        final repository = _QueuedProfileListingsRepository([]);
+        final product = Completer<Result<Product>>();
+        repository.productResponse = (_) => product.future;
+        final viewModel = ProfileListingsViewModel(repository: repository);
+
+        final first = viewModel.openListing('listing-1');
+
+        expect(await viewModel.openListing('listing-2'), isNull);
+        expect(viewModel.openListingError, isNull);
+
+        product.complete(Result.success(_product));
+        expect((await first)?.id, 'product-1');
+      });
+
+      test('ignores a blank listing id', () async {
+        final repository = _QueuedProfileListingsRepository([]);
+        final viewModel = ProfileListingsViewModel(repository: repository);
+
+        expect(await viewModel.openListing('   '), isNull);
+        expect(repository.requestedProductIds, isEmpty);
+      });
+    });
   });
 }
+
+const _product = Product(
+  id: 'product-1',
+  userId: 'seller-1',
+  name: 'Jumper',
+  description: 'Blue jumper',
+  quality: 'Good',
+  productImages: [],
+  donation: 20,
+  price: 20,
+  securityFee: 2,
+  likes: 0,
+  number: 1,
+  size: 'M',
+  postageSizeId: 'small',
+);
 
 SellerListing _listing(String id) {
   return SellerListing(

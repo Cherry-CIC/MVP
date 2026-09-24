@@ -1,3 +1,4 @@
+import 'package:cherry_mvp/core/models/product.dart';
 import 'package:cherry_mvp/core/services/safe_log.dart';
 import 'package:cherry_mvp/core/utils/status.dart';
 import 'package:cherry_mvp/features/profile/models/seller_listing.dart';
@@ -23,12 +24,28 @@ class ProfileListingsViewModel extends ChangeNotifier {
   bool _hasLoadMoreError = false;
   int _requestSequence = 0;
 
+  /// Tracks cancellation of in-flight listing opens only.
+  ///
+  /// Kept separate from [_requestSequence] so a refresh or a pagination request
+  /// cannot discard a listing-details response that is still wanted.
+  int _openSequence = 0;
+  String? _openingListingId;
+  String? _openListingError;
+
   Status get status => _status;
   List<SellerListing> get listings => List.unmodifiable(_listings);
   bool get hasMore => _hasMore;
   bool get isRefreshing => _isRefreshing;
   bool get isLoadingMore => _isLoadingMore;
   bool get hasLoadMoreError => _hasLoadMoreError;
+
+  /// Id of the listing whose details are currently being loaded, if any.
+  String? get openingListingId => _openingListingId;
+
+  /// Message describing the last failed attempt to open a listing.
+  String? get openListingError => _openListingError;
+
+  bool isOpeningListing(String listingId) => _openingListingId == listingId;
 
   Future<void> loadInitialListings() async {
     await _fetchFirstPage(clearListings: true);
@@ -94,6 +111,64 @@ class ProfileListingsViewModel extends ChangeNotifier {
     }
   }
 
+  /// Loads the full product behind one of the user's own listings.
+  ///
+  /// Returns `null` when the listing could not be loaded; [openListingError]
+  /// then holds a message suitable for showing to the user.
+  Future<Product?> openListing(String listingId) async {
+    final trimmedId = listingId.trim();
+    if (trimmedId.isEmpty || _openingListingId != null) {
+      return null;
+    }
+
+    final openId = _openSequence;
+    _openingListingId = trimmedId;
+    _openListingError = null;
+    notifyListeners();
+
+    try {
+      final result = await repository.fetchListingProduct(trimmedId);
+
+      if (openId != _openSequence) {
+        return null;
+      }
+
+      if (result.isSuccess && result.value != null) {
+        return result.value;
+      }
+
+      _openListingError = result.error ?? 'We could not open this listing.';
+      SafeLog.event(
+        AppLogEvent.profileListingsLoadFailed,
+        level: SafeLogLevel.warning,
+      );
+      return null;
+    } catch (_) {
+      if (openId == _openSequence) {
+        _openListingError = 'We could not open this listing.';
+      }
+      SafeLog.event(
+        AppLogEvent.profileListingsLoadFailed,
+        level: SafeLogLevel.severe,
+      );
+      return null;
+    } finally {
+      if (_openingListingId == trimmedId) {
+        _openingListingId = null;
+        notifyListeners();
+      }
+    }
+  }
+
+  void clearOpenListingError() {
+    if (_openListingError == null) {
+      return;
+    }
+
+    _openListingError = null;
+    notifyListeners();
+  }
+
   Future<void> retryLoadMore() async {
     await loadMoreListings(retry: true);
   }
@@ -108,6 +183,9 @@ class ProfileListingsViewModel extends ChangeNotifier {
     _isRefreshing = false;
     _isLoadingMore = false;
     _hasLoadMoreError = false;
+    _openSequence++;
+    _openingListingId = null;
+    _openListingError = null;
 
     if (notify) {
       notifyListeners();

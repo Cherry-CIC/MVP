@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'package:cherry_mvp/core/config/app_strings.dart';
+import 'package:cherry_mvp/core/models/product.dart';
 import 'package:cherry_mvp/core/utils/result.dart';
 import 'package:cherry_mvp/features/profile/models/seller_listing.dart';
 import 'package:cherry_mvp/features/profile/profile_listings_repository.dart';
@@ -6,14 +8,22 @@ import 'package:cherry_mvp/features/profile/profile_listings_view_model.dart';
 import 'package:cherry_mvp/features/profile/widgets/profile_listings_section.dart';
 import 'package:cherry_mvp/features/profile/widgets/seller_listing_card.dart';
 import 'package:cherry_mvp/features/profile/widgets/user_order_details.dart';
+import 'package:cherry_mvp/core/router/nav_provider.dart';
+import 'package:cherry_mvp/core/router/nav_routes.dart';
+import 'package:cherry_mvp/features/products/product_repository.dart';
+import 'package:cherry_mvp/features/products/product_viewmodel.dart';
+
+import 'support/unexpected_api_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
 class _ProfileListingsRepositoryStub implements IProfileListingsRepository {
   final Result<ProfileListingsPage> result;
+  final Future<Result<Product>> Function(String productId)? onFetchProduct;
+  final List<String> requestedProductIds = [];
 
-  const _ProfileListingsRepositoryStub(this.result);
+  _ProfileListingsRepositoryStub(this.result, {this.onFetchProduct});
 
   @override
   Future<Result<ProfileListingsPage>> fetchListings({
@@ -22,6 +32,16 @@ class _ProfileListingsRepositoryStub implements IProfileListingsRepository {
   }) async {
     return result;
   }
+
+  @override
+  Future<Result<Product>> fetchListingProduct(String productId) {
+    requestedProductIds.add(productId);
+    final fetchProduct = onFetchProduct;
+    if (fetchProduct == null) {
+      throw StateError('No product response configured');
+    }
+    return fetchProduct(productId);
+  }
 }
 
 Future<void> _pumpSection(
@@ -29,24 +49,40 @@ Future<void> _pumpSection(
   required ProfileListingsViewModel viewModel,
   VoidCallback? onCreateListing,
   double textScale = 1,
+  ProductViewModel? productViewModel,
+  NavigationProvider? navigator,
+  List<String>? pushedRoutes,
 }) async {
-  await tester.pumpWidget(
-    ChangeNotifierProvider.value(
-      value: viewModel,
-      child: MaterialApp(
-        home: MediaQuery(
-          data: MediaQueryData.fromView(
-            tester.view,
-          ).copyWith(textScaler: TextScaler.linear(textScale)),
-          child: Scaffold(
-            body: SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: ProfileListingsSection(
-                onCreateListing: onCreateListing ?? () {},
-              ),
-            ),
-          ),
+  final section = MediaQuery(
+    data: MediaQueryData.fromView(
+      tester.view,
+    ).copyWith(textScaler: TextScaler.linear(textScale)),
+    child: Scaffold(
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: ProfileListingsSection(
+          onCreateListing: onCreateListing ?? () {},
         ),
+      ),
+    ),
+  );
+
+  await tester.pumpWidget(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider<ProfileListingsViewModel>.value(value: viewModel),
+        if (productViewModel != null)
+          ChangeNotifierProvider<ProductViewModel>.value(value: productViewModel),
+      ],
+      child: MaterialApp(
+        navigatorKey: navigator?.navigatorKey,
+        onGenerateRoute: (settings) {
+          pushedRoutes?.add(settings.name ?? '');
+          return MaterialPageRoute(
+            builder: (_) => Scaffold(body: Text('route: ${settings.name}')),
+          );
+        },
+        home: section,
       ),
     ),
   );
@@ -241,4 +277,284 @@ void main() {
     expect(find.text(AppStrings.profileUserLiked), findsOneWidget);
     expect(find.text(AppStrings.profileUserListings), findsNothing);
   });
+
+  testWidgets('tapping an own listing opens the shared product details page', (tester) async {
+    final semantics = tester.ensureSemantics();
+    final repository = _ProfileListingsRepositoryStub(
+      Result.success(
+        const ProfileListingsPage(
+          listings: [
+            SellerListing(
+              id: 'listing-1',
+              name: 'First listing',
+              imageUrls: [],
+              price: 10,
+            ),
+          ],
+          limit: 20,
+          nextCursor: null,
+          hasMore: false,
+        ),
+      ),
+      onFetchProduct: (_) async => Result.success(_product),
+    );
+    final viewModel = ProfileListingsViewModel(repository: repository);
+    await viewModel.loadInitialListings();
+
+    final navigator = NavigationProvider();
+    final productViewModel = ProductViewModel(
+      productRepository: ProductRepository(const UnexpectedApiService()),
+      navigator: navigator,
+    );
+    final pushedRoutes = <String>[];
+
+    await _pumpSection(
+      tester,
+      viewModel: viewModel,
+      productViewModel: productViewModel,
+      navigator: navigator,
+      pushedRoutes: pushedRoutes,
+    );
+
+    expect(
+      find.bySemanticsLabel('First listing. £10.00.'),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.text('First listing'));
+    await tester.pumpAndSettle();
+
+    expect(repository.requestedProductIds, ['listing-1']);
+    expect(productViewModel.product?.id, 'product-1');
+    expect(pushedRoutes, [AppRoutes.product]);
+    expect(tester.takeException(), isNull);
+    semantics.dispose();
+  });
+
+  testWidgets('a listing that cannot be opened reports the failure and stays put', (tester) async {
+    final repository = _ProfileListingsRepositoryStub(
+      Result.success(
+        const ProfileListingsPage(
+          listings: [
+            SellerListing(
+              id: 'listing-1',
+              name: 'First listing',
+              imageUrls: [],
+              price: 10,
+            ),
+          ],
+          limit: 20,
+          nextCursor: null,
+          hasMore: false,
+        ),
+      ),
+      onFetchProduct: (_) async => Result.failure('Listing is gone.'),
+    );
+    final viewModel = ProfileListingsViewModel(repository: repository);
+    await viewModel.loadInitialListings();
+
+    final navigator = NavigationProvider();
+    final productViewModel = ProductViewModel(
+      productRepository: ProductRepository(const UnexpectedApiService()),
+      navigator: navigator,
+    );
+    final pushedRoutes = <String>[];
+
+    await _pumpSection(
+      tester,
+      viewModel: viewModel,
+      productViewModel: productViewModel,
+      navigator: navigator,
+      pushedRoutes: pushedRoutes,
+    );
+
+    await tester.tap(find.text('First listing'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Listing is gone.'), findsOneWidget);
+    expect(pushedRoutes, isEmpty);
+    expect(productViewModel.product, isNull);
+    expect(viewModel.openListingError, isNull);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('a listing being opened shows progress and ignores further taps', (tester) async {
+    final response = Completer<Result<Product>>();
+    final repository = _ProfileListingsRepositoryStub(
+      Result.success(
+        const ProfileListingsPage(
+          listings: [
+            SellerListing(
+              id: 'listing-1',
+              name: 'First listing',
+              imageUrls: [],
+              price: 10,
+            ),
+          ],
+          limit: 20,
+          nextCursor: null,
+          hasMore: false,
+        ),
+      ),
+      onFetchProduct: (_) => response.future,
+    );
+    final viewModel = ProfileListingsViewModel(repository: repository);
+    await viewModel.loadInitialListings();
+
+    final navigator = NavigationProvider();
+    final productViewModel = ProductViewModel(
+      productRepository: ProductRepository(const UnexpectedApiService()),
+      navigator: navigator,
+    );
+
+    await _pumpSection(
+      tester,
+      viewModel: viewModel,
+      productViewModel: productViewModel,
+      navigator: navigator,
+    );
+
+    await tester.tap(find.text('First listing'));
+    await tester.pump();
+
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+
+    await tester.tap(find.text('First listing'));
+    await tester.pump();
+    expect(repository.requestedProductIds, ['listing-1']);
+
+    response.complete(Result.success(_product));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(CircularProgressIndicator), findsNothing);
+  });
+
+
+  testWidgets('a tap suppressed while another listing loads shows no error', (tester) async {
+    final response = Completer<Result<Product>>();
+    final repository = _ProfileListingsRepositoryStub(
+      Result.success(
+        const ProfileListingsPage(
+          listings: [
+            SellerListing(
+              id: 'listing-1',
+              name: 'First listing',
+              imageUrls: [],
+              price: 10,
+            ),
+            SellerListing(
+              id: 'listing-2',
+              name: 'Second listing',
+              imageUrls: [],
+              price: 20,
+            ),
+          ],
+          limit: 20,
+          nextCursor: null,
+          hasMore: false,
+        ),
+      ),
+      onFetchProduct: (_) => response.future,
+    );
+    final viewModel = ProfileListingsViewModel(repository: repository);
+    await viewModel.loadInitialListings();
+
+    final navigator = NavigationProvider();
+    final productViewModel = ProductViewModel(
+      productRepository: ProductRepository(const UnexpectedApiService()),
+      navigator: navigator,
+    );
+
+    await _pumpSection(
+      tester,
+      viewModel: viewModel,
+      productViewModel: productViewModel,
+      navigator: navigator,
+    );
+
+    await tester.tap(find.text('First listing'));
+    await tester.pump();
+
+    // Tapping a different card while the first is still loading must stay
+    // silent: nothing failed.
+    await tester.tap(find.text('Second listing'));
+    await tester.pump();
+
+    expect(find.byType(SnackBar), findsNothing);
+    expect(repository.requestedProductIds, ['listing-1']);
+
+    response.complete(Result.success(_product));
+    await tester.pumpAndSettle();
+  });
+
+  testWidgets('a slow listing does not push over a screen opened meanwhile', (tester) async {
+    final response = Completer<Result<Product>>();
+    final repository = _ProfileListingsRepositoryStub(
+      Result.success(
+        const ProfileListingsPage(
+          listings: [
+            SellerListing(
+              id: 'listing-1',
+              name: 'First listing',
+              imageUrls: [],
+              price: 10,
+            ),
+          ],
+          limit: 20,
+          nextCursor: null,
+          hasMore: false,
+        ),
+      ),
+      onFetchProduct: (_) => response.future,
+    );
+    final viewModel = ProfileListingsViewModel(repository: repository);
+    await viewModel.loadInitialListings();
+
+    final navigator = NavigationProvider();
+    final productViewModel = ProductViewModel(
+      productRepository: ProductRepository(const UnexpectedApiService()),
+      navigator: navigator,
+    );
+    final pushedRoutes = <String>[];
+
+    await _pumpSection(
+      tester,
+      viewModel: viewModel,
+      productViewModel: productViewModel,
+      navigator: navigator,
+      pushedRoutes: pushedRoutes,
+    );
+
+    await tester.tap(find.text('First listing'));
+    await tester.pump();
+
+    // The user opens Settings before the listing finishes loading.
+    unawaited(navigator.navigateTo(AppRoutes.settingspage));
+    await tester.pumpAndSettle();
+    expect(pushedRoutes, [AppRoutes.settingspage]);
+
+    response.complete(Result.success(_product));
+    await tester.pumpAndSettle();
+
+    // The product page must not be stacked on top of Settings.
+    expect(pushedRoutes, [AppRoutes.settingspage]);
+    expect(find.text('route: ${AppRoutes.settingspage}'), findsOneWidget);
+  });
+
 }
+
+const _product = Product(
+  id: 'product-1',
+  userId: 'seller-1',
+  name: 'Jumper',
+  description: 'Blue jumper',
+  quality: 'Good',
+  productImages: [],
+  donation: 20,
+  price: 20,
+  securityFee: 2,
+  likes: 0,
+  number: 1,
+  size: 'M',
+  postageSizeId: 'small',
+);

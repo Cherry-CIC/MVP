@@ -86,6 +86,7 @@ class AppStrings {
   static const profileListingsLoadMoreFailed = 'We could not load more listings.';
   static const profileListingUntitled = 'Untitled listing';
   static const profileListingPriceUnavailable = 'Price unavailable';
+  static const profileListingViewDetailsHint = 'View listing details';
   static const profileUserBuyerDisc = "Donor discounts";
   static const myOrdersTitle = 'My Orders';
   static const myOrdersLoading = 'Loading your orders';

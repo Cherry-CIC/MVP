@@ -1,3 +1,4 @@
+import 'package:cherry_mvp/core/models/product.dart';
 import 'package:cherry_mvp/core/services/network/api_endpoints.dart';
 import 'package:cherry_mvp/core/services/network/api_service.dart';
 import 'package:cherry_mvp/core/services/safe_log.dart';
@@ -9,6 +10,10 @@ abstract class IProfileListingsRepository {
     int limit = 20,
     String? cursor,
   });
+
+  /// Loads the full product behind one of the signed-in user's listings so the
+  /// existing product details page can be shown for it.
+  Future<Result<Product>> fetchListingProduct(String productId);
 }
 
 class ProfileListingsPage {
@@ -26,6 +31,8 @@ class ProfileListingsPage {
 }
 
 class ProfileListingsRepository implements IProfileListingsRepository {
+  static const String _listingDetailsFailureMessage = 'We could not open this listing.';
+
   final ApiService _apiService;
 
   ProfileListingsRepository(this._apiService);
@@ -81,6 +88,48 @@ class ProfileListingsRepository implements IProfileListingsRepository {
         level: SafeLogLevel.severe,
       );
       return Result.failure('Could not load your listings');
+    }
+  }
+
+  @override
+  Future<Result<Product>> fetchListingProduct(String productId) async {
+    final trimmedId = productId.trim();
+    if (trimmedId.isEmpty) {
+      return Result.failure(_listingDetailsFailureMessage);
+    }
+
+    try {
+      // The details page renders the charity badge from the populated relation,
+      // which only the with-details variant returns.
+      final result = await _apiService.get<dynamic>(
+        ApiEndpoints.productByIdWithDetails(trimmedId),
+      );
+
+      if (!result.isSuccess || result.value == null) {
+        return Result.failure(result.error ?? _listingDetailsFailureMessage);
+      }
+
+      final response = result.value;
+      if (response is! Map || response['success'] == false) {
+        return Result.failure(_listingDetailsFailureMessage);
+      }
+
+      final data = response['data'];
+      if (data is! Map) {
+        SafeLog.event(
+          AppLogEvent.profileListingsResponseInvalid,
+          level: SafeLogLevel.warning,
+        );
+        return Result.failure(_listingDetailsFailureMessage);
+      }
+
+      return Result.success(Product.fromJson(Map<String, dynamic>.from(data)));
+    } catch (_) {
+      SafeLog.event(
+        AppLogEvent.profileListingsLoadFailed,
+        level: SafeLogLevel.severe,
+      );
+      return Result.failure(_listingDetailsFailureMessage);
     }
   }
 
