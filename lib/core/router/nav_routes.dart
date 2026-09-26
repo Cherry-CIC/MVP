@@ -62,7 +62,12 @@ class AppRoutes {
       case product:
         return MaterialPageRoute(builder: (_) => ProductPage());
       case home:
-        return MaterialPageRoute(builder: (_) => const PostAuthUsernameGate());
+        final homeArgs = settings.arguments as Map<String, dynamic>?;
+        return MaterialPageRoute(
+          builder: (_) => PostAuthUsernameGate(
+            openProfileOnStart: homeArgs?['openProfileOnStart'] ?? false,
+          ),
+        );
       case discover:
         return MaterialPageRoute(builder: (_) => DiscoverPage());
       case likedItems:
