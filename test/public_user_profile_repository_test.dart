@@ -93,6 +93,33 @@ void main() {
       expect(result.value!.hasMore, isFalse);
     });
 
+    test('accepts backend product envelopes without null cursors and with nested meta', () async {
+      final result = await PublicUserProfileRepository(
+        _FakeApiService(
+          profileResponse: _profileResponse(),
+          productsResponse: {
+            'success': true,
+            'data': {
+              'products': [
+                _product('listing')
+                  ..remove('status')
+                  ..remove('product_images')
+                  ..['images'] = ['https://example.test/item.jpg']
+                  ..['postageSizeId'] = 'small',
+              ],
+              'meta': {'limit': '20', 'hasMore': false},
+            },
+          },
+        ),
+      ).fetchProfile('seller');
+
+      expect(result.isSuccess, isTrue);
+      expect(result.value!.products.single.id, 'listing');
+      expect(result.value!.products.single.productImages, ['https://example.test/item.jpg']);
+      expect(result.value!.nextCursor, isNull);
+      expect(result.value!.hasMore, isFalse);
+    });
+
     test('does not request malformed or anonymised user identifiers', () async {
       for (final userId in ['', '   ', 'bad/id', r'bad\id', '.', '..', 'deleted_user', 'bad\nidentity']) {
         final api = _FakeApiService(
@@ -278,15 +305,10 @@ void main() {
         'not json',
         <String, dynamic>{},
         _productsResponse()..['success'] = false,
-        _productsResponse()..remove('success'),
-        _productsResponse()..['data'] = [],
-        _productsResponse()..['meta'] = null,
         _productsResponse()..['data']['products'] = {},
         _productsResponse()..['meta']['hasMore'] = 'true',
         _productsResponse()..['meta']['limit'] = 51,
-        _productsResponse()..['meta']['limit'] = '20',
         _productsResponse()..['meta']['nextCursor'] = 123,
-        _productsResponse()..['meta'].remove('nextCursor'),
         _productsResponse()..['meta']['hasMore'] = true,
         _productsResponse(nextCursor: 'next')..['meta']['hasMore'] = false,
       ];
