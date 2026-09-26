@@ -5,10 +5,12 @@ import 'package:flutter/material.dart';
 
 class SellerListingCard extends StatelessWidget {
   final SellerListing listing;
+  final VoidCallback? onTap;
 
   const SellerListingCard({
     super.key,
     required this.listing,
+    this.onTap,
   });
 
   @override
@@ -18,8 +20,10 @@ class SellerListingCard extends StatelessWidget {
         ? AppStrings.profileListingPriceUnavailable
         : '£${listing.price!.toStringAsFixed(2)}';
 
-    return Semantics(
+    final content = Semantics(
       container: true,
+      button: onTap == null ? null : true,
+      onTap: onTap,
       label: '$displayName. $priceLabel.',
       child: ExcludeSemantics(
         child: Column(
@@ -62,6 +66,17 @@ class SellerListingCard extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+
+    if (onTap == null) return content;
+    return Material(
+      type: MaterialType.transparency,
+      child: InkWell(
+        onTap: onTap,
+        excludeFromSemantics: true,
+        borderRadius: BorderRadius.circular(8),
+        child: content,
       ),
     );
   }

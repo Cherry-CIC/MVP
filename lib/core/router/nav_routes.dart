@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:cherry_mvp/core/config/app_strings.dart';
+import 'package:cherry_mvp/core/models/product.dart';
+import 'package:cherry_mvp/core/router/nav_provider.dart';
 import 'package:cherry_mvp/features/charity_page/charity_page.dart';
 import 'package:cherry_mvp/features/checkout/checkout_complete_page.dart';
 import 'package:cherry_mvp/features/checkout/checkout_page.dart';
@@ -11,6 +14,7 @@ import 'package:cherry_mvp/features/liked_items/liked_items_page.dart';
 import 'package:cherry_mvp/features/login/login_page.dart';
 import 'package:cherry_mvp/features/forgot_password/forgot_password_page.dart';
 import 'package:cherry_mvp/features/products/product_page.dart';
+import 'package:cherry_mvp/features/profile/public_user_profile.dart';
 import 'package:cherry_mvp/features/profile/edit_profile_page.dart';
 import 'package:cherry_mvp/features/register/register_page.dart';
 import 'package:cherry_mvp/features/search/widgets/category_page/category_page.dart';
@@ -32,6 +36,7 @@ class AppRoutes {
   static const String chat = '/chat';
   static const String discover = '/discover';
   static const String product = '/product';
+  static const String publicUserProfile = '/public-user-profile';
   static const String settingspage = '/settings';
   static const String donations = '/donations';
   static const String checkout = '/checkout';
@@ -60,7 +65,27 @@ class AppRoutes {
       case register:
         return MaterialPageRoute(builder: (_) => RegisterPage());
       case product:
-        return MaterialPageRoute(builder: (_) => ProductPage());
+        final productArgument = settings.arguments;
+        return MaterialPageRoute(
+          settings: settings,
+          builder: (_) => ProductPage(
+            product: productArgument is Product ? productArgument : null,
+          ),
+        );
+      case publicUserProfile:
+        final profileArgument = settings.arguments;
+        final userId = NavigationProvider.publicProfileUserId(
+          profileArgument is String ? profileArgument : null,
+        );
+        return MaterialPageRoute(
+          settings: settings,
+          builder: (_) => userId == null
+              ? Scaffold(
+                  appBar: AppBar(title: const Text(AppStrings.publicProfileFallbackTitle)),
+                  body: const Center(child: Text(AppStrings.publicProfileUnavailable)),
+                )
+              : PublicUserProfile(userId: userId),
+        );
       case home:
         return MaterialPageRoute(builder: (_) => const PostAuthUsernameGate());
       case discover:

@@ -77,8 +77,7 @@ class ProductViewModel extends ChangeNotifier {
     _ensureCurrentAccount();
     final accountStateVersion = _accountStateVersion;
     final pendingHydration = _likedProductsHydration;
-    if (pendingHydration != null &&
-        _likedProductsHydrationVersion == accountStateVersion) {
+    if (pendingHydration != null && _likedProductsHydrationVersion == accountStateVersion) {
       return pendingHydration;
     }
 
@@ -288,7 +287,7 @@ class ProductViewModel extends ChangeNotifier {
 
   void goToProductPage(Product product) async {
     setProduct(product);
-    await navigator.navigateTo(AppRoutes.product);
+    await navigator.navigateTo(AppRoutes.product, arguments: product);
   }
 
   @override

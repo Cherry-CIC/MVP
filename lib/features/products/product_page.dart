@@ -5,9 +5,9 @@ import 'package:cherry_mvp/core/config/feature_flags.dart';
 import 'package:cherry_mvp/core/config/app_images.dart';
 import 'package:cherry_mvp/core/config/app_strings.dart';
 import 'package:cherry_mvp/core/models/user_section.dart';
+import 'package:cherry_mvp/core/models/product.dart';
 import 'package:cherry_mvp/core/router/nav_provider.dart';
 import 'package:cherry_mvp/core/router/nav_routes.dart';
-import 'package:cherry_mvp/core/services/services.dart';
 import 'package:cherry_mvp/core/utils/donor_discount_state_store.dart';
 import 'package:cherry_mvp/features/checkout/checkout_view_model.dart';
 import 'package:cherry_mvp/features/products/product_viewmodel.dart';
@@ -15,14 +15,49 @@ import 'package:cherry_mvp/features/products/widgets/product_highlight_title.dar
 import 'package:cherry_mvp/features/products/widgets/product_information.dart';
 import 'package:cherry_mvp/features/products/widgets/seller_information.dart';
 import 'package:cherry_mvp/features/products/widgets/product_header_carousel.dart';
+import 'package:cherry_mvp/features/profile/public_user_profile_repository.dart';
 
-class ProductPage extends StatelessWidget {
-  const ProductPage({super.key});
+class ProductPage extends StatefulWidget {
+  const ProductPage({super.key, this.product});
+
+  final Product? product;
+
+  @override
+  State<ProductPage> createState() => _ProductPageState();
+}
+
+class _ProductPageState extends State<ProductPage> {
+  late final Product? _product;
+  late final String? _sellerId;
+  late final Future<PublicUser?> _seller;
+
+  @override
+  void initState() {
+    super.initState();
+    // Keep each detail route tied to its own listing when another is opened.
+    _product = widget.product ?? context.read<ProductViewModel>().product;
+    _sellerId = NavigationProvider.publicProfileUserId(_product?.userId);
+    final repository = context.read<IPublicUserProfileRepository?>();
+    _seller = _sellerId == null || repository == null
+        ? Future<PublicUser?>.value(null)
+        : _loadPublicSeller(repository, _sellerId);
+  }
+
+  Future<PublicUser?> _loadPublicSeller(
+    IPublicUserProfileRepository repository,
+    String userId,
+  ) async {
+    try {
+      final result = await repository.fetchUser(userId);
+      return result.isSuccess ? result.value : null;
+    } catch (_) {
+      return null;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final viewModel = Provider.of<ProductViewModel>(context);
-    final product = viewModel.product;
+    final product = _product;
 
     if (product == null) {
       return Scaffold(
@@ -54,25 +89,29 @@ class ProductPage extends StatelessWidget {
           ProductHeaderCarousel(product),
           SliverList.list(
             children: [
-              FutureBuilder<String?>(
-                future: UsernameService.getUsername(product.userId ?? ''),
+              FutureBuilder<PublicUser?>(
+                future: _seller,
                 builder: (context, snapshot) {
-                  final resolvedUsername = snapshot.data?.trim();
+                  final resolvedUsername = snapshot.data?.username.trim();
                   final sellerUsername = (resolvedUsername != null && resolvedUsername.isNotEmpty)
                       ? resolvedUsername
                       : 'User';
+                  final profileImageUrl = snapshot.data?.profileImageUrl;
 
                   return SellerInformation(
+                    onViewProfile: _sellerId == null
+                        ? null
+                        : () => context.read<NavigationProvider>().openPublicUserProfile(_sellerId),
+                    profileImage: profileImageUrl == null ? null : NetworkImage(profileImageUrl),
                     user: UserInformation(
                       username: sellerUsername,
-                      // TODO remove filler values
-                      location: 'New York, USA',
-                      reviewsCount: 120,
-                      followersCount: 300,
-                      followingCount: 150,
-                      rating: 3.5,
-                      awards: 37,
-                      hasBuyerDiscounts: true,
+                      location: '',
+                      reviewsCount: 0,
+                      followersCount: 0,
+                      followingCount: 0,
+                      rating: 0,
+                      awards: 0,
+                      hasBuyerDiscounts: false,
                     ),
                     charity: product.charity?.imageUrl != null
                         ? Image.network(product.charity!.imageUrl)
