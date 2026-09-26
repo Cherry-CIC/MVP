@@ -18,6 +18,7 @@ import 'package:cherry_mvp/features/profile/public_user_profile.dart';
 import 'package:cherry_mvp/features/profile/edit_profile_page.dart';
 import 'package:cherry_mvp/features/register/register_page.dart';
 import 'package:cherry_mvp/features/search/widgets/category_page/category_page.dart';
+import 'package:cherry_mvp/features/settings/community_rules_page.dart';
 import 'package:cherry_mvp/features/settings/faq_page.dart';
 import 'package:cherry_mvp/features/settings/legal_information_page.dart';
 import 'package:cherry_mvp/features/settings/privacy_policy_page.dart';
@@ -45,6 +46,7 @@ class AppRoutes {
   static const String legalInformationPage = '/legal-information';
   static const String privacyPolicyPage = '/privacy-policy';
   static const String termsAndConditionsPage = '/terms-and-conditions';
+  static const String communityRulesPage = '/community-rules';
   static const String category = '/category';
   static const String charity = '/charity';
   static const String postageSize = '/postageSize';
@@ -106,6 +108,8 @@ class AppRoutes {
         return MaterialPageRoute(
           builder: (_) => const TermsAndConditionsPage(),
         );
+      case communityRulesPage:
+        return MaterialPageRoute(builder: (_) => const CommunityRulesPage());
       case checkout:
         return MaterialPageRoute(
           fullscreenDialog: true,
