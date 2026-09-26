@@ -6,7 +6,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class PostAuthUsernameGate extends StatefulWidget {
-  const PostAuthUsernameGate({super.key});
+  const PostAuthUsernameGate({super.key, this.openProfileOnStart = false});
+
+  /// Diteruskan ke [HomePage] agar tab Profile langsung aktif bila true.
+  final bool openProfileOnStart;
 
   @override
   State<PostAuthUsernameGate> createState() => _PostAuthUsernameGateState();
@@ -48,7 +51,7 @@ class _PostAuthUsernameGateState extends State<PostAuthUsernameGate> {
 
         final username = snapshot.data?.trim();
         if (username != null && username.isNotEmpty) {
-          return const HomePage();
+          return HomePage(openProfileOnStart: widget.openProfileOnStart);
         }
 
         return const UsernameSetupPage();

@@ -10,7 +10,12 @@ import 'package:cherry_mvp/features/profile/profile_page.dart';
 import 'package:cherry_mvp/features/profile/profile_listings_view_model.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  const HomePage({super.key, this.openProfileOnStart = false});
+
+  /// Saat true, tab Profile ditampilkan sejak halaman dibangun.
+  /// Dipakai setelah item berhasil diunggah agar penjual langsung melihat
+  /// daftar item miliknya, bukan beranda.
+  final bool openProfileOnStart;
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -31,6 +36,19 @@ class _HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
   bool _showOrders = false;
   final PageController _pageController = PageController();
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.openProfileOnStart) {
+      _selectedIndex = _profileNavIndex;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _pageController.jumpToPage(_profilePageIndex);
+        }
+      });
+    }
+  }
 
   void _openOrders() {
     if (!_showOrders) {

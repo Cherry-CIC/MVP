@@ -66,11 +66,13 @@ class SuccessfulUploadPage extends StatelessWidget {
               height: 50,
               child: FilledButton(
                 onPressed: () {
-                  // Navigate back to home using the navigation provider
+                  // Setelah unggah sukses, arahkan penjual ke tab Profile
+                  // (My Listings) agar langsung melihat item miliknya.
                   final navigationProvider = Provider.of<NavigationProvider>(context, listen: false);
                   navigationProvider.navigateToAndRemoveUntil(
                     AppRoutes.home,
                     (route) => false, // Remove all previous routes
+                    arguments: {'openProfileOnStart': true},
                   );
                 },
                 child: Text(AppStrings.continueText),
