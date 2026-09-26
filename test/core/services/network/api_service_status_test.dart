@@ -22,7 +22,7 @@ void main() {
       final dio = Dio(BaseOptions(baseUrl: 'https://example.test'))..httpClientAdapter = _StatusAdapter(status);
       final service = DioApiService.forTesting(_AuthWithoutUser(), dio: dio, safeHttpLogSink: (_) {});
 
-      final result = await service.get<dynamic>('/api/users/seller/public-profile');
+      final result = await service.get<dynamic>('/api/users/seller/profile');
 
       expect(result.isSuccess, isFalse);
       expect(result.statusCode, status);

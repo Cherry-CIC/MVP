@@ -11,6 +11,15 @@ class FakePublicProfileRepository implements IPublicUserProfileRepository {
   FakePublicProfileRepository(this.respond);
 
   @override
+  Future<Result<PublicUser>> fetchUser(String userId) async {
+    final result = await respond(userId, null);
+    if (!result.isSuccess || result.value == null) {
+      return Result.failure(result.error, statusCode: result.statusCode);
+    }
+    return Result.success(result.value!.user);
+  }
+
+  @override
   Future<Result<PublicUserProfilePage>> fetchProfile(String userId, {int limit = 20, String? cursor}) async {
     calls.add((userId: userId, cursor: cursor));
     return await respond(userId, cursor);

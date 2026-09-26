@@ -38,6 +38,7 @@ class ApiEndpoints {
   static const String deleteAccount = '$_apiPrefix/auth/account';
   static const String profile = '$_apiPrefix/auth/profile';
 
-  // Public-only contract, separate from the authenticated account profile.
-  static String publicUserProfile(String userId) => '$_apiPrefix/users/${Uri.encodeComponent(userId)}/public-profile';
+  // Public-only contracts, separate from the authenticated account profile.
+  static String publicUserProfile(String userId) => '$_apiPrefix/users/${Uri.encodeComponent(userId)}/profile';
+  static String publicUserProducts(String userId) => '$_apiPrefix/users/${Uri.encodeComponent(userId)}/products';
 }

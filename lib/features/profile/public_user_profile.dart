@@ -50,7 +50,7 @@ class _PublicUserProfileState extends State<PublicUserProfile> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Profile')),
+      appBar: AppBar(title: const Text(AppStrings.publicProfileTitle)),
       body: SafeArea(
         child: ListenableBuilder(
           listenable: _viewModel,
@@ -73,21 +73,21 @@ class _PublicUserProfileState extends State<PublicUserProfile> {
         return const [
           Padding(
             padding: EdgeInsets.all(32),
-            child: Center(child: CircularProgressIndicator(semanticsLabel: 'Loading profile')),
+            child: Center(child: CircularProgressIndicator(semanticsLabel: AppStrings.publicProfileLoading)),
           ),
         ];
       case PublicProfileStatus.unavailable:
         return const [
           _ProfileMessage(
             icon: Icons.person_off_outlined,
-            message: 'This profile is unavailable.',
+            message: AppStrings.publicProfileUnavailable,
           ),
         ];
       case PublicProfileStatus.error:
         return [
           _ProfileMessage(
             icon: Icons.error_outline,
-            message: 'We couldn’t load this profile. Please try again.',
+            message: AppStrings.publicProfileLoadFailed,
             onRetry: _viewModel.loadProfile,
           ),
         ];
@@ -118,13 +118,13 @@ class _PublicUserProfileState extends State<PublicUserProfile> {
           const SizedBox(height: 24),
           Semantics(
             header: true,
-            child: Text('Listings', style: Theme.of(context).textTheme.titleMedium),
+            child: Text(AppStrings.publicProfileListingsTitle, style: Theme.of(context).textTheme.titleMedium),
           ),
           const SizedBox(height: 12),
           if (_viewModel.products.isEmpty)
             const _ProfileMessage(
               icon: Icons.inventory_2_outlined,
-              message: 'No public listings at the moment.',
+              message: AppStrings.publicProfileListingsEmpty,
             )
           else
             LayoutBuilder(
@@ -158,12 +158,14 @@ class _PublicUserProfileState extends State<PublicUserProfile> {
           if (_viewModel.isLoadingMore)
             const Padding(
               padding: EdgeInsets.all(24),
-              child: Center(child: CircularProgressIndicator(semanticsLabel: 'Loading more listings')),
+              child: Center(
+                child: CircularProgressIndicator(semanticsLabel: AppStrings.publicProfileListingsLoadingMore),
+              ),
             )
           else if (_viewModel.loadMoreFailed)
             _ProfileMessage(
               icon: Icons.error_outline,
-              message: 'We couldn’t load more listings.',
+              message: AppStrings.publicProfileListingsLoadMoreFailed,
               onRetry: _viewModel.loadMore,
             )
           else if (_viewModel.hasMore)

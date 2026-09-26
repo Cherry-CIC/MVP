@@ -48,8 +48,8 @@ class _ProductPageState extends State<ProductPage> {
     String userId,
   ) async {
     try {
-      final result = await repository.fetchProfile(userId, limit: 1);
-      return result.isSuccess ? result.value?.user : null;
+      final result = await repository.fetchUser(userId);
+      return result.isSuccess ? result.value : null;
     } catch (_) {
       return null;
     }
