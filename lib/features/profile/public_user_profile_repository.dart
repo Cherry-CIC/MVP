@@ -88,34 +88,32 @@ class PublicUserProfileRepository implements IPublicUserProfileRepository {
       }
 
       final response = productsResult.value;
-      if (response is! Map || response['success'] != true) {
+      if (response is Map && response['success'] == false) {
         return Result.failure(_loadError);
       }
-      final data = response['data'];
-      final meta = response['meta'];
-      if (data is! Map || data['products'] is! List || meta is! Map) {
+      final rawProducts = _extractProducts(response);
+      final meta = _extractMeta(response);
+      if (rawProducts == null) {
         return Result.failure(_loadError);
       }
-      final rawLimit = meta['limit'];
-      final rawHasMore = meta['hasMore'];
-      final rawCursor = meta['nextCursor'];
-      if (rawLimit is! int ||
-          rawLimit < 1 ||
+      final rawLimit = meta == null ? limit : _integer(meta['limit']) ?? limit;
+      final rawHasMore = meta?['hasMore'];
+      final rawCursor = meta?['nextCursor'];
+      if (rawLimit < 1 ||
           rawLimit > 50 ||
-          rawHasMore is! bool ||
-          !meta.containsKey('nextCursor') ||
+          (rawHasMore != null && rawHasMore is! bool) ||
           (rawCursor != null && rawCursor is! String)) {
         return Result.failure(_loadError);
       }
       final nextCursor = _text(rawCursor);
-      if ((rawHasMore && (nextCursor == null || nextCursor == requestedCursor)) ||
-          (!rawHasMore && nextCursor != null)) {
+      final hasMore = rawHasMore == true;
+      if ((hasMore && (nextCursor == null || nextCursor == requestedCursor)) || (!hasMore && nextCursor != null)) {
         return Result.failure(_loadError);
       }
 
       final products = <Product>[];
       final seenIds = <String>{};
-      for (final rawProduct in data['products'] as List) {
+      for (final rawProduct in rawProducts) {
         final product = _publicProduct(rawProduct, requestedId);
         if (product != null && seenIds.add(product.id)) {
           products.add(product);
@@ -127,7 +125,7 @@ class PublicUserProfileRepository implements IPublicUserProfileRepository {
           user: user,
           products: List.unmodifiable(products),
           nextCursor: nextCursor,
-          hasMore: rawHasMore,
+          hasMore: hasMore,
         ),
       );
     } catch (_) {
@@ -136,10 +134,31 @@ class PublicUserProfileRepository implements IPublicUserProfileRepository {
     }
   }
 
+  List<dynamic>? _extractProducts(dynamic response) {
+    if (response is List) return response;
+    if (response is! Map) return null;
+
+    final data = response['data'];
+    if (data is List) return data;
+    if (data is Map && data['products'] is List) return data['products'] as List;
+    if (response['products'] is List) return response['products'] as List;
+    return null;
+  }
+
+  Map<dynamic, dynamic>? _extractMeta(dynamic response) {
+    if (response is! Map) return null;
+
+    final data = response['data'];
+    final meta = response['meta'] ?? (data is Map ? data['meta'] : null);
+    return meta is Map ? meta : null;
+  }
+
   PublicUser? _publicUser(dynamic value, String requestedId) {
     if (value is! Map || value['success'] != true) return null;
     final data = value['data'];
-    if (data is! Map || _identifier(data['id']) != requestedId) return null;
+    if (data is! Map) return null;
+    final id = _identifier(data['id'] ?? data['_id'] ?? data['uid']);
+    if (id != requestedId) return null;
     final username = _text(data['username']);
     if (username == null || (data['profileImageUrl'] != null && data['profileImageUrl'] is! String)) return null;
     return PublicUser(
@@ -152,21 +171,26 @@ class PublicUserProfileRepository implements IPublicUserProfileRepository {
   /// Defence in depth only. The API must filter visibility and owner before
   /// pagination, and must never send private account fields in its response.
   Product? _publicProduct(dynamic value, String userId) {
-    if (value is! Map || value['status'] != 'active' || _identifier(value['userId']) != userId) {
+    if (value is! Map) {
       return null;
     }
-    final id = _identifier(value['id']);
+    final status = _text(value['status']);
+    final ownerId = _identifier(value['userId'] ?? value['user_id']);
+    if ((status != null && status != 'active') || ownerId != userId) {
+      return null;
+    }
+    final id = _identifier(value['id'] ?? value['_id']);
     final name = _text(value['name']);
     final description = value['description'];
     final quality = _text(value['quality']);
     final size = _text(value['size']);
-    final postageSizeId = _identifier(value['postageSize']);
+    final postageSizeId = _identifier(value['postageSize'] ?? value['postageSizeId'] ?? value['postage_size_id']);
     final price = _nonNegativeNumber(value['price']);
     final donation = _nonNegativeNumber(value['donation']);
     final securityFee = _nonNegativeNumber(value['securityFee']);
     final likes = _nonNegativeInteger(value['likes']);
     final number = _nonNegativeInteger(value['number']);
-    final rawImages = value['product_images'];
+    final rawImages = value['product_images'] ?? value['images'];
     if (id == null ||
         name == null ||
         description is! String ||
@@ -197,8 +221,8 @@ class PublicUserProfileRepository implements IPublicUserProfileRepository {
       number: number,
       size: size,
       postageSizeId: postageSizeId,
-      categoryId: _identifier(value['categoryId']),
-      charityId: _identifier(value['charityId']),
+      categoryId: _identifier(value['categoryId'] ?? value['category_id']),
+      charityId: _identifier(value['charityId'] ?? value['charity_id']),
       createdAt: _text(value['createdAt']),
       updatedAt: _text(value['updatedAt']),
       category: _publicCategory(value['category']),
@@ -270,5 +294,12 @@ class PublicUserProfileRepository implements IPublicUserProfileRepository {
   static int? _nonNegativeInteger(dynamic value) {
     final parsed = value is int ? value : (value is String ? int.tryParse(value) : null);
     return parsed != null && parsed >= 0 ? parsed : null;
+  }
+
+  static int? _integer(dynamic value) {
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    if (value is String) return int.tryParse(value);
+    return null;
   }
 }
