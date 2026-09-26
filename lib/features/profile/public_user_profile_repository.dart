@@ -9,6 +9,8 @@ import 'package:cherry_mvp/features/profile/models/public_user.dart';
 export 'package:cherry_mvp/features/profile/models/public_user.dart';
 
 abstract class IPublicUserProfileRepository {
+  Future<Result<PublicUser>> fetchUser(String userId);
+
   Future<Result<PublicUserProfilePage>> fetchProfile(
     String userId, {
     int limit = 20,
@@ -23,6 +25,31 @@ class PublicUserProfileRepository implements IPublicUserProfileRepository {
 
   static const _loadError = 'Could not load this profile. Please try again.';
   static const _unavailableError = 'This profile is unavailable.';
+
+  @override
+  Future<Result<PublicUser>> fetchUser(String userId) async {
+    final requestedId = _identifier(userId);
+    if (requestedId == null || requestedId == 'deleted_user') {
+      return Result.failure(_unavailableError, statusCode: 404);
+    }
+
+    try {
+      final profileResult = await _apiService.get<dynamic>(
+        ApiEndpoints.publicUserProfile(requestedId),
+      );
+      if (!profileResult.isSuccess) {
+        return Result.failure(
+          profileResult.statusCode == 404 || profileResult.statusCode == 410 ? _unavailableError : _loadError,
+          statusCode: profileResult.statusCode,
+        );
+      }
+      final user = _publicUser(profileResult.value, requestedId);
+      return user == null ? Result.failure(_loadError) : Result.success(user);
+    } catch (_) {
+      // Never surface raw service exceptions or backend response bodies.
+      return Result.failure(_loadError);
+    }
+  }
 
   @override
   Future<Result<PublicUserProfilePage>> fetchProfile(
@@ -40,35 +67,33 @@ class PublicUserProfileRepository implements IPublicUserProfileRepository {
     final requestedCursor = _text(cursor);
 
     try {
-      final result = await _apiService.get<dynamic>(
-        ApiEndpoints.publicUserProfile(requestedId),
+      final userResult = await fetchUser(requestedId);
+      if (!userResult.isSuccess || userResult.value == null) {
+        return Result.failure(userResult.error, statusCode: userResult.statusCode);
+      }
+      final user = userResult.value!;
+
+      final productsResult = await _apiService.get<dynamic>(
+        ApiEndpoints.publicUserProducts(requestedId),
         queryParameters: {
           'limit': limit,
           'cursor': ?requestedCursor,
         },
       );
-      if (!result.isSuccess) {
+      if (!productsResult.isSuccess) {
         return Result.failure(
-          result.statusCode == 404 || result.statusCode == 410 ? _unavailableError : _loadError,
-          statusCode: result.statusCode,
+          productsResult.statusCode == 404 || productsResult.statusCode == 410 ? _unavailableError : _loadError,
+          statusCode: productsResult.statusCode,
         );
       }
 
-      final response = result.value;
+      final response = productsResult.value;
       if (response is! Map || response['success'] != true) {
         return Result.failure(_loadError);
       }
       final data = response['data'];
       final meta = response['meta'];
       if (data is! Map || data['products'] is! List || meta is! Map) {
-        return Result.failure(_loadError);
-      }
-      final rawUser = data['user'];
-      if (rawUser is! Map || _identifier(rawUser['id']) != requestedId) {
-        return Result.failure(_loadError);
-      }
-      final username = _text(rawUser['username']);
-      if (username == null || (rawUser['profileImageUrl'] != null && rawUser['profileImageUrl'] is! String)) {
         return Result.failure(_loadError);
       }
       final rawLimit = meta['limit'];
@@ -99,11 +124,7 @@ class PublicUserProfileRepository implements IPublicUserProfileRepository {
 
       return Result.success(
         PublicUserProfilePage(
-          user: PublicUser(
-            id: requestedId,
-            username: username,
-            profileImageUrl: _imageUrl(rawUser['profileImageUrl']),
-          ),
+          user: user,
           products: List.unmodifiable(products),
           nextCursor: nextCursor,
           hasMore: rawHasMore,
@@ -115,13 +136,23 @@ class PublicUserProfileRepository implements IPublicUserProfileRepository {
     }
   }
 
+  PublicUser? _publicUser(dynamic value, String requestedId) {
+    if (value is! Map || value['success'] != true) return null;
+    final data = value['data'];
+    if (data is! Map || _identifier(data['id']) != requestedId) return null;
+    final username = _text(data['username']);
+    if (username == null || (data['profileImageUrl'] != null && data['profileImageUrl'] is! String)) return null;
+    return PublicUser(
+      id: requestedId,
+      username: username,
+      profileImageUrl: _imageUrl(data['profileImageUrl']),
+    );
+  }
+
   /// Defence in depth only. The API must filter visibility and owner before
   /// pagination, and must never send private account fields in its response.
   Product? _publicProduct(dynamic value, String userId) {
-    if (value is! Map ||
-        value['status'] != 'active' ||
-        value['visibility'] != 'public' ||
-        _identifier(value['userId']) != userId) {
+    if (value is! Map || value['status'] != 'active' || _identifier(value['userId']) != userId) {
       return null;
     }
     final id = _identifier(value['id']);

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cherry_mvp/core/config/app_strings.dart';
 import 'package:cherry_mvp/core/models/product.dart';
 import 'package:cherry_mvp/core/router/nav_provider.dart';
 import 'package:cherry_mvp/features/charity_page/charity_page.dart';
@@ -78,8 +79,8 @@ class AppRoutes {
           settings: settings,
           builder: (_) => userId == null
               ? Scaffold(
-                  appBar: AppBar(title: const Text('Public profile')),
-                  body: const Center(child: Text('This profile is unavailable.')),
+                  appBar: AppBar(title: const Text(AppStrings.publicProfileFallbackTitle)),
+                  body: const Center(child: Text(AppStrings.publicProfileUnavailable)),
                 )
               : PublicUserProfile(userId: userId),
         );

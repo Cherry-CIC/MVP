@@ -48,6 +48,13 @@ class _PublicProfileRepository implements IPublicUserProfileRepository {
   bool fail = false;
 
   @override
+  Future<Result<PublicUser>> fetchUser(String userId) async {
+    calls.add((userId: userId, limit: 0, cursor: null));
+    if (fail) return Result.failure('Unavailable');
+    return Result.success(PublicUser(id: userId, username: 'Seller $userId'));
+  }
+
+  @override
   Future<Result<PublicUserProfilePage>> fetchProfile(
     String userId, {
     int limit = 20,
@@ -225,7 +232,7 @@ void main() {
     ]) {
       app.navigator.navigateTo(AppRoutes.publicUserProfile, arguments: argument);
       await tester.pumpAndSettle();
-      expect(find.text('This profile is unavailable.'), findsOneWidget);
+      expect(find.text(AppStrings.publicProfileUnavailable), findsOneWidget);
       expect(find.byType(PublicUserProfile), findsNothing);
       app.navigator.goBack();
       await tester.pumpAndSettle();
@@ -273,7 +280,7 @@ void main() {
     expect(find.text('Seller seller-1'), findsOneWidget);
     expect(app.products.product, same(secondProduct));
     expect(
-      repository.calls.where((call) => call.limit == 1),
+      repository.calls.where((call) => call.limit == 0),
       hasLength(2),
       reason: 'Each detail route should fetch its identity only once.',
     );
