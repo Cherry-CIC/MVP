@@ -105,6 +105,7 @@ P0 tests cover functionality whose failure blocks the principal MVP journeys or 
 | P0-GIVE-04 | Select charity            | 1. Open the charity selector.<br>2. Select an available charity.<br>3. Continue through the flow.                       | The selected charity is displayed and retained.                                                             | Not run |                  |
 | P0-GIVE-05 | Select postage size       | 1. Open the postage-size selector.<br>2. Select an available size.<br>3. Continue through the flow.                     | The selected postage size is displayed and retained.                                                        | Not run |                  |
 | P0-GIVE-06 | Submit valid listing      | 1. Complete all required listing fields with valid test data.<br>2. Submit the listing once.<br>3. Wait for the result. | The listing is submitted once, clear success feedback is displayed and duplicate submission does not occur. | Not run |                  |
+| P0-GIVE-07 | Listing numbers and punctuation | 1. In the test environment, enter `route 66 shirt!` as the title.<br>2. Enter a description containing `Women's "Route 66" T-shirt, size 10/12 & 100% cotton.`, then a new line with `Café print: £5.50 👕`.<br>3. Complete the remaining fields and submit once.<br>4. Reopen the listing and compare both fields. | Both fields pass validation, the listing saves successfully, and numbers, punctuation, accented letters, emoji and line breaks are preserved when reopened. | Not run | |
 
 ## Checkout and Payment
 
