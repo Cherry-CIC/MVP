@@ -51,6 +51,7 @@ class DonationFormState extends State<DonationForm> {
 
   Charity? selectedCharity;
   bool _hasInitialized = false;
+  bool _isSubmitting = false;
   final _hideUnimplementedFeatures = true;
 
   @override
@@ -136,34 +137,6 @@ class DonationFormState extends State<DonationForm> {
   Widget build(BuildContext context) {
     return Consumer<DonationViewModel>(
       builder: (context, donationViewModel, child) {
-        WidgetsBinding.instance.addPostFrameCallback((_) async {
-          if (donationViewModel.status.type == StatusType.success && donationViewModel.lastSubmission != null) {
-            final navigator = Navigator.of(context);
-            final navigationProvider = Provider.of<NavigationProvider>(
-              context,
-              listen: false,
-            );
-            if (FeatureFlags.showDonorDiscounts) {
-              await DonorDiscountStateStore.setDonorDiscountState(
-                donationViewModel.lastSubmission!.id,
-                isSwitchedApplicableBuyerDiscounts,
-              );
-            }
-            if (!mounted) return;
-            _clearForm();
-            donationViewModel.resetStatus();
-            navigator.pop();
-            navigationProvider.navigateTo(AppRoutes.donationSuccess);
-          } else if (donationViewModel.status.type == StatusType.failure) {
-            final errorMessage = donationViewModel.submissionMessage ?? AppStrings.unexpectedErrorOccurred;
-            Fluttertoast.showToast(
-              msg: errorMessage,
-              backgroundColor: Colors.red,
-              textColor: Colors.white,
-            );
-          }
-        });
-
         return Form(
           key: _formKey,
           child: Column(
@@ -423,13 +396,14 @@ class DonationFormState extends State<DonationForm> {
 
               Padding(
                 padding: const EdgeInsets.all(16),
-                child: donationViewModel.status.type == StatusType.loading
+                child: _isSubmitting || donationViewModel.status.type == StatusType.loading
                     ? const Center(child: CircularProgressIndicator())
                     : SizedBox(
                         height: 56,
                         width: double.infinity,
                         child: FilledButton(
                           onPressed: () async {
+                            if (_isSubmitting) return;
                             if (_formKey.currentState!.validate()) {
                               final priceText = _priceController.text.trim();
 
@@ -463,21 +437,42 @@ class DonationFormState extends State<DonationForm> {
                                 return;
                               }
                               final request = _buildDonationRequest();
-                              await donationViewModel.submitDonation(request);
+                              final navigator = context.read<NavigationProvider>();
+                              final uploadNavigator = Navigator.of(context);
+                              final uploadRoute = ModalRoute.of(context);
+                              setState(() => _isSubmitting = true);
+                              try {
+                                await donationViewModel.submitDonation(request);
+                                if (!mounted || uploadRoute?.isActive != true) return;
 
-                              if (donationViewModel.status.type == StatusType.success &&
-                                  donationViewModel.lastSubmission != null) {
-                                _clearForm();
-                                donationViewModel.resetStatus();
-                                donationViewModel.showDonationSuccess();
-                              } else if (donationViewModel.status.type == StatusType.failure) {
-                                final errorMessage =
-                                    donationViewModel.submissionMessage ?? AppStrings.unexpectedErrorOccurred;
-                                Fluttertoast.showToast(
-                                  msg: errorMessage,
-                                  backgroundColor: Colors.red,
-                                  textColor: Colors.white,
-                                );
+                                if (donationViewModel.status.type == StatusType.success &&
+                                    donationViewModel.lastSubmission != null) {
+                                  if (FeatureFlags.showDonorDiscounts) {
+                                    await DonorDiscountStateStore.setDonorDiscountState(
+                                      donationViewModel.lastSubmission!.id,
+                                      isSwitchedApplicableBuyerDiscounts,
+                                    );
+                                    if (!mounted || uploadRoute?.isActive != true) return;
+                                  }
+                                  _clearForm();
+                                  donationViewModel.resetStatus();
+                                  // Close any selection screen opened while the upload was pending.
+                                  uploadNavigator.popUntil((route) => route == uploadRoute);
+                                  await donationViewModel.showDonationSuccess();
+                                  if (!mounted || uploadRoute?.isCurrent != true) return;
+                                  // Complete either the Give dialog or the named upload route.
+                                  navigator.goBack(true);
+                                } else if (donationViewModel.status.type == StatusType.failure) {
+                                  final errorMessage =
+                                      donationViewModel.submissionMessage ?? AppStrings.unexpectedErrorOccurred;
+                                  Fluttertoast.showToast(
+                                    msg: errorMessage,
+                                    backgroundColor: Colors.red,
+                                    textColor: Colors.white,
+                                  );
+                                }
+                              } finally {
+                                if (mounted) setState(() => _isSubmitting = false);
                               }
                             }
                           },
