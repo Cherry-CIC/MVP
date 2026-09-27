@@ -37,7 +37,7 @@ class DonationRequest {
     required this.price,
     this.productImages,
     this.likes = 0,
-    this.number = 10,
+    this.number = 1,
     this.localImages,
   });
 

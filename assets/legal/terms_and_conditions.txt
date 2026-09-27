@@ -27,7 +27,7 @@ You are able to be one of our users if you:
 - Have an active cherry account (Account),
 - Use our services solely for personal purposes.
 - Have the capacity and rights to complete Transactions on the Site, and
-- Agree to these Terms and the Catalogue Rules.
+- Agree to these Terms and the Community Rules.
 
 Your Role as a Buyer or Seller:
 
@@ -44,8 +44,8 @@ These Terms and Conditions (referred to as the "Terms") are a binding agreement 
 Definitions in Bold:
 Capitalised terms in bold (like "Transaction" or "Site") are defined within these Terms for clarity.
 
-Catalogue Rules:
-The Catalogue Rules, which govern Item listings, are an integral part of these Terms. If a contradiction arises between these Terms and the Catalogue Rules, the Catalogue Rules will take precedence.
+Community Rules:
+The Community Rules, which govern Item listings and other content shared through cherry, are an integral part of these Terms. If a contradiction arises between these Terms and the Community Rules, the Community Rules will take precedence for content and listing standards.
 
 Additional Information:
 We provide links to helpful resources, including our Help Centre, where you can find answers to frequently asked questions. If you need further assistance, feel free to contact us as outlined below.
@@ -180,7 +180,7 @@ Even after account termination, these terms will remain effective until all ongo
 What You Can Sell:
 You can sell Items if:
 You legally own them and can transfer ownership.
-They comply with our Catalogue Rules and any applicable restrictions from Payment Processors.
+They comply with our Community Rules and any applicable restrictions from Payment Processors.
 They are not purchased in bulk or through dropshipping with a low resale value.
 
 Listing Items:

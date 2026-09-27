@@ -21,7 +21,7 @@ DonationRequest _$DonationRequestFromJson(Map<String, dynamic> json) =>
           ?.map((e) => e as String)
           .toList(),
       likes: (json['likes'] as num?)?.toInt() ?? 0,
-      number: (json['number'] as num?)?.toInt() ?? 10,
+      number: (json['number'] as num?)?.toInt() ?? 1,
     );
 
 Map<String, dynamic> _$DonationRequestToJson(DonationRequest instance) =>

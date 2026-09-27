@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
+import 'package:cherry_mvp/core/config/config.dart';
 import 'package:cherry_mvp/core/router/router.dart';
 import 'package:cherry_mvp/core/utils/utils.dart';
 import 'package:cherry_mvp/features/register/register_viewmodel.dart';
@@ -214,6 +215,9 @@ class _RegisterFormState extends State<RegisterForm> {
               ),
               const SizedBox(height: 20),
 
+              const _LegalAcceptanceField(),
+              const SizedBox(height: 20),
+
               Consumer<RegisterViewModel>(
                 builder: (context, viewModel, child) {
                   return Column(
@@ -269,6 +273,91 @@ class _RegisterFormState extends State<RegisterForm> {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _LegalAcceptanceField extends StatelessWidget {
+  const _LegalAcceptanceField();
+
+  @override
+  Widget build(BuildContext context) {
+    final navigator = Provider.of<NavigationProvider>(context, listen: false);
+
+    return FormField<bool>(
+      initialValue: false,
+      validator: (value) => value == true ? null : AppStrings.legalAcceptanceRequiredText,
+      builder: (field) {
+        final colourScheme = Theme.of(context).colorScheme;
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Checkbox(
+                  value: field.value ?? false,
+                  onChanged: (value) => field.didChange(value ?? false),
+                  semanticLabel: AppStrings.legalAcceptanceRequiredText,
+                ),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Wrap(
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: 4,
+                      children: [
+                        Text(AppStrings.legalAcceptanceIntroText),
+                        _LegalDocumentLink(
+                          label: AppStrings.termsAndConditionsText,
+                          onTap: () => navigator.navigateTo(AppRoutes.termsAndConditionsPage),
+                        ),
+                        Text(AppStrings.legalAcceptanceAndText),
+                        _LegalDocumentLink(
+                          label: AppStrings.communityRulesText,
+                          onTap: () => navigator.navigateTo(AppRoutes.communityRulesPage),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            if (field.hasError)
+              Padding(
+                padding: const EdgeInsets.only(left: 12, top: 4),
+                child: Text(
+                  field.errorText!,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(color: colourScheme.error),
+                ),
+              ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _LegalDocumentLink extends StatelessWidget {
+  const _LegalDocumentLink({required this.label, required this.onTap});
+
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return TextButton(
+      onPressed: onTap,
+      style: TextButton.styleFrom(
+        minimumSize: const Size(0, 48),
+        padding: const EdgeInsets.symmetric(horizontal: 2),
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      ),
+      child: Text(
+        label,
+        style: const TextStyle(decoration: TextDecoration.underline),
       ),
     );
   }

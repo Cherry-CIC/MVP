@@ -39,6 +39,7 @@ class ProductPage extends StatelessWidget {
       bottomNavigationBar: BottomCta(
         enabled: !isOwnListing,
         text: isOwnListing ? AppStrings.productPageYourListing : AppStrings.productPageBuyNow,
+        textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
         onPressed: () {
           checkoutViewModel.clearBasket();
           if (!checkoutViewModel.addItem(product)) {

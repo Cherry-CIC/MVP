@@ -35,7 +35,7 @@ class ProfileListingsViewModel extends ChangeNotifier {
   }
 
   Future<void> refreshListings() async {
-    await _fetchFirstPage(clearListings: false);
+    await _fetchFirstPage(clearListings: false, supersedeInFlight: true);
   }
 
   Future<void> retryInitialLoad() async {
@@ -114,8 +114,9 @@ class ProfileListingsViewModel extends ChangeNotifier {
     }
   }
 
-  Future<void> _fetchFirstPage({required bool clearListings}) async {
-    if (_isFirstPageLoading) {
+  Future<void> _fetchFirstPage({required bool clearListings, bool supersedeInFlight = false}) async {
+    // A refresh after posting must replace any request started before the post.
+    if (_isFirstPageLoading && !supersedeInFlight) {
       return;
     }
 
