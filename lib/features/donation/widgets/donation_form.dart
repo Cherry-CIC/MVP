@@ -478,7 +478,7 @@ class DonationFormState extends State<DonationForm> {
                           },
                           child: const Text(
                             AppStrings.submitDonation,
-                            style: TextStyle(fontWeight: FontWeight.w700),
+                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
                           ),
                         ),
                       ),
