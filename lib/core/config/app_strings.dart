@@ -225,7 +225,7 @@ class AppStrings {
   static const pleaseSelectCharity = 'Please select a charity';
   static const pleaseChoosePostageSize = 'Please choose a size for postage';
   static const pleaseAddPhoto = 'Please add at least one photo';
-  static const submitDonation = 'Submit Donation';
+  static const submitDonation = 'Donate';
 
   // Donation Submission
   static const donationSubmittedSuccessfully = 'Donation submitted successfully!';
