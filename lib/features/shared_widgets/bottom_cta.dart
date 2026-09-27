@@ -4,6 +4,7 @@ class BottomCta extends StatelessWidget {
   final bool enabled;
   final VoidCallback? onPressed;
   final String text;
+  final TextStyle? textStyle;
   final bool loading;
 
   const BottomCta({
@@ -11,6 +12,7 @@ class BottomCta extends StatelessWidget {
     required this.enabled,
     this.onPressed,
     required this.text,
+    this.textStyle,
     this.loading = false,
   });
 
@@ -30,6 +32,7 @@ class BottomCta extends StatelessWidget {
               ? const CircularProgressIndicator()
               : Text(
                   text,
+                  style: textStyle,
                   textAlign: TextAlign.center,
                 ),
         ),

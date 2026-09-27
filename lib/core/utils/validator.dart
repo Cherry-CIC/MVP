@@ -79,6 +79,7 @@ String? validateConfirmPassword(String? value, String? password) {
   return null;
 }
 
+// Listing titles and descriptions are free text, including numbers and punctuation.
 String? validateDonationFormFields(String? value) {
   final field = value?.trim() ?? '';
 
@@ -87,9 +88,6 @@ String? validateDonationFormFields(String? value) {
   }
   if (field.length < 2) {
     return "This must be at least 2 characters";
-  }
-  if (!RegExp(r"^[a-zA-Z\s]+$").hasMatch(field)) {
-    return "This can only contain letters and spaces";
   }
   return null;
 }
