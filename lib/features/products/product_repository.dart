@@ -48,7 +48,8 @@ class ProductRepository {
       // The API permits listings without a description.
       json['description'] ??= '';
       final product = Product.fromJson(json);
-      if (product.id != productId) {
+      // Ownership must be known before the detail page can offer buyer actions.
+      if (product.id != productId || (product.userId?.trim().isEmpty ?? true)) {
         return Result.failure(failureMessage);
       }
 

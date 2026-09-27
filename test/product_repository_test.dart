@@ -138,6 +138,48 @@ void main() {
       expect(result.value!.description, isEmpty);
     });
 
+    for (final ownerField in ['userId', 'user_id']) {
+      for (final ownerId in [null, '', ' \t\n ']) {
+        test('rejects unusable $ownerField ${ownerId == null ? "null" : '"$ownerId"'}', () async {
+          final json = _productJson(id: 'requested-product')..remove('user_id');
+          json[ownerField] = ownerId;
+          final repository = ProductRepository(
+            _RecordingApiService(getValue: {'success': true, 'data': json}),
+          );
+
+          final result = await repository.fetchProduct('requested-product');
+
+          expect(result.isSuccess, isFalse);
+          expect(result.value, isNull);
+        });
+      }
+
+      test('accepts a valid $ownerField', () async {
+        final json = _productJson(id: 'requested-product')..remove('user_id');
+        json[ownerField] = 'seller-1';
+        final repository = ProductRepository(
+          _RecordingApiService(getValue: {'success': true, 'data': json}),
+        );
+
+        final result = await repository.fetchProduct('requested-product');
+
+        expect(result.isSuccess, isTrue);
+        expect(result.value!.userId, 'seller-1');
+      });
+    }
+
+    test('rejects a listing with no seller ID field', () async {
+      final json = _productJson(id: 'requested-product')..remove('user_id');
+      final repository = ProductRepository(
+        _RecordingApiService(getValue: {'success': true, 'data': json}),
+      );
+
+      final result = await repository.fetchProduct('requested-product');
+
+      expect(result.isSuccess, isFalse);
+      expect(result.value, isNull);
+    });
+
     for (final productId in ['', '   ', 'invalid/id']) {
       test('does not request an invalid listing ID "$productId"', () async {
         final apiService = _RecordingApiService();
@@ -440,6 +482,7 @@ Product _product() {
 Map<String, dynamic> _productJson({required String id}) {
   return {
     'id': id,
+    'user_id': 'listing-owner',
     'name': 'Liked item',
     'description': 'A liked test product',
     'quality': 'GOOD',

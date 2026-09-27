@@ -4,6 +4,7 @@ import 'package:cherry_mvp/core/config/app_images.dart';
 import 'package:cherry_mvp/core/config/app_strings.dart';
 import 'package:cherry_mvp/core/models/product.dart';
 import 'package:cherry_mvp/core/router/router.dart';
+import 'package:cherry_mvp/core/services/network/api_endpoints.dart';
 import 'package:cherry_mvp/core/utils/result.dart';
 import 'package:cherry_mvp/features/checkout/checkout_repository.dart';
 import 'package:cherry_mvp/features/checkout/checkout_view_model.dart';
@@ -79,6 +80,15 @@ class _ProductRepositoryStub extends ProductRepository {
   }
 }
 
+class _MissingSellerApiService extends UnexpectedApiService {
+  @override
+  Future<Result<T>> get<T>(String endpoint, {Map<String, dynamic>? queryParameters}) async {
+    expect(endpoint, ApiEndpoints.productWithDetailsById('listing-1'));
+    final json = _product(id: 'listing-1', name: 'Missing seller').toJson()..remove('userId');
+    return Result.success({'success': true, 'data': json} as T);
+  }
+}
+
 Product _product({
   required String id,
   required String name,
@@ -110,7 +120,7 @@ Future<
 >
 _pumpProfile(
   WidgetTester tester, {
-  required _ProductRepositoryStub repository,
+  required ProductRepository repository,
   Product? selectedProduct,
 }) async {
   SharedPreferences.setMockInitialValues({});
@@ -192,6 +202,25 @@ void _expectOwnerDetails(WidgetTester tester, Product product) {
 }
 
 void main() {
+  testWidgets('Profile details never offer buying when the API omits the seller ID', (tester) async {
+    final harness = await _pumpProfile(
+      tester,
+      repository: ProductRepository(_MissingSellerApiService()),
+      selectedProduct: _product(id: 'public-product', name: 'Previous listing', userId: 'another-seller'),
+    );
+
+    await tester.tap(find.widgetWithText(SellerListingCard, 'First listing'));
+    await tester.pumpAndSettle();
+
+    expect(find.text(AppStrings.productPageLoadFailed), findsOneWidget);
+    expect(find.text(AppStrings.retry), findsOneWidget);
+    expect(find.byType(ProductInformation), findsNothing);
+    expect(find.byType(BottomCta), findsNothing);
+    expect(find.text(AppStrings.productPageBuyNow), findsNothing);
+    expect(harness.checkoutViewModel.basketItems, isEmpty);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('Profile opens full details for each selected own listing', (
     tester,
   ) async {
