@@ -146,10 +146,13 @@ class _ProfilePageState extends State<ProfilePage> {
                     onLikedPressed: navigateToLikedItems,
                   ),
                 ProfileListingsSection(
-                  onCreateListing: () {
-                    context.read<NavigationProvider>().navigateTo(
+                  onCreateListing: () async {
+                    final posted = await context.read<NavigationProvider>().navigateTo(
                       AppRoutes.donations,
                     );
+                    if (posted == true && mounted) {
+                      _listingsViewModel?.refreshListings();
+                    }
                   },
                 ),
                 if (FeatureFlags.showImpactSummaries) ...[
