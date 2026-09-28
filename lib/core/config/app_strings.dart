@@ -249,6 +249,7 @@ class AppStrings {
   static const productPageMakeOffer = 'Make Offer';
   static const productPageBuyNow = 'Buy Now';
   static const productPageYourListing = 'Your listing';
+  static const productPageLoadFailed = 'We could not load this listing. Please try again.';
   static const giveInStyle = 'Give in style';
   static const productIncl = 'Incl.';
   static const askSeller = 'Ask seller';

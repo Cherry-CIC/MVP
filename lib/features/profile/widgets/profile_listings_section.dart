@@ -1,4 +1,5 @@
 import 'package:cherry_mvp/core/config/app_strings.dart';
+import 'package:cherry_mvp/core/router/router.dart';
 import 'package:cherry_mvp/core/utils/status.dart';
 import 'package:cherry_mvp/features/profile/profile_listings_view_model.dart';
 import 'package:cherry_mvp/features/profile/widgets/seller_listing_card.dart';
@@ -8,10 +9,7 @@ import 'package:provider/provider.dart';
 class ProfileListingsSection extends StatelessWidget {
   final VoidCallback onCreateListing;
 
-  const ProfileListingsSection({
-    super.key,
-    required this.onCreateListing,
-  });
+  const ProfileListingsSection({super.key, required this.onCreateListing});
 
   @override
   Widget build(BuildContext context) {
@@ -84,7 +82,13 @@ class ProfileListingsSection extends StatelessWidget {
                   SizedBox(
                     key: ValueKey(listing.id),
                     width: cardWidth,
-                    child: SellerListingCard(listing: listing),
+                    child: SellerListingCard(
+                      listing: listing,
+                      onTap: () => context.read<NavigationProvider>().navigateTo(
+                        AppRoutes.product,
+                        arguments: {'productId': listing.id},
+                      ),
+                    ),
                   ),
               ],
             );
