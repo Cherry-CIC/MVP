@@ -95,7 +95,7 @@ class ProductCard extends StatelessWidget {
                           ),
                         ),
                       ),
-                      Positioned(
+                      if (!viewModel.isOwnProduct(product)) Positioned(
                         bottom: 16,
                         right: 16,
                         child: Semantics(

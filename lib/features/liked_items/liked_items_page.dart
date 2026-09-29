@@ -8,6 +8,7 @@ import 'package:cherry_mvp/features/liked_items/liked_items_view_model.dart';
 import 'package:cherry_mvp/features/products/product_card.dart';
 import 'package:cherry_mvp/features/products/product_repository.dart';
 import 'package:cherry_mvp/features/products/product_viewmodel.dart';
+import 'package:cherry_mvp/features/profile/profile_listings_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -72,7 +73,7 @@ class _LikedItemsView extends StatelessWidget {
     );
   }
 
-  void _handleNavTap(BuildContext context, int index) {
+  void _handleNavTap(BuildContext context, int index) async {
     final navigator = context.read<NavigationProvider>();
 
     if (index == _homeNavIndex) {
@@ -86,10 +87,14 @@ class _LikedItemsView extends StatelessWidget {
     }
 
     if (index == _giveNavIndex) {
-      showDialog(
+      final posted = await showDialog<bool>(
         context: context,
         builder: (context) => const Dialog.fullscreen(child: DonationPage()),
       );
+      if (posted == true && context.mounted) {
+        context.read<ProfileListingsViewModel>().refreshListings();
+        navigator.goBack();
+      }
       return;
     }
 

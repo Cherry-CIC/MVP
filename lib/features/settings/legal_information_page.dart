@@ -1,4 +1,5 @@
 import 'package:cherry_mvp/core/config/config.dart';
+import 'package:cherry_mvp/features/settings/community_rules_page.dart';
 import 'package:cherry_mvp/features/settings/privacy_policy_page.dart';
 import 'package:cherry_mvp/features/settings/terms_and_conditions_page.dart';
 import 'package:cherry_mvp/features/settings/widgets/settings_item.dart';
@@ -64,5 +65,9 @@ const _legalDocuments = [
   _LegalDocumentItem(
     title: AppStrings.termsAndConditionsText,
     page: TermsAndConditionsPage(),
+  ),
+  _LegalDocumentItem(
+    title: AppStrings.communityRulesText,
+    page: CommunityRulesPage(),
   ),
 ];
