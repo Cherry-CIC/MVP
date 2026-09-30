@@ -65,7 +65,7 @@ class Product {
     }
     return _$ProductFromJson({
       ...json,
-      'userId': json['userId'] ?? json['user_id'] ?? '',
+      'userId': _readOwnerId(json) ?? '',
     });
   }
 
@@ -94,5 +94,30 @@ class Product {
     if (value is double) return value.toInt();
     if (value is String) return int.tryParse(value) ?? 0;
     return 0;
+  }
+
+  static String? _readOwnerId(Map<String, dynamic> json) {
+    for (final value in [
+      json['user'],
+      json['seller'],
+      json['owner'],
+      json['userId'],
+      json['user_id'],
+    ]) {
+      final id = switch (value) {
+        {'id': final id} => _trimText(id),
+        {'_id': final id} => _trimText(id),
+        {'uid': final id} => _trimText(id),
+        _ => _trimText(value),
+      };
+      if (id != null) return id;
+    }
+    return null;
+  }
+
+  static String? _trimText(dynamic value) {
+    if (value is! String) return null;
+    final trimmed = value.trim();
+    return trimmed.isEmpty ? null : trimmed;
   }
 }

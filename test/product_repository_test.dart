@@ -168,6 +168,20 @@ void main() {
       });
     }
 
+    test('prefers nested public seller ID over flat owner fields', () async {
+      final json = _productJson(id: 'requested-product')
+        ..['user_id'] = 'legacy-owner-id'
+        ..['user'] = {'id': 'public-seller-id', 'username': 'Public seller'};
+      final repository = ProductRepository(
+        _RecordingApiService(getValue: {'success': true, 'data': json}),
+      );
+
+      final result = await repository.fetchProduct('requested-product');
+
+      expect(result.isSuccess, isTrue);
+      expect(result.value!.userId, 'public-seller-id');
+    });
+
     test('rejects a listing with no seller ID field', () async {
       final json = _productJson(id: 'requested-product')..remove('user_id');
       final repository = ProductRepository(
