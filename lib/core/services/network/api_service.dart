@@ -118,7 +118,7 @@ class DioApiService implements ApiService {
       );
       return Result.success(response.data as T);
     } on DioException catch (e) {
-      return Result.failure(_handleDioError(e));
+      return Result.failure(_handleDioError(e), statusCode: e.response?.statusCode);
     } catch (_) {
       SafeLog.event(
         AppLogEvent.unexpectedGetFailure,

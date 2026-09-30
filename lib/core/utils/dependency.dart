@@ -34,6 +34,7 @@ import 'package:cherry_mvp/features/profile/edit_profile_repository.dart';
 import 'package:cherry_mvp/features/profile/edit_profile_view_model.dart';
 import 'package:cherry_mvp/features/profile/profile_listings_repository.dart';
 import 'package:cherry_mvp/features/profile/profile_listings_view_model.dart';
+import 'package:cherry_mvp/features/profile/public_user_profile_repository.dart';
 import 'package:cherry_mvp/features/register/register_repository.dart';
 import 'package:cherry_mvp/features/register/register_viewmodel.dart';
 import 'package:cherry_mvp/features/search/search_repository.dart';
@@ -147,6 +148,11 @@ List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
     ),
     Provider<IProfileListingsRepository>(
       create: (context) => ProfileListingsRepository(
+        Provider.of<ApiService>(context, listen: false),
+      ),
+    ),
+    Provider<IPublicUserProfileRepository>(
+      create: (context) => PublicUserProfileRepository(
         Provider.of<ApiService>(context, listen: false),
       ),
     ),

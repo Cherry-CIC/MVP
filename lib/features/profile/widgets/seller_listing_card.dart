@@ -16,7 +16,7 @@ class SellerListingCard extends StatelessWidget {
         ? AppStrings.profileListingPriceUnavailable
         : '£${listing.price!.toStringAsFixed(2)}';
 
-    return Semantics(
+    final content = Semantics(
       container: true,
       label: '$displayName. $priceLabel.',
       button: onTap != null,
@@ -67,6 +67,17 @@ class SellerListingCard extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+
+    if (onTap == null) return content;
+    return Material(
+      type: MaterialType.transparency,
+      child: InkWell(
+        onTap: onTap,
+        excludeFromSemantics: true,
+        borderRadius: BorderRadius.circular(8),
+        child: content,
       ),
     );
   }
