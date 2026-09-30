@@ -105,6 +105,20 @@ class LikedItemsViewModel extends ChangeNotifier {
   void _handleProductStateChange() {
     if (!productViewModel.isAccountStateCurrent(_accountStateVersion)) {
       _clearProductsAfterAccountChange();
+      return;
+    }
+
+    var changed = false;
+    final updatedProducts = _products
+        .map((product) {
+          final updated = productViewModel.resolveListing(product);
+          changed |= !identical(product, updated);
+          return updated;
+        })
+        .toList(growable: false);
+    if (changed) {
+      _products = List.unmodifiable(updatedProducts);
+      notifyListeners();
     }
   }
 
@@ -119,7 +133,7 @@ class LikedItemsViewModel extends ChangeNotifier {
       if (product.id.trim().isEmpty || !seenProductIds.add(product.id)) {
         continue;
       }
-      products.add(product);
+      products.add(productViewModel.resolveListing(product));
     }
 
     return List.unmodifiable(products);

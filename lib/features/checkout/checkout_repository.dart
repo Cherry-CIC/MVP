@@ -26,6 +26,7 @@ abstract class ICheckoutRepository {
     required String pickupPointId,
     required String country,
     required String postalCode,
+    int? expectedEditVersion,
   });
   Future<Result> createOrder(Map<String, dynamic> order);
   Future<Result<UserCredentials>> fetchUserProfile();
@@ -165,14 +166,16 @@ final class CheckoutRepository implements ICheckoutRepository {
     required String pickupPointId,
     required String country,
     required String postalCode,
+    int? expectedEditVersion,
   }) async {
     //  call backend API which returns client_secret
-    var data = {
+    final data = <String, dynamic>{
       "productId": productId,
       "shippingMethodId": shippingMethodId,
       "pickupPointId": pickupPointId,
       "country": country,
       "postalCode": postalCode,
+      'expectedEditVersion': ?expectedEditVersion,
     };
 
     try {

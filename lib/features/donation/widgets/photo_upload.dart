@@ -6,10 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:provider/provider.dart';
 import 'package:cherry_mvp/core/config/app_colors.dart';
 import 'package:cherry_mvp/core/config/app_strings.dart';
-import 'package:cherry_mvp/features/donation/donation_view_model.dart';
 
 class PhotoUpload extends StatefulWidget {
   final Function(List<XFile>)? onImagesChanged;
@@ -117,15 +115,15 @@ class _PhotoUploadState extends State<PhotoUpload> {
     return result ?? false;
   }
 
-    Future<bool> _showPermissionDeniedDialog({
-      required bool permanentlyDenied,
-    }) async {
+  Future<bool> _showPermissionDeniedDialog({
+    required bool permanentlyDenied,
+  }) async {
     final title = permanentlyDenied
-      ? AppStrings.cameraPermissionPermanentlyDeniedTitle
-      : AppStrings.cameraPermissionDeniedTitle;
+        ? AppStrings.cameraPermissionPermanentlyDeniedTitle
+        : AppStrings.cameraPermissionDeniedTitle;
     final message = permanentlyDenied
-      ? AppStrings.cameraPermissionPermanentlyDeniedMessage
-      : AppStrings.cameraPermissionDeniedMessage;
+        ? AppStrings.cameraPermissionPermanentlyDeniedMessage
+        : AppStrings.cameraPermissionDeniedMessage;
 
     final openSettings = await showDialog<bool>(
       context: context,
@@ -155,6 +153,7 @@ class _PhotoUploadState extends State<PhotoUpload> {
 
   Future<bool> _ensureCameraPermission() async {
     var status = await Permission.camera.status;
+    if (!mounted) return false;
     if (status.isGranted) return true;
 
     if (status.isPermanentlyDenied || status.isRestricted) {
@@ -163,6 +162,7 @@ class _PhotoUploadState extends State<PhotoUpload> {
     }
 
     status = await Permission.camera.request();
+    if (!mounted) return false;
     if (status.isGranted) return true;
 
     await _showPermissionDeniedDialog(
@@ -206,6 +206,7 @@ class _PhotoUploadState extends State<PhotoUpload> {
       if (source == ImageSource.gallery) {
         // Allow multiple selection from gallery
         final List<XFile> picked = await _pickGalleryImages(picker);
+        if (!mounted) return;
 
         if (picked.isNotEmpty) {
           // Filter out duplicates based on file path
@@ -243,11 +244,13 @@ class _PhotoUploadState extends State<PhotoUpload> {
       } else {
         // Single image from camera - show pre-permission rationale dialog
         final bool userConfirmed = await _showCameraPermissionRationaleDialog();
-        if (!userConfirmed) return;
+        if (!mounted || !userConfirmed) return;
 
         if (!await _ensureCameraPermission()) return;
+        if (!mounted) return;
 
         final XFile? picked = await _pickCameraImage(picker);
+        if (!mounted) return;
 
         if (picked != null) {
           // Check for duplicates
@@ -328,18 +331,18 @@ class _PhotoUploadState extends State<PhotoUpload> {
             ListTile(
               leading: const Icon(Icons.camera_alt),
               title: const Text(AppStrings.cameraPhoto),
-              onTap: () => context.read<DonationViewModel>().selectType(ImageSource.camera),
+              onTap: () => Navigator.of(context).pop(ImageSource.camera),
             ),
             ListTile(
               leading: const Icon(Icons.photo_library),
               title: const Text(AppStrings.galleryPhotoMultiple),
-              onTap: () => context.read<DonationViewModel>().selectType(ImageSource.gallery),
+              onTap: () => Navigator.of(context).pop(ImageSource.gallery),
             ),
           ],
         ),
       ),
     );
-    if (source == null) return;
+    if (!mounted || source == null) return;
     await pickImages(source);
   }
 

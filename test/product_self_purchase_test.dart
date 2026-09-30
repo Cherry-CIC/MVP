@@ -34,6 +34,9 @@ class _ProductRepositoryStub extends ProductRepository {
   int likeCount = 0;
 
   @override
+  Future<Result<Product>> fetchProduct(String productId) async => Result.success(_product);
+
+  @override
   Future<Result<ProductLikeUpdate>> likeProduct(Product product) async {
     likeCount += 1;
     return Result.success(

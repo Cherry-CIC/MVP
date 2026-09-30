@@ -11,6 +11,7 @@ import 'package:cherry_mvp/features/liked_items/liked_items_page.dart';
 import 'package:cherry_mvp/features/login/login_page.dart';
 import 'package:cherry_mvp/features/forgot_password/forgot_password_page.dart';
 import 'package:cherry_mvp/features/products/product_page.dart';
+import 'package:cherry_mvp/features/products/edit_listing/edit_listing_page.dart';
 import 'package:cherry_mvp/features/profile/edit_profile_page.dart';
 import 'package:cherry_mvp/features/register/register_page.dart';
 import 'package:cherry_mvp/features/search/widgets/category_page/category_page.dart';
@@ -48,6 +49,7 @@ class AppRoutes {
   static const String pickupPointSelector = '/pickupPointSelector';
   static const String likedItems = '/liked-items';
   static const String editProfile = '/editProfile';
+  static const String editListing = '/edit-listing';
 
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
@@ -63,6 +65,12 @@ class AppRoutes {
         final args = settings.arguments as Map<String, dynamic>?;
         return MaterialPageRoute(
           builder: (_) => ProductPage(productId: args?['productId']),
+        );
+      case editListing:
+        final args = settings.arguments;
+        final productId = args is Map ? args['productId'] : null;
+        return MaterialPageRoute(
+          builder: (_) => EditListingPage(productId: productId is String ? productId : ''),
         );
       case home:
         return MaterialPageRoute(builder: (_) => const PostAuthUsernameGate());
