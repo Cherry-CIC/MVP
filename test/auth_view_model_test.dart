@@ -149,7 +149,8 @@ void main() {
       (await SharedPreferences.getInstance()).get('account-a-preference'),
       isNull,
     );
-    expect(navigator.goBackCount, 1);
+    expect(navigator.goBackCount, 0);
+    expect(navigator.removedUntilRoute, AppRoutes.welcome);
   });
 
   test('successful account deletion clears account-scoped liked state', () async {

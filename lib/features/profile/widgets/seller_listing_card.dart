@@ -7,11 +7,7 @@ class SellerListingCard extends StatelessWidget {
   final SellerListing listing;
   final VoidCallback? onTap;
 
-  const SellerListingCard({
-    super.key,
-    required this.listing,
-    this.onTap,
-  });
+  const SellerListingCard({super.key, required this.listing, this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -22,49 +18,54 @@ class SellerListingCard extends StatelessWidget {
 
     final content = Semantics(
       container: true,
-      button: onTap == null ? null : true,
-      onTap: onTap,
       label: '$displayName. $priceLabel.',
-      child: ExcludeSemantics(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            AspectRatio(
-              aspectRatio: 1,
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.surfaceContainerHighest,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: Theme.of(context).colorScheme.outlineVariant,
+      button: onTap != null,
+      onTap: onTap,
+      child: InkWell(
+        onTap: onTap,
+        excludeFromSemantics: true,
+        borderRadius: BorderRadius.circular(8),
+        child: ExcludeSemantics(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              AspectRatio(
+                aspectRatio: 1,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.surfaceContainerHighest,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: Theme.of(context).colorScheme.outlineVariant,
+                    ),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(7),
+                    child: _ListingImage(imageUrls: listing.imageUrls),
                   ),
                 ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(7),
-                  child: _ListingImage(imageUrls: listing.imageUrls),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                displayName,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                priceLabel,
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                  color: listing.price == null
+                      ? Theme.of(context).colorScheme.onSurfaceVariant
+                      : Theme.of(context).colorScheme.onSurface,
                 ),
               ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              displayName,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-            const SizedBox(height: 4),
-            Text(
-              priceLabel,
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                color: listing.price == null
-                    ? Theme.of(context).colorScheme.onSurfaceVariant
-                    : Theme.of(context).colorScheme.onSurface,
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
