@@ -15,7 +15,6 @@ import 'package:cherry_mvp/core/models/product.dart';
 import 'package:cherry_mvp/core/models/user_section.dart';
 import 'package:cherry_mvp/core/router/nav_provider.dart';
 import 'package:cherry_mvp/core/router/nav_routes.dart';
-import 'package:cherry_mvp/core/services/services.dart';
 import 'package:cherry_mvp/core/utils/donor_discount_state_store.dart';
 import 'package:cherry_mvp/core/utils/result.dart';
 import 'package:cherry_mvp/features/checkout/checkout_view_model.dart';
@@ -24,11 +23,13 @@ import 'package:cherry_mvp/features/products/widgets/product_highlight_title.dar
 import 'package:cherry_mvp/features/products/widgets/product_information.dart';
 import 'package:cherry_mvp/features/products/widgets/seller_information.dart';
 import 'package:cherry_mvp/features/products/widgets/product_header_carousel.dart';
+import 'package:cherry_mvp/features/profile/public_user_profile_repository.dart';
 
 class ProductPage extends StatefulWidget {
-  final String? productId;
+  const ProductPage({super.key, this.product, this.productId});
 
-  const ProductPage({super.key, this.productId});
+  final Product? product;
+  final String? productId;
 
   @override
   State<ProductPage> createState() => _ProductPageState();
@@ -37,6 +38,8 @@ class ProductPage extends StatefulWidget {
 class _ProductPageState extends State<ProductPage> {
   Future<Result<Product>>? _productLoad;
   bool _checkingPurchase = false;
+  String? _sellerRequestId;
+  Future<PublicUser?>? _sellerLoad;
 
   @override
   void initState() {
@@ -47,7 +50,7 @@ class _ProductPageState extends State<ProductPage> {
   @override
   void didUpdateWidget(covariant ProductPage oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.productId != widget.productId) {
+    if (oldWidget.productId != widget.productId || oldWidget.product != widget.product) {
       _loadProduct();
     }
   }
@@ -64,7 +67,10 @@ class _ProductPageState extends State<ProductPage> {
   @override
   Widget build(BuildContext context) {
     if (_productLoad == null) {
-      return _buildDetails(context, context.watch<ProductViewModel>().product);
+      return _buildDetails(
+        context,
+        widget.product ?? context.watch<ProductViewModel>().product,
+      );
     }
 
     // Keep a Profile request local to this route so Back cannot change the
@@ -127,6 +133,8 @@ class _ProductPageState extends State<ProductPage> {
     final unavailable = product.number <= 0 || (product.status != null && product.status != 'active');
     final hasOptionalProductHighlights =
         FeatureFlags.showDonorDiscounts || (!isOwnListing && FeatureFlags.showOtherCharityRequests);
+    final sellerId = NavigationProvider.publicProfileUserId(product.userId);
+    final sellerLoad = _sellerFuture(context, sellerId);
 
     return Scaffold(
       bottomNavigationBar: isOwnListing
@@ -141,7 +149,10 @@ class _ProductPageState extends State<ProductPage> {
               enabled: !unavailable && !_checkingPurchase,
               loading: _checkingPurchase,
               text: unavailable ? 'This listing is unavailable' : AppStrings.productPageBuyNow,
-              textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+              textStyle: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+              ),
               onPressed: () => _buyNow(displayedProduct),
             ),
       body: CustomScrollView(
@@ -149,26 +160,30 @@ class _ProductPageState extends State<ProductPage> {
           ProductHeaderCarousel(product, canLike: !isOwnListing),
           SliverList.list(
             children: [
-              FutureBuilder<String?>(
-                future: UsernameService.getUsername(displayedProduct.userId ?? ''),
+              FutureBuilder<PublicUser?>(
+                future: sellerLoad,
                 builder: (context, snapshot) {
-                  final resolvedUsername = snapshot.data?.trim();
+                  final resolvedUsername = snapshot.data?.username.trim();
                   final sellerUsername = (resolvedUsername != null && resolvedUsername.isNotEmpty)
                       ? resolvedUsername
                       : 'User';
+                  final profileImageUrl = snapshot.data?.profileImageUrl;
 
                   return SellerInformation(
+                    onViewProfile: sellerId == null
+                        ? null
+                        : () => context.read<NavigationProvider>().openPublicUserProfile(sellerId),
+                    profileImage: profileImageUrl == null ? null : NetworkImage(profileImageUrl),
                     showAskSeller: !isOwnListing,
                     user: UserInformation(
                       username: sellerUsername,
-                      // TODO remove filler values
-                      location: 'New York, USA',
-                      reviewsCount: 120,
-                      followersCount: 300,
-                      followingCount: 150,
-                      rating: 3.5,
-                      awards: 37,
-                      hasBuyerDiscounts: true,
+                      location: '',
+                      reviewsCount: 0,
+                      followersCount: 0,
+                      followingCount: 0,
+                      rating: 0,
+                      awards: 0,
+                      hasBuyerDiscounts: false,
                     ),
                     charity: displayedProduct.charity?.imageUrl != null
                         ? Image.network(displayedProduct.charity!.imageUrl)
@@ -270,12 +285,16 @@ class _ProductPageState extends State<ProductPage> {
     final saved = result.product;
     if (saved != null) {
       context.read<ProductViewModel>().applyListingUpdate(saved);
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Listing updated')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Listing updated')));
     }
     // Invalidate even after an uncertain response: a timed-out PUT may have
     // committed. Never restore the pre-edit cards when a refresh fails.
     unawaited(context.read<HomeViewModel>().refreshAfterListingEdit());
-    unawaited(context.read<ProfileListingsViewModel>().refreshAfterListingEdit());
+    unawaited(
+      context.read<ProfileListingsViewModel>().refreshAfterListingEdit(),
+    );
     setState(() {
       _productLoad = context.read<ProductViewModel>().productRepository.fetchProduct(product.id);
     });
@@ -291,9 +310,11 @@ class _ProductPageState extends State<ProductPage> {
       if (!mounted || !vm.isAccountStateCurrent(accountVersion)) return;
       final latest = result.value;
       if (!result.isSuccess || latest == null) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Could not check this listing. Please try again.')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Could not check this listing. Please try again.'),
+          ),
+        );
         return;
       }
       if (!sameListingDetails(displayed, latest)) {
@@ -301,9 +322,13 @@ class _ProductPageState extends State<ProductPage> {
         // second explicit Buy now after the buyer has reviewed its new details.
         vm.applyListingUpdate(latest);
         setState(() => _productLoad = Future.value(Result.success(latest)));
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('This listing has changed. Please review it before buying.')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'This listing has changed. Please review it before buying.',
+            ),
+          ),
+        );
         return;
       }
       final checkout = context.read<CheckoutViewModel>();
@@ -315,12 +340,37 @@ class _ProductPageState extends State<ProductPage> {
       await context.read<NavigationProvider>().navigateTo(AppRoutes.checkout);
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Could not check this listing. Please try again.')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Could not check this listing. Please try again.'),
+          ),
+        );
       }
     } finally {
       if (mounted) setState(() => _checkingPurchase = false);
+    }
+  }
+
+  Future<PublicUser?> _sellerFuture(BuildContext context, String? userId) {
+    if (_sellerRequestId != userId || _sellerLoad == null) {
+      _sellerRequestId = userId;
+      _sellerLoad = _loadPublicSeller(context, userId);
+    }
+    return _sellerLoad!;
+  }
+
+  Future<PublicUser?> _loadPublicSeller(
+    BuildContext context,
+    String? userId,
+  ) async {
+    if (userId == null) return null;
+    final repository = context.read<IPublicUserProfileRepository?>();
+    if (repository == null) return null;
+    try {
+      final result = await repository.fetchUser(userId);
+      return result.isSuccess ? result.value : null;
+    } catch (_) {
+      return null;
     }
   }
 }
