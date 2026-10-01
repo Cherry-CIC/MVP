@@ -1,6 +1,10 @@
 class FeatureFlags {
   const FeatureFlags._();
 
+  // Enable only after the conditional edit and checkout safeguards described
+  // in docs/qa/edit-listing-frontend.md are deployed and verified.
+  static const bool enableListingEdit = bool.fromEnvironment('ENABLE_LISTING_EDIT');
+
   // Hide incomplete inbox and messaging UI for the MVP without removing the code.
   static const bool showInbox = false;
 

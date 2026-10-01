@@ -14,6 +14,7 @@ import 'package:cherry_mvp/features/checkout/checkout_repository.dart';
 import 'package:cherry_mvp/features/checkout/constants/address_constants.dart';
 import 'package:cherry_mvp/features/checkout/models/payment_intent.dart';
 import 'package:cherry_mvp/features/checkout/payment_type.dart';
+import 'package:cherry_mvp/features/products/listing_details.dart';
 import 'package:cherry_mvp/features/checkout/widgets/shipping_address_widget.dart';
 
 enum DeliveryType { pickup, home, undefined }
@@ -24,14 +25,19 @@ class CheckoutViewModel extends ChangeNotifier {
   final IDonationRepository _donationRepository;
   final NavigationProvider navigator;
   final String? Function() _currentUserIdProvider;
+  final Future<Result<Product>> Function(String)? _fetchListing;
+  int _basketRevision = 0;
+  int _paymentAttempt = 0;
 
   CheckoutViewModel({
     required IDonationRepository donationRepository,
     required this.checkoutRepository,
     required this.navigator,
     String? Function()? currentUserIdProvider,
+    Future<Result<Product>> Function(String)? loadProduct,
     // ignore: prefer_initializing_formals - `this._x` named params need an experimental feature
   }) : _donationRepository = donationRepository,
+       _fetchListing = loadProduct,
        _currentUserIdProvider = currentUserIdProvider ?? (() => null);
 
   Status _status = Status.uninitialized;
@@ -163,17 +169,20 @@ class CheckoutViewModel extends ChangeNotifier {
     }
 
     _basketItems.add(product);
+    _basketRevision++;
     notifyListeners();
     return true;
   }
 
   void removeItem(Product product) {
     _basketItems.remove(product);
+    _basketRevision++;
     notifyListeners();
   }
 
   void clearBasket() {
     _basketItems.clear();
+    _basketRevision++;
     notifyListeners();
   }
 
@@ -256,6 +265,8 @@ class CheckoutViewModel extends ChangeNotifier {
   /// Resets checkout state for a new order
   /// Clears shipping address and payment method but preserves basket items
   void resetCheckout() {
+    _basketRevision++;
+    _paymentAttempt++;
     _shippingAddress = null;
     _selectedPaymentType = null;
     _hasPaymentMethod = false;
@@ -525,6 +536,8 @@ class CheckoutViewModel extends ChangeNotifier {
   // }
 
   Future<bool> payWithPaymentSheet() async {
+    if (_createOrderStatus.type == StatusType.loading) return false;
+    _paymentAttempt++;
     if (basketItems.isEmpty) {
       _createOrderStatus = Status.failure('Your basket is empty');
       notifyListeners();
@@ -568,16 +581,33 @@ class CheckoutViewModel extends ChangeNotifier {
     }
 
     final selectedShippingMethod = selectedInpostShippingMethod!;
+    final selectedPickupPoint = selectedInpost!;
+    final selectedPayment = _selectedPaymentType!;
+    final selectedDelivery = _deliveryChoice;
+    final attempt = _paymentAttempt;
+    final basketRevision = _basketRevision;
 
     try {
+      if (!await verifyBasketDetails()) return false;
+      if (attempt != _paymentAttempt || basketRevision != _basketRevision) return false;
+      if (selectedInpost != selectedPickupPoint ||
+          selectedInpostShippingMethod != selectedShippingMethod ||
+          _selectedPaymentType != selectedPayment ||
+          _deliveryChoice != selectedDelivery) {
+        _createOrderStatus = Status.failure('Your delivery or payment choice changed. Please review it before paying.');
+        notifyListeners();
+        return false;
+      }
       // To create a PaymentIntent and return the client_secret
       final response = await checkoutRepository.createPaymentIntent(
         productId: basketItems.first.id,
         shippingMethodId: selectedShippingMethod.id,
-        pickupPointId: selectedInpost!.id,
-        country: selectedInpost!.country,
-        postalCode: selectedInpost!.postcode,
+        pickupPointId: selectedPickupPoint.id,
+        country: selectedPickupPoint.country,
+        postalCode: selectedPickupPoint.postcode,
+        expectedEditVersion: basketItems.first.editVersion,
       );
+      if (attempt != _paymentAttempt || basketRevision != _basketRevision) return false;
 
       if (response.isSuccess && response.value != null) {
         final paymentResponse = response.value!;
@@ -587,7 +617,7 @@ class CheckoutViewModel extends ChangeNotifier {
 
         final setupParams = _buildPaymentSheetParameters(
           paymentResponse,
-          _selectedPaymentType!,
+          selectedPayment,
         );
 
         await Stripe.instance.initPaymentSheet(
@@ -626,6 +656,78 @@ class CheckoutViewModel extends ChangeNotifier {
       _lastPaymentIntentId = null;
       notifyListeners();
       return false;
+    }
+  }
+
+  /// A local freshness check helps the buyer, but the backend must atomically
+  /// bind this reviewed version when creating a payment intent as well.
+  Future<bool> verifyBasketDetails() async {
+    final loadProduct = _fetchListing;
+    if (loadProduct == null) {
+      // Production always supplies the loader. Fail closed for versioned
+      // listings in isolated/legacy consumers that have not wired it yet.
+      if (_basketItems.any((product) => product.editVersion != null)) {
+        _createOrderStatus = Status.failure('Could not check this listing. Please reopen it.');
+        notifyListeners();
+        return false;
+      }
+      return true;
+    }
+    final revision = _basketRevision;
+    final attempt = _paymentAttempt;
+    final uid = _currentUserIdProvider();
+    final products = List<Product>.of(_basketItems);
+    if (products.isEmpty) return false;
+    try {
+      for (final product in products) {
+        final result = await loadProduct(product.id);
+        if (revision != _basketRevision) {
+          _cancelFreshnessCheck(attempt);
+          return false;
+        }
+        if (uid != _currentUserIdProvider()) {
+          _basketItems.clear();
+          _basketRevision++;
+          _createOrderStatus = Status.failure('Your account changed. Reopen the listing before buying.');
+          notifyListeners();
+          return false;
+        }
+        final latest = result.value;
+        if (!result.isSuccess || latest == null) {
+          _createOrderStatus = Status.failure('Could not check this listing. Please try again.');
+          notifyListeners();
+          return false;
+        }
+        if (!sameListingDetails(product, latest) ||
+            isOwnProduct(latest) ||
+            latest.number <= 0 ||
+            (latest.status != null && latest.status != 'active')) {
+          _basketItems.clear();
+          _basketRevision++;
+          _lastPaymentIntentId = null;
+          _createOrderStatus = Status.failure(
+            'This listing has changed or is unavailable. Return to the listing to review it before buying.',
+          );
+          notifyListeners();
+          return false;
+        }
+      }
+      return true;
+    } catch (_) {
+      if (revision == _basketRevision) {
+        _createOrderStatus = Status.failure('Could not check this listing. Please try again.');
+        notifyListeners();
+      } else {
+        _cancelFreshnessCheck(attempt);
+      }
+      return false;
+    }
+  }
+
+  void _cancelFreshnessCheck(int attempt) {
+    if (attempt == _paymentAttempt && _createOrderStatus.type == StatusType.loading) {
+      _createOrderStatus = Status.failure('Your basket changed. Please review it before paying.');
+      notifyListeners();
     }
   }
 

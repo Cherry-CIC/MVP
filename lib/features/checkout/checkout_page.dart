@@ -62,7 +62,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
 
   @override
   Widget build(BuildContext context) {
-    final basket = context.read<CheckoutViewModel>();
+    final basket = context.watch<CheckoutViewModel>();
 
     return PopScope(
       canPop: true,
@@ -82,7 +82,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 final product = basket.basketItems[index];
                 return BasketListItem(
                   product: product,
-                  onRemove: () => basket.removeItem(product),
+                  onRemove: basket.createOrderStatus.type == StatusType.loading
+                      ? null
+                      : () => basket.removeItem(product),
                 );
               },
             ),

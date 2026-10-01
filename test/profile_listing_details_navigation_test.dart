@@ -324,7 +324,9 @@ void main() {
     );
     final harness = await _pumpProfile(
       tester,
-      repository: _ProductRepositoryStub((_) => pending.future),
+      repository: _ProductRepositoryStub(
+        (id) => id == laterProduct.id ? Future.value(Result.success(laterProduct)) : pending.future,
+      ),
     );
 
     await tester.tap(find.widgetWithText(SellerListingCard, 'First listing'));
