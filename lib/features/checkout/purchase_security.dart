@@ -9,7 +9,6 @@ class PurchaseSecurity extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.white,
       appBar: AppBar(leading: const CloseButton()),
       body: Container(
         padding: EdgeInsets.all(15),
@@ -40,7 +39,7 @@ class PurchaseSecurity extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 11,
                         decoration: TextDecoration.underline,
-                        color: AppColors.grey,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                     ),
                   ),
