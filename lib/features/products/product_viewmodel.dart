@@ -245,8 +245,10 @@ class ProductViewModel extends ChangeNotifier {
     } catch (_) {
       return Result.failure('Please try again.');
     } finally {
-      _pendingSafetyActions.remove(key);
-      notifyListeners();
+      if (isAccountStateCurrent(accountStateVersion)) {
+        _pendingSafetyActions.remove(key);
+        notifyListeners();
+      }
     }
   }
 
