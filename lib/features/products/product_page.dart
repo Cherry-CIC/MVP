@@ -14,6 +14,7 @@ import 'package:cherry_mvp/features/checkout/checkout_view_model.dart';
 import 'package:cherry_mvp/features/products/product_viewmodel.dart';
 import 'package:cherry_mvp/features/products/widgets/product_highlight_title.dart';
 import 'package:cherry_mvp/features/products/widgets/product_information.dart';
+import 'package:cherry_mvp/features/products/widgets/product_safety_actions.dart';
 import 'package:cherry_mvp/features/products/widgets/seller_information.dart';
 import 'package:cherry_mvp/features/products/widgets/product_header_carousel.dart';
 import 'package:cherry_mvp/features/profile/public_user_profile_repository.dart';
@@ -122,6 +123,7 @@ class _ProductPageState extends State<ProductPage> {
         FeatureFlags.showDonorDiscounts || (!isOwnListing && FeatureFlags.showOtherCharityRequests);
     final sellerId = NavigationProvider.publicProfileUserId(product.userId);
     final sellerLoad = _sellerFuture(context, sellerId);
+    final canUseSafetyActions = !isOwnListing && sellerId != null && sellerId.isNotEmpty;
 
     return Scaffold(
       bottomNavigationBar: isOwnListing
@@ -142,7 +144,17 @@ class _ProductPageState extends State<ProductPage> {
             ),
       body: CustomScrollView(
         slivers: [
-          ProductHeaderCarousel(product, canLike: !isOwnListing),
+          ProductHeaderCarousel(
+            product,
+            canLike: !isOwnListing,
+            showSafetyActions: canUseSafetyActions,
+            onSafetyActionSelected: (action) => _handleSafetyAction(
+              context,
+              action,
+              product,
+              sellerId!,
+            ),
+          ),
           SliverList.list(
             children: [
               FutureBuilder<PublicUser?>(
@@ -279,5 +291,90 @@ class _ProductPageState extends State<ProductPage> {
     } catch (_) {
       return null;
     }
+  }
+
+  Future<void> _handleSafetyAction(
+    BuildContext context,
+    ProductSafetyMenuAction action,
+    Product product,
+    String sellerId,
+  ) async {
+    switch (action) {
+      case ProductSafetyMenuAction.reportProduct:
+        await _submitReport(
+          context,
+          title: AppStrings.productPageReportProductTitle,
+          submit: (viewModel, draft) => viewModel.reportProduct(
+            product,
+            reason: draft.reason,
+            message: draft.message,
+          ),
+        );
+        break;
+      case ProductSafetyMenuAction.reportSeller:
+        await _submitReport(
+          context,
+          title: AppStrings.productPageReportSellerTitle,
+          submit: (viewModel, draft) => viewModel.reportSeller(
+            sellerId,
+            reason: draft.reason,
+            message: draft.message,
+          ),
+        );
+        break;
+      case ProductSafetyMenuAction.blockSeller:
+        await _blockSeller(context, sellerId);
+        break;
+    }
+  }
+
+  Future<void> _submitReport(
+    BuildContext context, {
+    required String title,
+    required Future<Result<void>> Function(
+      ProductViewModel viewModel,
+      ReportDraft draft,
+    )
+    submit,
+  }) async {
+    final draft = await showReportProductSheet(context, title: title);
+    if (draft == null || !context.mounted) {
+      return;
+    }
+
+    final result = await submit(context.read<ProductViewModel>(), draft);
+    if (!context.mounted) {
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          result.isSuccess ? AppStrings.productPageReportSubmitted : result.error ?? AppStrings.productPageReportFailed,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _blockSeller(BuildContext context, String sellerId) async {
+    final confirmed = await showBlockSellerDialog(context);
+    if (!confirmed || !context.mounted) {
+      return;
+    }
+
+    final result = await context.read<ProductViewModel>().blockSeller(sellerId);
+    if (!context.mounted) {
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          result.isSuccess
+              ? AppStrings.productPageBlockSellerSuccess
+              : result.error ?? AppStrings.productPageBlockSellerFailed,
+        ),
+      ),
+    );
   }
 }

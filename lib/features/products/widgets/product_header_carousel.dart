@@ -4,20 +4,33 @@ import 'package:cherry_mvp/core/utils/image_provider_helper.dart';
 import 'package:cherry_mvp/core/config/app_images.dart';
 import 'package:cherry_mvp/core/config/app_colors.dart';
 import 'package:cherry_mvp/features/products/product_viewmodel.dart';
+import 'package:cherry_mvp/features/products/widgets/product_safety_actions.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 class ProductHeaderCarousel extends StatelessWidget {
   final Product product;
   final bool canLike;
-  const ProductHeaderCarousel(this.product, {super.key, this.canLike = true});
+  final bool showSafetyActions;
+  final ValueChanged<ProductSafetyMenuAction>? onSafetyActionSelected;
+
+  const ProductHeaderCarousel(
+    this.product, {
+    super.key,
+    this.canLike = true,
+    this.showSafetyActions = false,
+    this.onSafetyActionSelected,
+  });
 
   @override
   Widget build(BuildContext context) {
     return SliverAppBar(
       leading: const BackButton(color: Colors.white),
-      expandedHeight: MediaQuery.of(context).size.width -
-          MediaQuery.of(context).padding.top,
+      actions: [
+        if (showSafetyActions && onSafetyActionSelected != null)
+          ProductSafetyActionsButton(onSelected: onSafetyActionSelected!),
+      ],
+      expandedHeight: MediaQuery.of(context).size.width - MediaQuery.of(context).padding.top,
       flexibleSpace: FlexibleSpaceBar(
         background: ClipRRect(
           borderRadius: const BorderRadius.only(
@@ -28,9 +41,7 @@ class ProductHeaderCarousel extends StatelessWidget {
             children: [
               Positioned.fill(
                 child: ImageCarousel(
-                  images: product.productImages
-                      .map((path) => ImageProviderHelper.getImageProvider(path))
-                      .toList(),
+                  images: product.productImages.map((path) => ImageProviderHelper.getImageProvider(path)).toList(),
                 ),
               ),
               PositionedDirectional(
@@ -51,8 +62,7 @@ class ProductHeaderCarousel extends StatelessWidget {
                         elevation: 4,
                         borderRadius: BorderRadius.circular(16),
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 14, vertical: 10),
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -72,15 +82,10 @@ class ProductHeaderCarousel extends StatelessWidget {
                               const SizedBox(width: 8),
                               Text(
                                 count.toString(),
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .titleMedium
-                                    ?.copyWith(
-                                      color: isLiked
-                                          ? Colors.red
-                                          : AppColors.grey,
-                                      fontWeight: FontWeight.bold,
-                                    ),
+                                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  color: isLiked ? Colors.red : AppColors.grey,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ],
                           ),
