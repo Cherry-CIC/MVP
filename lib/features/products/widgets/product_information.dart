@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:cherry_mvp/core/config/app_colors.dart';
 import 'package:cherry_mvp/core/config/app_images.dart';
+import 'package:cherry_mvp/core/config/feature_flags.dart';
 import 'package:cherry_mvp/core/models/model.dart';
 import 'package:cherry_mvp/features/products/product_viewmodel.dart';
 
@@ -62,11 +62,18 @@ class ProductInformation extends StatelessWidget {
                       style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
                     ),
                     const SizedBox(width: 16),
-                    Text(product.quality, style: const TextStyle(color: AppColors.green)),
-                    Icon(
-                      Icons.workspace_premium,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    Text(
+                      product.quality,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurface,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
+                    if (FeatureFlags.showProductBadge)
+                      Icon(
+                        Icons.workspace_premium,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                   ],
                 ),
               ),
