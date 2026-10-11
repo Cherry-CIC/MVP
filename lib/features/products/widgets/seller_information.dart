@@ -47,7 +47,7 @@ class SellerInformation extends StatelessWidget {
                     spacing: 8,
                     children: [
                       CircleAvatar(
-                        radius: 28,
+                        radius: 24,
                         backgroundImage: AssetImage(AppImages.icProfile),
                         foregroundImage: profileImage,
                         onForegroundImageError: profileImage == null ? null : (_, _) {},
@@ -62,7 +62,7 @@ class SellerInformation extends StatelessWidget {
                                 user.username,
                                 style: const TextStyle(
                                   height: 1,
-                                  fontSize: 16,
+                                  fontSize: 18,
                                   fontFamily: 'Raleway',
                                   fontWeight: FontWeight.w800,
                                 ),
