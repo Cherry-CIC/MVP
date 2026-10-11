@@ -60,7 +60,12 @@ class SellerInformation extends StatelessWidget {
                             ExcludeSemantics(
                               child: Text(
                                 user.username,
-                                style: const TextStyle(height: 1, fontSize: 14),
+                                style: const TextStyle(
+                                  height: 1,
+                                  fontSize: 14,
+                                  fontFamily: 'Raleway',
+                                  fontWeight: FontWeight.w800,
+                                ),
                               ),
                             ),
                             if (FeatureFlags.showRatings)
