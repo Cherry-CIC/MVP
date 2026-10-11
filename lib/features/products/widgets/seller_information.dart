@@ -105,7 +105,7 @@ class SellerInformation extends StatelessWidget {
                   ),
                 ],
               ),
-              child: SizedBox(width: 42, height: 42, child: charity),
+              child: SizedBox(width: 56, height: 56, child: charity),
             ),
           if (FeatureFlags.showAskSeller && showAskSeller)
             Expanded(
