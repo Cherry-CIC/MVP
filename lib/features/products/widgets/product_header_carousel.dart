@@ -25,10 +25,22 @@ class ProductHeaderCarousel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SliverAppBar(
-      leading: const BackButton(color: Colors.white),
+      leading: const Padding(
+        padding: EdgeInsetsDirectional.only(start: 8),
+        child: _HeaderIconSurface(
+          child: BackButton(color: Colors.white),
+        ),
+      ),
       actions: [
         if (showSafetyActions && onSafetyActionSelected != null)
-          ProductSafetyActionsButton(onSelected: onSafetyActionSelected!),
+          Padding(
+            padding: const EdgeInsetsDirectional.only(end: 8),
+            child: _HeaderIconSurface(
+              child: ProductSafetyActionsButton(
+                onSelected: onSafetyActionSelected!,
+              ),
+            ),
+          ),
       ],
       expandedHeight: MediaQuery.of(context).size.width - MediaQuery.of(context).padding.top,
       flexibleSpace: FlexibleSpaceBar(
@@ -96,6 +108,30 @@ class ProductHeaderCarousel extends StatelessWidget {
                 ),
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _HeaderIconSurface extends StatelessWidget {
+  const _HeaderIconSurface({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Material(
+        color: Colors.black.withValues(alpha: 0.32),
+        shape: const CircleBorder(),
+        clipBehavior: Clip.antiAlias,
+        child: SizedBox.square(
+          dimension: 38,
+          child: IconTheme.merge(
+            data: const IconThemeData(color: Colors.white),
+            child: child,
           ),
         ),
       ),

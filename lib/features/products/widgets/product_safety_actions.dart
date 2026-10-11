@@ -21,15 +21,17 @@ class ProductSafetyActionsButton extends StatelessWidget {
   const ProductSafetyActionsButton({
     super.key,
     required this.onSelected,
+    this.iconColor = Colors.white,
   });
 
   final ValueChanged<ProductSafetyMenuAction> onSelected;
+  final Color iconColor;
 
   @override
   Widget build(BuildContext context) {
     return PopupMenuButton<ProductSafetyMenuAction>(
       tooltip: AppStrings.productPageMoreActions,
-      icon: const Icon(Icons.more_vert, color: Colors.white),
+      icon: Icon(Icons.more_vert, color: iconColor),
       onSelected: onSelected,
       itemBuilder: (context) => const [
         PopupMenuItem(
