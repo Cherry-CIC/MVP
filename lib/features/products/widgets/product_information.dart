@@ -20,7 +20,13 @@ class ProductInformation extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         spacing: 4,
         children: [
-          Text(product.name),
+          Text(
+            product.name,
+            style: const TextStyle(
+              fontFamily: 'Raleway',
+              fontWeight: FontWeight.w800,
+            ),
+          ),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -34,14 +40,22 @@ class ProductInformation extends StatelessWidget {
                     children: [
                       Text(
                         '£${product.donation.toStringAsFixed(2)}',
-                        style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                        style: TextStyle(
+                          fontFamily: 'Raleway',
+                          fontWeight: FontWeight.w800,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
                       ),
                       Row(
                         spacing: 4,
                         children: [
                           Text(
                             '£${product.price.toStringAsFixed(2)}',
-                            style: TextStyle(color: Theme.of(context).colorScheme.primary),
+                            style: TextStyle(
+                              fontFamily: 'Raleway',
+                              fontWeight: FontWeight.w800,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
                           ),
                           Image.asset(AppImages.shieldTick, width: 16, height: 16),
                         ],
