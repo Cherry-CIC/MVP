@@ -66,6 +66,9 @@ class ProductInformation extends StatelessWidget {
                     Text(
                       product.quality,
                       style: TextStyle(
+                        // Select the bundled extra-bold face rather than inheriting
+                        // a Google Fonts family tied to the regular variant.
+                        fontFamily: 'Raleway',
                         color: Theme.of(context).brightness == Brightness.dark
                             ? AppColors.green
                             : const Color(0xFF287A20),
