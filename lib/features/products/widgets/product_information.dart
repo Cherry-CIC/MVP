@@ -69,7 +69,7 @@ class ProductInformation extends StatelessWidget {
                         color: Theme.of(context).brightness == Brightness.dark
                             ? AppColors.green
                             : const Color(0xFF287A20),
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w800,
                       ),
                     ),
                     if (FeatureFlags.showProductBadge)
