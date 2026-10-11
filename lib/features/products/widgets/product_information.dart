@@ -60,7 +60,11 @@ class ProductInformation extends StatelessWidget {
                   children: [
                     Text(
                       product.size,
-                      style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                      style: TextStyle(
+                        fontFamily: 'Raleway',
+                        fontWeight: FontWeight.w800,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                     ),
                     const SizedBox(width: 16),
                     Text(
