@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:cherry_mvp/core/config/app_colors.dart';
 import 'package:cherry_mvp/core/config/app_images.dart';
 import 'package:cherry_mvp/core/config/feature_flags.dart';
 import 'package:cherry_mvp/core/models/model.dart';
@@ -65,8 +66,10 @@ class ProductInformation extends StatelessWidget {
                     Text(
                       product.quality,
                       style: TextStyle(
-                        color: Theme.of(context).colorScheme.onSurface,
-                        fontWeight: FontWeight.w600,
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? AppColors.green
+                            : const Color(0xFF287A20),
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                     if (FeatureFlags.showProductBadge)
