@@ -124,7 +124,7 @@ class _HeaderIconSurface extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Material(
-        color: Colors.black.withValues(alpha: 0.32),
+        color: Colors.black.withValues(alpha: 0.22),
         shape: const CircleBorder(),
         clipBehavior: Clip.antiAlias,
         child: SizedBox.square(
