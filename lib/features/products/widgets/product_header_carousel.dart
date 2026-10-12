@@ -22,11 +22,9 @@ class ProductHeaderCarousel extends StatelessWidget {
         child: BackButton(
           color: AppColors.red,
           style: IconButton.styleFrom(
-            backgroundColor: Colors.white,
+            backgroundColor: Colors.transparent,
             iconSize: 28,
             fixedSize: const Size.square(56),
-            shape: const CircleBorder(),
-            side: const BorderSide(color: AppColors.red, width: 2),
           ),
         ),
       ),
