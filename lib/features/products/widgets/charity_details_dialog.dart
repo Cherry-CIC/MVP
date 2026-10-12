@@ -1,5 +1,6 @@
 import 'package:cherry_mvp/core/utils/image_provider_helper.dart';
 import 'package:cherry_mvp/features/charity_page/charity_model.dart';
+import 'package:cherry_mvp/features/discover/discover_repository.dart';
 import 'package:flutter/material.dart';
 
 class CharityDetailsDialog extends StatelessWidget {
@@ -9,7 +10,10 @@ class CharityDetailsDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final description = charity.description?.trim();
+    final suppliedDescription = charity.description?.trim();
+    final description = suppliedDescription != null && suppliedDescription.isNotEmpty
+        ? suppliedDescription
+        : DiscoverRepository().descriptionForCharityName(charity.name);
     return Dialog(
       constraints: const BoxConstraints(maxWidth: 560),
       child: Padding(

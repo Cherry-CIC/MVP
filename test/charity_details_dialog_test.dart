@@ -2,14 +2,19 @@ import 'package:cherry_mvp/core/config/app_images.dart';
 import 'package:cherry_mvp/core/config/app_theme.dart';
 import 'package:cherry_mvp/core/models/user_section.dart';
 import 'package:cherry_mvp/features/charity_page/charity_model.dart';
+import 'package:cherry_mvp/features/discover/discover_repository.dart';
 import 'package:cherry_mvp/features/products/widgets/charity_details_dialog.dart';
 import 'package:cherry_mvp/features/products/widgets/seller_information.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-Charity charity({String? description = 'Supporting local people.', String image = AppImages.mind}) => Charity(
+Charity charity({
+  String name = 'Example charity',
+  String? description = 'Supporting local people.',
+  String image = AppImages.mind,
+}) => Charity(
   id: 'charity-1',
-  name: 'Example charity',
+  name: name,
   imageUrl: image,
   description: description,
   createdAt: DateTime(2024),
@@ -17,6 +22,26 @@ Charity charity({String? description = 'Supporting local people.', String image 
 );
 
 void main() {
+  for (final description in [null, '  ', 'Description from the charity record.']) {
+    testWidgets('uses Discovery only when the record description is absent: $description', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: CharityDetailsDialog(
+              charity: charity(name: ' British  Red Cross ', description: description),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final expected = description == null || description.trim().isEmpty
+          ? DiscoverRepository().descriptionForCharityName('British Red Cross')!
+          : description;
+      expect(find.text(expected), findsOneWidget);
+      expect(find.text('A description is not available for this charity yet.'), findsNothing);
+    });
+  }
+
   testWidgets('charity opens details independently of seller and closes with icon', (tester) async {
     var sellerTaps = 0;
     final semantics = tester.ensureSemantics();
