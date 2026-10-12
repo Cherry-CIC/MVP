@@ -20,6 +20,11 @@ class ProductInformation extends StatelessWidget {
       fontWeight: FontWeight.w800,
       fontSize: 18,
     );
+    const priceStyle = TextStyle(
+      fontFamily: 'InstrumentSansPricing',
+      fontWeight: FontWeight.w700,
+      fontSize: 18,
+    );
 
     return Padding(
       padding: padding ?? const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -41,7 +46,7 @@ class ProductInformation extends StatelessWidget {
                   children: [
                     Text(
                       '£${product.donation.toStringAsFixed(2)}',
-                      style: detailStyle.copyWith(color: colours.onSurfaceVariant),
+                      style: priceStyle.copyWith(color: colours.onSurfaceVariant),
                     ),
                     Wrap(
                       crossAxisAlignment: WrapCrossAlignment.center,
@@ -50,7 +55,7 @@ class ProductInformation extends StatelessWidget {
                       children: [
                         Text(
                           '£${product.price.toStringAsFixed(2)}',
-                          style: detailStyle.copyWith(color: colours.primary),
+                          style: priceStyle.copyWith(color: colours.primary),
                         ),
                         Image.asset(AppImages.shieldTick, width: 20, height: 20),
                       ],

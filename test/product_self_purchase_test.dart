@@ -51,6 +51,9 @@ void main() {
         final fontLoader = FontLoader('Raleway')
           ..addFont(rootBundle.load('assets/fonts/Raleway-ExtraBold.ttf'));
         await fontLoader.load();
+        final priceFontLoader = FontLoader('InstrumentSansPricing')
+          ..addFont(rootBundle.load('assets/fonts/InstrumentSans-Bold.ttf'));
+        await priceFontLoader.load();
         tester.view.physicalSize = Size(width, 1600);
         tester.view.devicePixelRatio = 1;
         addTearDown(tester.view.resetPhysicalSize);
