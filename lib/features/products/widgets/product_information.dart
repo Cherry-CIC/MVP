@@ -14,93 +14,61 @@ class ProductInformation extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colours = Theme.of(context).colorScheme;
+    const detailStyle = TextStyle(
+      fontFamily: 'Raleway',
+      fontWeight: FontWeight.w800,
+      fontSize: 18,
+    );
+
     return Padding(
-      padding: padding ?? const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      padding: padding ?? const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        spacing: 4,
+        spacing: 8,
         children: [
-          Text(
-            product.name,
-            style: const TextStyle(
-              fontFamily: 'Raleway',
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          Text(product.name, style: detailStyle.copyWith(fontSize: 20)),
+          Wrap(
+            spacing: 24,
+            runSpacing: 12,
             children: [
-              Expanded(
-                child: GestureDetector(
-                  onTap: context.read<ProductViewModel>().showPurchaseSecurity,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    spacing: 2,
-                    children: [
-                      Text(
-                        '£${product.donation.toStringAsFixed(2)}',
-                        style: TextStyle(
-                          fontFamily: 'Raleway',
-                          fontWeight: FontWeight.w800,
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                      Row(
-                        spacing: 4,
-                        children: [
-                          Text(
-                            '£${product.price.toStringAsFixed(2)}',
-                            style: TextStyle(
-                              fontFamily: 'Raleway',
-                              fontWeight: FontWeight.w800,
-                              color: Theme.of(context).colorScheme.primary,
-                            ),
-                          ),
-                          Image.asset(AppImages.shieldTick, width: 16, height: 16),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                flex: 2,
-                child: Wrap(
-                  crossAxisAlignment: WrapCrossAlignment.center,
+              GestureDetector(
+                onTap: context.read<ProductViewModel>().showPurchaseSecurity,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   spacing: 4,
-                  runSpacing: 2,
                   children: [
                     Text(
-                      product.size,
-                      style: TextStyle(
-                        fontFamily: 'Raleway',
-                        fontWeight: FontWeight.w800,
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
+                      '£${product.donation.toStringAsFixed(2)}',
+                      style: detailStyle.copyWith(color: colours.onSurfaceVariant),
                     ),
-                    const SizedBox(width: 16),
-                    Text(
-                      product.quality,
-                      style: TextStyle(
-                        // Select the bundled extra-bold face rather than inheriting
-                        // a Google Fonts family tied to the regular variant.
-                        fontFamily: 'Raleway',
-                        color: Theme.of(context).brightness == Brightness.dark
-                            ? AppColors.green
-                            : const Color(0xFF287A20),
-                        fontWeight: FontWeight.w800,
-                      ),
+                    Wrap(
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: 4,
+                      runSpacing: 4,
+                      children: [
+                        Text(
+                          '£${product.price.toStringAsFixed(2)}',
+                          style: detailStyle.copyWith(color: colours.primary),
+                        ),
+                        Image.asset(AppImages.shieldTick, width: 20, height: 20),
+                      ],
                     ),
-                    if (FeatureFlags.showProductBadge)
-                      Icon(
-                        Icons.workspace_premium,
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
                   ],
                 ),
               ),
+              Text(
+                product.size,
+                style: detailStyle.copyWith(color: colours.onSurfaceVariant),
+              ),
+              Text(
+                product.quality,
+                style: detailStyle.copyWith(
+                  color: Theme.of(context).brightness == Brightness.dark ? AppColors.green : const Color(0xFF287A20),
+                ),
+              ),
+              if (FeatureFlags.showProductBadge) Icon(Icons.workspace_premium, color: colours.onSurfaceVariant),
             ],
           ),
         ],
