@@ -347,8 +347,7 @@ class AppStrings {
   static const refundPolicyBodyTextBold = "2 days to submit your claim";
   static const refundPolicyBodyTextEnd =
       " from when you're notified that an item was delivered, even if the item never arrived.";
-  static const refundPolicyReturns =
-      "Buyers cover the cost of returning an item unless agreed otherwise. Learn more in our ";
+  static const refundPolicyReturns = "Learn more in our ";
   static const refundPolicyLinkText = "Refund Policy";
 
   // Secure Transactions
