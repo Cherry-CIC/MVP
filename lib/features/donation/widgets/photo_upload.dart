@@ -485,7 +485,7 @@ class _PhotoUploadState extends State<PhotoUpload> {
 
   Widget _buildEmptyState() {
     return Material(
-      color: AppColors.pinkBackground,
+      color: AppColors.pinkBg(context),
       borderRadius: BorderRadius.circular(20),
       child: InkWell(
         onTap: _pickProductImage,

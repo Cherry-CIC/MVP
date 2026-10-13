@@ -72,7 +72,7 @@ class DiscoverCharityCardState extends State<DiscoverCharityCard> {
                     color: Theme.of(context).colorScheme.surfaceContainerHighest,
                     boxShadow: [
                       BoxShadow(
-                        color: Theme.of(context).colorScheme.onSurface,
+                        color: Colors.black.withValues(alpha: 0.15),
                         blurRadius: 4,
                         offset: Offset(0, 2),
                       ),
