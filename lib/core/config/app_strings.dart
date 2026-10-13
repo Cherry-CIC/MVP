@@ -338,7 +338,7 @@ class AppStrings {
   static const purchaseSecurityButtonText = "Got it";
 
   // Refund Policy
-  static const refundPolicyHeading = "Refund policy";
+  static const refundPolicyHeading = "Refund Policy";
   static const refundPolicyConditionsHeading = "You can receive a refund if your order:";
   static const refundPolicyConditionOne = "was never shipped or is lost";
   static const refundPolicyConditionTwo = "arrives damaged";
@@ -352,7 +352,7 @@ class AppStrings {
   static const refundPolicyLinkText = "Refund Policy";
 
   // Secure Transactions
-  static const secureTransactionsHeading = "Secure transactions";
+  static const secureTransactionsHeading = "Secure Transactions";
   static const secureTransactionsBodyOne =
       "Your money is held securely throughout the entire transaction. "
       "We won’t release the funds to the charity until you receive and confirm (‘OK’) your order. "
@@ -365,7 +365,7 @@ class AppStrings {
   static const yourSupportHeading = "Your Support";
   static const yourSupportBody =
       "Reach out to our support at any time with any issues, disputes questions, guidance or anything else- they’re here to help!";
-  static const supportMissionHeading = "Support our mission";
+  static const supportMissionHeading = "Support Our Mission";
   static const supportMissionBoldTextSpan = "cherry is a nonprofit CIC (Community Interest Company) limited by guarantee, ";
   static const supportMissionNormalTextSpan = "NOT by shares.";
   static const supportMissionPlainText = "Meaning ";

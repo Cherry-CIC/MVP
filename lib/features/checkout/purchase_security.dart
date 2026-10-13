@@ -61,7 +61,7 @@ class PurchaseSecurity extends StatelessWidget {
                             Text(
                               AppStrings.refundPolicyHeading,
                               style: TextStyle(
-                                fontSize: 13,
+                                fontSize: 14,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -136,7 +136,7 @@ class PurchaseSecurity extends StatelessWidget {
                             Text(
                               AppStrings.secureTransactionsHeading,
                               style: TextStyle(
-                                fontSize: 13,
+                                fontSize: 14,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -166,7 +166,7 @@ class PurchaseSecurity extends StatelessWidget {
                             Text(
                               AppStrings.yourSupportHeading,
                               style: TextStyle(
-                                fontSize: 13,
+                                fontSize: 14,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -194,7 +194,7 @@ class PurchaseSecurity extends StatelessWidget {
                             Text(
                               AppStrings.supportMissionHeading,
                               style: TextStyle(
-                                fontSize: 13,
+                                fontSize: 14,
                                 fontWeight: FontWeight.bold,
                                 color: AppColors.red,
                               ),
