@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:cherry_mvp/core/config/feature_flags.dart';
 import 'package:cherry_mvp/core/models/product.dart';
@@ -8,6 +9,7 @@ import 'package:cherry_mvp/core/services/network/api_service.dart';
 import 'package:cherry_mvp/core/utils/result.dart';
 import 'package:cherry_mvp/features/products/edit_listing/edit_listing_draft.dart';
 import 'package:cherry_mvp/features/products/edit_listing/edit_listing_repository.dart';
+import 'package:cherry_mvp/features/products/edit_listing/listing_photo_format.dart';
 import 'package:cherry_mvp/features/products/product_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:image_picker/image_picker.dart';
@@ -59,13 +61,28 @@ class _Storage implements StorageProvider {
   final List<String> events;
   final List<String> paths = [];
   final List<String> files = [];
+  final List<String> contentTypes = [];
+  final List<Map<String, String>> metadata = [];
   Future<Result<String>> Function()? onUpload;
 
+  // The editor must never use the plain upload: it carries no metadata, so the
+  // backend's Storage rules and photo validation reject what it produces.
   @override
-  Future<Result<String>> uploadImage(File imageFile, String storagePath) async {
+  Future<Result<String>> uploadImage(File imageFile, String storagePath) =>
+      throw StateError('Listing photos must use uploadImageWithMetadata');
+
+  @override
+  Future<Result<String>> uploadImageWithMetadata(
+    File imageFile,
+    String storagePath, {
+    required String contentType,
+    required Map<String, String> customMetadata,
+  }) async {
     events.add('upload');
     paths.add(storagePath);
     files.add(imageFile.path);
+    contentTypes.add(contentType);
+    metadata.add(customMetadata);
     return onUpload != null ? onUpload!() : Result.success('https://example.com/new-photo.jpg');
   }
 
@@ -127,14 +144,32 @@ Product _product([Map<String, dynamic> changes = const {}]) => Product.fromJson(
 EditListingDraft _changed(Product original) =>
     EditListingDraft.fromProduct(original).copyWith(name: 'Green cotton shirt');
 
+// Leading bytes of real files. The repository inspects these, not file names.
+const _pngBytes = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0, 0, 0, 0];
+const _jpegBytes = [0xFF, 0xD8, 0xFF, 0xE0, 0, 0, 0, 0, 0, 0, 0, 0];
+const _webpBytes = [0x52, 0x49, 0x46, 0x46, 0, 0, 0, 0, 0x57, 0x45, 0x42, 0x50];
+const _heicBytes = [0, 0, 0, 0x18, 0x66, 0x74, 0x79, 0x70, 0x68, 0x65, 0x69, 0x63];
+
+Directory? _photoDir;
+
+/// Writes a real file, because the repository reads each new photo's header
+/// and size before uploading anything.
+XFile _photoFile(String name, List<int> bytes) {
+  final directory = _photoDir ??= Directory.systemTemp.createTempSync('listing_photos_');
+  final file = File('${directory.path}/$name')..writeAsBytesSync(bytes);
+  return XFile(file.path);
+}
+
 EditListingDraft _withNewPhoto(Product original) => _changed(original).copyWith(
   photos: [
     ListingPhoto.remote(original.productImages.first),
-    ListingPhoto.local(XFile('/tmp/new-photo.png')),
+    ListingPhoto.local(_photoFile('new-photo.png', _pngBytes)),
   ],
 );
 
 void main() {
+  tearDownAll(() => _photoDir?.deleteSync(recursive: true));
+
   group('EditListingRepository access checks', () {
     test('default-off build prevents reads, uploads and writes', () async {
       expect(FeatureFlags.enableListingEdit, isFalse);
@@ -221,7 +256,7 @@ void main() {
         quality: 'LIKE NEW',
         size: 'L',
         categoryId: 'tops',
-        photos: [ListingPhoto.local(XFile('/tmp/replacement.jpg'))],
+        photos: [ListingPhoto.local(_photoFile('replacement.jpg', _jpegBytes))],
       );
       harness.products.responses.addAll([
         Result.success(original),
@@ -281,8 +316,14 @@ void main() {
         original.productImages.single,
         'https://example.com/new-photo.jpg',
       ]);
-      expect(harness.storage.paths.single, matches(r'^products/seller-1/edit_[0-9a-f]{32}\.png$'));
-      expect(harness.storage.files, ['/tmp/new-photo.png']);
+      // The backend only accepts new photos directly under this folder, with
+      // the owner and policy metadata its Storage rules require.
+      expect(harness.storage.paths.single, matches(r'^listing-media-v1/seller-1/edit_[0-9a-f]{32}\.png$'));
+      expect(harness.storage.files.single, endsWith('new-photo.png'));
+      expect(harness.storage.contentTypes, ['image/png']);
+      expect(harness.storage.metadata, [
+        {'ownerUid': 'seller-1', 'mediaPolicy': 'listing-v1'},
+      ]);
     });
 
     test('upload failure leaves the original listing untouched', () async {
@@ -391,6 +432,107 @@ void main() {
         expect((await harness.repository.save(original, draft)).isSuccess, isFalse);
       }
       expect(harness.events, isEmpty);
+    });
+  });
+
+  group('EditListingRepository photos', () {
+    Future<EditListingSaveResult> saveWith(_Harness harness, Product original, List<ListingPhoto> photos) {
+      harness.products.responses.addAll([
+        Result.success(original),
+        Result.success(_product({'editVersion': 8})),
+      ]);
+      return harness.repository.save(original, _changed(original).copyWith(photos: photos));
+    }
+
+    test('identifies the real format instead of trusting the file name', () async {
+      final harness = _Harness(enabled: true);
+      final result = await saveWith(harness, _product(), [
+        ListingPhoto.local(_photoFile('actually-png.jpg', _pngBytes)),
+        ListingPhoto.local(_photoFile('actually-jpeg.png', _jpegBytes)),
+        ListingPhoto.local(_photoFile('actually-webp.jpeg', _webpBytes)),
+      ]);
+      expect(result.isSuccess, isTrue);
+      expect(harness.storage.contentTypes, ['image/png', 'image/jpeg', 'image/webp']);
+      expect(harness.storage.paths[0], endsWith('.png'));
+      expect(harness.storage.paths[1], endsWith('.jpg'));
+      expect(harness.storage.paths[2], endsWith('.webp'));
+    });
+
+    test('keeps photo order when new and existing photos are mixed', () async {
+      final harness = _Harness(enabled: true);
+      final original = _product();
+      var uploads = 0;
+      harness.storage.onUpload = () async => Result.success('https://example.com/new-${++uploads}.jpg');
+      final result = await saveWith(harness, original, [
+        ListingPhoto.local(_photoFile('first.png', _pngBytes)),
+        ListingPhoto.remote(original.productImages.first),
+        ListingPhoto.local(_photoFile('last.jpg', _jpegBytes)),
+      ]);
+      expect(result.isSuccess, isTrue);
+      expect(harness.api.writes.single['product_images'], [
+        'https://example.com/new-1.jpg',
+        original.productImages.first,
+        'https://example.com/new-2.jpg',
+      ]);
+      expect(harness.storage.contentTypes, ['image/png', 'image/jpeg']);
+    });
+
+    test('HEIC content is refused before any upload or write, whatever its name', () async {
+      final harness = _Harness(enabled: true);
+      final result = await saveWith(harness, _product(), [
+        ListingPhoto.local(_photoFile('IMG_0001.jpg', _heicBytes)),
+      ]);
+      expect(result.isSuccess, isFalse);
+      expect(result.writeAttempted, isFalse);
+      expect(result.error, contains('JPEG, PNG or WebP'));
+      expect(harness.events, ['get']);
+    });
+
+    test('one unusable photo stops every upload, so none are orphaned', () async {
+      final harness = _Harness(enabled: true);
+      final result = await saveWith(harness, _product(), [
+        ListingPhoto.local(_photoFile('good.png', _pngBytes)),
+        ListingPhoto.local(_photoFile('bad.heic', _heicBytes)),
+      ]);
+      expect(result.isSuccess, isFalse);
+      expect(harness.storage.paths, isEmpty);
+      expect(harness.events, ['get']);
+    });
+
+    test('a photo over 10 MB is refused before any upload', () async {
+      final harness = _Harness(enabled: true);
+      final bytes = Uint8List(maxListingPhotoBytes + 1)..setRange(0, 3, [0xFF, 0xD8, 0xFF]);
+      final result = await saveWith(harness, _product(), [ListingPhoto.local(_photoFile('huge.jpg', bytes))]);
+      expect(result.isSuccess, isFalse);
+      expect(result.error, contains('10 MB'));
+      expect(harness.events, ['get']);
+    });
+
+    test('a photo of exactly 10 MB is accepted', () async {
+      final harness = _Harness(enabled: true);
+      final bytes = Uint8List(maxListingPhotoBytes)..setRange(0, 3, [0xFF, 0xD8, 0xFF]);
+      final result = await saveWith(harness, _product(), [ListingPhoto.local(_photoFile('limit.jpg', bytes))]);
+      expect(result.isSuccess, isTrue);
+    });
+
+    test('an unreadable photo is refused before any upload', () async {
+      final harness = _Harness(enabled: true);
+      final missing = XFile('${Directory.systemTemp.path}/listing-photo-that-does-not-exist.jpg');
+      final result = await saveWith(harness, _product(), [ListingPhoto.local(missing)]);
+      expect(result.isSuccess, isFalse);
+      expect(result.error, contains('could not be read'));
+      expect(harness.events, ['get']);
+    });
+
+    test('more than ten photos is an invalid draft that never uploads', () async {
+      final harness = _Harness(enabled: true);
+      final original = _product();
+      final many = [for (var i = 0; i < 11; i++) ListingPhoto.local(XFile('photo-$i.jpg'))];
+      final tooMany = _changed(original).copyWith(photos: many);
+      expect(tooMany.validate(original), 'Use no more than 10 photos');
+      expect((await harness.repository.save(original, tooMany)).isSuccess, isFalse);
+      expect(harness.events, isEmpty);
+      expect(_changed(original).copyWith(photos: many.take(10).toList()).validate(original), isNull);
     });
   });
 }
