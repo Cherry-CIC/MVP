@@ -338,7 +338,7 @@ class AppStrings {
   static const purchaseSecurityButtonText = "Got it";
 
   // Refund Policy
-  static const refundPolicyHeading = "Refund policy";
+  static const refundPolicyHeading = "Refund Policy";
   static const refundPolicyConditionsHeading = "You can receive a refund if your order:";
   static const refundPolicyConditionOne = "was never shipped or is lost";
   static const refundPolicyConditionTwo = "arrives damaged";
@@ -347,16 +347,15 @@ class AppStrings {
   static const refundPolicyBodyTextBold = "2 days to submit your claim";
   static const refundPolicyBodyTextEnd =
       " from when you're notified that an item was delivered, even if the item never arrived.";
-  static const refundPolicyReturns =
-      "Buyers cover the cost of returning an item unless agreed otherwise. Learn more in our ";
+  static const refundPolicyReturns = "Learn more in our ";
   static const refundPolicyLinkText = "Refund Policy";
 
   // Secure Transactions
-  static const secureTransactionsHeading = "Secure transactions";
+  static const secureTransactionsHeading = "Secure Transactions";
   static const secureTransactionsBodyOne =
       "Your money is held securely throughout the entire transaction. "
       "We won’t release the funds to the charity until you receive and confirm (‘OK’) your order. "
-      "Failing this, all funds will be held securely in escrow for 7 days, then 100% of the funds will be released to the charity.";
+      "Failing this, all funds will be held securely for a short duration, then 100% of the funds will be released to the charity.";
   static const secureTransactionsBodyTwo =
       "Payments are encrypted by our payment partner, so your money is always sent and received safely.";
   static const secureTransactionsBodyThreeBold = "The seller will never see your payment details.";
@@ -365,8 +364,8 @@ class AppStrings {
   static const yourSupportHeading = "Your Support";
   static const yourSupportBody =
       "Reach out to our support at any time with any issues, disputes questions, guidance or anything else- they’re here to help!";
-  static const supportMissionHeading = "Support our mission";
-  static const supportMissionBoldTextSpan = "cherry is a CIC (Community Interest Company) limited by guarantee, ";
+  static const supportMissionHeading = "Support Our Mission";
+  static const supportMissionBoldTextSpan = "cherry is a nonprofit CIC (Community Interest Company) limited by guarantee, ";
   static const supportMissionNormalTextSpan = "NOT by shares.";
   static const supportMissionPlainText = "Meaning ";
   static const supportMissionPinkText = "we will NEVER work in the interests of profiteers.";

@@ -31,6 +31,7 @@ class DiscoverButton extends StatelessWidget {
               child: Row(
                 children: [
                   Expanded(
+                    flex: 3,
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -38,20 +39,30 @@ class DiscoverButton extends StatelessWidget {
                         Text(
                           AppStrings.exploreText,
                           style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                            fontFamily: 'InstrumentSansPricing',
+                            fontSize: 32,
+                            height: 1,
                             color: Theme.of(context).colorScheme.onPrimary,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
+                        const SizedBox(height: 6),
                         Text(
                           AppStrings.discoverSomethingText,
                           style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                            fontFamily: 'InstrumentSansPricing',
+                            fontWeight: FontWeight.w700,
+                            fontSize: 14,
+                            height: 1.2,
                             color: Theme.of(context).colorScheme.onPrimary,
                           ),
                         ),
                       ],
                     ),
                   ),
+                  const SizedBox(width: 12),
                   Expanded(
+                    flex: 2,
                     child: AspectRatio(
                       aspectRatio: 1,
                       child: Ink(

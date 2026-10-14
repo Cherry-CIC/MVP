@@ -170,9 +170,7 @@ class _ProductPageState extends State<ProductPage> {
                       awards: 0,
                       hasBuyerDiscounts: false,
                     ),
-                    charity: product.charity?.imageUrl != null
-                        ? Image.network(product.charity!.imageUrl)
-                        : SizedBox.shrink(),
+                    charityDetails: product.charity,
                     padding: const EdgeInsets.fromLTRB(16, 24, 16, 16),
                   );
                 },
