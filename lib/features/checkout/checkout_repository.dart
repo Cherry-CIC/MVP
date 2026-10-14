@@ -26,6 +26,8 @@ abstract class ICheckoutRepository {
     required String pickupPointId,
     required String country,
     required String postalCode,
+    required Map<String, dynamic> shipping,
+    required Map<String, dynamic> pickupPoint,
   });
   Future<Result> createOrder(Map<String, dynamic> order);
   Future<Result<UserCredentials>> fetchUserProfile();
@@ -165,6 +167,8 @@ final class CheckoutRepository implements ICheckoutRepository {
     required String pickupPointId,
     required String country,
     required String postalCode,
+    required Map<String, dynamic> shipping,
+    required Map<String, dynamic> pickupPoint,
   }) async {
     //  call backend API which returns client_secret
     var data = {
@@ -173,6 +177,8 @@ final class CheckoutRepository implements ICheckoutRepository {
       "pickupPointId": pickupPointId,
       "country": country,
       "postalCode": postalCode,
+      "shipping": shipping,
+      "pickupPoint": pickupPoint,
     };
 
     try {
