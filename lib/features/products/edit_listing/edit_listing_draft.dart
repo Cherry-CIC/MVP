@@ -3,6 +3,8 @@ import 'package:cherry_mvp/core/utils/validator.dart';
 import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
 
+import 'listing_photo_format.dart';
+
 class ListingPhoto {
   const ListingPhoto.remote(String url) : remoteUrl = url, file = null;
   const ListingPhoto.local(XFile image) : file = image, remoteUrl = null;
@@ -81,6 +83,7 @@ class EditListingDraft {
       return 'Choose a category';
     }
     if (photos.isEmpty) return 'Keep at least one photo';
+    if (photos.length > maxListingPhotos) return 'Use no more than $maxListingPhotos photos';
     for (final photo in photos) {
       if (photo.remoteUrl != null && !original.productImages.contains(photo.remoteUrl)) {
         return 'Reload this listing before changing its photos';

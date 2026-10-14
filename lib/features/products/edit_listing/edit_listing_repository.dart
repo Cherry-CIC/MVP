@@ -10,6 +10,7 @@ import 'package:cherry_mvp/core/utils/result.dart';
 import 'package:cherry_mvp/features/products/listing_details.dart';
 import 'package:cherry_mvp/features/products/product_repository.dart';
 import 'edit_listing_draft.dart';
+import 'listing_photo_format.dart';
 
 abstract class IEditListingRepository {
   bool canEdit(Product product);
@@ -100,8 +101,15 @@ class EditListingRepository implements IEditListingRepository {
         );
       }
 
+      // Inspect every new photo before uploading any, so one unusable photo
+      // cannot leave earlier ones orphaned in Storage.
+      final formats = <ListingPhotoFormat?>[];
+      final photoError = await _inspectNewPhotos(draft.photos, formats);
+      if (photoError != null) return EditListingSaveResult.failure(photoError);
+
       final imageUrls = <String>[];
-      for (final photo in draft.photos) {
+      for (var index = 0; index < draft.photos.length; index++) {
+        final photo = draft.photos[index];
         if (uid != _readUserId()) {
           return const EditListingSaveResult.failure('Your account changed. Reopen the listing.', requiresReload: true);
         }
@@ -109,11 +117,16 @@ class EditListingRepository implements IEditListingRepository {
           imageUrls.add(photo.remoteUrl!);
           continue;
         }
-        final image = photo.file!;
+        final format = formats[index]!;
         final nonce = List.generate(16, (_) => Random.secure().nextInt(256).toRadixString(16).padLeft(2, '0')).join();
-        final extension = image.name.split('.').last.toLowerCase();
-        final suffix = {'jpg', 'jpeg', 'png', 'webp', 'heic', 'heif'}.contains(extension) ? extension : 'jpg';
-        final uploaded = await _storage.uploadImage(File(image.path), 'products/$uid/edit_$nonce.$suffix');
+        // The backend only accepts new photos under its protected folder, with
+        // the owner and policy metadata that its Storage rules require.
+        final uploaded = await _storage.uploadImageWithMetadata(
+          File(photo.file!.path),
+          '$listingMediaFolder/$uid/edit_$nonce.${format.extension}',
+          contentType: format.contentType,
+          customMetadata: {'ownerUid': uid, 'mediaPolicy': listingMediaPolicy},
+        );
         if (!uploaded.isSuccess || uploaded.value == null) {
           return const EditListingSaveResult.failure(
             'A photo could not be uploaded. Your listing has not been changed.',
@@ -176,5 +189,39 @@ class EditListingRepository implements IEditListingRepository {
     }
     // Never delete media here, even after a successful save. Historical orders
     // or concurrent reads may still reference it. Retention is a backend task.
+  }
+
+  /// Reads the real format and size of each new photo, in the same order as
+  /// [photos]; already-uploaded photos get a null entry in [formats].
+  /// Returns a message for the first unusable photo, or null if all are fine.
+  Future<String?> _inspectNewPhotos(List<ListingPhoto> photos, List<ListingPhotoFormat?> formats) async {
+    for (final photo in photos) {
+      final image = photo.file;
+      if (image == null) {
+        formats.add(null);
+        continue;
+      }
+      try {
+        final file = File(image.path);
+        if (await file.length() > maxListingPhotoBytes) {
+          return 'Each photo must be no larger than 10 MB. Your listing has not been changed.';
+        }
+        final handle = await file.open();
+        final List<int> header;
+        try {
+          header = await handle.read(listingPhotoHeaderLength);
+        } finally {
+          await handle.close();
+        }
+        final format = detectListingPhotoFormat(header);
+        if (format == null) {
+          return 'Use JPEG, PNG or WebP photos. Your listing has not been changed.';
+        }
+        formats.add(format);
+      } on FileSystemException {
+        return 'A photo could not be read. Your listing has not been changed.';
+      }
+    }
+    return null;
   }
 }
