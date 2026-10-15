@@ -14,9 +14,20 @@ import 'package:cherry_mvp/features/checkout/models/payment_intent.dart';
 import 'package:cherry_mvp/features/checkout/payment_type.dart';
 import 'package:cherry_mvp/features/donation/donation_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter/services.dart';
 
 class _CheckoutRepository implements ICheckoutRepository {
   final intents = <Map<String, dynamic>>[];
+  final cancelledIntents = <String>[];
+  Future<Result<PaymentIntentResponse>> Function()? onIntent;
+  Result<void> cancelResult = Result.success(null);
+  Future<Result<void>> Function()? onCancel;
+
+  @override
+  Future<Result<void>> cancelPaymentIntent(String paymentIntentId) async {
+    cancelledIntents.add(paymentIntentId);
+    return onCancel != null ? onCancel!() : cancelResult;
+  }
 
   @override
   Future<Result<PaymentIntentResponse>> createPaymentIntent({
@@ -35,7 +46,8 @@ class _CheckoutRepository implements ICheckoutRepository {
       'postalCode': postalCode,
       'expectedEditVersion': expectedEditVersion,
     });
-    // Stop before native Stripe. These tests never initialise a payment sheet.
+    if (onIntent != null) return onIntent!();
+    // Default tests stop before native Stripe.
     return Result.failure('Intent creation stopped by the test repository');
   }
 
@@ -137,7 +149,20 @@ InpostShippingMethod _shipping([String id = 'shipping-1']) => InpostShippingMeth
   checkoutIdentifier: id,
 );
 
+PaymentIntentResponse _intent() => PaymentIntentResponse(
+  success: true,
+  message: 'Created',
+  data: PaymentIntentData(
+    paymentIntentId: 'pi_test_123',
+    paymentIntent: 'pi_test_123_secret_test',
+    ephemeralKey: '',
+    customer: '',
+    publishableKey: 'pk_test_example',
+  ),
+);
+
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
   group('Listing freshness before checkout', () {
     test('unchanged details pass without removing the reviewed basket item', () async {
       final harness = _Harness();
@@ -277,6 +302,180 @@ void main() {
         expect(harness.viewModel.createOrderStatus.type, isNot(StatusType.loading));
       });
     }
+  });
+
+  group('Abandoned payment reservations', () {
+    test('a late intent after checkout was closed is cancelled', () async {
+      final response = Completer<Result<PaymentIntentResponse>>();
+      final requested = Completer<void>();
+      final harness = _Harness();
+      addTearDown(harness.viewModel.dispose);
+      harness.repository.onIntent = () {
+        requested.complete();
+        return response.future;
+      };
+      harness.preparePayment();
+      final payment = harness.viewModel.payWithPaymentSheet();
+      await requested.future;
+      harness.viewModel.resetCheckout();
+      response.complete(Result.success(_intent()));
+      expect(await payment, isFalse);
+      expect(harness.repository.cancelledIntents, ['pi_test_123']);
+      expect(harness.viewModel.lastPaymentIntentId, isNull);
+    });
+
+    test('a delivery change while creating an intent cancels it', () async {
+      final harness = _Harness();
+      addTearDown(harness.viewModel.dispose);
+      harness.preparePayment();
+      harness.repository.onIntent = () async {
+        harness.viewModel.setSelectedInpost(_pickup('locker-2'));
+        return Result.success(_intent());
+      };
+      expect(await harness.viewModel.payWithPaymentSheet(), isFalse);
+      expect(harness.repository.cancelledIntents, ['pi_test_123']);
+      expect(harness.viewModel.createOrderStatus.type, StatusType.failure);
+    });
+
+    test('failed cancellation is retained and blocks another payment', () async {
+      final harness = _Harness();
+      addTearDown(harness.viewModel.dispose);
+      harness.preparePayment();
+      harness.repository.cancelResult = Result.failure('Offline');
+      harness.repository.onIntent = () async {
+        harness.viewModel.setSelectedInpost(_pickup('locker-2'));
+        return Result.success(_intent());
+      };
+      expect(await harness.viewModel.payWithPaymentSheet(), isFalse);
+      expect(await harness.viewModel.payWithPaymentSheet(), isFalse);
+      expect(harness.repository.intents, hasLength(1));
+      expect(harness.repository.cancelledIntents, ['pi_test_123', 'pi_test_123']);
+      expect(harness.viewModel.createOrderStatus.message, contains('cancelled'));
+      harness.repository.cancelResult = Result.success(null);
+      expect(await harness.viewModel.cancelPendingPayment(), isTrue);
+    });
+
+    test('checkout reset during cancellation cannot start a new payment', () async {
+      final harness = _Harness();
+      addTearDown(harness.viewModel.dispose);
+      harness.preparePayment();
+      harness.repository.cancelResult = Result.failure('Offline');
+      harness.repository.onIntent = () async {
+        harness.viewModel.setSelectedInpost(_pickup('locker-2'));
+        return Result.success(_intent());
+      };
+      expect(await harness.viewModel.payWithPaymentSheet(), isFalse);
+      final cancellation = Completer<Result<void>>();
+      final started = Completer<void>();
+      harness.repository.onCancel = () {
+        if (!started.isCompleted) started.complete();
+        return cancellation.future;
+      };
+      final retry = harness.viewModel.payWithPaymentSheet();
+      await started.future;
+      harness.viewModel.resetCheckout();
+      cancellation.complete(Result.success(null));
+      expect(await retry, isFalse);
+      expect(harness.repository.intents, hasLength(1));
+      expect(harness.viewModel.basketItems, isEmpty);
+    });
+
+    test('an account change never presents another user’s payment', () async {
+      final harness = _Harness();
+      addTearDown(harness.viewModel.dispose);
+      harness.preparePayment();
+      harness.repository.onIntent = () async {
+        harness.uid = 'buyer-2';
+        return Result.success(_intent());
+      };
+      expect(await harness.viewModel.payWithPaymentSheet(), isFalse);
+      expect(harness.repository.cancelledIntents, isEmpty);
+      expect(await harness.viewModel.cancelPendingPayment(), isFalse);
+      harness.uid = 'buyer-1';
+      expect(await harness.viewModel.cancelPendingPayment(), isTrue);
+      expect(harness.repository.cancelledIntents, ['pi_test_123']);
+    });
+
+    test('a Stripe setup failure requests backend cancellation', () async {
+      const channel = MethodChannel('flutter.stripe/payments', JSONMethodCodec());
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(channel, (call) async {
+        throw PlatformException(code: 'test_failure');
+      });
+      addTearDown(
+        () => TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(channel, null),
+      );
+      final harness = _Harness();
+      addTearDown(harness.viewModel.dispose);
+      harness.repository.onIntent = () async => Result.success(_intent());
+      harness.preparePayment();
+      expect(await harness.viewModel.payWithPaymentSheet(), isFalse);
+      expect(harness.repository.cancelledIntents, ['pi_test_123']);
+      expect(harness.viewModel.lastPaymentIntentId, isNull);
+    });
+
+    for (final cancelled in [true, false]) {
+      test('PaymentSheet ${cancelled ? 'dismissal cancels' : 'success retains'} the owned intent', () async {
+        const channel = MethodChannel('flutter.stripe/payments', JSONMethodCodec());
+        final calls = <String>[];
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(channel, (
+          call,
+        ) async {
+          calls.add(call.method);
+          if (call.method == 'presentPaymentSheet' && cancelled) {
+            return {
+              'error': {'code': 'Canceled', 'message': 'Cancelled'},
+            };
+          }
+          return <String, dynamic>{};
+        });
+        addTearDown(
+          () =>
+              TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(channel, null),
+        );
+        final harness = _Harness();
+        addTearDown(harness.viewModel.dispose);
+        harness.repository.onIntent = () async => Result.success(_intent());
+        harness.preparePayment();
+        expect(await harness.viewModel.payWithPaymentSheet(), !cancelled);
+        expect(calls, contains('presentPaymentSheet'));
+        expect(harness.repository.cancelledIntents, cancelled ? ['pi_test_123'] : isEmpty);
+        expect(harness.viewModel.lastPaymentIntentId, cancelled ? isNull : 'pi_test_123');
+        if (!cancelled) {
+          harness.viewModel.resetCreateOrderStatus();
+          expect(await harness.viewModel.payWithPaymentSheet(), isTrue);
+          expect(harness.repository.intents, hasLength(1));
+          expect(calls.where((call) => call == 'presentPaymentSheet'), hasLength(1));
+          harness.uid = 'buyer-2';
+          expect(await harness.viewModel.payWithPaymentSheet(), isFalse);
+          expect(harness.repository.intents, hasLength(1));
+        }
+      });
+    }
+
+    test('unversioned listings do not call the new cancellation endpoint', () async {
+      const channel = MethodChannel('flutter.stripe/payments', JSONMethodCodec());
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(channel, (call) async {
+        throw PlatformException(code: 'test_failure');
+      });
+      addTearDown(
+        () => TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(channel, null),
+      );
+      final product = _product({'editVersion': null});
+      final harness = _Harness()..loadResponse = () async => Result.success(product);
+      addTearDown(harness.viewModel.dispose);
+      harness.repository.onIntent = () async => Result.success(_intent());
+      harness.preparePayment(product);
+      expect(await harness.viewModel.payWithPaymentSheet(), isFalse);
+      expect(harness.repository.cancelledIntents, isEmpty);
+    });
+
+    test('cancellation calls the authenticated endpoint with only the intent ID', () async {
+      final api = _Api();
+      final result = await CheckoutRepository(api).cancelPaymentIntent('pi_test_123');
+      expect(api.endpoint, ApiEndpoints.cancelPaymentIntent);
+      expect(api.requests.single, {'paymentIntentId': 'pi_test_123'});
+      expect(result.isSuccess, isFalse);
+    });
   });
 
   group('CheckoutRepository reviewed version contract', () {

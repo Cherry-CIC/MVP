@@ -1,4 +1,5 @@
 import 'package:cherry_mvp/core/models/product.dart';
+import 'package:cherry_mvp/core/services/firebase_storage.dart';
 import 'package:cherry_mvp/core/utils/validator.dart';
 import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
@@ -81,6 +82,7 @@ class EditListingDraft {
       return 'Choose a category';
     }
     if (photos.isEmpty) return 'Keep at least one photo';
+    if (photos.length > StorageProvider.maxListingPhotos) return 'Use no more than 10 photos';
     for (final photo in photos) {
       if (photo.remoteUrl != null && !original.productImages.contains(photo.remoteUrl)) {
         return 'Reload this listing before changing its photos';

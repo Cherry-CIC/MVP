@@ -62,9 +62,9 @@ class _Storage implements StorageProvider {
   Future<Result<String>> Function()? onUpload;
 
   @override
-  Future<Result<String>> uploadImage(File imageFile, String storagePath) async {
+  Future<Result<String>> uploadListingImage(File imageFile, String ownerUid) async {
     events.add('upload');
-    paths.add(storagePath);
+    paths.add(ownerUid);
     files.add(imageFile.path);
     return onUpload != null ? onUpload!() : Result.success('https://example.com/new-photo.jpg');
   }
@@ -281,7 +281,7 @@ void main() {
         original.productImages.single,
         'https://example.com/new-photo.jpg',
       ]);
-      expect(harness.storage.paths.single, matches(r'^products/seller-1/edit_[0-9a-f]{32}\.png$'));
+      expect(harness.storage.paths.single, 'seller-1');
       expect(harness.storage.files, ['/tmp/new-photo.png']);
     });
 
@@ -385,6 +385,7 @@ void main() {
         EditListingDraft.fromProduct(original),
         _changed(original).copyWith(name: 'x'),
         _changed(original).copyWith(photos: []),
+        _changed(original).copyWith(photos: List.generate(11, (i) => ListingPhoto.local(XFile('/tmp/photo-$i.jpg')))),
         _changed(original).copyWith(photos: const [ListingPhoto.remote('https://other.com/injected.jpg')]),
       ];
       for (final draft in drafts) {

@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:math';
 
 import 'package:cherry_mvp/core/config/feature_flags.dart';
 import 'package:cherry_mvp/core/models/product.dart';
@@ -110,13 +109,10 @@ class EditListingRepository implements IEditListingRepository {
           continue;
         }
         final image = photo.file!;
-        final nonce = List.generate(16, (_) => Random.secure().nextInt(256).toRadixString(16).padLeft(2, '0')).join();
-        final extension = image.name.split('.').last.toLowerCase();
-        final suffix = {'jpg', 'jpeg', 'png', 'webp', 'heic', 'heif'}.contains(extension) ? extension : 'jpg';
-        final uploaded = await _storage.uploadImage(File(image.path), 'products/$uid/edit_$nonce.$suffix');
+        final uploaded = await _storage.uploadListingImage(File(image.path), uid);
         if (!uploaded.isSuccess || uploaded.value == null) {
-          return const EditListingSaveResult.failure(
-            'A photo could not be uploaded. Your listing has not been changed.',
+          return EditListingSaveResult.failure(
+            uploaded.error ?? 'A photo could not be uploaded. Your listing has not been changed.',
           );
         }
         imageUrls.add(uploaded.value!);

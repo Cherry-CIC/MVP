@@ -272,7 +272,7 @@ class _EditListingFormState extends State<_EditListingForm> {
                           children: [
                             SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)),
                             SizedBox(width: 12),
-                          Flexible(child: Text('Saving changes…')),
+                            Flexible(child: Text('Saving changes…')),
                           ],
                         )
                       : const Text('Save changes'),
@@ -325,7 +325,12 @@ class _ListingPhotos extends StatelessWidget {
     );
     if (!context.mounted || added == null || added.isEmpty) return;
     final existingPaths = photos.map((photo) => photo.file?.path).whereType<String>().toSet();
-    onChanged([...photos, ...added.where((file) => existingPaths.add(file.path)).map(ListingPhoto.local)]);
+    final updated = [...photos, ...added.where((file) => existingPaths.add(file.path)).map(ListingPhoto.local)];
+    if (updated.length > 10) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Use no more than 10 photos')));
+      return;
+    }
+    onChanged(updated);
   }
 
   @override
@@ -336,7 +341,7 @@ class _ListingPhotos extends StatelessWidget {
       children: [
         Text('Photos', style: Theme.of(context).textTheme.titleMedium),
         const SizedBox(height: 8),
-        const Text('Keep at least one photo. The first photo is your main listing photo.'),
+        const Text('Use 1 to 10 photos, up to 10 MiB each. The first photo is your main listing photo.'),
         const SizedBox(height: 12),
         for (var index = 0; index < photos.length; index++)
           Padding(
@@ -382,7 +387,7 @@ class _ListingPhotos extends StatelessWidget {
             ),
           ),
         OutlinedButton.icon(
-          onPressed: () => _addPhotos(context),
+          onPressed: photos.length < 10 ? () => _addPhotos(context) : null,
           icon: const Icon(Icons.add_a_photo_outlined),
           label: const Text('Add photos'),
         ),

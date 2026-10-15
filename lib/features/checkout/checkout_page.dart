@@ -65,9 +65,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
     final basket = context.watch<CheckoutViewModel>();
 
     return PopScope(
-      canPop: true,
-      onPopInvokedWithResult: (_, _) {
-        _vm?.resetCheckout();
+      canPop: basket.createOrderStatus.type != StatusType.loading,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) _vm?.resetCheckout();
       },
       child: Scaffold(
         appBar: AppBar(

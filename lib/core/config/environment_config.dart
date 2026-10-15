@@ -7,6 +7,7 @@ class AppEnvironment {
   static const String firebaseAuthEmulatorPortKey =
       'FIREBASE_AUTH_EMULATOR_PORT';
   static const String firestoreEmulatorPortKey = 'FIRESTORE_EMULATOR_PORT';
+  static const String storageEmulatorPortKey = 'FIREBASE_STORAGE_EMULATOR_PORT';
 
   static String get apiBaseUrl => resolveApiBaseUrl(dotenv.env);
 
@@ -59,6 +60,7 @@ class AppEnvironment {
         firestoreEmulatorPortKey,
         fallback: 8080,
       ),
+      storagePort: _resolvePort(env, storageEmulatorPortKey, fallback: 9199),
     );
   }
 
@@ -92,9 +94,11 @@ class FirebaseEmulatorConfig {
     required this.host,
     required this.authPort,
     required this.firestorePort,
+    this.storagePort = 9199,
   });
 
   final String host;
   final int authPort;
   final int firestorePort;
+  final int storagePort;
 }

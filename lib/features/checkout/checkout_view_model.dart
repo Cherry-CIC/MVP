@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cherry_mvp/core/models/model.dart';
 import 'package:cherry_mvp/core/services/safe_log.dart';
 import 'package:cherry_mvp/features/donation/donation_repository.dart';
@@ -148,6 +150,10 @@ class CheckoutViewModel extends ChangeNotifier {
   // Payment properties
   bool _hasPaymentMethod = false;
   String? _lastPaymentIntentId;
+  String? _paidProductId;
+  String? _paidUserId;
+  String? _pendingPaymentIntentId;
+  String? _pendingPaymentOwnerId;
 
   String? get lastPaymentIntentId => _lastPaymentIntentId;
 
@@ -265,6 +271,7 @@ class CheckoutViewModel extends ChangeNotifier {
   /// Resets checkout state for a new order
   /// Clears shipping address and payment method but preserves basket items
   void resetCheckout() {
+    unawaited(cancelPendingPayment());
     _basketRevision++;
     _paymentAttempt++;
     _shippingAddress = null;
@@ -274,6 +281,8 @@ class CheckoutViewModel extends ChangeNotifier {
     _selectedInpost = null;
     _selectedInpostShippingMethod = null;
     _lastPaymentIntentId = null;
+    _paidProductId = null;
+    _paidUserId = null;
     _basketItems.clear();
     _deliveryChoice = DeliveryType.undefined;
     _createOrderStatus = Status.uninitialized;
@@ -537,7 +546,9 @@ class CheckoutViewModel extends ChangeNotifier {
 
   Future<bool> payWithPaymentSheet() async {
     if (_createOrderStatus.type == StatusType.loading) return false;
-    _paymentAttempt++;
+    final attempt = ++_paymentAttempt;
+    final basketRevision = _basketRevision;
+    final buyerId = _currentUserIdProvider();
     if (basketItems.isEmpty) {
       _createOrderStatus = Status.failure('Your basket is empty');
       notifyListeners();
@@ -560,9 +571,27 @@ class CheckoutViewModel extends ChangeNotifier {
       return false;
     }
 
+    // Retry order fulfilment with the same successful payment, never charge again.
+    if (_lastPaymentIntentId != null) {
+      if (_paidUserId == _currentUserIdProvider() && _paidProductId == basketItems.first.id) return true;
+      _createOrderStatus = Status.failure('A payment needs to be completed for the original account and listing.');
+      notifyListeners();
+      return false;
+    }
     _createOrderStatus = Status.loading;
-    _lastPaymentIntentId = null;
     notifyListeners();
+    if (_pendingPaymentIntentId != null && !await cancelPendingPayment()) {
+      _createOrderStatus = Status.failure(
+        'The previous payment could not be cancelled. Please try again before paying.',
+      );
+      notifyListeners();
+      return false;
+    }
+
+    if (attempt != _paymentAttempt || basketRevision != _basketRevision || buyerId != _currentUserIdProvider()) {
+      _cancelFreshnessCheck(attempt);
+      return false;
+    }
 
     if (selectedInpostShippingMethod == null) {
       _createOrderStatus = Status.failure(
@@ -584,8 +613,8 @@ class CheckoutViewModel extends ChangeNotifier {
     final selectedPickupPoint = selectedInpost!;
     final selectedPayment = _selectedPaymentType!;
     final selectedDelivery = _deliveryChoice;
-    final attempt = _paymentAttempt;
-    final basketRevision = _basketRevision;
+    final productId = basketItems.first.id;
+    final supportsReservations = basketItems.first.editVersion != null;
 
     try {
       if (!await verifyBasketDetails()) return false;
@@ -607,10 +636,25 @@ class CheckoutViewModel extends ChangeNotifier {
         postalCode: selectedPickupPoint.postcode,
         expectedEditVersion: basketItems.first.editVersion,
       );
-      if (attempt != _paymentAttempt || basketRevision != _basketRevision) return false;
-
       if (response.isSuccess && response.value != null) {
         final paymentResponse = response.value!;
+        // Older backends have no cancellation endpoint. Only versioned
+        // listings advertise the coordinated edit/checkout contract.
+        if (supportsReservations) {
+          _pendingPaymentIntentId = paymentResponse.paymentIntentId;
+          _pendingPaymentOwnerId = buyerId;
+        }
+        if (attempt != _paymentAttempt ||
+            basketRevision != _basketRevision ||
+            buyerId != _currentUserIdProvider() ||
+            selectedInpost != selectedPickupPoint ||
+            selectedInpostShippingMethod != selectedShippingMethod ||
+            _selectedPaymentType != selectedPayment ||
+            _deliveryChoice != selectedDelivery) {
+          await cancelPendingPayment();
+          _cancelFreshnessCheck(attempt);
+          return false;
+        }
 
         Stripe.publishableKey = paymentResponse.publishableKey;
         await Stripe.instance.applySettings();
@@ -624,9 +668,25 @@ class CheckoutViewModel extends ChangeNotifier {
           paymentSheetParameters: setupParams,
         );
 
-        // Present the native PaymentSheet (it will show ApplePay/GooglePay if available)
+        if (attempt != _paymentAttempt || basketRevision != _basketRevision || buyerId != _currentUserIdProvider()) {
+          await cancelPendingPayment();
+          _cancelFreshnessCheck(attempt);
+          return false;
+        }
+        // Present the native PaymentSheet (it will show ApplePay/GooglePay if available).
         await Stripe.instance.presentPaymentSheet();
         _lastPaymentIntentId = paymentResponse.paymentIntentId;
+        _paidProductId = productId;
+        _paidUserId = buyerId;
+        _pendingPaymentIntentId = null;
+        _pendingPaymentOwnerId = null;
+        if (attempt != _paymentAttempt || basketRevision != _basketRevision || buyerId != _currentUserIdProvider()) {
+          _createOrderStatus = Status.failure(
+            'Payment completed. Return to the original account and listing to finish the order.',
+          );
+          notifyListeners();
+          return false;
+        }
         return true;
       } else {
         _createOrderStatus = Status.failure('Payment could not be completed. Please try again.');
@@ -639,7 +699,12 @@ class CheckoutViewModel extends ChangeNotifier {
         return false;
       }
     } on StripeException {
-      _createOrderStatus = Status.failure('Payment could not be completed. Please try again.');
+      final cancelled = await cancelPendingPayment();
+      _createOrderStatus = Status.failure(
+        cancelled
+            ? 'Payment was not completed. Reopen the listing before trying again.'
+            : 'Payment cancellation could not be confirmed. Please try again before paying.',
+      );
       SafeLog.event(
         AppLogEvent.checkoutPaymentFailed,
         level: SafeLogLevel.severe,
@@ -648,13 +713,37 @@ class CheckoutViewModel extends ChangeNotifier {
       notifyListeners();
       return false;
     } catch (_) {
-      _createOrderStatus = Status.failure('Payment could not be completed. Please try again.');
+      final cancelled = await cancelPendingPayment();
+      _createOrderStatus = Status.failure(
+        cancelled
+            ? 'Payment was not completed. Reopen the listing before trying again.'
+            : 'Payment cancellation could not be confirmed. Please try again before paying.',
+      );
       SafeLog.event(
         AppLogEvent.checkoutPaymentFailed,
         level: SafeLogLevel.severe,
       );
       _lastPaymentIntentId = null;
       notifyListeners();
+      return false;
+    }
+  }
+
+  /// Only the backend can release a reservation after Stripe confirms cancellation.
+  /// Keep the intent on failure so a retry cannot silently abandon an actionable payment.
+  Future<bool> cancelPendingPayment() async {
+    final intentId = _pendingPaymentIntentId;
+    if (intentId == null) return true;
+    if (_pendingPaymentOwnerId != _currentUserIdProvider()) return false;
+    try {
+      final result = await checkoutRepository.cancelPaymentIntent(intentId);
+      if (!result.isSuccess) return false;
+      if (_pendingPaymentIntentId == intentId) {
+        _pendingPaymentIntentId = null;
+        _pendingPaymentOwnerId = null;
+      }
+      return true;
+    } catch (_) {
       return false;
     }
   }
