@@ -66,6 +66,25 @@ class HomeViewModel extends ChangeNotifier {
     await _fetchHomeFirstPage(clearProducts: false);
   }
 
+  /// Discard pre-edit cards and requests before loading the latest listing data.
+  Future<void> refreshAfterListingEdit() async {
+    _searchDebounce?.cancel();
+    final query = _searchText;
+    _searchRequestSequence++;
+    _searchProducts = const [];
+    _searchNextCursor = null;
+    _searchHasMore = false;
+    _isLoadingMoreSearch = false;
+    _searchQuery = query;
+    _searchStatus = query.isEmpty ? Status.uninitialized : Status.loading;
+    _isRefreshing = false;
+
+    await Future.wait([
+      _fetchHomeFirstPage(clearProducts: true),
+      if (query.isNotEmpty) _runSearch(query),
+    ]);
+  }
+
   void updateSearchText(String query) {
     final normalizedQuery = query.trim();
     _searchText = normalizedQuery;

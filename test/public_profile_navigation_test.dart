@@ -30,6 +30,16 @@ class _RecordingNavigationProvider extends NavigationProvider {
   }
 }
 
+class _ProductRepository extends ProductRepository {
+  _ProductRepository(this.listings) : super(const UnexpectedApiService());
+  final List<Product> listings;
+
+  @override
+  Future<Result<Product>> fetchProduct(String productId) async {
+    return Result.success(listings.singleWhere((product) => product.id == productId));
+  }
+}
+
 class _CheckoutRepositoryStub implements ICheckoutRepository {
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -96,6 +106,7 @@ Product _product({
 Future<({NavigationProvider navigator, ProductViewModel products, CheckoutViewModel checkout})> _pumpApp(
   WidgetTester tester, {
   required _PublicProfileRepository repository,
+  List<Product>? listings,
   Widget home = const Scaffold(body: Text('Home')),
 }) async {
   tester.view.physicalSize = const Size(800, 1600);
@@ -104,7 +115,7 @@ Future<({NavigationProvider navigator, ProductViewModel products, CheckoutViewMo
   addTearDown(tester.view.resetDevicePixelRatio);
   final navigator = NavigationProvider();
   final products = ProductViewModel(
-    productRepository: ProductRepository(const UnexpectedApiService()),
+    productRepository: _ProductRepository(listings ?? [_product()]),
     navigator: navigator,
   );
   final checkout = CheckoutViewModel(
@@ -161,7 +172,7 @@ void main() {
     expect(navigator.calls, isEmpty);
   });
 
-  test('listing navigation passes its own product as a route argument', () {
+  test('listing navigation passes its own ID for a fresh route fetch', () {
     final navigator = _RecordingNavigationProvider();
     final products = ProductViewModel(
       productRepository: ProductRepository(const UnexpectedApiService()),
@@ -171,7 +182,7 @@ void main() {
     final product = _product();
     products.goToProductPage(product);
     expect(navigator.calls.single.route, AppRoutes.product);
-    expect(navigator.calls.single.arguments, same(product));
+    expect(navigator.calls.single.arguments, {'productId': product.id});
   });
 
   for (final useAvatar in [false, true]) {
@@ -205,8 +216,9 @@ void main() {
   testWidgets('invalid product seller IDs disable the identity link', (tester) async {
     for (final userId in [null, '', '  ', 'seller/other']) {
       final repository = _PublicProfileRepository();
-      final app = await _pumpApp(tester, repository: repository);
-      app.products.goToProductPage(_product(userId: userId));
+      final product = _product(userId: userId);
+      final app = await _pumpApp(tester, repository: repository, listings: [product]);
+      app.products.goToProductPage(product);
       await tester.pumpAndSettle();
 
       expect(
@@ -258,7 +270,7 @@ void main() {
     final firstProduct = _product();
     final secondProduct = _product(id: 'second-listing', name: 'Second coat');
     final repository = _PublicProfileRepository(products: [secondProduct]);
-    final app = await _pumpApp(tester, repository: repository);
+    final app = await _pumpApp(tester, repository: repository, listings: [firstProduct, secondProduct]);
     app.products.goToProductPage(firstProduct);
     await tester.pumpAndSettle();
     expect(find.text('First jumper'), findsOneWidget);

@@ -41,6 +41,14 @@ class _HomeRepositoryStub implements home.IHomeRepository {
 class _ProductRepositoryStub extends ProductRepository {
   _ProductRepositoryStub() : super(const UnexpectedApiService());
 
+  final fetchedIds = <String>[];
+
+  @override
+  Future<Result<Product>> fetchProduct(String productId) async {
+    fetchedIds.add(productId);
+    return Result.success(productId == _selectedProduct.id ? _updatedProduct : _firstProduct);
+  }
+
   @override
   Future<Result<List<Product>>> fetchLikedProducts() async {
     return Result.success(const []);
@@ -58,7 +66,7 @@ class _DonationRepositoryStub implements IDonationRepository {
 }
 
 void main() {
-  testWidgets('Home opens the selected listing and keeps buyer checkout working', (
+  testWidgets('Home fetches the latest selected listing and keeps buyer checkout working', (
     tester,
   ) async {
     SharedPreferences.setMockInitialValues({});
@@ -68,8 +76,9 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
 
     final navigator = NavigationProvider();
+    final productRepository = _ProductRepositoryStub();
     final productViewModel = ProductViewModel(
-      productRepository: _ProductRepositoryStub(),
+      productRepository: productRepository,
       navigator: navigator,
       currentUserIdProvider: () => 'buyer-1',
     )..setProduct(_firstProduct);
@@ -115,9 +124,11 @@ void main() {
 
     expect(generatedRoutes, [AppRoutes.product]);
     expect(find.byType(ProductPage), findsOneWidget);
+    expect(productRepository.fetchedIds, [_selectedProduct.id]);
     expect(productViewModel.product, same(_selectedProduct));
-    expect(find.text(_selectedProduct.name), findsOneWidget);
-    expect(find.text(_selectedProduct.description), findsOneWidget);
+    expect(find.text(_updatedProduct.name), findsOneWidget);
+    expect(find.text(_updatedProduct.description), findsOneWidget);
+    expect(find.text(_selectedProduct.description), findsNothing);
     expect(find.text(_firstProduct.description), findsNothing);
     final buyButton = find.widgetWithText(FilledButton, AppStrings.productPageBuyNow);
     expect(tester.widget<FilledButton>(buyButton).onPressed, isNotNull);
@@ -127,7 +138,7 @@ void main() {
 
     expect(generatedRoutes, [AppRoutes.product, AppRoutes.checkout]);
     expect(find.text('Checkout destination'), findsOneWidget);
-    expect(checkoutViewModel.basketItems, [same(_selectedProduct)]);
+    expect(checkoutViewModel.basketItems, [same(_updatedProduct)]);
   });
 }
 
@@ -162,3 +173,9 @@ const _selectedProduct = Product(
   size: 'L',
   postageSizeId: 'small',
 );
+
+final _updatedProduct = Product.fromJson({
+  ..._selectedProduct.toJson(),
+  'name': 'Blue wool jumper',
+  'description': 'Updated details saved after the Home feed loaded',
+});

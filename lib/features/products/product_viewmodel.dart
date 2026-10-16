@@ -11,6 +11,7 @@ class ProductViewModel extends ChangeNotifier {
   // Centralized tracker: Map<ProductID, IsLiked>
   final Map<String, bool> _likedProducts = {};
   final Map<String, Product> _likedProductCache = {};
+  final Map<String, Product> _confirmedListingUpdates = {};
   final Map<String, int> _likeCountOverrides = {};
   final Set<String> _pendingLikeUpdates = {};
   final String? Function() _currentUserIdProvider;
@@ -22,7 +23,7 @@ class ProductViewModel extends ChangeNotifier {
   bool _accountChangeNotificationPending = false;
   bool _disposed = false;
 
-  Product? get product => _product;
+  Product? get product => _product == null ? null : resolveListing(_product!);
 
   final ProductRepository productRepository;
   final NavigationProvider navigator;
@@ -48,9 +49,7 @@ class ProductViewModel extends ChangeNotifier {
   bool isOwnProduct(Product product) {
     _ensureCurrentAccount();
     final currentUserId = _accountOwnerId;
-    return currentUserId != null &&
-        currentUserId.isNotEmpty &&
-        product.userId == currentUserId;
+    return currentUserId != null && currentUserId.isNotEmpty && product.userId == currentUserId;
   }
 
   // Check if a specific product is liked
@@ -69,7 +68,7 @@ class ProductViewModel extends ChangeNotifier {
     final products = <Product>[];
     for (final entry in _likedProductCache.entries) {
       if (_likedProducts[entry.key] == true) {
-        products.add(entry.value);
+        products.add(resolveListing(entry.value));
       }
     }
     return List.unmodifiable(products);
@@ -129,8 +128,47 @@ class ProductViewModel extends ChangeNotifier {
   }
 
   void setProduct(Product product) {
-    _product = product;
+    _product = resolveListing(product);
     notifyListeners();
+  }
+
+  /// Only call after the backend has confirmed and returned the saved listing.
+  void applyListingUpdate(Product product) {
+    _ensureCurrentAccount();
+    if (product.id.trim().isEmpty) {
+      return;
+    }
+
+    final previous = _confirmedListingUpdates[product.id];
+    if (previous?.editVersion != null &&
+        (product.editVersion == null || product.editVersion! < previous!.editVersion!)) {
+      return;
+    }
+
+    _confirmedListingUpdates[product.id] = product;
+    if (_product?.id == product.id) {
+      _product = product;
+    }
+    if (_likedProductCache.containsKey(product.id)) {
+      _likedProductCache[product.id] = product;
+    }
+    notifyListeners();
+  }
+
+  /// Prevent a pre-save response from restoring an older card in this session.
+  /// A later backend revision takes precedence over our confirmed local save.
+  Product resolveListing(Product product) {
+    _ensureCurrentAccount();
+    final confirmed = _confirmedListingUpdates[product.id];
+    if (confirmed == null) {
+      return product;
+    }
+    if (confirmed.editVersion == null ||
+        (product.editVersion != null && product.editVersion! >= confirmed.editVersion!)) {
+      _confirmedListingUpdates[product.id] = product;
+      return product;
+    }
+    return confirmed;
   }
 
   Future<Result<bool>> toggleLike(Product product) async {
@@ -145,9 +183,7 @@ class ProductViewModel extends ChangeNotifier {
     _ensureCurrentAccount();
     final accountStateVersion = _accountStateVersion;
     final id = product.id;
-    if (id.trim().isEmpty ||
-        _pendingLikeUpdates.contains(id) ||
-        (liked && isOwnProduct(product))) {
+    if (id.trim().isEmpty || _pendingLikeUpdates.contains(id) || (liked && isOwnProduct(product))) {
       return Result.failure('Unable to update this liked item.');
     }
 
@@ -167,7 +203,7 @@ class ProductViewModel extends ChangeNotifier {
       _likedProducts[id] = update.liked;
       _likeCountOverrides[id] = update.likes;
       if (update.liked) {
-        _likedProductCache[id] = product;
+        _likedProductCache[id] = resolveListing(product);
       } else {
         _likedProductCache.remove(id);
       }
@@ -196,7 +232,8 @@ class ProductViewModel extends ChangeNotifier {
     _ensureCurrentAccount();
     var changed = false;
 
-    for (final product in products) {
+    for (final incomingProduct in products) {
+      final product = resolveListing(incomingProduct);
       if (product.id.trim().isEmpty) {
         continue;
       }
@@ -211,8 +248,8 @@ class ProductViewModel extends ChangeNotifier {
         changed = true;
       }
 
-      if (_likeCountOverrides[product.id] != product.likes) {
-        _likeCountOverrides[product.id] = product.likes;
+      if (_likeCountOverrides[product.id] != incomingProduct.likes) {
+        _likeCountOverrides[product.id] = incomingProduct.likes;
         changed = true;
       }
     }
@@ -279,6 +316,7 @@ class ProductViewModel extends ChangeNotifier {
   void _resetAccountState(String? currentUserId) {
     _likedProducts.clear();
     _likedProductCache.clear();
+    _confirmedListingUpdates.clear();
     _pendingLikeUpdates.clear();
     _likedProductsHydration = null;
     _likedProductsHydrationVersion = null;
@@ -297,7 +335,10 @@ class ProductViewModel extends ChangeNotifier {
 
   void goToProductPage(Product product) async {
     setProduct(product);
-    await navigator.navigateTo(AppRoutes.product, arguments: product);
+    await navigator.navigateTo(
+      AppRoutes.product,
+      arguments: {'productId': product.id},
+    );
   }
 
   @override

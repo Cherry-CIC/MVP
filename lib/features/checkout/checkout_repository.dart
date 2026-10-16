@@ -26,7 +26,9 @@ abstract class ICheckoutRepository {
     required String pickupPointId,
     required String country,
     required String postalCode,
+    int? expectedEditVersion,
   });
+  Future<Result<void>> cancelPaymentIntent(String paymentIntentId);
   Future<Result> createOrder(Map<String, dynamic> order);
   Future<Result<UserCredentials>> fetchUserProfile();
 }
@@ -165,14 +167,16 @@ final class CheckoutRepository implements ICheckoutRepository {
     required String pickupPointId,
     required String country,
     required String postalCode,
+    int? expectedEditVersion,
   }) async {
     //  call backend API which returns client_secret
-    var data = {
+    final data = <String, dynamic>{
       "productId": productId,
       "shippingMethodId": shippingMethodId,
       "pickupPointId": pickupPointId,
       "country": country,
       "postalCode": postalCode,
+      'expectedEditVersion': ?expectedEditVersion,
     };
 
     try {
@@ -190,6 +194,22 @@ final class CheckoutRepository implements ICheckoutRepository {
       }
     } catch (e) {
       return Result.failure(e.toString());
+    }
+  }
+
+  @override
+  Future<Result<void>> cancelPaymentIntent(String paymentIntentId) async {
+    try {
+      final result = await _apiService.post<dynamic>(
+        ApiEndpoints.cancelPaymentIntent,
+        data: {'paymentIntentId': paymentIntentId},
+      );
+      if (result.isSuccess && result.value is Map && result.value['success'] == true) {
+        return Result.success(null);
+      }
+      return Result.failure('Payment cancellation could not be confirmed. Please try again.');
+    } catch (_) {
+      return Result.failure('Payment cancellation could not be confirmed. Please try again.');
     }
   }
 

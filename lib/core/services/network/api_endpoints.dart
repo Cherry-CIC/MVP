@@ -20,6 +20,7 @@ class ApiEndpoints {
   static const String charities = '$_apiPrefix/charities';
   static const String postageSizes = '$_apiPrefix/postage-sizes';
   static const String paymentIntent = '$_apiPrefix/payment/create-payment-intent';
+  static const String cancelPaymentIntent = '$_apiPrefix/payment/cancel-payment-intent';
   static const String createOrder = '$_apiPrefix/order/create';
   static const String myOrders = '$_apiPrefix/order/my-orders';
   static String confirmOrderReceived(String orderId) {

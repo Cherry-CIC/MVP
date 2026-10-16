@@ -62,12 +62,15 @@ class _CheckoutPageState extends State<CheckoutPage> {
 
   @override
   Widget build(BuildContext context) {
-    final basket = context.read<CheckoutViewModel>();
+    final basket = context.watch<CheckoutViewModel>();
 
     return PopScope(
-      canPop: true,
-      onPopInvokedWithResult: (_, _) {
-        _vm?.resetCheckout();
+      canPop: basket.createOrderStatus.type != StatusType.loading,
+      onPopInvokedWithResult: (didPop, _) {
+        // Keep a completed payment available if order creation needs a retry.
+        if (didPop && basket.lastPaymentIntentId == null) {
+          _vm?.resetCheckout();
+        }
       },
       child: Scaffold(
         appBar: AppBar(
@@ -82,7 +85,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 final product = basket.basketItems[index];
                 return BasketListItem(
                   product: product,
-                  onRemove: () => basket.removeItem(product),
+                  onRemove: basket.createOrderStatus.type == StatusType.loading
+                      ? null
+                      : () => basket.removeItem(product),
                 );
               },
             ),

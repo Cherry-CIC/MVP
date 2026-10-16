@@ -40,6 +40,7 @@ void main() {
       expect(config!.host, 'localhost');
       expect(config.authPort, 9099);
       expect(config.firestorePort, 8080);
+      expect(config.storagePort, 9199);
     });
 
     test('throws when an emulator port is invalid', () {

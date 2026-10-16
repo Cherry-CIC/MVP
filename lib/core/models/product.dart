@@ -30,6 +30,11 @@ class Product {
   final String? charityId;
   final String? createdAt;
   final String? updatedAt;
+  final String? status;
+  // Absent on older servers. Editing must stay unavailable without the
+  // backend's conditional-update contract, even in an edit-enabled build.
+  @JsonKey(fromJson: _parseEditVersion)
+  final int? editVersion;
   final Category? category;
   final Charity? charity;
 
@@ -51,6 +56,8 @@ class Product {
     this.charityId,
     this.createdAt,
     this.updatedAt,
+    this.status,
+    this.editVersion,
     this.category,
     this.charity,
   });
@@ -72,6 +79,8 @@ class Product {
   Map<String, dynamic> toJson() => _$ProductToJson(this);
 
   // Helper functions for JSON parsing
+  static int? _parseEditVersion(dynamic value) => value is int && value >= 0 ? value : null;
+
   static double _parseDouble(dynamic value) {
     if (value == null) return 0.0;
     if (value is double) return value;

@@ -37,6 +37,12 @@ class DonationRepository implements IDonationRepository {
         return Result.failure(AppStrings.userNotAuthenticated);
       }
 
+      if (FeatureFlags.enableListingEdit &&
+          (request.localImages == null ||
+              request.localImages!.isEmpty ||
+              request.localImages!.length > StorageProvider.maxListingPhotos)) {
+        return Result.failure('Use between 1 and 10 photos');
+      }
       List<String> imageUrls = [];
 
       if (request.localImages != null && request.localImages!.isNotEmpty) {
@@ -56,7 +62,7 @@ class DonationRepository implements IDonationRepository {
             AppLogEvent.donationImageUploadFailed,
             level: SafeLogLevel.warning,
           );
-          return Result.failure(AppStrings.failedToUploadImages);
+          return Result.failure(uploadResult.error ?? AppStrings.failedToUploadImages);
         }
         SafeLog.count(
           AppLogEvent.donationImageUploadSucceeded,
@@ -64,6 +70,9 @@ class DonationRepository implements IDonationRepository {
         );
       }
 
+      if (_firebaseAuth.currentUser?.uid != user.uid) {
+        return Result.failure('Your account changed. Reopen the listing form.');
+      }
       final apiRequest = request.copyWith(
         productImages: imageUrls,
         localImages: null,
@@ -129,27 +138,23 @@ class DonationRepository implements IDonationRepository {
 
   Future<Result<List<String>>> _uploadMultipleImages(List<File> imageFiles, String userId) async {
     try {
+      final downloadUrls = <String>[];
       final timestamp = DateTime.now().millisecondsSinceEpoch;
-
-      final List<Future<Result<String>>> uploadFutures = [];
-
-      for (int i = 0; i < imageFiles.length; i++) {
-        final imageName = 'image_${timestamp}_$i.jpg';
-        final imagePath = 'products/$userId/$imageName';
-
-        uploadFutures.add(_storageProvider.uploadImage(imageFiles[i], imagePath));
-      }
-
-      final List<Result<String>> uploadResults = await Future.wait(uploadFutures);
-
-      final List<String> downloadUrls = [];
-      for (int i = 0; i < uploadResults.length; i++) {
-        final result = uploadResults[i];
-        if (result.isSuccess) {
-          downloadUrls.add(result.value!);
-        } else {
-          return Result.failure(AppStrings.failedToUploadImages);
+      // Decode and upload one photo at a time to bound memory usage.
+      for (final image in imageFiles) {
+        if (_firebaseAuth.currentUser?.uid != userId) {
+          return Result.failure('Your account changed. Reopen the listing form.');
         }
+        final result = FeatureFlags.enableListingEdit
+            ? await _storageProvider.uploadListingImage(image, userId)
+            : await _storageProvider.uploadImage(
+                image,
+                'products/$userId/image_${timestamp}_${downloadUrls.length}.jpg',
+              );
+        if (!result.isSuccess || result.value == null) {
+          return Result.failure(result.error ?? AppStrings.failedToUploadImages);
+        }
+        downloadUrls.add(result.value!);
       }
 
       return Result.success(downloadUrls);

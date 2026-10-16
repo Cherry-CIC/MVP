@@ -26,6 +26,8 @@ Product _$ProductFromJson(Map<String, dynamic> json) => Product(
   charityId: json['charityId'] as String?,
   createdAt: json['createdAt'] as String?,
   updatedAt: json['updatedAt'] as String?,
+  status: json['status'] as String?,
+  editVersion: Product._parseEditVersion(json['editVersion']),
   category: json['category'] == null
       ? null
       : Category.fromJson(json['category'] as Map<String, dynamic>),
@@ -52,6 +54,8 @@ Map<String, dynamic> _$ProductToJson(Product instance) => <String, dynamic>{
   'charityId': instance.charityId,
   'createdAt': instance.createdAt,
   'updatedAt': instance.updatedAt,
+  'status': instance.status,
+  'editVersion': instance.editVersion,
   'category': instance.category,
   'charity': instance.charity,
 };

@@ -38,6 +38,12 @@ class ProfileListingsViewModel extends ChangeNotifier {
     await _fetchFirstPage(clearListings: false, supersedeInFlight: true);
   }
 
+  /// An edited listing must not retain its old card if the refresh fails.
+  Future<void> refreshAfterListingEdit() async {
+    _isRefreshing = false;
+    await _fetchFirstPage(clearListings: true, supersedeInFlight: true);
+  }
+
   Future<void> retryInitialLoad() async {
     await _fetchFirstPage(clearListings: true);
   }
