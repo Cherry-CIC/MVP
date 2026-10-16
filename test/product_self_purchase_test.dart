@@ -6,6 +6,7 @@ import 'package:cherry_mvp/core/utils/result.dart';
 import 'package:cherry_mvp/features/checkout/checkout_repository.dart';
 import 'package:cherry_mvp/features/checkout/checkout_view_model.dart';
 import 'package:cherry_mvp/features/donation/donation_repository.dart';
+import 'package:cherry_mvp/features/products/edit_listing/edit_listing_repository.dart';
 import 'package:cherry_mvp/features/products/product_page.dart';
 import 'package:cherry_mvp/features/products/widgets/product_information.dart';
 import 'package:cherry_mvp/features/products/product_card.dart';
@@ -19,6 +20,15 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'support/unexpected_api_service.dart';
+
+// These legacy fixtures have no edit version and cannot open the editor.
+class _EditListingRepositoryStub implements IEditListingRepository {
+  @override
+  bool canEdit(Product product) => false;
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => throw StateError('Unexpected listing edit');
+}
 
 class _CheckoutRepositoryStub implements ICheckoutRepository {
   @override
@@ -130,6 +140,7 @@ void main() {
     await tester.pumpWidget(
       MultiProvider(
         providers: [
+          Provider<IEditListingRepository>(create: (_) => _EditListingRepositoryStub()),
           Provider<NavigationProvider>.value(value: navigator),
           ChangeNotifierProvider<ProductViewModel>.value(
             value: productViewModel,
@@ -191,6 +202,7 @@ void main() {
     await tester.pumpWidget(
       MultiProvider(
         providers: [
+          Provider<IEditListingRepository>(create: (_) => _EditListingRepositoryStub()),
           Provider<NavigationProvider>.value(value: navigator),
           ChangeNotifierProvider<ProductViewModel>.value(value: productViewModel),
           ChangeNotifierProvider<CheckoutViewModel>.value(

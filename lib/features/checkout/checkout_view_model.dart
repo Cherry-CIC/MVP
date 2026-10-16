@@ -668,7 +668,13 @@ class CheckoutViewModel extends ChangeNotifier {
           paymentSheetParameters: setupParams,
         );
 
-        if (attempt != _paymentAttempt || basketRevision != _basketRevision || buyerId != _currentUserIdProvider()) {
+        if (attempt != _paymentAttempt ||
+            basketRevision != _basketRevision ||
+            buyerId != _currentUserIdProvider() ||
+            selectedInpost != selectedPickupPoint ||
+            selectedInpostShippingMethod != selectedShippingMethod ||
+            _selectedPaymentType != selectedPayment ||
+            _deliveryChoice != selectedDelivery) {
           await cancelPendingPayment();
           _cancelFreshnessCheck(attempt);
           return false;

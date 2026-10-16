@@ -67,7 +67,10 @@ class _CheckoutPageState extends State<CheckoutPage> {
     return PopScope(
       canPop: basket.createOrderStatus.type != StatusType.loading,
       onPopInvokedWithResult: (didPop, _) {
-        if (didPop) _vm?.resetCheckout();
+        // Keep a completed payment available if order creation needs a retry.
+        if (didPop && basket.lastPaymentIntentId == null) {
+          _vm?.resetCheckout();
+        }
       },
       child: Scaffold(
         appBar: AppBar(

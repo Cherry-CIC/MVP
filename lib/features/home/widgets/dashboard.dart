@@ -170,7 +170,7 @@ class _DashboardPageState extends State<DashboardPage> {
     return GestureDetector(
       onTap: () {
         productViewModel.setProduct(product);
-        navigator.navigateTo(AppRoutes.product);
+        navigator.navigateTo(AppRoutes.product, arguments: {'productId': product.id});
       },
       child: ProductCard(
         key: ValueKey(product.id),

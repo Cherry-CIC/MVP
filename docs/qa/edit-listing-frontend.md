@@ -47,7 +47,7 @@ Backend PR #55 implements the coordinated update and payment contract below. An 
 5. Preserve immutable purchased details and media, or reject edits after any unit has been sold. Existing order enrichment reads live product images/size/charity, so merely blocking fully sold stock is insufficient for multi-unit listings. Any order-snapshot API change also needs a later frontend consumer change.
 6. Validate media origin/ownership, size/type/count and define safe retention/cleanup. Verify deployed Firestore and Storage rules. The checked-in Firestore rules allow broad access until 2030; deployment state was not verified, and Storage rules are not tracked here. The API checks cannot protect canonical data if direct writes bypass them.
 
-For versioned listings, dismissing PaymentSheet, failing payment setup or changing checkout while an intent is being created requests `POST /api/payment/cancel-payment-intent`. Failed cancellation retains the known intent and blocks a fresh payment attempt. The client never clears a backend reservation itself. An account change does not attempt cancellation as another user; backend reconciliation remains necessary if the original account never returns. A successful payment is retained for order retry in the same account and listing, without another payment sheet. Checkout cannot be closed normally during an active payment/order request.
+For versioned listings, dismissing PaymentSheet, failing payment setup or changing checkout while an intent is being created requests `POST /api/payment/cancel-payment-intent`. Failed cancellation retains the known intent and blocks a fresh payment attempt. The client never clears a backend reservation itself. An account change does not attempt cancellation as another user; backend reconciliation remains necessary if the original account never returns. Delivery and payment selections are rechecked after intent creation and native sheet setup; a changed selection cancels the known intent before presentation. A successful payment is retained for order retry in the same account and listing, including after leaving and reopening checkout, without another payment sheet. Unpaid checkout resets on exit; the confirmation page clears paid state after completion. Checkout cannot be closed normally during an active payment/order request.
 
 Unversioned listings retain legacy checkout compatibility and do not call the new cancellation endpoint. Backend expiry/reconciliation therefore remains necessary for old clients and backend flag-off operation. Application termination or a network loss before the intent ID reaches the client also requires that server fallback.
 
@@ -94,3 +94,16 @@ checkout locks, successful order creation and duplicate-order replay. Shipping w
 mocked, with labels and email off. The iOS simulator build still requires the iOS
 26.5 platform component for the installed Xcode; manual device verification remains
 pending until that installation and a successful native build.
+
+## Review follow-up (16 October 2026)
+
+Merged main through `19f2795`, preserving its charity information display while
+using the freshly fetched listing. Regression checks cover Home detail refresh,
+selection changes during intent creation and PaymentSheet setup, and paid-order
+recovery after Close/Back without another charge.
+
+Full suite: 467 passed, four skipped and the same two previously reproduced
+baseline failures (password visibility and public-profile semantics). The enabled
+editing/navigation run passed 17 tests with one intentional skip. Targeted Dart
+analysis and the safe logging guard passed. Native Stripe calls in the route
+regressions are mocked; these results do not claim device verification.

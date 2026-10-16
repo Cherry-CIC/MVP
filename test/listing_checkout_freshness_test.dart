@@ -324,18 +324,49 @@ void main() {
       expect(harness.viewModel.lastPaymentIntentId, isNull);
     });
 
-    test('a delivery change while creating an intent cancels it', () async {
-      final harness = _Harness();
-      addTearDown(harness.viewModel.dispose);
-      harness.preparePayment();
-      harness.repository.onIntent = () async {
-        harness.viewModel.setSelectedInpost(_pickup('locker-2'));
-        return Result.success(_intent());
-      };
-      expect(await harness.viewModel.payWithPaymentSheet(), isFalse);
-      expect(harness.repository.cancelledIntents, ['pi_test_123']);
-      expect(harness.viewModel.createOrderStatus.type, StatusType.failure);
-    });
+    final selectionChanges = <String, void Function(CheckoutViewModel)>{
+      'pickup point': (vm) => vm.setSelectedInpost(_pickup('locker-2')),
+      'shipping method': (vm) => vm.setSelectedInpostShippingMethod(_shipping('shipping-2')),
+      'payment method': (vm) => vm.setPaymentType(PaymentType.apple),
+      'delivery type': (vm) => vm.setDeliveryChoice(DeliveryType.home),
+    };
+    for (final duringSetup in [false, true]) {
+      for (final entry in selectionChanges.entries) {
+        test(
+          '${entry.key} change during ${duringSetup ? 'PaymentSheet setup' : 'intent creation'} cancels payment',
+          () async {
+            const channel = MethodChannel('flutter.stripe/payments', JSONMethodCodec());
+            final calls = <String>[];
+            final harness = _Harness();
+            addTearDown(harness.viewModel.dispose);
+            TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(channel, (
+              call,
+            ) async {
+              calls.add(call.method);
+              if (duringSetup && call.method == 'initPaymentSheet') entry.value(harness.viewModel);
+              return <String, dynamic>{};
+            });
+            addTearDown(
+              () => TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(
+                channel,
+                null,
+              ),
+            );
+            harness.preparePayment();
+            harness.repository.onIntent = () async {
+              if (!duringSetup) entry.value(harness.viewModel);
+              return Result.success(_intent());
+            };
+            expect(await harness.viewModel.payWithPaymentSheet(), isFalse);
+            expect(harness.repository.cancelledIntents, ['pi_test_123']);
+            expect(harness.viewModel.createOrderStatus.type, StatusType.failure);
+            expect(calls, isNot(contains('presentPaymentSheet')));
+            if (duringSetup) expect(calls, contains('initPaymentSheet'));
+            expect(harness.viewModel.lastPaymentIntentId, isNull);
+          },
+        );
+      }
+    }
 
     test('failed cancellation is retained and blocks another payment', () async {
       final harness = _Harness();
