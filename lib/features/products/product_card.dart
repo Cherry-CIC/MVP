@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:cherry_mvp/core/config/app_colors.dart';
 import 'package:cherry_mvp/core/config/app_images.dart';
 import 'package:cherry_mvp/core/config/app_strings.dart';
 import 'package:cherry_mvp/core/config/app_spacing.dart';
@@ -155,7 +154,11 @@ class ProductCard extends StatelessWidget {
                   maxLines: 1,
                   style: Theme.of(
                     context,
-                  ).textTheme.bodySmall?.copyWith(fontSize: 14),
+                  ).textTheme.bodySmall?.copyWith(
+                    fontFamily: 'InstrumentSansPricing',
+                    fontWeight: FontWeight.w700,
+                    fontSize: 14,
+                  ),
                 ),
                 const SizedBox(height: 4),
                 Row(

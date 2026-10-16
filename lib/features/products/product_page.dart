@@ -185,9 +185,7 @@ class _ProductPageState extends State<ProductPage> {
                       awards: 0,
                       hasBuyerDiscounts: false,
                     ),
-                    charity: displayedProduct.charity?.imageUrl != null
-                        ? Image.network(displayedProduct.charity!.imageUrl)
-                        : SizedBox.shrink(),
+                    charityDetails: displayedProduct.charity,
                     padding: const EdgeInsets.fromLTRB(16, 24, 16, 16),
                   );
                 },

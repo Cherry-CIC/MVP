@@ -7,11 +7,13 @@ import 'package:cherry_mvp/features/checkout/checkout_repository.dart';
 import 'package:cherry_mvp/features/checkout/checkout_view_model.dart';
 import 'package:cherry_mvp/features/donation/donation_repository.dart';
 import 'package:cherry_mvp/features/products/product_page.dart';
+import 'package:cherry_mvp/features/products/widgets/product_information.dart';
 import 'package:cherry_mvp/features/products/product_card.dart';
 import 'package:cherry_mvp/features/products/product_repository.dart';
 import 'package:cherry_mvp/features/products/product_viewmodel.dart';
 import 'package:cherry_mvp/features/shared_widgets/bottom_cta.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -46,6 +48,63 @@ class _ProductRepositoryStub extends ProductRepository {
 }
 
 void main() {
+  for (final width in [320.0, 390.0]) {
+    for (final scale in [1.0, 2.0]) {
+      testWidgets('product details fit width $width at text scale $scale', (tester) async {
+        final fontLoader = FontLoader('Raleway')
+          ..addFont(rootBundle.load('assets/fonts/Raleway-ExtraBold.ttf'));
+        await fontLoader.load();
+        final priceFontLoader = FontLoader('InstrumentSansPricing')
+          ..addFont(rootBundle.load('assets/fonts/InstrumentSans-Bold.ttf'));
+        await priceFontLoader.load();
+        tester.view.physicalSize = Size(width, 1600);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+        final viewModel = ProductViewModel(
+          productRepository: _ProductRepositoryStub(),
+          navigator: NavigationProvider(),
+        );
+        addTearDown(viewModel.dispose);
+        const product = Product(
+          id: 'layout-product',
+          description: 'Layout test',
+          productImages: [],
+          securityFee: 2,
+          likes: 0,
+          number: 1,
+          postageSizeId: 'small',
+          name: 'Long sleeve cotton jumper with embroidered detail',
+          size: 'XXXL',
+          quality: 'EXCELLENT',
+          donation: 1234.56,
+          price: 1234.56,
+        );
+        await tester.pumpWidget(
+          ChangeNotifierProvider<ProductViewModel>.value(
+            value: viewModel,
+            child: MaterialApp(
+              home: MediaQuery(
+                data: MediaQueryData(textScaler: TextScaler.linear(scale)),
+                child: Scaffold(body: ProductInformation(product: product)),
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull);
+        for (final label in [product.name, product.size, product.quality, '£1234.56']) {
+          for (final element in find.text(label).evaluate()) {
+            final rect = tester.getRect(find.byWidget(element.widget));
+            expect(rect.left, greaterThanOrEqualTo(0));
+            expect(rect.right, lessThanOrEqualTo(width));
+          }
+          expect(find.text(label), findsWidgets);
+        }
+      });
+    }
+  }
+
   testWidgets('ProductPage keeps seller details and hides buyer actions', (
     tester,
   ) async {
