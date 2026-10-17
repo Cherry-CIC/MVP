@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cherry_mvp/core/config/firestore_constants.dart';
 import 'package:cherry_mvp/core/models/model.dart';
 import 'package:cherry_mvp/core/services/firebase_auth_service.dart';
@@ -38,9 +40,10 @@ class _FakeFirebaseStorage implements FirebaseStorage {
 }
 
 class _FakeAuthService extends FirebaseAuthService {
-  _FakeAuthService({this.verificationResult}) : super(firebaseAuth: _FakeFirebaseAuth());
+  _FakeAuthService({this.verificationResult, this.verificationCompleter}) : super(firebaseAuth: _FakeFirebaseAuth());
 
   final Result<void>? verificationResult;
+  final Completer<Result<void>>? verificationCompleter;
   int signUpCalls = 0;
   int verificationEmailCalls = 0;
 
@@ -53,6 +56,10 @@ class _FakeAuthService extends FirebaseAuthService {
   @override
   Future<Result<void>> sendVerificationEmail() async {
     verificationEmailCalls += 1;
+    final completer = verificationCompleter;
+    if (completer != null) {
+      return completer.future;
+    }
     return verificationResult ?? Result.success(null);
   }
 }
@@ -126,7 +133,7 @@ void main() {
     );
   });
 
-  test('successful registration sends a verification email', () async {
+  test('successful registration dispatches a verification email', () async {
     final result = await repository.register(_request());
 
     expect(result.isSuccess, isTrue);
@@ -138,6 +145,23 @@ void main() {
       firestoreService.savedData?[FirestoreConstants.email],
       'taylor@example.com',
     );
+  });
+
+  test('registration does not wait for verification email delivery', () async {
+    final verificationCompleter = Completer<Result<void>>();
+    authService = _FakeAuthService(verificationCompleter: verificationCompleter);
+    repository = RegisterRepository(
+      authService,
+      firestoreService,
+      StorageProvider(firebaseStorage: _FakeFirebaseStorage()),
+    );
+
+    final result = await repository.register(_request());
+
+    expect(result.isSuccess, isTrue);
+    expect(authService.verificationEmailCalls, 1);
+
+    verificationCompleter.complete(Result.success(null));
   });
 
   test('verification email failure does not fail account creation', () async {

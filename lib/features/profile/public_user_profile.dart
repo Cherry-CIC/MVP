@@ -1,11 +1,16 @@
 import 'package:cherry_mvp/core/config/app_strings.dart';
+import 'package:cherry_mvp/core/utils/result.dart';
 import 'package:cherry_mvp/features/products/product_viewmodel.dart';
+import 'package:cherry_mvp/features/products/widgets/product_safety_actions.dart';
 import 'package:cherry_mvp/features/profile/models/seller_listing.dart';
 import 'package:cherry_mvp/features/profile/public_user_profile_repository.dart';
 import 'package:cherry_mvp/features/profile/public_user_profile_view_model.dart';
 import 'package:cherry_mvp/features/profile/widgets/seller_listing_card.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
+enum _PublicProfileSafetyAction { reportUser, blockUser }
 
 class PublicUserProfile extends StatefulWidget {
   final String userId;
@@ -50,7 +55,10 @@ class _PublicUserProfileState extends State<PublicUserProfile> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text(AppStrings.publicProfileTitle)),
+      appBar: AppBar(
+        title: const Text(AppStrings.publicProfileTitle),
+        actions: _buildAppBarActions(context),
+      ),
       body: SafeArea(
         child: ListenableBuilder(
           listenable: _viewModel,
@@ -65,6 +73,37 @@ class _PublicUserProfileState extends State<PublicUserProfile> {
         ),
       ),
     );
+  }
+
+  List<Widget> _buildAppBarActions(BuildContext context) {
+    final currentUserId = context.read<FirebaseAuth>().currentUser?.uid.trim();
+    final isOwnProfile = currentUserId != null && currentUserId.isNotEmpty && currentUserId == widget.userId.trim();
+    if (isOwnProfile) {
+      return const [];
+    }
+
+    return [
+      PopupMenuButton<_PublicProfileSafetyAction>(
+        tooltip: AppStrings.productPageMoreActions,
+        onSelected: (action) => _handleSafetyAction(context, action),
+        itemBuilder: (context) => const [
+          PopupMenuItem(
+            value: _PublicProfileSafetyAction.reportUser,
+            child: _PublicProfileSafetyMenuItem(
+              icon: Icons.person_off_outlined,
+              label: AppStrings.productPageReportSeller,
+            ),
+          ),
+          PopupMenuItem(
+            value: _PublicProfileSafetyAction.blockUser,
+            child: _PublicProfileSafetyMenuItem(
+              icon: Icons.block,
+              label: AppStrings.productPageBlockSeller,
+            ),
+          ),
+        ],
+      ),
+    ];
   }
 
   List<Widget> _buildContent(BuildContext context) {
@@ -179,6 +218,101 @@ class _PublicUserProfileState extends State<PublicUserProfile> {
         ];
     }
   }
+
+  Future<void> _handleSafetyAction(
+    BuildContext context,
+    _PublicProfileSafetyAction action,
+  ) async {
+    switch (action) {
+      case _PublicProfileSafetyAction.reportUser:
+        await _submitReport(context);
+        break;
+      case _PublicProfileSafetyAction.blockUser:
+        await _blockUser(context);
+        break;
+    }
+  }
+
+  Future<void> _submitReport(BuildContext context) async {
+    final draft = await showReportProductSheet(
+      context,
+      title: AppStrings.productPageReportSellerTitle,
+    );
+    if (draft == null || !context.mounted) {
+      return;
+    }
+
+    final result = await context.read<ProductViewModel>().reportSeller(
+      widget.userId,
+      reason: draft.reason,
+      message: draft.message,
+    );
+    if (!context.mounted) {
+      return;
+    }
+
+    _showSafetyResult(
+      context,
+      result,
+      successMessage: AppStrings.productPageReportSubmitted,
+      fallbackError: AppStrings.productPageReportFailed,
+    );
+  }
+
+  Future<void> _blockUser(BuildContext context) async {
+    final confirmed = await showBlockSellerDialog(context);
+    if (!confirmed || !context.mounted) {
+      return;
+    }
+
+    final result = await context.read<ProductViewModel>().blockSeller(widget.userId);
+    if (!context.mounted) {
+      return;
+    }
+
+    _showSafetyResult(
+      context,
+      result,
+      successMessage: AppStrings.productPageBlockSellerSuccess,
+      fallbackError: AppStrings.productPageBlockSellerFailed,
+    );
+    if (result.isSuccess) {
+      await _viewModel.loadProfile();
+    }
+  }
+
+  void _showSafetyResult(
+    BuildContext context,
+    Result<void> result, {
+    required String successMessage,
+    required String fallbackError,
+  }) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(result.isSuccess ? successMessage : result.error ?? fallbackError),
+      ),
+    );
+  }
+}
+
+class _PublicProfileSafetyMenuItem extends StatelessWidget {
+  const _PublicProfileSafetyMenuItem({
+    required this.icon,
+    required this.label,
+  });
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) => Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Icon(icon, size: 20),
+      const SizedBox(width: 12),
+      Text(label),
+    ],
+  );
 }
 
 class _AvatarPlaceholder extends StatelessWidget {

@@ -38,6 +38,11 @@ class ApiEndpoints {
     return '${productById(productId)}/with-details';
   }
 
+  static const String reports = '$_apiPrefix/reports';
+  static String blockUser(String userId) {
+    return '$_apiPrefix/blocks/${Uri.encodeComponent(userId)}';
+  }
+
   // Auth related
   static const String deleteAccount = '$_apiPrefix/auth/account';
   static const String profile = '$_apiPrefix/auth/profile';
