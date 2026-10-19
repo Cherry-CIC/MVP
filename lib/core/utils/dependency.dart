@@ -30,6 +30,7 @@ import 'package:cherry_mvp/features/orders/orders_repository.dart';
 import 'package:cherry_mvp/features/orders/orders_view_model.dart';
 import 'package:cherry_mvp/features/products/product_repository.dart';
 import 'package:cherry_mvp/features/products/product_viewmodel.dart';
+import 'package:cherry_mvp/features/products/safety_repository.dart';
 import 'package:cherry_mvp/features/profile/edit_profile_repository.dart';
 import 'package:cherry_mvp/features/profile/edit_profile_view_model.dart';
 import 'package:cherry_mvp/features/profile/profile_listings_repository.dart';
@@ -112,6 +113,11 @@ List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
     Provider<DiscoverRepository>(create: (context) => DiscoverRepository()),
     Provider<ProductRepository>(
       create: (context) => ProductRepository(Provider.of<ApiService>(context, listen: false)),
+    ),
+    Provider<SafetyRepository>(
+      create: (context) => SafetyRepository(
+        Provider.of<ApiService>(context, listen: false),
+      ),
     ),
     Provider<IDonationRepository>(
       create: (context) {
@@ -199,6 +205,10 @@ List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
     ChangeNotifierProvider<ProductViewModel>(
       create: (context) => ProductViewModel(
         productRepository: Provider.of<ProductRepository>(
+          context,
+          listen: false,
+        ),
+        safetyRepository: Provider.of<SafetyRepository>(
           context,
           listen: false,
         ),

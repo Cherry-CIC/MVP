@@ -54,8 +54,22 @@ class _HomeRepositoryStub implements IHomeRepository {
 // Navigation only fetches orders; Fake throws for unexpected repository calls.
 class _OrdersRepositoryStub extends Fake implements IOrdersRepository {
   @override
+  Future<Result<dynamic>> confirmOrderReceived(String orderId) async {
+    return Result.success(null);
+  }
+
+  @override
   Future<Result<List<OrderSummary>>> fetchOrders() async {
     return Result.success(const []);
+  }
+
+  @override
+  Future<Result<dynamic>> submitOrderDispute(
+    String orderId, {
+    required String reason,
+    String? message,
+  }) async {
+    return Result.success(null);
   }
 }
 

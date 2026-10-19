@@ -1,0 +1,98 @@
+name: Flutter builds
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Firebase environment to build
+        required: true
+        type: choice
+        options:
+          - dev
+          - prod
+        default: dev
+
+permissions:
+  contents: read
+
+jobs:
+  build-android:
+    name: Android build (${{ inputs.environment || (github.ref_name == 'main' && 'prod' || 'dev') }})
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Resolve build environment
+        id: config
+        shell: bash
+        run: |
+          app_env="${{ inputs.environment || (github.ref_name == 'main' && 'prod' || 'dev') }}"
+          echo "app_env=$app_env" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Analyze
+        run: flutter analyze --no-fatal-infos --no-fatal-warnings
+
+      - name: Build Android APK
+        env:
+          APP_ENV: ${{ steps.config.outputs.app_env }}
+        run: flutter build apk --debug --flavor "$APP_ENV" --dart-define=APP_ENV="$APP_ENV"
+
+  build-ios-simulator:
+    name: iOS simulator build (${{ inputs.environment || (github.ref_name == 'main' && 'prod' || 'dev') }})
+    runs-on: xcode-27
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Resolve build environment
+        id: config
+        shell: bash
+        run: |
+          app_env="${{ inputs.environment || (github.ref_name == 'main' && 'prod' || 'dev') }}"
+          echo "app_env=$app_env" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Use Swift Package Manager for iOS plugins
+        run: flutter config --enable-swift-package-manager
+
+      - name: Install dependencies
+        run: |
+          mkdir -p build/ios/SourcePackages
+          flutter pub get
+          flutter precache --ios
+
+      - name: Build unsigned iOS simulator app
+        env:
+          APP_ENV: ${{ steps.config.outputs.app_env }}
+        run: |
+          xcodebuild \
+            -project ios/Runner.xcodeproj \
+            -scheme Runner \
+            -configuration "Debug-${APP_ENV}" \
+            -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath build/ios/ci \
+            -clonedSourcePackagesDirPath build/ios/SourcePackages \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            build

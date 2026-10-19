@@ -34,6 +34,37 @@ The backend API documentation is available at:
 
 This Swagger interface allows you to explore and test all available API endpoints directly in your browser.
 
+## Development and Production Builds
+
+The app has separate Flutter flavors so Firebase and the backend cannot be mixed accidentally:
+
+```bash
+flutter run --flavor dev --dart-define=APP_ENV=dev
+flutter run --flavor prod --dart-define=APP_ENV=prod
+```
+
+Build Android packages with the same environment selection:
+
+```bash
+flutter build appbundle --flavor dev --dart-define=APP_ENV=dev
+flutter build appbundle --flavor prod --dart-define=APP_ENV=prod
+```
+
+Development uses `cherry-mvp` and `uk.org.cherry.app.dev`. Production uses `cherry-prod-d513e` and `uk.org.cherry.app`.
+
+### GitHub Actions builds and distribution
+
+The `Flutter builds` workflow runs on pull requests and pushes to `develop` or `main`. It analyzes the project and builds Android and unsigned iOS simulator apps for validation. It does not upload artifacts or publish to testers.
+
+Use `Android Firebase Distribution` from the Actions tab to publish Android only. Select one of `debug-dev`, `debug-prod`, `release-dev`, or `release-prod`. Dev builds publish to the `cherry-mvp` Firebase app; prod builds publish to `cherry-prod-d513e`.
+
+Use `iOS TestFlight Distribution` to publish iOS only. Select `Release-dev` or `Release-prod`. These are release-mode App Store builds; TestFlight cannot use Flutter debug builds. The dev and prod bundle IDs must each exist as an app in App Store Connect.
+
+Required protected credentials:
+
+- Android Firebase: `FIREBASE_SERVICE_ACCOUNT`, `ANDROID_DEBUG_KEYSTORE_BASE64`; release configurations additionally require `ANDROID_RELEASE_KEYSTORE_BASE64`, `ANDROID_RELEASE_KEYSTORE_PASSWORD`, `ANDROID_RELEASE_KEY_ALIAS`, and `ANDROID_RELEASE_KEY_PASSWORD`.
+- iOS TestFlight: `APPSTORE_API_PRIVATE_KEY`, `APPSTORE_KEY_ID`, `APPSTORE_ISSUER_ID`, and the `APPLE_TEAM_ID` repository variable. App Store Connect API access must be allowed to manage signing for the team.
+
 ## What to Contribute
 
 Amazing! Thank you so much for considering to volunteer your time and skills to our amazing project.

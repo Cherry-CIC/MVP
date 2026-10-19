@@ -6,6 +6,7 @@ import 'package:cherry_mvp/core/router/nav_provider.dart';
 import 'package:cherry_mvp/core/utils/result.dart';
 import 'package:cherry_mvp/features/products/product_repository.dart';
 import 'package:cherry_mvp/features/products/product_viewmodel.dart';
+import 'package:cherry_mvp/features/products/safety_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'support/unexpected_api_service.dart';
@@ -41,6 +42,19 @@ class _LikeUpdateRepository extends ProductRepository {
   @override
   Future<Result<ProductLikeUpdate>> unlikeProduct(String productId) async {
     return Result.success(unlikeUpdate);
+  }
+}
+
+class _SafetyRepositoryStub extends SafetyRepository {
+  _SafetyRepositoryStub({required this.blockCompleters}) : super(const UnexpectedApiService());
+
+  final List<Completer<Result<void>>> blockCompleters;
+  int blockCalls = 0;
+
+  @override
+  Future<Result<void>> blockUser(String userId) {
+    blockCalls += 1;
+    return blockCompleters[blockCalls - 1].future;
   }
 }
 
@@ -277,6 +291,39 @@ void main() {
     expect(viewModel.isProductLiked(product.id), isFalse);
     expect(viewModel.cachedLikedProducts, isEmpty);
     expect(viewModel.getLikesCount(product), 1);
+  });
+
+  test('old safety requests do not clear newer account pending actions', () async {
+    var currentUserId = 'account-a';
+    final firstBlock = Completer<Result<void>>();
+    final secondBlock = Completer<Result<void>>();
+    final safetyRepository = _SafetyRepositoryStub(
+      blockCompleters: [firstBlock, secondBlock],
+    );
+    final viewModel = ProductViewModel(
+      productRepository: _LikeUpdateRepository(
+        likeUpdate: const ProductLikeUpdate(liked: true, likes: 1),
+        unlikeUpdate: const ProductLikeUpdate(liked: false, likes: 0),
+      ),
+      safetyRepository: safetyRepository,
+      navigator: NavigationProvider(),
+      currentUserIdProvider: () => currentUserId,
+    );
+
+    final accountAAction = viewModel.blockSeller('seller-1');
+    currentUserId = 'account-b';
+    viewModel.clearUserState();
+    final accountBAction = viewModel.blockSeller('seller-1');
+
+    firstBlock.complete(Result.success(null));
+    await accountAAction;
+
+    final duplicateResult = await viewModel.blockSeller('seller-1');
+    expect(duplicateResult.isSuccess, isFalse);
+    expect(safetyRepository.blockCalls, 2);
+
+    secondBlock.complete(Result.success(null));
+    await accountBAction;
   });
 }
 
