@@ -24,4 +24,30 @@ class StorageProvider {
       return Result.failure(e.toString());
     }
   }
+
+  /// Like [uploadImage], but declares the content type and custom metadata.
+  ///
+  /// Needed for locations whose Storage rules require them, such as the listing
+  /// media folder, where a missing `ownerUid` makes the upload fail.
+  Future<Result<String>> uploadImageWithMetadata(
+    File imageFile,
+    String storagePath, {
+    required String contentType,
+    required Map<String, String> customMetadata,
+  }) async {
+    try {
+      final imageRef = firebaseStorage.ref().child(storagePath);
+
+      await imageRef.putFile(
+        imageFile,
+        SettableMetadata(contentType: contentType, customMetadata: customMetadata),
+      );
+
+      return Result.success(await imageRef.getDownloadURL());
+    } on FirebaseException catch (e) {
+      return Result.failure(e.message ?? ErrorStrings.storageError);
+    } catch (e) {
+      return Result.failure(e.toString());
+    }
+  }
 }

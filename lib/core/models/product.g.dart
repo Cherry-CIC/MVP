@@ -12,9 +12,7 @@ Product _$ProductFromJson(Map<String, dynamic> json) => Product(
   name: json['name'] as String,
   description: json['description'] as String,
   quality: json['quality'] as String,
-  productImages: (json['product_images'] as List<dynamic>)
-      .map((e) => e as String)
-      .toList(),
+  productImages: (json['product_images'] as List<dynamic>).map((e) => e as String).toList(),
   donation: Product._parseDouble(json['donation']),
   price: Product._parseDouble(json['price']),
   securityFee: Product._parseOptionalDouble(json['securityFee']),
@@ -26,12 +24,9 @@ Product _$ProductFromJson(Map<String, dynamic> json) => Product(
   charityId: json['charityId'] as String?,
   createdAt: json['createdAt'] as String?,
   updatedAt: json['updatedAt'] as String?,
-  category: json['category'] == null
-      ? null
-      : Category.fromJson(json['category'] as Map<String, dynamic>),
-  charity: json['charity'] == null
-      ? null
-      : Charity.fromJson(json['charity'] as Map<String, dynamic>),
+  status: json['status'] as String?,
+  category: json['category'] == null ? null : Category.fromJson(json['category'] as Map<String, dynamic>),
+  charity: json['charity'] == null ? null : Charity.fromJson(json['charity'] as Map<String, dynamic>),
 );
 
 Map<String, dynamic> _$ProductToJson(Product instance) => <String, dynamic>{
@@ -52,6 +47,7 @@ Map<String, dynamic> _$ProductToJson(Product instance) => <String, dynamic>{
   'charityId': instance.charityId,
   'createdAt': instance.createdAt,
   'updatedAt': instance.updatedAt,
+  'status': instance.status,
   'category': instance.category,
   'charity': instance.charity,
 };

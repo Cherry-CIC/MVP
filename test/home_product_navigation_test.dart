@@ -42,6 +42,11 @@ class _ProductRepositoryStub extends ProductRepository {
   _ProductRepositoryStub() : super(const UnexpectedApiService());
 
   @override
+  Future<Result<Product>> fetchProduct(String productId) async => Result.success(
+    productId == _selectedProduct.id ? _selectedProduct : _firstProduct,
+  );
+
+  @override
   Future<Result<List<Product>>> fetchLikedProducts() async {
     return Result.success(const []);
   }

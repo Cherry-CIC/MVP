@@ -30,6 +30,7 @@ class Product {
   final String? charityId;
   final String? createdAt;
   final String? updatedAt;
+  final String? status;
   final Category? category;
   final Charity? charity;
 
@@ -51,6 +52,7 @@ class Product {
     this.charityId,
     this.createdAt,
     this.updatedAt,
+    this.status,
     this.category,
     this.charity,
   });
