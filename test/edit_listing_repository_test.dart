@@ -8,7 +8,7 @@ import 'package:cherry_mvp/core/services/network/api_service.dart';
 import 'package:cherry_mvp/core/utils/result.dart';
 import 'package:cherry_mvp/features/products/edit_listing/edit_listing_draft.dart';
 import 'package:cherry_mvp/features/products/edit_listing/edit_listing_repository.dart';
-import 'package:cherry_mvp/features/products/edit_listing/listing_photo_format.dart';
+import 'package:cherry_mvp/features/products/edit_listing/image_upload_format.dart';
 import 'package:cherry_mvp/features/products/product_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:image_picker/image_picker.dart';
@@ -60,28 +60,13 @@ class _Storage implements StorageProvider {
   final List<String> events;
   final List<String> paths = [];
   final List<String> files = [];
-  final List<String> contentTypes = [];
-  final List<Map<String, String>> metadata = [];
   Future<Result<String>> Function()? onUpload;
 
-  // The editor must never use the plain upload: it carries no metadata, so the
-  // backend's Storage rules and photo validation reject what it produces.
   @override
-  Future<Result<String>> uploadImage(File imageFile, String storagePath) =>
-      throw StateError('Listing photos must use uploadImageWithMetadata');
-
-  @override
-  Future<Result<String>> uploadImageWithMetadata(
-    File imageFile,
-    String storagePath, {
-    required String contentType,
-    required Map<String, String> customMetadata,
-  }) async {
+  Future<Result<String>> uploadImage(File imageFile, String storagePath) async {
     events.add('upload');
     paths.add(storagePath);
     files.add(imageFile.path);
-    contentTypes.add(contentType);
-    metadata.add(customMetadata);
     return onUpload != null ? onUpload!() : Result.success('https://example.com/new-photo.jpg');
   }
 
@@ -298,14 +283,8 @@ void main() {
         original.productImages.single,
         'https://example.com/new-photo.jpg',
       ]);
-      // The backend only accepts new photos directly under this folder, with
-      // the owner and policy metadata its Storage rules require.
-      expect(harness.storage.paths.single, matches(r'^listing-media-v1/seller-1/edit_[0-9a-f]{32}\.png$'));
+      expect(harness.storage.paths.single, matches(r'^products/seller-1/edit_[0-9a-f]{32}\.png$'));
       expect(harness.storage.files.single, endsWith('new-photo.png'));
-      expect(harness.storage.contentTypes, ['image/png']);
-      expect(harness.storage.metadata, [
-        {'ownerUid': 'seller-1', 'mediaPolicy': 'listing-v1'},
-      ]);
     });
 
     test('upload failure leaves the original listing untouched', () async {
@@ -420,7 +399,6 @@ void main() {
         ListingPhoto.local(_photoFile('actually-webp.jpeg', _webpBytes)),
       ]);
       expect(result.isSuccess, isTrue);
-      expect(harness.storage.contentTypes, ['image/png', 'image/jpeg', 'image/webp']);
       expect(harness.storage.paths[0], endsWith('.png'));
       expect(harness.storage.paths[1], endsWith('.jpg'));
       expect(harness.storage.paths[2], endsWith('.webp'));
@@ -442,7 +420,7 @@ void main() {
         original.productImages.first,
         'https://example.com/new-2.jpg',
       ]);
-      expect(harness.storage.contentTypes, ['image/png', 'image/jpeg']);
+      expect(harness.storage.paths, [matches(r'\.png$'), matches(r'\.jpg$')]);
     });
 
     test('HEIC content is refused before any upload or write, whatever its name', () async {

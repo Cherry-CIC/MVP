@@ -3,7 +3,7 @@ import 'package:cherry_mvp/core/utils/validator.dart';
 import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
 
-import 'listing_photo_format.dart';
+import 'image_upload_format.dart';
 
 class ListingPhoto {
   const ListingPhoto.remote(String url) : remoteUrl = url, file = null;
