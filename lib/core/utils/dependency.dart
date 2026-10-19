@@ -29,6 +29,7 @@ import 'package:cherry_mvp/features/forgot_password/forgot_password_viewmodel.da
 import 'package:cherry_mvp/features/orders/orders_repository.dart';
 import 'package:cherry_mvp/features/orders/orders_view_model.dart';
 import 'package:cherry_mvp/features/products/product_repository.dart';
+import 'package:cherry_mvp/features/products/edit_listing/edit_listing_repository.dart';
 import 'package:cherry_mvp/features/products/product_viewmodel.dart';
 import 'package:cherry_mvp/features/products/safety_repository.dart';
 import 'package:cherry_mvp/features/profile/edit_profile_repository.dart';
@@ -113,6 +114,14 @@ List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
     Provider<DiscoverRepository>(create: (context) => DiscoverRepository()),
     Provider<ProductRepository>(
       create: (context) => ProductRepository(Provider.of<ApiService>(context, listen: false)),
+    ),
+    Provider<IEditListingRepository>(
+      create: (context) => EditListingRepository(
+        apiService: context.read<ApiService>(),
+        productRepository: context.read<ProductRepository>(),
+        storageProvider: context.read<StorageProvider>(),
+        currentUserId: () => context.read<FirebaseAuth>().currentUser?.uid,
+      ),
     ),
     Provider<SafetyRepository>(
       create: (context) => SafetyRepository(

@@ -12,6 +12,10 @@ import 'package:cherry_mvp/core/utils/donor_discount_state_store.dart';
 import 'package:cherry_mvp/core/utils/result.dart';
 import 'package:cherry_mvp/features/checkout/checkout_view_model.dart';
 import 'package:cherry_mvp/features/products/product_viewmodel.dart';
+import 'package:cherry_mvp/features/products/edit_listing/edit_listing_page.dart';
+import 'package:cherry_mvp/features/products/edit_listing/edit_listing_repository.dart';
+import 'package:cherry_mvp/features/home/home_viewmodel.dart';
+import 'package:cherry_mvp/features/profile/profile_listings_view_model.dart';
 import 'package:cherry_mvp/features/products/widgets/product_highlight_title.dart';
 import 'package:cherry_mvp/features/products/widgets/product_information.dart';
 import 'package:cherry_mvp/features/products/widgets/product_safety_actions.dart';
@@ -118,23 +122,34 @@ class _ProductPageState extends State<ProductPage> {
     }
 
     final checkoutViewModel = context.watch<CheckoutViewModel>();
-    final isOwnListing = checkoutViewModel.isOwnProduct(product);
+    final displayedProduct = product;
+    final isOwnListing = checkoutViewModel.isOwnProduct(displayedProduct);
+    final canEdit =
+        isOwnListing &&
+        FeatureFlags.enableListingEdit &&
+        context.read<IEditListingRepository>().canEdit(displayedProduct);
     final hasOptionalProductHighlights =
         FeatureFlags.showDonorDiscounts || (!isOwnListing && FeatureFlags.showOtherCharityRequests);
-    final sellerId = NavigationProvider.publicProfileUserId(product.userId);
+    final sellerId = NavigationProvider.publicProfileUserId(displayedProduct.userId);
     final sellerLoad = _sellerFuture(context, sellerId);
     final canUseSafetyActions = !isOwnListing && sellerId != null && sellerId.isNotEmpty;
 
     return Scaffold(
       bottomNavigationBar: isOwnListing
-          ? null
+          ? (canEdit
+                ? BottomCta(
+                    enabled: true,
+                    text: 'Edit listing',
+                    onPressed: () => _editListing(displayedProduct),
+                  )
+                : null)
           : BottomCta(
               enabled: true,
               text: AppStrings.productPageBuyNow,
               textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
               onPressed: () {
                 checkoutViewModel.clearBasket();
-                if (!checkoutViewModel.addItem(product)) {
+                if (!checkoutViewModel.addItem(displayedProduct)) {
                   return;
                 }
                 context.read<NavigationProvider>().navigateTo(
@@ -145,13 +160,13 @@ class _ProductPageState extends State<ProductPage> {
       body: CustomScrollView(
         slivers: [
           ProductHeaderCarousel(
-            product,
+            displayedProduct,
             canLike: !isOwnListing,
             showSafetyActions: canUseSafetyActions,
             onSafetyActionSelected: (action) => _handleSafetyAction(
               context,
               action,
-              product,
+              displayedProduct,
               sellerId!,
             ),
           ),
@@ -182,21 +197,21 @@ class _ProductPageState extends State<ProductPage> {
                       awards: 0,
                       hasBuyerDiscounts: false,
                     ),
-                    charityDetails: product.charity,
+                    charityDetails: displayedProduct.charity,
                     padding: const EdgeInsets.fromLTRB(16, 24, 16, 16),
                   );
                 },
               ),
               const Divider(thickness: 8),
               ProductInformation(
-                product: product,
+                product: displayedProduct,
                 padding: const EdgeInsets.all(16),
               ),
               const Divider(thickness: 8),
               ListTile(
                 title: Text(AppStrings.productPageDescription),
                 titleTextStyle: Theme.of(context).textTheme.titleSmall,
-                subtitle: Text(product.description),
+                subtitle: Text(displayedProduct.description),
                 subtitleTextStyle: TextStyle(
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
@@ -208,7 +223,7 @@ class _ProductPageState extends State<ProductPage> {
                     if (FeatureFlags.showDonorDiscounts)
                       FutureBuilder<bool?>(
                         future: DonorDiscountStateStore.getDonorDiscountState(
-                          product.id,
+                          displayedProduct.id,
                         ),
                         builder: (context, snapshot) {
                           final bool isDonorDiscountActive = snapshot.data ?? false;
@@ -277,6 +292,22 @@ class _ProductPageState extends State<ProductPage> {
       _sellerLoad = _loadPublicSeller(context, userId);
     }
     return _sellerLoad!;
+  }
+
+  Future<void> _editListing(Product product) async {
+    final result = await context.read<NavigationProvider>().navigateTo(
+      AppRoutes.editListing,
+      arguments: {'productId': product.id},
+    );
+    if (!mounted || result is! EditListingResult) return;
+    if (result.product != null) {
+      context.read<ProductViewModel>().applyListingUpdate(result.product!);
+    }
+    await Future.wait([
+      context.read<HomeViewModel>().refreshAfterListingEdit(),
+      context.read<ProfileListingsViewModel>().refreshAfterListingEdit(),
+    ]);
+    if (mounted) setState(_loadProduct);
   }
 
   Future<PublicUser?> _loadPublicSeller(BuildContext context, String? userId) async {

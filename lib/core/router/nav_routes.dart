@@ -14,6 +14,7 @@ import 'package:cherry_mvp/features/liked_items/liked_items_page.dart';
 import 'package:cherry_mvp/features/login/login_page.dart';
 import 'package:cherry_mvp/features/forgot_password/forgot_password_page.dart';
 import 'package:cherry_mvp/features/products/product_page.dart';
+import 'package:cherry_mvp/features/products/edit_listing/edit_listing_page.dart';
 import 'package:cherry_mvp/features/profile/public_user_profile.dart';
 import 'package:cherry_mvp/features/profile/edit_profile_page.dart';
 import 'package:cherry_mvp/features/register/register_page.dart';
@@ -53,6 +54,7 @@ class AppRoutes {
   static const String pickupPointSelector = '/pickupPointSelector';
   static const String likedItems = '/liked-items';
   static const String editProfile = '/editProfile';
+  static const String editListing = '/edit-listing';
 
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
@@ -84,10 +86,20 @@ class AppRoutes {
           settings: settings,
           builder: (_) => userId == null
               ? Scaffold(
-                  appBar: AppBar(title: const Text(AppStrings.publicProfileFallbackTitle)),
-                  body: const Center(child: Text(AppStrings.publicProfileUnavailable)),
+                  appBar: AppBar(
+                    title: const Text(AppStrings.publicProfileFallbackTitle),
+                  ),
+                  body: const Center(
+                    child: Text(AppStrings.publicProfileUnavailable),
+                  ),
                 )
               : PublicUserProfile(userId: userId),
+        );
+      case editListing:
+        final args = settings.arguments;
+        final productId = args is Map ? args['productId'] : null;
+        return MaterialPageRoute(
+          builder: (_) => EditListingPage(productId: productId is String ? productId : ''),
         );
       case home:
         return MaterialPageRoute(builder: (_) => const PostAuthUsernameGate());
@@ -145,10 +157,14 @@ class AppRoutes {
         final args = settings.arguments;
         final mapArgs = args is Map<String, dynamic> ? args : null;
         return MaterialPageRoute(
-          builder: (_) => PostageSizePage(initialPostageSize: mapArgs?['initialPostageSize']),
+          builder: (_) => PostageSizePage(
+            initialPostageSize: mapArgs?['initialPostageSize'],
+          ),
         );
       case pickupPointSelector:
-        return MaterialPageRoute(builder: (_) => const PickupPointSelectionPage());
+        return MaterialPageRoute(
+          builder: (_) => const PickupPointSelectionPage(),
+        );
       default:
         return MaterialPageRoute(
           builder: (_) => Scaffold(
