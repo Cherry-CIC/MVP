@@ -128,11 +128,19 @@ jobs:
           channel: stable
           cache: true
 
-      - name: Use Swift Package Manager for iOS plugins
-        run: flutter config --enable-swift-package-manager
+      - name: Use CocoaPods for iOS plugins
+        run: flutter config --no-enable-swift-package-manager
 
       - name: Install dependencies
         run: flutter pub get
+
+      - name: Keep iOS project on CocoaPods
+        run: |
+          git restore --source=HEAD -- ios/Runner.xcodeproj/project.pbxproj
+          if grep -q 'FlutterGeneratedPluginSwiftPackage' ios/Runner.xcodeproj/project.pbxproj; then
+            echo 'Swift Package Manager integration is still present in the iOS project'
+            exit 1
+          fi
 
       - name: Build unsigned iOS simulator app
         env:
