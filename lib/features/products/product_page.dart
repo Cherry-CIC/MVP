@@ -124,10 +124,7 @@ class _ProductPageState extends State<ProductPage> {
     final checkoutViewModel = context.watch<CheckoutViewModel>();
     final displayedProduct = product;
     final isOwnListing = checkoutViewModel.isOwnProduct(displayedProduct);
-    final canEdit =
-        isOwnListing &&
-        FeatureFlags.enableListingEdit &&
-        context.read<IEditListingRepository>().canEdit(displayedProduct);
+    final canEdit = isOwnListing && context.read<IEditListingRepository>().canEdit(displayedProduct);
     final hasOptionalProductHighlights =
         FeatureFlags.showDonorDiscounts || (!isOwnListing && FeatureFlags.showOtherCharityRequests);
     final sellerId = NavigationProvider.publicProfileUserId(displayedProduct.userId);
@@ -302,6 +299,9 @@ class _ProductPageState extends State<ProductPage> {
     if (!mounted || result is! EditListingResult) return;
     if (result.product != null) {
       context.read<ProductViewModel>().applyListingUpdate(result.product!);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Listing updated')),
+      );
     }
     await Future.wait([
       context.read<HomeViewModel>().refreshAfterListingEdit(),

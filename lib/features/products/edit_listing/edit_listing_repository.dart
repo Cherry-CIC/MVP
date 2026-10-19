@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'dart:math';
 
-import 'package:cherry_mvp/core/config/feature_flags.dart';
 import 'package:cherry_mvp/core/models/product.dart';
 import 'package:cherry_mvp/core/services/firebase_storage.dart';
 import 'package:cherry_mvp/core/services/network/api_endpoints.dart';
@@ -39,24 +38,20 @@ class EditListingRepository implements IEditListingRepository {
     required ProductRepository productRepository,
     required StorageProvider storageProvider,
     required String? Function() currentUserId,
-    bool enabled = FeatureFlags.enableListingEdit,
   }) : _api = apiService,
        _products = productRepository,
        _storage = storageProvider,
-       _readUserId = currentUserId,
-       _editingEnabled = enabled;
+       _readUserId = currentUserId;
 
   final ApiService _api;
   final ProductRepository _products;
   final StorageProvider _storage;
   final String? Function() _readUserId;
-  final bool _editingEnabled;
 
   @override
   bool canEdit(Product product) {
     final uid = _readUserId();
-    return _editingEnabled &&
-        uid != null &&
+    return uid != null &&
         uid.isNotEmpty &&
         product.userId == uid &&
         product.number > 0 &&
@@ -65,7 +60,6 @@ class EditListingRepository implements IEditListingRepository {
 
   @override
   Future<Result<Product>> load(String productId) async {
-    if (!_editingEnabled) return Result.failure('Listing editing is not available yet');
     final uid = _readUserId();
     if (uid == null || uid.isEmpty) return Result.failure('Sign in to edit your listing');
     final result = await _products.fetchProduct(productId);

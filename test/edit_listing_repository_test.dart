@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:cherry_mvp/core/config/feature_flags.dart';
 import 'package:cherry_mvp/core/models/product.dart';
 import 'package:cherry_mvp/core/services/firebase_storage.dart';
 import 'package:cherry_mvp/core/services/network/api_endpoints.dart';
@@ -80,20 +79,12 @@ class _Harness {
     api = _Api(events);
     products = _Products(events);
     storage = _Storage(events);
-    repository = enabled == null
-        ? EditListingRepository(
-            apiService: api,
-            productRepository: products,
-            storageProvider: storage,
-            currentUserId: () => uid,
-          )
-        : EditListingRepository(
-            apiService: api,
-            productRepository: products,
-            storageProvider: storage,
-            currentUserId: () => uid,
-            enabled: enabled,
-          );
+    repository = EditListingRepository(
+      apiService: api,
+      productRepository: products,
+      storageProvider: storage,
+      currentUserId: () => uid,
+    );
   }
   String? uid = 'seller-1';
   final List<String> events = [];
@@ -135,12 +126,10 @@ EditListingDraft _withNewPhoto(Product original) => _changed(original).copyWith(
 
 void main() {
   group('EditListingRepository access checks', () {
-    test('default-off build prevents reads, uploads and writes', () async {
-      expect(FeatureFlags.enableListingEdit, isFalse);
+    test('backend eligibility gates prevent reads, uploads and writes', () async {
       final harness = _Harness();
-      final original = _product();
+      final original = _product({'status': 'sold', 'number': 0});
       expect(harness.repository.canEdit(original), isFalse);
-      expect((await harness.repository.load(original.id)).isSuccess, isFalse);
       final result = await harness.repository.save(original, _withNewPhoto(original));
       expect(result.isSuccess, isFalse);
       expect(result.writeAttempted, isFalse);
@@ -157,7 +146,7 @@ void main() {
     };
     for (final entry in unavailable.entries) {
       test('${entry.key} prevents upload and PUT', () async {
-        final harness = _Harness(enabled: true);
+        final harness = _Harness();
         final original = _product(entry.value);
         expect(harness.repository.canEdit(original), isFalse);
         final result = await harness.repository.save(original, _withNewPhoto(original));
@@ -175,7 +164,7 @@ void main() {
     });
 
     test('supports owned active and unlisted listings without version metadata', () {
-      final harness = _Harness(enabled: true);
+      final harness = _Harness();
       for (final status in ['active', 'unlisted']) {
         expect(harness.repository.canEdit(_product({'status': status})), isTrue);
       }

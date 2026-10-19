@@ -2,7 +2,7 @@
 
 Branch: `cherry/edit-listing-frontend`, based on MVP `00fbc19`.
 
-This change adds UI, client logic, API integration and tests. It does not change or deploy the backend or Firebase rules. **Editing is disabled by default and is not ready to enable against the existing live backend.**
+This change adds UI, client logic, API integration and tests. It does not change or deploy the backend or Firebase rules. Editing is available for listings that pass the client checks below; the backend remains authoritative.
 
 ## Editable fields
 
@@ -25,21 +25,19 @@ The entry point requires an owned listing, positive stock, and an `active` or `u
 - An uncertain PUT result freezes further saves until an explicit reload. The UI does not claim success without a successful response, an advanced version and canonical readback.
 - Both confirmed and uncertain writes invalidate the caller's cached views on return. Upload-only failures preserve the original listing and draft.
 
-## Consistency and buying
+## Consistency
 
 Home and search share a cache. After an edit, their results and profile listings are cleared and reloaded; pending older requests cannot restore old cards. Confirmed product and liked-item caches are updated by ID and version. Product routes from Home/search/liked items fetch by ID rather than displaying only the original card snapshot.
-
-Buy now re-fetches the listing. Changed details are shown for review and require another explicit Buy now. A changed or unavailable item is removed from the basket and payment is stopped. Lookup failures also stop payment. The backend remains authoritative for the final availability and payment checks.
 
 Discover currently contains dummy product data and its product rows are hidden. The charity screen has no live product feed. No duplicate product documents or historical orders are written by this feature. Other devices receive changes on their next API read; this is not a real-time cross-device subscription. Already-open feeds retain their normal refresh behaviour, but details and payment are rechecked.
 
 ## Proposed backend contract for step two
 
-The backend is authoritative for ownership, listing state, pending payments, sales history, and the allowed editable fields. Keep the frontend flag disabled until the backend listing-edit endpoint is deployed and verified in the target environment.
+The backend is authoritative for ownership, listing state, pending payments, sales history, and the allowed editable fields. Deploy and verify the backend listing-edit endpoint before enabling editing in a target environment.
 5. Preserve immutable purchased details and media, or reject edits after any unit has been sold. Existing order enrichment reads live product images/size/charity, so merely blocking fully sold stock is insufficient for multi-unit listings. Any order-snapshot API change also needs a later frontend consumer change.
 6. Validate media origin/ownership, size/type/count and define safe retention/cleanup. Verify deployed Firestore and Storage rules. The checked-in Firestore rules allow broad access until 2030; deployment state was not verified, and Storage rules are not tracked here. The API checks cannot protect canonical data if direct writes bypass them.
 
-Only after backend integration tests pass should a separate reviewed release enable `--dart-define=ENABLE_LISTING_EDIT=true`. The default-off flag and required server version deliberately make this frontend branch safe to stage separately. Even with the flag enabled, today's unversioned backend cannot trigger uploads or PUTs through the editor.
+The backend must be deployed and integration-tested before release. The frontend does not use a separate rollout flag; server authorization and the client eligibility checks control the edit entry point.
 
 ## Verification
 
@@ -47,12 +45,12 @@ Use the tracked `.env.example` as a local `.env` for test asset bundling. No liv
 
 ```sh
 flutter test --no-pub
-flutter test --no-pub --dart-define=ENABLE_LISTING_EDIT=true test/edit_listing_navigation_test.dart
+flutter test --no-pub test/edit_listing_navigation_test.dart
 flutter analyze --no-pub
 bash tool/check_safe_logging.sh
 ```
 
-Tests cover the release/version/owner/state gates, sparse payloads, text/photo validation, upload ordering/failure, account changes, stale and uncertain writes, readback, duplicate saves, discard/reload, photo ordering, large text at 320px, cache invalidation, owner navigation, buyer review and checkout freshness/selection races.
+Tests cover owner/state gates, sparse payloads, text/photo validation, upload ordering/failure, account changes, stale and uncertain writes, readback, duplicate saves, discard/reload, photo ordering, large text at 320px, cache invalidation and owner navigation.
 
 Results on Flutter 3.44.4 / Dart 3.12.2:
 

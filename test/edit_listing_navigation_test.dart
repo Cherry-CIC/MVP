@@ -1,5 +1,4 @@
 import 'package:cherry_mvp/core/config/app_images.dart';
-import 'package:cherry_mvp/core/config/feature_flags.dart';
 import 'package:cherry_mvp/core/models/product.dart';
 import 'package:cherry_mvp/core/router/router.dart';
 import 'package:cherry_mvp/core/utils/result.dart';
@@ -126,11 +125,6 @@ Future<({_Editor editor, _Home home, _Profile profile, CheckoutViewModel checkou
 }
 
 void main() {
-  testWidgets('release flag keeps the edit entry point hidden', (tester) async {
-    await _open(tester, _Products(_product()));
-    expect(find.widgetWithText(FilledButton, 'Edit listing'), findsNothing);
-  }, skip: FeatureFlags.enableListingEdit);
-
   testWidgets('owner opens editor, saves and refreshes detail, profile and feed', (tester) async {
     final products = _Products(_product());
     final harness = await _open(tester, products);
@@ -155,13 +149,13 @@ void main() {
     expect(harness.profile.reads, 1);
     expect(harness.home.reads, 1);
     expect(harness.productVm.product?.name, 'Updated blue jumper');
-  }, skip: !FeatureFlags.enableListingEdit);
+  });
 
   for (final p in [_product(status: 'sold'), _product(status: null)]) {
     testWidgets('uneditable listing ${p.status} has no edit button', (tester) async {
       await _open(tester, _Products(p));
       expect(find.widgetWithText(FilledButton, 'Edit listing'), findsNothing);
-    }, skip: !FeatureFlags.enableListingEdit);
+    });
   }
 }
 
