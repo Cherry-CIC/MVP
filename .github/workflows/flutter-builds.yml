@@ -129,7 +129,7 @@ jobs:
       - name: Build unsigned iOS simulator app
         env:
           APP_ENV: ${{ steps.config.outputs.app_env }}
-        run: flutter build ios --debug --no-codesign --flavor "$APP_ENV" --dart-define=APP_ENV="$APP_ENV"
+        run: flutter build ios --debug --no-codesign --simulator --flavor "$APP_ENV" --dart-define=APP_ENV="$APP_ENV"
 
       - name: Package iOS simulator app
         run: |
