@@ -58,6 +58,10 @@ flutter:
   # list giving the assets and other descriptors for the font. For
   # example:
   fonts:
+    - family: InstrumentSansPricing
+      fonts:
+        - asset: assets/fonts/InstrumentSans-Bold.ttf
+          weight: 700
     - family: Raleway
       fonts:
         - asset: assets/fonts/Raleway-Light.ttf

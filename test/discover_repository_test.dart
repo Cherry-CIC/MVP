@@ -4,6 +4,14 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   final repository = DiscoverRepository();
 
+  test('description lookup matches full names with case and spacing differences', () {
+    final expected = repository.fetchCharities().firstWhere((charity) => charity.charityName == 'British Red Cross');
+    expect(repository.descriptionForCharityName('  BRITISH   red cross  '), expected.description);
+    expect(repository.descriptionForCharityName('Red Cross'), isNull);
+    expect(repository.descriptionForCharityName('Unknown charity'), isNull);
+    expect(repository.descriptionForCharityName(' '), isNull);
+  });
+
   test('includes the six new charities in the local Discover feed', () {
     final charityNames = repository.fetchCharities().map((charity) => charity.charityName).toSet();
 
