@@ -151,7 +151,7 @@ jobs:
             -scheme "$APP_ENV" \
             -configuration "Debug-${APP_ENV}" \
             -sdk iphonesimulator \
-            -destination 'platform=iOS Simulator,arch=arm64,name=iPhone 16' \
+            -destination 'generic/platform=iOS Simulator' \
             -derivedDataPath build/ios/ci \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
