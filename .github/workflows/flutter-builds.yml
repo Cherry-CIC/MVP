@@ -139,22 +139,27 @@ jobs:
         env:
           APP_ENV: ${{ steps.config.outputs.app_env }}
         run: |
-          flutter build ios \
-            --debug \
-            --no-codesign \
-            --simulator \
-            --flavor "$APP_ENV" \
-            --dart-define=APP_ENV="$APP_ENV"
+          xcodebuild \
+            -project ios/Runner.xcodeproj \
+            -scheme Runner \
+            -configuration "Debug-${APP_ENV}" \
+            -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath build/ios/ci \
+            -clonedSourcePackagesDirPath build/ios/SourcePackages \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            build
 
       - name: Package iOS simulator app
         run: |
-          cd build/ios/iphonesimulator
+          cd "build/ios/ci/Build/Products/Debug-${{ steps.config.outputs.app_env }}-iphonesimulator"
           zip -r "cherry-ios-${{ steps.config.outputs.app_env }}-simulator.zip" Runner.app
 
       - name: Upload iOS simulator app
         uses: actions/upload-artifact@v4
         with:
           name: cherry-ios-${{ steps.config.outputs.app_env }}-simulator-${{ github.run_number }}
-          path: build/ios/iphonesimulator/cherry-ios-${{ steps.config.outputs.app_env }}-simulator.zip
+          path: build/ios/ci/Build/Products/Debug-${{ steps.config.outputs.app_env }}-iphonesimulator/cherry-ios-${{ steps.config.outputs.app_env }}-simulator.zip
           if-no-files-found: error
           retention-days: 30
