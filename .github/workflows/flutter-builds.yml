@@ -104,16 +104,11 @@ jobs:
 
   build-ios-simulator:
     name: iOS simulator (${{ inputs.environment || (github.ref_name == 'main' && 'prod' || 'dev') }})
-    runs-on: macos-15
+    runs-on: xcode-27
     environment: ${{ inputs.environment || (github.ref_name == 'main' && 'prod' || 'dev') }}
     steps:
       - name: Check out source
         uses: actions/checkout@v4
-
-      - name: Select stable Xcode
-        uses: maxim-lobanov/setup-xcode@v1
-        with:
-          xcode-version: '16.4'
 
       - name: Resolve build environment
         id: config
