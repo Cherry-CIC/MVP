@@ -54,7 +54,7 @@ Development uses `cherry-mvp` and `uk.org.cherry.app.dev`. Production uses `cher
 
 ### GitHub Actions builds and distribution
 
-The `Flutter builds` workflow runs on pull requests and pushes to `develop` or `main`. It analyzes the project and uploads downloadable Android APK and unsigned iOS simulator artifacts. It does not publish to testers.
+The `Flutter builds` workflow runs on pull requests and pushes to `develop` or `main`. It analyzes the project and builds Android and unsigned iOS simulator apps for validation. It does not upload artifacts or publish to testers.
 
 Use `Android Firebase Distribution` from the Actions tab to publish Android only. Select one of `debug-dev`, `debug-prod`, `release-dev`, or `release-prod`. Dev builds publish to the `cherry-mvp` Firebase app; prod builds publish to `cherry-prod-d513e`.
 
