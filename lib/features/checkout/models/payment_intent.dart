@@ -20,6 +20,7 @@ class PaymentIntentResponse {
 
   String get paymentIntent => data.paymentIntent;
   String get paymentIntentId => data.resolvedPaymentIntentId;
+  String get orderId => data.orderId;
   String get ephemeralKey => data.ephemeralKey;
   String get customer => data.customer;
   String get publishableKey => data.publishableKey;
@@ -27,6 +28,7 @@ class PaymentIntentResponse {
 
 @JsonSerializable()
 class PaymentIntentData {
+  final String orderId;
   final String? paymentIntentId;
   @JsonKey(name: 'clientSecret')
   final String paymentIntent;
@@ -35,6 +37,7 @@ class PaymentIntentData {
   final String publishableKey;
 
   PaymentIntentData({
+    required this.orderId,
     this.paymentIntentId,
     required this.paymentIntent,
     required this.ephemeralKey,

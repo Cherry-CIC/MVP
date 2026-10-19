@@ -80,8 +80,16 @@ class CheckoutViewModel extends ChangeNotifier {
   String _mobilePhoneNumber = '';
   String get mobilePhoneNumber => _mobilePhoneNumber;
 
+  String _recipientName = '';
+  String get recipientName => _recipientName;
+
   void setMobilePhoneNumber(String value) {
     _mobilePhoneNumber = value;
+    notifyListeners();
+  }
+
+  void setRecipientName(String value) {
+    _recipientName = value.trim();
     notifyListeners();
   }
 
@@ -142,8 +150,10 @@ class CheckoutViewModel extends ChangeNotifier {
   // Payment properties
   bool _hasPaymentMethod = false;
   String? _lastPaymentIntentId;
+  String? _lastOrderId;
 
   String? get lastPaymentIntentId => _lastPaymentIntentId;
+  String? get lastOrderId => _lastOrderId;
 
   /// Whether a payment method has been set
   bool get hasPaymentMethod => _selectedPaymentType != null || _hasPaymentMethod;
@@ -263,6 +273,7 @@ class CheckoutViewModel extends ChangeNotifier {
     _selectedInpost = null;
     _selectedInpostShippingMethod = null;
     _lastPaymentIntentId = null;
+    _lastOrderId = null;
     _basketItems.clear();
     _deliveryChoice = DeliveryType.undefined;
     _createOrderStatus = Status.uninitialized;
@@ -547,8 +558,17 @@ class CheckoutViewModel extends ChangeNotifier {
       return false;
     }
 
+    if (_deliveryChoice != DeliveryType.pickup) {
+      _createOrderStatus = Status.failure(
+        AppStrings.checkoutPickupOnlyCurrently,
+      );
+      notifyListeners();
+      return false;
+    }
+
     _createOrderStatus = Status.loading;
     _lastPaymentIntentId = null;
+    _lastOrderId = null;
     notifyListeners();
 
     if (selectedInpostShippingMethod == null) {
@@ -567,16 +587,39 @@ class CheckoutViewModel extends ChangeNotifier {
       return false;
     }
 
+    if (mobilePhoneNumber.trim().isEmpty) {
+      _createOrderStatus = Status.failure(
+        AppStrings.checkoutMobilePhoneRequired,
+      );
+      notifyListeners();
+      return false;
+    }
+
+    if (recipientName.isEmpty) {
+      _createOrderStatus = Status.failure(
+        AppStrings.checkoutRecipientNameRequired,
+      );
+      notifyListeners();
+      return false;
+    }
+
     final selectedShippingMethod = selectedInpostShippingMethod!;
+    final selectedPickupPoint = selectedInpost!;
 
     try {
       // To create a PaymentIntent and return the client_secret
       final response = await checkoutRepository.createPaymentIntent(
         productId: basketItems.first.id,
         shippingMethodId: selectedShippingMethod.id,
-        pickupPointId: selectedInpost!.id,
-        country: selectedInpost!.country,
-        postalCode: selectedInpost!.postcode,
+        pickupPointId: selectedPickupPoint.id,
+        country: _countryCode(selectedPickupPoint.country),
+        postalCode: selectedPickupPoint.postcode,
+        shipping: {
+          "address": _buildShippingAddress(),
+          "name": recipientName,
+          "telephone": mobilePhoneNumber.trim(),
+        },
+        pickupPoint: _buildPickupPointPayload(selectedPickupPoint),
       );
 
       if (response.isSuccess && response.value != null) {
@@ -597,6 +640,7 @@ class CheckoutViewModel extends ChangeNotifier {
         // Present the native PaymentSheet (it will show ApplePay/GooglePay if available)
         await Stripe.instance.presentPaymentSheet();
         _lastPaymentIntentId = paymentResponse.paymentIntentId;
+        _lastOrderId = paymentResponse.orderId;
         return true;
       } else {
         _createOrderStatus = Status.failure('Payment could not be completed. Please try again.');
@@ -648,8 +692,15 @@ class CheckoutViewModel extends ChangeNotifier {
     }
 
     final paymentIntentId = _lastPaymentIntentId?.trim() ?? '';
+    final orderId = _lastOrderId?.trim() ?? '';
     if (paymentIntentId.isEmpty) {
       _createOrderStatus = Status.failure('Payment intent is missing');
+      notifyListeners();
+      return;
+    }
+
+    if (orderId.isEmpty) {
+      _createOrderStatus = Status.failure('Pending order is missing');
       notifyListeners();
       return;
     }
@@ -672,14 +723,9 @@ class CheckoutViewModel extends ChangeNotifier {
       return;
     }
 
-    final address = _buildShippingAddress();
-    final inpost = selectedInpost;
-
     final Map<String, dynamic> orderData = {
-      "productId": basketItems.first.id,
+      "orderId": orderId,
       "paymentIntentId": paymentIntentId,
-      "shipping": {"address": address, "name": 'Customer', "telephone": mobilePhoneNumber},
-      if (_deliveryChoice == DeliveryType.pickup) "pickupPoint": _buildPickupPointPayload(inpost!),
     };
     try {
       final result = await checkoutRepository.createOrder(orderData);

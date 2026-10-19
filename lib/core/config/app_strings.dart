@@ -323,6 +323,9 @@ class AppStrings {
   static const checkoutFindNearestPickupPoints = 'Find pick-up points';
   static const checkoutNearestPickupPoints = 'Nearest pick-up points';
   static const checkoutMobilePhoneRequired = 'A mobile phone number is required for InPost pickup';
+  static const checkoutRecipientNameRequired = 'Your name is required for pickup delivery.';
+  static const checkoutPickupOnlyCurrently =
+      'Only pick-up point delivery is currently available.';
   static const checkoutPickupPostcodeRequired = 'Please enter a postcode';
   static const checkoutPickupPostcodeInvalid = 'Please enter a valid UK postcode';
   static const checkoutOwnProductNotAllowed = 'You cannot buy your own listing.';
