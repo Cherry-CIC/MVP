@@ -47,7 +47,8 @@ flutter:
     - assets/images/
     - assets/fonts/
     - assets/legal/
-    - .env
+    - .env.dev
+    - .env.prod
   config:
     enable-swift-package-manager: true
 

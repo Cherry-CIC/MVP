@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "166746898861",
+    "project_id": "cherry-prod-d513e",
+    "storage_bucket": "cherry-prod-d513e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:166746898861:android:7393858dd30a6241aca124",
+        "android_client_info": {
+          "package_name": "uk.org.cherry.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "166746898861-tvta41k3rf3o3tq958de5lpnd9bra3b8.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD63LTq2uUSKad-owUwZ97RFsITuADvRE4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "166746898861-tvta41k3rf3o3tq958de5lpnd9bra3b8.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "166746898861-l86d3t6jtdp3iu314e4onl87jtij37a6.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "uk.org.cherry.app"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

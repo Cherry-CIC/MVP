@@ -1,6 +1,7 @@
 import 'package:cherry_mvp/core/services/safe_log.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class GoogleAuthService {
   final _googleSignIn = GoogleSignIn.instance;
@@ -12,8 +13,8 @@ class GoogleAuthService {
   Future<void> _initializeGoogleSignIn() async {
     try {
       await _googleSignIn.initialize(
-        clientId: '401854471349-oh11bqm8vk5i5vo8m73mf037qn9lgkoh.apps.googleusercontent.com',
-        serverClientId: '401854471349-803q3o5vmr8m94fuvt50t1ke07h79c87.apps.googleusercontent.com',
+        clientId: dotenv.env['GOOGLE_SIGN_IN_CLIENT_ID'],
+        serverClientId: dotenv.env['GOOGLE_SIGN_IN_SERVER_CLIENT_ID'],
       );
       _isGoogleSignInInitialized = true;
     } catch (_) {

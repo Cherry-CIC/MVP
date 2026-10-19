@@ -1,5 +1,7 @@
 {
   "projects": {
-    "default": "cherry-mvp"
+    "default": "cherry-mvp",
+    "dev": "cherry-mvp",
+    "prod": "cherry-prod-d513e"
   }
 }
