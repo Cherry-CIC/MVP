@@ -34,6 +34,24 @@ The backend API documentation is available at:
 
 This Swagger interface allows you to explore and test all available API endpoints directly in your browser.
 
+## Development and Production Builds
+
+The app has separate Flutter flavors so Firebase and the backend cannot be mixed accidentally:
+
+```bash
+flutter run --flavor dev --dart-define=APP_ENV=dev
+flutter run --flavor prod --dart-define=APP_ENV=prod
+```
+
+Build Android packages with the same environment selection:
+
+```bash
+flutter build appbundle --flavor dev --dart-define=APP_ENV=dev
+flutter build appbundle --flavor prod --dart-define=APP_ENV=prod
+```
+
+Development uses `cherry-mvp` and `uk.org.cherry.app.dev`. Production uses `cherry-prod-d513e` and `uk.org.cherry.app`.
+
 ## What to Contribute
 
 Amazing! Thank you so much for considering to volunteer your time and skills to our amazing project.

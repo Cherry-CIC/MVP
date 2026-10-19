@@ -4,6 +4,7 @@ import 'package:cherry_mvp/core/router/nav_provider.dart';
 import 'package:cherry_mvp/core/router/nav_routes.dart';
 import 'package:cherry_mvp/core/utils/result.dart';
 import 'package:cherry_mvp/features/products/product_repository.dart';
+import 'package:cherry_mvp/features/products/safety_repository.dart';
 
 class ProductViewModel extends ChangeNotifier {
   Product? _product;
@@ -13,6 +14,7 @@ class ProductViewModel extends ChangeNotifier {
   final Map<String, Product> _likedProductCache = {};
   final Map<String, int> _likeCountOverrides = {};
   final Set<String> _pendingLikeUpdates = {};
+  final Set<String> _pendingSafetyActions = {};
   final String? Function() _currentUserIdProvider;
   int _accountStateVersion = 0;
   bool _accountOwnerInitialised = false;
@@ -25,11 +27,13 @@ class ProductViewModel extends ChangeNotifier {
   Product? get product => _product;
 
   final ProductRepository productRepository;
+  final SafetyRepository? safetyRepository;
   final NavigationProvider navigator;
 
   ProductViewModel({
     required this.productRepository,
     required this.navigator,
+    this.safetyRepository,
     String? Function()? currentUserIdProvider,
   }) : _currentUserIdProvider = currentUserIdProvider ?? _unauthenticatedUserId;
 
@@ -48,9 +52,7 @@ class ProductViewModel extends ChangeNotifier {
   bool isOwnProduct(Product product) {
     _ensureCurrentAccount();
     final currentUserId = _accountOwnerId;
-    return currentUserId != null &&
-        currentUserId.isNotEmpty &&
-        product.userId == currentUserId;
+    return currentUserId != null && currentUserId.isNotEmpty && product.userId == currentUserId;
   }
 
   // Check if a specific product is liked
@@ -62,6 +64,11 @@ class ProductViewModel extends ChangeNotifier {
   bool isLikeUpdatePending(String productId) {
     _ensureCurrentAccount();
     return _pendingLikeUpdates.contains(productId);
+  }
+
+  bool isSafetyActionPending(String key) {
+    _ensureCurrentAccount();
+    return _pendingSafetyActions.contains(key);
   }
 
   List<Product> get cachedLikedProducts {
@@ -145,9 +152,7 @@ class ProductViewModel extends ChangeNotifier {
     _ensureCurrentAccount();
     final accountStateVersion = _accountStateVersion;
     final id = product.id;
-    if (id.trim().isEmpty ||
-        _pendingLikeUpdates.contains(id) ||
-        (liked && isOwnProduct(product))) {
+    if (id.trim().isEmpty || _pendingLikeUpdates.contains(id) || (liked && isOwnProduct(product))) {
       return Result.failure('Unable to update this liked item.');
     }
 
@@ -177,6 +182,82 @@ class ProductViewModel extends ChangeNotifier {
 
     notifyListeners();
     return Result.failure(result.error ?? 'Unable to update this liked item.');
+  }
+
+  Future<Result<void>> reportProduct(
+    Product product, {
+    required String reason,
+    String? message,
+  }) {
+    return _runSafetyAction(
+      'report-product:${product.id}',
+      () => _requireSafetyRepository().submitReport(
+        targetType: ReportTargetType.product,
+        targetId: product.id,
+        reason: reason,
+        message: message,
+      ),
+    );
+  }
+
+  Future<Result<void>> reportSeller(
+    String sellerId, {
+    required String reason,
+    String? message,
+  }) {
+    return _runSafetyAction(
+      'report-seller:$sellerId',
+      () => _requireSafetyRepository().submitReport(
+        targetType: ReportTargetType.user,
+        targetId: sellerId,
+        reason: reason,
+        message: message,
+      ),
+    );
+  }
+
+  Future<Result<void>> blockSeller(String sellerId) {
+    return _runSafetyAction(
+      'block-seller:$sellerId',
+      () => _requireSafetyRepository().blockUser(sellerId),
+    );
+  }
+
+  Future<Result<void>> _runSafetyAction(
+    String key,
+    Future<Result<void>> Function() action,
+  ) async {
+    _ensureCurrentAccount();
+    if (_pendingSafetyActions.contains(key)) {
+      return Result.failure('Please wait for the current action to finish.');
+    }
+
+    _pendingSafetyActions.add(key);
+    notifyListeners();
+
+    final accountStateVersion = _accountStateVersion;
+    try {
+      final result = await action();
+      if (!isAccountStateCurrent(accountStateVersion)) {
+        return Result.failure('Please try again.');
+      }
+      return result;
+    } catch (_) {
+      return Result.failure('Please try again.');
+    } finally {
+      if (isAccountStateCurrent(accountStateVersion)) {
+        _pendingSafetyActions.remove(key);
+        notifyListeners();
+      }
+    }
+  }
+
+  SafetyRepository _requireSafetyRepository() {
+    final repository = safetyRepository;
+    if (repository == null) {
+      throw StateError('SafetyRepository is not configured.');
+    }
+    return repository;
   }
 
   void setCachedLikeState(String productId, bool liked) {
@@ -280,6 +361,7 @@ class ProductViewModel extends ChangeNotifier {
     _likedProducts.clear();
     _likedProductCache.clear();
     _pendingLikeUpdates.clear();
+    _pendingSafetyActions.clear();
     _likedProductsHydration = null;
     _likedProductsHydrationVersion = null;
     _accountOwnerId = currentUserId;

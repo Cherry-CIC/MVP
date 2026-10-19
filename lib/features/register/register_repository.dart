@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cherry_mvp/core/config/config.dart';
 import 'package:cherry_mvp/core/models/model.dart';
 import 'package:cherry_mvp/core/services/services.dart';
@@ -52,19 +54,30 @@ class RegisterRepository {
       );
 
       if (firestoreResult.isSuccess) {
-        final verificationResult = await _authService.sendVerificationEmail();
-        if (!verificationResult.isSuccess) {
-          SafeLog.event(
-            AppLogEvent.authenticationOperationFailed,
-            level: SafeLogLevel.warning,
-          );
-        }
+        unawaited(_sendVerificationEmail());
         return Result.success(userCredentials);
       } else {
         return Result.failure(firestoreResult.error);
       }
     } else {
       return Result.failure(result.error);
+    }
+  }
+
+  Future<void> _sendVerificationEmail() async {
+    try {
+      final verificationResult = await _authService.sendVerificationEmail();
+      if (!verificationResult.isSuccess) {
+        SafeLog.event(
+          AppLogEvent.authenticationOperationFailed,
+          level: SafeLogLevel.warning,
+        );
+      }
+    } catch (_) {
+      SafeLog.event(
+        AppLogEvent.authenticationOperationFailed,
+        level: SafeLogLevel.warning,
+      );
     }
   }
 
