@@ -104,7 +104,7 @@ jobs:
 
   build-ios-simulator:
     name: iOS simulator (${{ inputs.environment || (github.ref_name == 'main' && 'prod' || 'dev') }})
-    runs-on: macos-14
+    runs-on: macos-15
     environment: ${{ inputs.environment || (github.ref_name == 'main' && 'prod' || 'dev') }}
     steps:
       - name: Check out source
@@ -113,7 +113,7 @@ jobs:
       - name: Select stable Xcode
         uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: '16.2'
+          xcode-version: '16.4'
 
       - name: Resolve build environment
         id: config
@@ -128,8 +128,8 @@ jobs:
           channel: stable
           cache: true
 
-      - name: Use CocoaPods for iOS plugins
-        run: flutter config --no-enable-swift-package-manager
+      - name: Use Swift Package Manager for iOS plugins
+        run: flutter config --enable-swift-package-manager
 
       - name: Prepare Flutter iOS plugin directory
         run: mkdir -p build/ios/SourcePackages
@@ -137,17 +137,8 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Install iOS CocoaPods dependencies
-        run: |
-          flutter precache --ios
-          pod install --project-directory=ios
-
-      - name: Verify iOS project uses CocoaPods
-        run: |
-          if grep -q 'FlutterGeneratedPluginSwiftPackage' ios/Runner.xcodeproj/project.pbxproj; then
-            echo 'Swift Package Manager integration is still present in the iOS project'
-            exit 1
-          fi
+      - name: Prepare iOS Swift packages
+        run: flutter precache --ios
 
       - name: Build unsigned iOS simulator app
         env:
