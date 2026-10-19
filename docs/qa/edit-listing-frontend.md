@@ -19,10 +19,11 @@ The entry point requires an owned listing, positive stock, and an `active` or `u
 ## Saving and photos
 
 - Only changed descriptive fields are sent to `PUT /api/products/{id}`. A whole `Product` is never serialised for the update.
-- New files upload first to unique `products/{uid}/edit_{random}.{extension}` paths. Existing files are never overwritten or deleted, including photos removed from the listing.
+- New JPEG, PNG and WebP files upload first to unique `listing-media-v1/{uid}/edit_{random}.{extension}` paths with the owner and media-policy metadata required by the backend. Existing files are never overwritten or deleted, including photos removed from the listing.
+- Photo bytes are inspected before upload, with a 10 MiB per-file limit and a maximum of 10 photos. File names are not trusted for format detection.
 - Partial upload failure does not send a listing update. Uploaded but unreferenced files may remain, including after cancellation/conflict. Server-side retention and cleanup are prerequisites for release.
 - The user cannot submit twice or leave normally while saving. Unsaved changes require confirmation before discarding.
-- An uncertain PUT result freezes further saves until an explicit reload. The UI does not claim success without a successful response, an advanced version and canonical readback.
+- An uncertain PUT result freezes further saves until an explicit reload. The UI does not claim success without a successful response and canonical readback.
 - Both confirmed and uncertain writes invalidate the caller's cached views on return. Upload-only failures preserve the original listing and draft.
 
 ## Consistency
@@ -50,7 +51,7 @@ flutter analyze --no-pub
 bash tool/check_safe_logging.sh
 ```
 
-Tests cover owner/state gates, sparse payloads, text/photo validation, upload ordering/failure, account changes, stale and uncertain writes, readback, duplicate saves, discard/reload, photo ordering, large text at 320px, cache invalidation and owner navigation.
+Tests cover owner/state gates, sparse payloads, text/photo validation, protected upload paths and metadata, format/size limits, upload ordering/failure, account changes, stale and uncertain writes, readback, duplicate saves, discard/reload, photo ordering, large text at 320px, cache invalidation and owner navigation.
 
 Results on Flutter 3.44.4 / Dart 3.12.2:
 
