@@ -72,14 +72,12 @@ class _WelcomePageState extends State<WelcomePage> {
                   Text(
                     AppStrings.giveInStyle,
                     style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                   ),
                   SizedBox(
-                    height: showBottomCard
-                        ? MediaQuery.of(context).size.height * 0.1
-                        : 0,
-                  )
+                    height: showBottomCard ? MediaQuery.of(context).size.height * 0.1 : 0,
+                  ),
                 ],
               ),
             ),
@@ -135,10 +133,9 @@ class _WelcomePageState extends State<WelcomePage> {
                     children: [
                       Text(
                         AppStrings.createAccount,
-                        style: Theme.of(context)
-                            .textTheme
-                            .labelSmall
-                            ?.copyWith(color: Theme.of(context).colorScheme.onSurface),
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: AppColors.primaryAction,
+                        ),
                       ),
                       const SizedBox(width: 5),
                       Image.asset(
