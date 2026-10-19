@@ -80,8 +80,16 @@ class CheckoutViewModel extends ChangeNotifier {
   String _mobilePhoneNumber = '';
   String get mobilePhoneNumber => _mobilePhoneNumber;
 
+  String _recipientName = '';
+  String get recipientName => _recipientName;
+
   void setMobilePhoneNumber(String value) {
     _mobilePhoneNumber = value;
+    notifyListeners();
+  }
+
+  void setRecipientName(String value) {
+    _recipientName = value.trim();
     notifyListeners();
   }
 
@@ -587,6 +595,14 @@ class CheckoutViewModel extends ChangeNotifier {
       return false;
     }
 
+    if (recipientName.isEmpty) {
+      _createOrderStatus = Status.failure(
+        AppStrings.checkoutRecipientNameRequired,
+      );
+      notifyListeners();
+      return false;
+    }
+
     final selectedShippingMethod = selectedInpostShippingMethod!;
     final selectedPickupPoint = selectedInpost!;
 
@@ -600,7 +616,7 @@ class CheckoutViewModel extends ChangeNotifier {
         postalCode: selectedPickupPoint.postcode,
         shipping: {
           "address": _buildShippingAddress(),
-          "name": 'Customer',
+          "name": recipientName,
           "telephone": mobilePhoneNumber.trim(),
         },
         pickupPoint: _buildPickupPointPayload(selectedPickupPoint),

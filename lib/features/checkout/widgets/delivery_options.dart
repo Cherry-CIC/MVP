@@ -33,8 +33,13 @@ class _DeliveryOptionsState extends State<DeliveryOptions> {
       final profile = await vm.fetchUserProfile();
       if (!mounted) return;
       final mobilePhone = profile?.phoneNumber ?? '';
+      final recipientName = [profile?.firstname, profile?.username]
+          .whereType<String>()
+          .map((value) => value.trim())
+          .firstWhere((value) => value.isNotEmpty, orElse: () => '');
       _mobilePhoneController.text = mobilePhone;
       vm.setMobilePhoneNumber(mobilePhone);
+      vm.setRecipientName(recipientName);
     });
   }
 
