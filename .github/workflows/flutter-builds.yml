@@ -134,6 +134,14 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      - name: Keep iOS project on CocoaPods
+        run: |
+          git restore --source=HEAD -- ios/Runner.xcodeproj/project.pbxproj
+          if grep -q 'FlutterGeneratedPluginSwiftPackage' ios/Runner.xcodeproj/project.pbxproj; then
+            echo 'Swift Package Manager integration is still present in the iOS project'
+            exit 1
+          fi
+
       - name: Build unsigned iOS simulator app
         env:
           APP_ENV: ${{ steps.config.outputs.app_env }}
