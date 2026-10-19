@@ -27,10 +27,15 @@ class ProductHeaderCarousel extends StatelessWidget {
     return SliverAppBar(
       toolbarHeight: 72,
       leadingWidth: 80,
-      leading: const Padding(
-        padding: EdgeInsetsDirectional.only(start: 8),
-        child: _HeaderIconSurface(
-          child: BackButton(color: Colors.white),
+      leading: Padding(
+        padding: const EdgeInsetsDirectional.fromSTEB(16, 8, 8, 8),
+        child: BackButton(
+          color: AppColors.red,
+          style: IconButton.styleFrom(
+            backgroundColor: Colors.transparent,
+            iconSize: 28,
+            fixedSize: const Size.square(56),
+          ),
         ),
       ),
       actions: [
