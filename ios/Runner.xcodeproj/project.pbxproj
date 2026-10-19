@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 54;
+	objectVersion = 60;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -279,7 +279,7 @@
 			);
 			mainGroup = 97C146E51CF9000F007C117D;
 			packageReferences = (
-				781AD8BC2B33823900A9FFBB /* XCLocalSwiftPackageReference "FlutterGeneratedPluginSwiftPackage" */,
+				781AD8BC2B33823900A9FFBB /* XCLocalSwiftPackageReference "Flutter/ephemeral/Packages/FlutterGeneratedPluginSwiftPackage" */,
 			);
 			productRefGroup = 97C146EF1CF9000F007C117D /* Products */;
 			projectDirPath = "";
@@ -321,9 +321,13 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
+			inputPaths = (
+			);
 			name = "[CP] Embed Pods Frameworks";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -338,9 +342,13 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-resources-${CONFIGURATION}-input-files.xcfilelist",
 			);
+			inputPaths = (
+			);
 			name = "[CP] Copy Pods Resources";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-resources-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -538,6 +546,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements;
 				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
+				DART_DEFINES = "QVBQX0VOVj1kZXY=";
 				ENABLE_BITCODE = NO;
 				GOOGLE_REVERSED_CLIENT_ID = "com.googleusercontent.apps.401854471349-tpobubge18v04dgo4uvc1ebr74qum6kd";
 				INFOPLIST_FILE = Runner/Info.plist;
@@ -579,6 +588,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements;
 				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
+				DART_DEFINES = "QVBQX0VOVj1wcm9k";
 				ENABLE_BITCODE = NO;
 				GOOGLE_REVERSED_CLIENT_ID = "com.googleusercontent.apps.166746898861-l86d3t6jtdp3iu314e4onl87jtij37a6";
 				INFOPLIST_FILE = Runner/Info.plist;
@@ -781,6 +791,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements;
 				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
+				DART_DEFINES = "QVBQX0VOVj1kZXY=";
 				ENABLE_BITCODE = NO;
 				GOOGLE_REVERSED_CLIENT_ID = "com.googleusercontent.apps.401854471349-tpobubge18v04dgo4uvc1ebr74qum6kd";
 				INFOPLIST_FILE = Runner/Info.plist;
@@ -821,6 +832,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements;
 				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
+				DART_DEFINES = "QVBQX0VOVj1kZXY=";
 				ENABLE_BITCODE = NO;
 				GOOGLE_REVERSED_CLIENT_ID = "com.googleusercontent.apps.401854471349-tpobubge18v04dgo4uvc1ebr74qum6kd";
 				INFOPLIST_FILE = Runner/Info.plist;
@@ -1044,6 +1056,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements;
 				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
+				DEVELOPMENT_TEAM = 63U2HM4MQA;
 				ENABLE_BITCODE = NO;
 				GOOGLE_REVERSED_CLIENT_ID = "com.googleusercontent.apps.401854471349-tpobubge18v04dgo4uvc1ebr74qum6kd";
 				INFOPLIST_FILE = Runner/Info.plist;
@@ -1068,6 +1081,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements;
 				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
+				DEVELOPMENT_TEAM = 63U2HM4MQA;
 				ENABLE_BITCODE = NO;
 				GOOGLE_REVERSED_CLIENT_ID = "com.googleusercontent.apps.166746898861-l86d3t6jtdp3iu314e4onl87jtij37a6";
 				INFOPLIST_FILE = Runner/Info.plist;
@@ -1283,6 +1297,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements;
 				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
+				DART_DEFINES = "QVBQX0VOVj1wcm9k";
 				ENABLE_BITCODE = NO;
 				GOOGLE_REVERSED_CLIENT_ID = "com.googleusercontent.apps.166746898861-l86d3t6jtdp3iu314e4onl87jtij37a6";
 				INFOPLIST_FILE = Runner/Info.plist;
@@ -1307,6 +1322,8 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements;
 				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
+				DART_DEFINES = "QVBQX0VOVj1wcm9k";
+				DEVELOPMENT_TEAM = 63U2HM4MQA;
 				ENABLE_BITCODE = NO;
 				GOOGLE_REVERSED_CLIENT_ID = "com.googleusercontent.apps.166746898861-l86d3t6jtdp3iu314e4onl87jtij37a6";
 				INFOPLIST_FILE = Runner/Info.plist;
@@ -1376,7 +1393,7 @@
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
-		781AD8BC2B33823900A9FFBB /* XCLocalSwiftPackageReference "FlutterGeneratedPluginSwiftPackage" */ = {
+		781AD8BC2B33823900A9FFBB /* XCLocalSwiftPackageReference "Flutter/ephemeral/Packages/FlutterGeneratedPluginSwiftPackage" */ = {
 			isa = XCLocalSwiftPackageReference;
 			relativePath = Flutter/ephemeral/Packages/FlutterGeneratedPluginSwiftPackage;
 		};

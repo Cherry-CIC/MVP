@@ -27,13 +27,13 @@
          </BuildActionEntry>
       </BuildActionEntries>
    </BuildAction>
-   <TestAction buildConfiguration = "Debug" shouldUseLaunchSchemeArgsEnv = "YES" customLLDBInitFile = "$(SRCROOT)/Flutter/ephemeral/flutter_lldbinit"/>
-   <LaunchAction buildConfiguration = "Debug" selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB" selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB" shouldUseLaunchSchemeArgsEnv = "YES" customLLDBInitFile = "$(SRCROOT)/Flutter/ephemeral/flutter_lldbinit">
+   <TestAction buildConfiguration = "Debug-dev" shouldUseLaunchSchemeArgsEnv = "YES" customLLDBInitFile = "$(SRCROOT)/Flutter/ephemeral/flutter_lldbinit"/>
+   <LaunchAction buildConfiguration = "Debug-dev" selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB" selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB" shouldUseLaunchSchemeArgsEnv = "YES" customLLDBInitFile = "$(SRCROOT)/Flutter/ephemeral/flutter_lldbinit">
       <BuildableProductRunnable runnableDebuggingMode = "0">
          <BuildableReference BuildableIdentifier = "primary" BlueprintIdentifier = "97C146ED1CF9000F007C117D" BuildableName = "Runner.app" BlueprintName = "Runner" ReferencedContainer = "container:Runner.xcodeproj"/>
       </BuildableProductRunnable>
    </LaunchAction>
-   <ProfileAction buildConfiguration = "Profile" shouldUseLaunchSchemeArgsEnv = "YES"/>
-   <AnalyzeAction buildConfiguration = "Debug"/>
-   <ArchiveAction buildConfiguration = "Debug"/>
+   <ProfileAction buildConfiguration = "Profile-dev" shouldUseLaunchSchemeArgsEnv = "YES"/>
+   <AnalyzeAction buildConfiguration = "Debug-dev"/>
+   <ArchiveAction buildConfiguration = "Release-dev"/>
 </Scheme>
