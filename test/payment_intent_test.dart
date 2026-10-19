@@ -7,6 +7,7 @@ void main() {
       'success': true,
       'message': 'Created',
       'data': {
+        'orderId': 'order-123',
         'paymentIntentId': 'pi_123',
         'clientSecret': 'pi_123_secret_abc',
         'ephemeralKey': 'ek_test_123',
@@ -16,6 +17,7 @@ void main() {
     });
 
     expect(response.paymentIntentId, 'pi_123');
+    expect(response.orderId, 'order-123');
     expect(response.paymentIntent, 'pi_123_secret_abc');
   });
 
@@ -24,6 +26,7 @@ void main() {
       'success': true,
       'message': 'Created',
       'data': {
+        'orderId': 'order-456',
         'clientSecret': 'pi_456_secret_def',
         'ephemeralKey': '',
         'customer': '',
@@ -32,5 +35,6 @@ void main() {
     });
 
     expect(response.paymentIntentId, 'pi_456');
+    expect(response.orderId, 'order-456');
   });
 }
