@@ -128,19 +128,11 @@ jobs:
           channel: stable
           cache: true
 
+      - name: Use CocoaPods for iOS plugins
+        run: flutter config --no-enable-swift-package-manager
+
       - name: Install dependencies
         run: flutter pub get
-
-      - name: Resolve Swift packages
-        env:
-          APP_ENV: ${{ steps.config.outputs.app_env }}
-        run: |
-          xcodebuild \
-            -resolvePackageDependencies \
-            -workspace ios/Runner.xcworkspace \
-            -scheme "$APP_ENV" \
-            -configuration "Debug-${APP_ENV}" \
-            -clonedSourcePackagesDirPath build/ios/ci/SourcePackages
 
       - name: Build unsigned iOS simulator app
         env:
@@ -153,8 +145,6 @@ jobs:
             -sdk iphonesimulator \
             -destination 'generic/platform=iOS Simulator' \
             -derivedDataPath build/ios/ci \
-            -clonedSourcePackagesDirPath build/ios/ci/SourcePackages \
-            -disableAutomaticPackageResolution \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
             build
