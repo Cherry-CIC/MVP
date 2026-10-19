@@ -1,0 +1,123 @@
+name: Android Firebase Distribution
+
+on:
+  workflow_dispatch:
+    inputs:
+      configuration:
+        description: Android build configuration
+        required: true
+        type: choice
+        options:
+          - debug-dev
+          - debug-prod
+          - release-dev
+          - release-prod
+        default: debug-dev
+
+permissions:
+  contents: read
+
+jobs:
+  distribute-android:
+    name: Firebase Android (${{ inputs.configuration }})
+    runs-on: ubuntu-latest
+    environment: ${{ endsWith(inputs.configuration, '-prod') && 'prod' || 'dev' }}
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Resolve build configuration
+        id: config
+        shell: bash
+        env:
+          CONFIGURATION: ${{ inputs.configuration }}
+        run: |
+          case "$CONFIGURATION" in
+            debug-dev|debug-prod|release-dev|release-prod) ;;
+            *) echo "Unsupported configuration: $CONFIGURATION" >&2; exit 1 ;;
+          esac
+
+          build_type="${CONFIGURATION%%-*}"
+          app_env="${CONFIGURATION##*-}"
+          echo "build_type=$build_type" >> "$GITHUB_OUTPUT"
+          echo "app_env=$app_env" >> "$GITHUB_OUTPUT"
+          echo "apk_path=build/app/outputs/flutter-apk/app-${app_env}-${build_type}.apk" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Configure Android signing
+        shell: bash
+        env:
+          BUILD_TYPE: ${{ steps.config.outputs.build_type }}
+          ANDROID_DEBUG_KEYSTORE_BASE64: ${{ secrets.ANDROID_DEBUG_KEYSTORE_BASE64 }}
+          ANDROID_RELEASE_KEYSTORE_BASE64: ${{ secrets.ANDROID_RELEASE_KEYSTORE_BASE64 }}
+          ANDROID_RELEASE_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_RELEASE_KEYSTORE_PASSWORD }}
+          ANDROID_RELEASE_KEY_ALIAS: ${{ secrets.ANDROID_RELEASE_KEY_ALIAS }}
+          ANDROID_RELEASE_KEY_PASSWORD: ${{ secrets.ANDROID_RELEASE_KEY_PASSWORD }}
+        run: |
+          mkdir -p "$HOME/.android"
+
+          if [[ "$BUILD_TYPE" == "debug" ]]; then
+            test -n "$ANDROID_DEBUG_KEYSTORE_BASE64" || { echo "Missing ANDROID_DEBUG_KEYSTORE_BASE64" >&2; exit 1; }
+            printf '%s' "$ANDROID_DEBUG_KEYSTORE_BASE64" | base64 --decode > "$HOME/.android/debug.keystore"
+          else
+            test -n "$ANDROID_RELEASE_KEYSTORE_BASE64" || { echo "Missing ANDROID_RELEASE_KEYSTORE_BASE64" >&2; exit 1; }
+            test -n "$ANDROID_RELEASE_KEYSTORE_PASSWORD" || { echo "Missing ANDROID_RELEASE_KEYSTORE_PASSWORD" >&2; exit 1; }
+            test -n "$ANDROID_RELEASE_KEY_ALIAS" || { echo "Missing ANDROID_RELEASE_KEY_ALIAS" >&2; exit 1; }
+            test -n "$ANDROID_RELEASE_KEY_PASSWORD" || { echo "Missing ANDROID_RELEASE_KEY_PASSWORD" >&2; exit 1; }
+            printf '%s' "$ANDROID_RELEASE_KEYSTORE_BASE64" | base64 --decode > "$HOME/release.keystore"
+            printf 'storePassword=%s\nkeyPassword=%s\nkeyAlias=%s\nstoreFile=%s\n' \
+              "$ANDROID_RELEASE_KEYSTORE_PASSWORD" \
+              "$ANDROID_RELEASE_KEY_PASSWORD" \
+              "$ANDROID_RELEASE_KEY_ALIAS" \
+              "$HOME/release.keystore" > android/key.properties
+          fi
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build Android APK
+        env:
+          BUILD_TYPE: ${{ steps.config.outputs.build_type }}
+          APP_ENV: ${{ steps.config.outputs.app_env }}
+        run: flutter build apk --"$BUILD_TYPE" --flavor "$APP_ENV" --dart-define=APP_ENV="$APP_ENV"
+
+      - name: Authenticate for Firebase
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install Firebase CLI
+        run: npm install --global firebase-tools
+
+      - name: Publish Android APK to Firebase App Distribution
+        env:
+          APP_ENV: ${{ steps.config.outputs.app_env }}
+          APK_PATH: ${{ steps.config.outputs.apk_path }}
+        run: |
+          if [[ "$APP_ENV" == "dev" ]]; then
+            app_id="1:401854471349:android:a4c4ddc4dbe5319585f2fc"
+          else
+            app_id="1:166746898861:android:7393858dd30a6241aca124"
+          fi
+
+          firebase appdistribution:distribute "$APK_PATH" \
+            --app "$app_id" \
+            --release-notes "${APP_ENV} Android build ${GITHUB_SHA::7}"
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: cherry-android-${{ inputs.configuration }}-${{ github.run_number }}
+          path: ${{ steps.config.outputs.apk_path }}
+          if-no-files-found: error
+          retention-days: 30

@@ -52,11 +52,18 @@ flutter build appbundle --flavor prod --dart-define=APP_ENV=prod
 
 Development uses `cherry-mvp` and `uk.org.cherry.app.dev`. Production uses `cherry-prod-d513e` and `uk.org.cherry.app`.
 
-### GitHub Actions builds
+### GitHub Actions builds and distribution
 
-The `Flutter builds` workflow runs the dev build for `develop` and the production build for `main`. It can also be started manually from the Actions tab by choosing `dev` or `prod`.
+The `Flutter builds` workflow runs on pull requests and pushes to `develop` or `main`. It analyzes the project and uploads downloadable Android APK and unsigned iOS simulator artifacts. It does not publish to testers.
 
-Each run uploads downloadable Android APK and unsigned iOS simulator artifacts. Android signing and iOS distribution credentials should be added to protected GitHub Environments before publishing to Google Play or TestFlight.
+Use `Android Firebase Distribution` from the Actions tab to publish Android only. Select one of `debug-dev`, `debug-prod`, `release-dev`, or `release-prod`. Dev builds publish to the `cherry-mvp` Firebase app; prod builds publish to `cherry-prod-d513e`.
+
+Use `iOS TestFlight Distribution` to publish iOS only. Select `Release-dev` or `Release-prod`. These are release-mode App Store builds; TestFlight cannot use Flutter debug builds. The dev and prod bundle IDs must each exist as an app in App Store Connect.
+
+Required protected credentials:
+
+- Android Firebase: `FIREBASE_SERVICE_ACCOUNT`, `ANDROID_DEBUG_KEYSTORE_BASE64`; release configurations additionally require `ANDROID_RELEASE_KEYSTORE_BASE64`, `ANDROID_RELEASE_KEYSTORE_PASSWORD`, `ANDROID_RELEASE_KEY_ALIAS`, and `ANDROID_RELEASE_KEY_PASSWORD`.
+- iOS TestFlight: `APPSTORE_API_PRIVATE_KEY`, `APPSTORE_KEY_ID`, `APPSTORE_ISSUER_ID`, and the `APPLE_TEAM_ID` repository variable. App Store Connect API access must be allowed to manage signing for the team.
 
 ## What to Contribute
 

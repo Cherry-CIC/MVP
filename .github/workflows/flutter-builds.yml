@@ -70,38 +70,6 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
-      - name: Authenticate for Firebase App Distribution
-        if: github.event_name != 'pull_request'
-        uses: google-github-actions/auth@v2
-        with:
-          credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
-
-      - name: Set up Node.js
-        if: github.event_name != 'pull_request'
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-
-      - name: Install Firebase CLI
-        if: github.event_name != 'pull_request'
-        run: npm install --global firebase-tools
-
-      - name: Publish Android APK to Firebase App Distribution
-        if: github.event_name != 'pull_request'
-        env:
-          APP_ENV: ${{ steps.config.outputs.app_env }}
-        run: |
-          if [[ "$APP_ENV" == "dev" ]]; then
-            app_id="1:401854471349:android:a4c4ddc4dbe5319585f2fc"
-          else
-            app_id="1:166746898861:android:7393858dd30a6241aca124"
-          fi
-
-          firebase appdistribution:distribute \
-            "build/app/outputs/flutter-apk/app-${APP_ENV}-debug.apk" \
-            --app "$app_id" \
-            --release-notes "${APP_ENV} build ${GITHUB_SHA::7}"
-
   build-ios-simulator:
     name: iOS simulator (${{ inputs.environment || (github.ref_name == 'main' && 'prod' || 'dev') }})
     runs-on: xcode-27
