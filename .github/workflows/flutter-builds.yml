@@ -104,7 +104,7 @@ jobs:
 
   build-ios-simulator:
     name: iOS simulator (${{ inputs.environment || (github.ref_name == 'main' && 'prod' || 'dev') }})
-    runs-on: macos-latest
+    runs-on: macos-15
     environment: ${{ inputs.environment || (github.ref_name == 'main' && 'prod' || 'dev') }}
     steps:
       - name: Check out source
