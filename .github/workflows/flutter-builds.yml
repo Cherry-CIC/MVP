@@ -131,13 +131,15 @@ jobs:
       - name: Use CocoaPods for iOS plugins
         run: flutter config --no-enable-swift-package-manager
 
+      - name: Prepare Flutter iOS plugin directory
+        run: mkdir -p build/ios/SourcePackages
+
       - name: Install dependencies
         run: flutter pub get
 
       - name: Install iOS CocoaPods dependencies
         run: |
           flutter precache --ios
-          mkdir -p build/ios/SourcePackages
           pod install --project-directory=ios
 
       - name: Keep iOS project on CocoaPods
