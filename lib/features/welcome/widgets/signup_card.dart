@@ -25,7 +25,7 @@ class AuthCard extends StatelessWidget {
         final bool isLoading = viewModel.status.type == StatusType.loading;
 
         return Card(
-          color: const Color(0xFFFAFAFA),
+          color: Theme.of(context).colorScheme.surface,
           margin: EdgeInsets.zero,
           elevation: 20,
           shape: const RoundedRectangleBorder(
@@ -46,7 +46,7 @@ class AuthCard extends StatelessWidget {
                       ),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.close, color: AppColors.black),
+                      icon: Icon(Icons.close, color: Theme.of(context).colorScheme.onSurface),
                       onPressed: isLoading ? null : onClose,
                     ),
                   ],

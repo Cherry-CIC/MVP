@@ -6,10 +6,14 @@ import 'package:cherry_mvp/core/config/app_strings.dart';
 class PurchaseSecurity extends StatelessWidget {
   const PurchaseSecurity({super.key});
 
+  static const _sectionHeadingStyle = TextStyle(
+    fontSize: 14,
+    fontWeight: FontWeight.bold,
+  );
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.white,
       appBar: AppBar(leading: const CloseButton()),
       body: Container(
         padding: EdgeInsets.all(15),
@@ -40,7 +44,7 @@ class PurchaseSecurity extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 11,
                         decoration: TextDecoration.underline,
-                        color: AppColors.grey,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                     ),
                   ),
@@ -61,10 +65,7 @@ class PurchaseSecurity extends StatelessWidget {
                           children: [
                             Text(
                               AppStrings.refundPolicyHeading,
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.bold,
-                              ),
+                              style: _sectionHeadingStyle,
                             ),
                             Text(AppStrings.refundPolicyConditionsHeading),
                             Row(
@@ -136,10 +137,7 @@ class PurchaseSecurity extends StatelessWidget {
                           children: [
                             Text(
                               AppStrings.secureTransactionsHeading,
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.bold,
-                              ),
+                              style: _sectionHeadingStyle,
                             ),
                             Text(AppStrings.secureTransactionsBodyOne),
                             SizedBox(height: 15),
@@ -166,10 +164,7 @@ class PurchaseSecurity extends StatelessWidget {
                           children: [
                             Text(
                               AppStrings.yourSupportHeading,
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.bold,
-                              ),
+                              style: _sectionHeadingStyle,
                             ),
                             Text(AppStrings.yourSupportBody),
                           ],
@@ -194,11 +189,7 @@ class PurchaseSecurity extends StatelessWidget {
                           children: [
                             Text(
                               AppStrings.supportMissionHeading,
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.red,
-                              ),
+                              style: _sectionHeadingStyle.copyWith(color: AppColors.red),
                             ),
                             Text.rich(
                               TextSpan(

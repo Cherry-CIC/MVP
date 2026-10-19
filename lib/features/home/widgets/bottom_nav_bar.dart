@@ -22,23 +22,29 @@ class CherryBottomNavBar extends StatelessWidget {
   Widget build(BuildContext context) {
     const giveIndex = FeatureFlags.showInbox ? 2 : 1;
     const profileIndex = giveIndex + (FeatureFlags.showSearchNavigation ? 2 : 1);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final selectedColor = this.selectedColor ?? Theme.of(context).colorScheme.primary;
     final unselectedColor = this.unselectedColor ?? Theme.of(context).colorScheme.onSurfaceVariant;
+    final gradientColors = isDark
+        ? const [Color(0xFF2E1A22), Color(0xFF18181B)]
+        : const [Color(0xFFFFC0D4), Color(0xFFFFF2F6)];
+
     return DecoratedBox(
-      decoration: const BoxDecoration(
-        borderRadius: BorderRadius.only(
+      decoration: BoxDecoration(
+        borderRadius: const BorderRadius.only(
           bottomLeft: Radius.circular(40),
           bottomRight: Radius.circular(20),
         ),
         gradient: RadialGradient(
-          transform: GradientRotation(-12.58),
-          colors: [Color(0xFFFFC0D4), Color(0xFFFFF2F6)],
+          transform: const GradientRotation(-12.58),
+          colors: gradientColors,
         ),
       ),
       child: BottomNavigationBar(
         currentIndex: selectedIndex,
         onTap: onItemSelected,
         type: BottomNavigationBarType.fixed,
+        backgroundColor: Colors.transparent,
         selectedItemColor: selectedColor,
         unselectedItemColor: unselectedColor,
         selectedFontSize: 12,

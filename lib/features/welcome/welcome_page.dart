@@ -138,7 +138,7 @@ class _WelcomePageState extends State<WelcomePage> {
                         style: Theme.of(context)
                             .textTheme
                             .labelSmall
-                            ?.copyWith(color: AppColors.black),
+                            ?.copyWith(color: Theme.of(context).colorScheme.onSurface),
                       ),
                       const SizedBox(width: 5),
                       Image.asset(

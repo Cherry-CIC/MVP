@@ -1,0 +1,246 @@
+{
+  "project_info": {
+    "project_number": "401854471349",
+    "project_id": "cherry-mvp",
+    "storage_bucket": "cherry-mvp.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:401854471349:android:cad8afc621be102485f2fc",
+        "android_client_info": {
+          "package_name": "com.example.cherry_mvp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "401854471349-203slnble6n0oceoc1kg34c4tq0t1mnm.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.cherry_mvp",
+            "certificate_hash": "1395e5719a5f8b9b37ab774767273b2d8df57710"
+          }
+        },
+        {
+          "client_id": "401854471349-5equ9b47s44qkn2oaje1c6enk11n81mb.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.cherry_mvp",
+            "certificate_hash": "efd0029e8d28686a6afc209444b32609a1d69660"
+          }
+        },
+        {
+          "client_id": "401854471349-7hge5fqq72tubpt3c9eno1imaqaauk3v.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.cherry_mvp",
+            "certificate_hash": "56ab5746cd03aa952cd82945e2aa5ae0abfd070c"
+          }
+        },
+        {
+          "client_id": "401854471349-aaaok4o6r79cn1vrmdv7bh4hk1cgfrrc.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.cherry_mvp",
+            "certificate_hash": "8111477239c2c04fb50dc905334925203bea747b"
+          }
+        },
+        {
+          "client_id": "401854471349-j1tki5dfg47h74ffolnobubh04b8ac8n.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.cherry_mvp",
+            "certificate_hash": "868940988fb4bad2518beeb191f71174d345fb8f"
+          }
+        },
+        {
+          "client_id": "401854471349-o5iveq9hqbp0pp1s5hgphj0bqi7q703f.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.cherry_mvp",
+            "certificate_hash": "9ed8b11b20410a0ee8440a1577071819ec8d08e8"
+          }
+        },
+        {
+          "client_id": "401854471349-ti9nhvacvm7n2vbaj14lcgh56ojgf6b9.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.cherry_mvp",
+            "certificate_hash": "6a608df83cf3662da02b18096b4d47170507f03b"
+          }
+        },
+        {
+          "client_id": "401854471349-803q3o5vmr8m94fuvt50t1ke07h79c87.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCKF0hkCPR2nhUfv_CsgZFsnWcx7hjkep4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "401854471349-803q3o5vmr8m94fuvt50t1ke07h79c87.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "401854471349-85ukp8gmj5v2n8u7am3cg219dnqqvdsb.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.cherrymvp.cherry"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:401854471349:android:8cff1aa597379a8c85f2fc",
+        "android_client_info": {
+          "package_name": "uk.org.cherry.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "401854471349-33f266iiah2dja5pi4623dgerlqv4jal.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "uk.org.cherry.app",
+            "certificate_hash": "8111477239c2c04fb50dc905334925203bea747b"
+          }
+        },
+        {
+          "client_id": "401854471349-4gj4gnoeqjqfq11a4aulbro8pcbj0og5.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "uk.org.cherry.app",
+            "certificate_hash": "868940988fb4bad2518beeb191f71174d345fb8f"
+          }
+        },
+        {
+          "client_id": "401854471349-4i3tq8d1g7972f7sshq2qejd9dq8kuef.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "uk.org.cherry.app",
+            "certificate_hash": "6a608df83cf3662da02b18096b4d47170507f03b"
+          }
+        },
+        {
+          "client_id": "401854471349-4r7f0p52nu053rh4jluheki7me57c9t6.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "uk.org.cherry.app",
+            "certificate_hash": "1395e5719a5f8b9b37ab774767273b2d8df57710"
+          }
+        },
+        {
+          "client_id": "401854471349-57l0bbv8ajoobpsjb38os4va57fqpd2n.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "uk.org.cherry.app",
+            "certificate_hash": "efd0029e8d28686a6afc209444b32609a1d69660"
+          }
+        },
+        {
+          "client_id": "401854471349-99cjtu05rsbi87mmspq2longdp540kgo.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "uk.org.cherry.app",
+            "certificate_hash": "56ab5746cd03aa952cd82945e2aa5ae0abfd070c"
+          }
+        },
+        {
+          "client_id": "401854471349-cqbo256tc794938prrjp89td4fvosav4.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "uk.org.cherry.app",
+            "certificate_hash": "ac6ccbac4cc8b96bd2706007391981da23f18de4"
+          }
+        },
+        {
+          "client_id": "401854471349-rnnvaum4mt7rv8c0ofnjgk84f662ugpn.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "uk.org.cherry.app",
+            "certificate_hash": "9ed8b11b20410a0ee8440a1577071819ec8d08e8"
+          }
+        },
+        {
+          "client_id": "401854471349-vqa2rcgmahguetf5s296c1hdo3gjjl3g.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "uk.org.cherry.app",
+            "certificate_hash": "fc09f1171d808964941bb023c86526b3252f9a1b"
+          }
+        },
+        {
+          "client_id": "401854471349-803q3o5vmr8m94fuvt50t1ke07h79c87.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCKF0hkCPR2nhUfv_CsgZFsnWcx7hjkep4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "401854471349-803q3o5vmr8m94fuvt50t1ke07h79c87.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "401854471349-85ukp8gmj5v2n8u7am3cg219dnqqvdsb.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.cherrymvp.cherry"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:401854471349:android:a4c4ddc4dbe5319585f2fc",
+        "android_client_info": {
+          "package_name": "uk.org.cherry.app.dev"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "401854471349-803q3o5vmr8m94fuvt50t1ke07h79c87.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCKF0hkCPR2nhUfv_CsgZFsnWcx7hjkep4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "401854471349-803q3o5vmr8m94fuvt50t1ke07h79c87.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "401854471349-85ukp8gmj5v2n8u7am3cg219dnqqvdsb.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.cherrymvp.cherry"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

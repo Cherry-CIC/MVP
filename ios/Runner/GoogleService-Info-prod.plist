@@ -3,23 +3,21 @@
 <plist version="1.0">
 <dict>
 	<key>CLIENT_ID</key>
-	<string>401854471349-oh11bqm8vk5i5vo8m73mf037qn9lgkoh.apps.googleusercontent.com</string>
+	<string>166746898861-l86d3t6jtdp3iu314e4onl87jtij37a6.apps.googleusercontent.com</string>
 	<key>REVERSED_CLIENT_ID</key>
-	<string>com.googleusercontent.apps.401854471349-oh11bqm8vk5i5vo8m73mf037qn9lgkoh</string>
-	<key>ANDROID_CLIENT_ID</key>
-	<string>401854471349-203slnble6n0oceoc1kg34c4tq0t1mnm.apps.googleusercontent.com</string>
+	<string>com.googleusercontent.apps.166746898861-l86d3t6jtdp3iu314e4onl87jtij37a6</string>
 	<key>API_KEY</key>
-	<string>AIzaSyB9jkZAhIsFB-7pmtJT-x3kw7ZLBUxOuHQ</string>
+	<string>AIzaSyCYS8PH6o0UKLS6WANHYtRqH_A8ggpBAjQ</string>
 	<key>GCM_SENDER_ID</key>
-	<string>401854471349</string>
+	<string>166746898861</string>
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
 	<string>uk.org.cherry.app</string>
 	<key>PROJECT_ID</key>
-	<string>cherry-mvp</string>
+	<string>cherry-prod-d513e</string>
 	<key>STORAGE_BUCKET</key>
-	<string>cherry-mvp.firebasestorage.app</string>
+	<string>cherry-prod-d513e.firebasestorage.app</string>
 	<key>IS_ADS_ENABLED</key>
 	<false></false>
 	<key>IS_ANALYTICS_ENABLED</key>
@@ -31,6 +29,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:401854471349:ios:6f29a0fb34d26a3b85f2fc</string>
+	<string>1:166746898861:ios:8541f0745ba3efcbaca124</string>
 </dict>
 </plist>

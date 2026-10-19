@@ -25,6 +25,8 @@ class ProductHeaderCarousel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SliverAppBar(
+      toolbarHeight: 72,
+      leadingWidth: 80,
       leading: const Padding(
         padding: EdgeInsetsDirectional.only(start: 8),
         child: _HeaderIconSurface(

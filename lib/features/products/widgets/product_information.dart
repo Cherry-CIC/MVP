@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cherry_mvp/core/config/app_colors.dart';
 import 'package:cherry_mvp/core/config/app_images.dart';
+import 'package:cherry_mvp/core/config/feature_flags.dart';
 import 'package:cherry_mvp/core/models/model.dart';
 import 'package:cherry_mvp/features/products/product_viewmodel.dart';
 
@@ -13,63 +14,66 @@ class ProductInformation extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colours = Theme.of(context).colorScheme;
+    const detailStyle = TextStyle(
+      fontFamily: 'Raleway',
+      fontWeight: FontWeight.w800,
+      fontSize: 18,
+    );
+    const priceStyle = TextStyle(
+      fontFamily: 'InstrumentSansPricing',
+      fontWeight: FontWeight.w700,
+      fontSize: 18,
+    );
+
     return Padding(
-      padding: padding ?? const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      padding: padding ?? const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        spacing: 4,
+        spacing: 8,
         children: [
-          Text(product.name),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          Text(product.name, style: detailStyle.copyWith(fontSize: 20)),
+          Wrap(
+            spacing: 24,
+            runSpacing: 12,
             children: [
-              Expanded(
-                child: GestureDetector(
-                  onTap: context.read<ProductViewModel>().showPurchaseSecurity,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    spacing: 2,
-                    children: [
-                      Text(
-                        '£${product.donation.toStringAsFixed(2)}',
-                        style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
-                      ),
-                      Row(
-                        spacing: 4,
-                        children: [
-                          Text(
-                            '£${product.price.toStringAsFixed(2)}',
-                            style: TextStyle(color: Theme.of(context).colorScheme.primary),
-                          ),
-                          Image.asset(AppImages.shieldTick, width: 16, height: 16),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                flex: 2,
-                child: Wrap(
-                  crossAxisAlignment: WrapCrossAlignment.center,
+              GestureDetector(
+                onTap: context.read<ProductViewModel>().showPurchaseSecurity,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   spacing: 4,
-                  runSpacing: 2,
                   children: [
                     Text(
-                      product.size,
-                      style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                      '£${product.donation.toStringAsFixed(2)}',
+                      style: priceStyle.copyWith(color: colours.onSurfaceVariant),
                     ),
-                    const SizedBox(width: 16),
-                    Text(product.quality, style: const TextStyle(color: AppColors.green)),
-                    Icon(
-                      Icons.workspace_premium,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    Wrap(
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: 4,
+                      runSpacing: 4,
+                      children: [
+                        Text(
+                          '£${product.price.toStringAsFixed(2)}',
+                          style: priceStyle.copyWith(color: colours.primary),
+                        ),
+                        Image.asset(AppImages.shieldTick, width: 20, height: 20),
+                      ],
                     ),
                   ],
                 ),
               ),
+              Text(
+                product.size,
+                style: detailStyle.copyWith(color: colours.onSurfaceVariant),
+              ),
+              Text(
+                product.quality,
+                style: detailStyle.copyWith(
+                  color: Theme.of(context).brightness == Brightness.dark ? AppColors.green : const Color(0xFF287A20),
+                ),
+              ),
+              if (FeatureFlags.showProductBadge) Icon(Icons.workspace_premium, color: colours.onSurfaceVariant),
             ],
           ),
         ],

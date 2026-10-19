@@ -14,4 +14,18 @@ class AppColors {
 
   static const pinkBackground = Color(0xFFfff0f3);
   static const borderGrey = Color(0xFFDFDFDF);
+
+  static Color pinkBg(BuildContext context) {
+    return Theme.of(context).brightness == Brightness.dark
+        ? const Color(0x33F90653)
+        : pinkBackground;
+  }
+
+  static Color onSurface(BuildContext context) {
+    return Theme.of(context).colorScheme.onSurface;
+  }
+
+  static Color onSurfaceVariant(BuildContext context) {
+    return Theme.of(context).colorScheme.onSurfaceVariant;
+  }
 }
