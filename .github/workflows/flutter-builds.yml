@@ -142,9 +142,8 @@ jobs:
           flutter precache --ios
           pod install --project-directory=ios
 
-      - name: Keep iOS project on CocoaPods
+      - name: Verify iOS project uses CocoaPods
         run: |
-          git restore --source=HEAD -- ios/Runner.xcodeproj/project.pbxproj
           if grep -q 'FlutterGeneratedPluginSwiftPackage' ios/Runner.xcodeproj/project.pbxproj; then
             echo 'Swift Package Manager integration is still present in the iOS project'
             exit 1
