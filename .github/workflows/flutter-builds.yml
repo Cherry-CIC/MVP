@@ -134,6 +134,12 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      - name: Install iOS CocoaPods dependencies
+        run: |
+          flutter precache --ios
+          mkdir -p build/ios/SourcePackages
+          pod install --project-directory=ios
+
       - name: Keep iOS project on CocoaPods
         run: |
           git restore --source=HEAD -- ios/Runner.xcodeproj/project.pbxproj
