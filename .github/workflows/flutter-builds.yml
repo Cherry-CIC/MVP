@@ -1,0 +1,103 @@
+name: Flutter builds
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Firebase environment to build
+        required: true
+        type: choice
+        options:
+          - dev
+          - prod
+        default: dev
+
+permissions:
+  contents: read
+
+jobs:
+  build-android:
+    name: Android (${{ inputs.environment || (github.ref_name == 'main' && 'prod' || 'dev') }})
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment || (github.ref_name == 'main' && 'prod' || 'dev') }}
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Resolve build environment
+        id: config
+        shell: bash
+        run: |
+          app_env="${{ inputs.environment || (github.ref_name == 'main' && 'prod' || 'dev') }}"
+          echo "app_env=$app_env" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Analyze
+        run: flutter analyze
+
+      - name: Build Android APK
+        env:
+          APP_ENV: ${{ steps.config.outputs.app_env }}
+        run: flutter build apk --debug --flavor "$APP_ENV" --dart-define=APP_ENV="$APP_ENV"
+
+      - name: Upload Android APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: cherry-android-${{ steps.config.outputs.app_env }}-${{ github.run_number }}
+          path: build/app/outputs/flutter-apk/app-${{ steps.config.outputs.app_env }}-debug.apk
+          if-no-files-found: error
+          retention-days: 30
+
+  build-ios-simulator:
+    name: iOS simulator (${{ inputs.environment || (github.ref_name == 'main' && 'prod' || 'dev') }})
+    runs-on: macos-latest
+    environment: ${{ inputs.environment || (github.ref_name == 'main' && 'prod' || 'dev') }}
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Resolve build environment
+        id: config
+        shell: bash
+        run: |
+          app_env="${{ inputs.environment || (github.ref_name == 'main' && 'prod' || 'dev') }}"
+          echo "app_env=$app_env" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build unsigned iOS simulator app
+        env:
+          APP_ENV: ${{ steps.config.outputs.app_env }}
+        run: flutter build ios --debug --no-codesign --flavor "$APP_ENV" --dart-define=APP_ENV="$APP_ENV"
+
+      - name: Package iOS simulator app
+        run: |
+          cd build/ios/iphonesimulator
+          zip -r "cherry-ios-${{ steps.config.outputs.app_env }}-simulator.zip" Runner.app
+
+      - name: Upload iOS simulator app
+        uses: actions/upload-artifact@v4
+        with:
+          name: cherry-ios-${{ steps.config.outputs.app_env }}-simulator-${{ github.run_number }}
+          path: build/ios/iphonesimulator/cherry-ios-${{ steps.config.outputs.app_env }}-simulator.zip
+          if-no-files-found: error
+          retention-days: 30

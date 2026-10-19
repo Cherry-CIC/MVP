@@ -52,6 +52,12 @@ flutter build appbundle --flavor prod --dart-define=APP_ENV=prod
 
 Development uses `cherry-mvp` and `uk.org.cherry.app.dev`. Production uses `cherry-prod-d513e` and `uk.org.cherry.app`.
 
+### GitHub Actions builds
+
+The `Flutter builds` workflow runs the dev build for `develop` and the production build for `main`. It can also be started manually from the Actions tab by choosing `dev` or `prod`.
+
+Each run uploads downloadable Android APK and unsigned iOS simulator artifacts. Android signing and iOS distribution credentials should be added to protected GitHub Environments before publishing to Google Play or TestFlight.
+
 ## What to Contribute
 
 Amazing! Thank you so much for considering to volunteer your time and skills to our amazing project.
