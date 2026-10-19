@@ -28,6 +28,9 @@ class FeatureFlags {
   // Hide ratings and review-count UI for the MVP until ratings are actionable.
   static const bool showRatings = false;
 
+  // Hide the product badge placeholder for the MVP until its feature is ready.
+  static const bool showProductBadge = false;
+
   // Hide static impact summaries for the MVP until impact data is live.
   static const bool showImpactSummaries = false;
 

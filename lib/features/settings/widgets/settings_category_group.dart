@@ -55,7 +55,7 @@ class SettingsCategoryGroup extends StatelessWidget {
                       child: Text(
                         'Cancel',
                         style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                          color: AppColors.black,
+                          color: Theme.of(context).colorScheme.onSurface,
                         ),
                       ),
                     ),

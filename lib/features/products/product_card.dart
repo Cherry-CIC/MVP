@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:cherry_mvp/core/config/app_colors.dart';
 import 'package:cherry_mvp/core/config/app_images.dart';
 import 'package:cherry_mvp/core/config/app_strings.dart';
 import 'package:cherry_mvp/core/config/app_spacing.dart';
@@ -107,7 +106,7 @@ class ProductCard extends StatelessWidget {
                             child: Material(
                               borderRadius: BorderRadius.circular(4),
                               elevation: 2,
-                              color: Colors.white,
+                              color: Theme.of(context).colorScheme.surfaceContainerHighest,
                               type: MaterialType.button,
                               child: Container(
                                 padding: const EdgeInsets.symmetric(
@@ -125,17 +124,17 @@ class ProductCard extends StatelessWidget {
                                             fit: BoxFit.contain,
                                             color: Colors.red,
                                           )
-                                        : const Icon(
+                                        : Icon(
                                             Icons.favorite_outline,
                                             size: 16,
-                                            color: AppColors.grey,
+                                            color: Theme.of(context).colorScheme.onSurfaceVariant,
                                           ),
                                     const SizedBox(width: 4),
                                     Text(
                                       displayLikes.toString(),
                                       style: Theme.of(context).textTheme.labelSmall?.copyWith(
                                         fontWeight: FontWeight.bold,
-                                        color: isLiked ? Colors.red : AppColors.grey,
+                                        color: isLiked ? Colors.red : Theme.of(context).colorScheme.onSurfaceVariant,
                                       ),
                                     ),
                                   ],
@@ -155,7 +154,11 @@ class ProductCard extends StatelessWidget {
                   maxLines: 1,
                   style: Theme.of(
                     context,
-                  ).textTheme.bodySmall?.copyWith(fontSize: 14),
+                  ).textTheme.bodySmall?.copyWith(
+                    fontFamily: 'InstrumentSansPricing',
+                    fontWeight: FontWeight.w700,
+                    fontSize: 14,
+                  ),
                 ),
                 const SizedBox(height: 4),
                 Row(
