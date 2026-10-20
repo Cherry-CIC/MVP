@@ -140,6 +140,13 @@ class ProductViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  void applyListingUpdate(Product product) {
+    if (_product?.id == product.id) {
+      _product = product;
+      notifyListeners();
+    }
+  }
+
   Future<Result<bool>> toggleLike(Product product) async {
     _ensureCurrentAccount();
     final String id = product.id;
