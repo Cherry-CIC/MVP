@@ -49,32 +49,25 @@ jobs:
           channel: stable
           cache: true
 
-      - name: Configure Android signing
+      - name: Configure Firebase distribution signing
         shell: bash
         env:
           BUILD_TYPE: ${{ steps.config.outputs.build_type }}
-          ANDROID_DEBUG_KEYSTORE_BASE64: ${{ secrets.ANDROID_DEBUG_KEYSTORE_BASE64 }}
-          ANDROID_RELEASE_KEYSTORE_BASE64: ${{ secrets.ANDROID_RELEASE_KEYSTORE_BASE64 }}
-          ANDROID_RELEASE_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_RELEASE_KEYSTORE_PASSWORD }}
-          ANDROID_RELEASE_KEY_ALIAS: ${{ secrets.ANDROID_RELEASE_KEY_ALIAS }}
-          ANDROID_RELEASE_KEY_PASSWORD: ${{ secrets.ANDROID_RELEASE_KEY_PASSWORD }}
         run: |
-          mkdir -p "$HOME/.android"
-
-          if [[ "$BUILD_TYPE" == "debug" ]]; then
-            test -n "$ANDROID_DEBUG_KEYSTORE_BASE64" || { echo "Missing ANDROID_DEBUG_KEYSTORE_BASE64" >&2; exit 1; }
-            printf '%s' "$ANDROID_DEBUG_KEYSTORE_BASE64" | base64 --decode > "$HOME/.android/debug.keystore"
-          else
-            test -n "$ANDROID_RELEASE_KEYSTORE_BASE64" || { echo "Missing ANDROID_RELEASE_KEYSTORE_BASE64" >&2; exit 1; }
-            test -n "$ANDROID_RELEASE_KEYSTORE_PASSWORD" || { echo "Missing ANDROID_RELEASE_KEYSTORE_PASSWORD" >&2; exit 1; }
-            test -n "$ANDROID_RELEASE_KEY_ALIAS" || { echo "Missing ANDROID_RELEASE_KEY_ALIAS" >&2; exit 1; }
-            test -n "$ANDROID_RELEASE_KEY_PASSWORD" || { echo "Missing ANDROID_RELEASE_KEY_PASSWORD" >&2; exit 1; }
-            printf '%s' "$ANDROID_RELEASE_KEYSTORE_BASE64" | base64 --decode > "$HOME/release.keystore"
-            printf 'storePassword=%s\nkeyPassword=%s\nkeyAlias=%s\nstoreFile=%s\n' \
-              "$ANDROID_RELEASE_KEYSTORE_PASSWORD" \
-              "$ANDROID_RELEASE_KEY_PASSWORD" \
-              "$ANDROID_RELEASE_KEY_ALIAS" \
-              "$HOME/release.keystore" > android/key.properties
+          if [[ "$BUILD_TYPE" == "release" ]]; then
+            # Firebase distribution is not Google Play. Use a short-lived CI
+            # key so the Play signing key is never needed in this workflow.
+            keytool -genkeypair -v \
+              -keystore "$HOME/firebase-distribution.keystore" \
+              -storepass android \
+              -keypass android \
+              -alias firebase-distribution \
+              -keyalg RSA \
+              -keysize 2048 \
+              -validity 1 \
+              -dname "CN=Firebase Distribution, OU=Cherry, O=Cherry, L=London, S=London, C=GB"
+            printf 'storePassword=android\nkeyPassword=android\nkeyAlias=firebase-distribution\nstoreFile=%s\n' \
+              "$HOME/firebase-distribution.keystore" > android/key.properties
           fi
 
       - name: Install dependencies
