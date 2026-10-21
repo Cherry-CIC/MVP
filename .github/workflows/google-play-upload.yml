@@ -1,0 +1,75 @@
+name: Android Google Play Upload
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  upload-play-draft:
+    name: Upload Android production draft
+    runs-on: ubuntu-latest
+    environment: prod
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Configure Google Play signing
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_RELEASE_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_RELEASE_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_RELEASE_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_RELEASE_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          test -n "$KEYSTORE_BASE64" || { echo 'Missing ANDROID_RELEASE_KEYSTORE_BASE64'; exit 1; }
+          test -n "$KEYSTORE_PASSWORD" || { echo 'Missing ANDROID_RELEASE_KEYSTORE_PASSWORD'; exit 1; }
+          test -n "$KEY_ALIAS" || { echo 'Missing ANDROID_RELEASE_KEY_ALIAS'; exit 1; }
+          test -n "$KEY_PASSWORD" || { echo 'Missing ANDROID_RELEASE_KEY_PASSWORD'; exit 1; }
+
+          printf '%s' "$KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/cherry-release.keystore"
+          cat > android/key.properties <<EOF
+          storePassword=$KEYSTORE_PASSWORD
+          keyPassword=$KEY_PASSWORD
+          keyAlias=$KEY_ALIAS
+          storeFile=$RUNNER_TEMP/cherry-release.keystore
+          EOF
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build production Android App Bundle
+        run: flutter build appbundle --release --flavor prod --dart-define=APP_ENV=prod
+
+      - name: Upload draft to Google Play
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT }}
+          packageName: uk.org.cherry.app
+          releaseFiles: build/app/outputs/bundle/prodRelease/app-prod-release.aab
+          track: production
+          status: draft
+
+      - name: Upload AAB artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: cherry-android-release-prod-${{ github.run_number }}
+          path: build/app/outputs/bundle/prodRelease/app-prod-release.aab
+          if-no-files-found: error
+          retention-days: 30
