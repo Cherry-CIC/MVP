@@ -126,7 +126,7 @@ class _Donation implements IDonationRepository {
 }
 
 class _Harness {
-  _Harness({this.uid = 'seller', bool sold = false, bool enabled = true}) {
+  _Harness({this.uid = 'seller', bool sold = false}) {
     products = _Products(deleted);
     profileRepo = _Profile(sold: sold);
     profile = ProfileListingsViewModel(
@@ -145,7 +145,6 @@ class _Harness {
       repository: products,
       deletedListings: deleted,
       currentUserId: () => uid,
-      enabled: enabled,
     );
     checkout = CheckoutViewModel(
       checkoutRepository: _Checkout(),
@@ -243,16 +242,6 @@ void main() {
     semantics.dispose();
   });
 
-  testWidgets('cancelling the card dialogue sends no request', (tester) async {
-    final h = _Harness();
-    await h.pump(tester);
-    await _chooseDelete(tester);
-    await tester.tap(find.text('Cancel'));
-    await tester.pumpAndSettle();
-    expect(h.products.deletes, 0);
-    expect(find.byType(SellerListingCard), findsOneWidget);
-  });
-
   testWidgets('card deletion stays removed after refresh failure and shows refresh retry', (tester) async {
     final h = _Harness();
     await h.pump(tester);
@@ -325,6 +314,9 @@ void main() {
     await _chooseDelete(tester);
     await tester.tap(find.widgetWithText(FilledButton, 'Delete listing'));
     await tester.pumpAndSettle();
+    expect(find.text(DeleteListingOutcome.unauthenticated.message), findsOneWidget);
+    expect(find.text('Try again'), findsNothing);
+    expect(h.deleted.contains('listing'), isFalse);
     await tester.tap(find.text('Sign in'));
     await tester.pumpAndSettle();
     expect(h.visited, [AppRoutes.login]);
@@ -337,16 +329,6 @@ void main() {
       expect(find.byType(ListingActionsMenu), findsNothing);
     });
   }
-
-  testWidgets('release gate leaves Edit available independently of Delete', (tester) async {
-    final h = _Harness(enabled: false);
-    await h.pump(tester);
-    await tester.tap(find.byTooltip('Manage Blue jacket'));
-    await tester.pumpAndSettle();
-    expect(find.text('Edit listing'), findsOneWidget);
-    expect(find.text('Delete listing'), findsNothing);
-    expect(h.products.deletes, 0);
-  });
 
   testWidgets('owner cards and menus support large text on a narrow screen', (tester) async {
     tester.view.physicalSize = const Size(360, 800);

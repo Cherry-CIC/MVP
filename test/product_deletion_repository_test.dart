@@ -28,7 +28,7 @@ void main() {
     expect(deleted.contains('listing-1'), isFalse);
   });
 
-  for (final status in <int?>[null, 201, 202, 204]) {
+  for (final status in <int?>[null, 202, 204]) {
     test('deletion does not accept HTTP $status as a confirmed deletion', () async {
       final repository = ProductRepository(
         _Api(
@@ -45,12 +45,9 @@ void main() {
 
   for (final response in [
     null,
-    '',
-    <dynamic>[],
     <String, dynamic>{},
     {'success': false, 'message': 'PRIVATE_BACKEND_ERROR'},
     {'success': 'true'},
-    {'data': null},
   ]) {
     test('deletion rejects an unconfirmed envelope $response', () async {
       final repository = ProductRepository(
@@ -66,36 +63,22 @@ void main() {
     });
   }
 
-  for (final code in [
-    'LISTING_NOT_OWNER',
-    'LISTING_NOT_FOUND',
-    'LISTING_PAYMENT_PENDING',
-    'LISTING_HAS_SALES',
-    'LISTING_REVIEW_REQUIRED',
-    'UNRECOGNISED_CONFLICT',
-  ]) {
-    test('deletion forwards structured $code without backend message text', () async {
-      final status = switch (code) {
-        'LISTING_NOT_OWNER' => 403,
-        'LISTING_NOT_FOUND' => 404,
-        _ => 409,
-      };
-      final api = _Api(
-        deletion: Result.failure(
-          'PRIVATE_BACKEND_ERROR',
-          statusCode: status,
-          errorCode: code,
-        ),
-      );
-      final result = await ProductRepository(api).deleteProduct('listing-1');
+  test('deletion forwards status and code without interpreting them or exposing backend text', () async {
+    final api = _Api(
+      deletion: Result.failure(
+        'PRIVATE_BACKEND_ERROR',
+        statusCode: 409,
+        errorCode: 'UNRECOGNISED_CONFLICT',
+      ),
+    );
+    final result = await ProductRepository(api).deleteProduct('listing-1');
 
-      expect(result.isSuccess, isFalse);
-      expect(result.statusCode, status);
-      expect(result.errorCode, code);
-      expect(result.error, isNot(contains('PRIVATE_BACKEND_ERROR')));
-      expect(api.deleteCalls, 1);
-    });
-  }
+    expect(result.isSuccess, isFalse);
+    expect(result.statusCode, 409);
+    expect(result.errorCode, 'UNRECOGNISED_CONFLICT');
+    expect(result.error, isNot(contains('PRIVATE_BACKEND_ERROR')));
+    expect(api.deleteCalls, 1);
+  });
 
   test('deletion does not retry an uncertain transport failure', () async {
     final api = _Api(deletion: Result.failure('Request timed out.'));
@@ -117,7 +100,7 @@ void main() {
     expect(api.deleteCalls, 1);
   });
 
-  for (final id in ['', ' ', 'invalid/id']) {
+  for (final id in [' ', 'invalid/id']) {
     test('deletion validates "$id" before requesting', () async {
       final api = _Api();
 

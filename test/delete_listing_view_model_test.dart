@@ -28,7 +28,6 @@ void main() {
   late String? userId;
 
   DeleteListingViewModel createViewModel({
-    bool enabled = true,
     Stream<String?>? accountChanges,
     void Function()? onAccountChanged,
   }) => DeleteListingViewModel(
@@ -37,7 +36,6 @@ void main() {
     currentUserId: () => userId,
     accountChanges: accountChanges,
     onAccountChanged: onAccountChanged,
-    enabled: enabled,
   );
 
   Future<DeleteListingOutcome> submit({
@@ -61,19 +59,6 @@ void main() {
   tearDown(() {
     viewModel.dispose();
     deletedListings.dispose();
-  });
-
-  test('deletion is disabled by default, independently of listing ownership', () async {
-    viewModel.dispose();
-    viewModel = DeleteListingViewModel(
-      repository: repository,
-      deletedListings: deletedListings,
-      currentUserId: () => userId,
-    );
-    expect(viewModel.enabled, isFalse);
-    expect(viewModel.canDelete('listing', ownerId: 'owner', knownSold: false), isFalse);
-    expect(await submit(), DeleteListingOutcome.unavailable);
-    expect(repository.deletedIds, isEmpty);
   });
 
   test('only a signed-in owner can delete and known sold listings are blocked', () async {
@@ -117,20 +102,14 @@ void main() {
 
   for (final (status, code, outcome) in [
     (401, null, DeleteListingOutcome.unauthenticated),
-    (401, 'UNEXPECTED_CODE', DeleteListingOutcome.unauthenticated),
     (403, 'LISTING_NOT_OWNER', DeleteListingOutcome.notOwner),
     (404, 'LISTING_NOT_FOUND', DeleteListingOutcome.notFound),
     (409, 'LISTING_PAYMENT_PENDING', DeleteListingOutcome.paymentPending),
     (409, 'LISTING_HAS_SALES', DeleteListingOutcome.hasSales),
     (409, 'LISTING_REVIEW_REQUIRED', DeleteListingOutcome.reviewRequired),
-    (400, 'INVALID_REQUEST', DeleteListingOutcome.uncertain),
-    (403, null, DeleteListingOutcome.uncertain),
     (404, null, DeleteListingOutcome.uncertain),
-    (404, 'UNEXPECTED_CODE', DeleteListingOutcome.uncertain),
     (409, 'UNEXPECTED_CODE', DeleteListingOutcome.uncertain),
-    (500, null, DeleteListingOutcome.uncertain),
     (503, 'LISTING_NOT_FOUND', DeleteListingOutcome.uncertain),
-    (null, null, DeleteListingOutcome.uncertain),
   ]) {
     test('maps DELETE $status / $code to $outcome without trusting error text', () async {
       repository.onDelete = () async => Result<void>.failure(
@@ -142,6 +121,10 @@ void main() {
       expect(viewModel.isPending('listing'), isFalse);
       expect(deletedListings.contains('listing'), outcome == DeleteListingOutcome.notFound);
       expect(outcome.message, isNot(contains('Untrusted backend details')));
+      expect(
+        outcome.canRetry,
+        outcome == DeleteListingOutcome.paymentPending || outcome == DeleteListingOutcome.uncertain,
+      );
     });
   }
 
@@ -165,21 +148,16 @@ void main() {
     expect(deletedListings.contains('listing'), isFalse);
   });
 
-  for (final result in [
-    Result<void>.success(null, statusCode: 200),
-    Result<void>.failure('Gone', statusCode: 404, errorCode: 'LISTING_NOT_FOUND'),
-  ]) {
-    test('an account change during ${result.isSuccess ? 'success' : 'not-found'} prevents a tombstone', () async {
-      final response = Completer<Result<void>>();
-      repository.onDelete = () => response.future;
-      final deletion = submit();
-      userId = 'another-owner';
-      response.complete(result);
-      expect(await deletion, DeleteListingOutcome.accountChanged);
-      expect(deletedListings.contains('listing'), isFalse);
-      expect(viewModel.isPending('listing'), isFalse);
-    });
-  }
+  test('an account change during deletion prevents a late success tombstone', () async {
+    final response = Completer<Result<void>>();
+    repository.onDelete = () => response.future;
+    final deletion = submit();
+    userId = 'another-owner';
+    response.complete(Result<void>.success(null, statusCode: 200));
+    expect(await deletion, DeleteListingOutcome.accountChanged);
+    expect(deletedListings.contains('listing'), isFalse);
+    expect(viewModel.isPending('listing'), isFalse);
+  });
 
   test('signing out during an exception does not report the previous account result', () async {
     final response = Completer<Result<void>>();

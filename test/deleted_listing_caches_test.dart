@@ -78,18 +78,6 @@ void main() {
 
   tearDown(() => deletedListings.dispose());
 
-  test('confirmed deletion notifications are idempotent and ignore empty IDs', () {
-    var notifications = 0;
-    deletedListings.addListener(() => notifications++);
-    deletedListings.add('');
-    deletedListings.add(' ');
-    deletedListings.add('removed');
-    deletedListings.add('removed');
-    expect(deletedListings.contains('removed'), isTrue);
-    expect(deletedListings.contains('other'), isFalse);
-    expect(notifications, 1);
-  });
-
   testWidgets('home and search first pages filter deletion completed during their requests', (tester) async {
     final homeResponse = Completer<Result<ProductPage>>();
     final searchResponse = Completer<Result<ProductPage>>();

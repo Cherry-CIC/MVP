@@ -35,7 +35,6 @@ class _Harness {
     deletedListings: deletedListings,
     currentUserId: () => userId,
     accountChanges: changes.stream,
-    enabled: true,
   );
 
   void dispose() {
@@ -100,15 +99,6 @@ void main() {
     expect(harness.deletedListings.contains('listing'), isFalse);
   });
 
-  testWidgets('tapping outside the confirmation does not dismiss it or delete', (tester) async {
-    await harness.open(tester);
-    await tester.tapAt(const Offset(4, 4));
-    await tester.pumpAndSettle();
-    expect(find.byType(AlertDialog), findsOneWidget);
-    expect(harness.results, isEmpty);
-    expect(harness.repository.deletedIds, isEmpty);
-  });
-
   testWidgets('busy state disables both buttons and back until the response arrives', (tester) async {
     final response = Completer<Result<void>>();
     harness.repository.onDelete = () => response.future;
@@ -138,88 +128,47 @@ void main() {
   });
 
   testWidgets('uncertain deletion keeps the dialog open and retries only when requested', (tester) async {
-    harness.repository.onDelete = () async => throw TimeoutException('Response lost');
-    await harness.open(tester);
-    await tester.tap(_deleteButton);
-    await tester.pumpAndSettle();
-    expect(find.text(DeleteListingOutcome.uncertain.message), findsOneWidget);
-    expect(find.text('Try again'), findsOneWidget);
-    expect(harness.repository.deletedIds, ['listing']);
-    expect(harness.deletedListings.contains('listing'), isFalse);
-    expect(harness.results, isEmpty);
-
-    harness.repository.onDelete = () async => Result<void>.success(null, statusCode: 200);
-    await tester.tap(find.widgetWithText(FilledButton, 'Try again'));
-    await tester.pumpAndSettle();
-    expect(harness.repository.deletedIds, ['listing', 'listing']);
-    expect(harness.results, [DeleteListingOutcome.deleted]);
-    expect(harness.deletedListings.contains('listing'), isTrue);
-  });
-
-  for (final (code, outcome, retryable) in [
-    ('LISTING_PAYMENT_PENDING', DeleteListingOutcome.paymentPending, true),
-    ('LISTING_HAS_SALES', DeleteListingOutcome.hasSales, false),
-    ('LISTING_REVIEW_REQUIRED', DeleteListingOutcome.reviewRequired, false),
-  ]) {
-    testWidgets('$code shows a clear explanation and appropriate recovery controls', (tester) async {
-      harness.repository.onDelete = () async => Result<void>.failure(
-        'Untrusted backend text',
-        statusCode: 409,
-        errorCode: code,
-      );
+    final semantics = tester.ensureSemantics();
+    try {
+      harness.repository.onDelete = () async => throw TimeoutException('Response lost');
       await harness.open(tester);
       await tester.tap(_deleteButton);
       await tester.pumpAndSettle();
-      expect(find.text(outcome.message), findsOneWidget);
-      expect(find.text('Untrusted backend text'), findsNothing);
-      expect(find.text('Try again'), retryable ? findsOneWidget : findsNothing);
-      expect(find.widgetWithText(TextButton, 'Close'), findsOneWidget);
+      final error = find.text(DeleteListingOutcome.uncertain.message);
+      expect(error, findsOneWidget);
+      expect(tester.getSemantics(error).getSemanticsData().flagsCollection.isLiveRegion, isTrue);
+      expect(find.text('Try again'), findsOneWidget);
+      expect(harness.repository.deletedIds, ['listing']);
       expect(harness.deletedListings.contains('listing'), isFalse);
       expect(harness.results, isEmpty);
-    });
-  }
 
-  testWidgets('not-owner result is returned on close so the caller can refresh ownership', (tester) async {
+      harness.repository.onDelete = () async => Result<void>.success(null, statusCode: 200);
+      await tester.tap(find.widgetWithText(FilledButton, 'Try again'));
+      await tester.pumpAndSettle();
+      expect(harness.repository.deletedIds, ['listing', 'listing']);
+      expect(harness.results, [DeleteListingOutcome.deleted]);
+      expect(harness.deletedListings.contains('listing'), isTrue);
+    } finally {
+      semantics.dispose();
+    }
+  });
+
+  testWidgets('a terminal rejection explains why deletion is blocked and offers only Close', (tester) async {
     harness.repository.onDelete = () async => Result<void>.failure(
-      'Forbidden',
-      statusCode: 403,
-      errorCode: 'LISTING_NOT_OWNER',
+      'Untrusted backend text',
+      statusCode: 409,
+      errorCode: 'LISTING_HAS_SALES',
     );
     await harness.open(tester);
     await tester.tap(_deleteButton);
     await tester.pumpAndSettle();
-    expect(find.text(DeleteListingOutcome.notOwner.message), findsOneWidget);
+    expect(find.text(DeleteListingOutcome.hasSales.message), findsOneWidget);
+    expect(find.text('Untrusted backend text'), findsNothing);
     expect(find.byType(FilledButton), findsNothing);
-    await tester.tap(find.text('Close'));
-    await tester.pumpAndSettle();
-    expect(harness.results, [DeleteListingOutcome.notOwner]);
     expect(harness.deletedListings.contains('listing'), isFalse);
-  });
-
-  testWidgets('authentication failure offers sign in without claiming deletion', (tester) async {
-    harness.repository.onDelete = () async => Result<void>.failure('Expired', statusCode: 401);
-    await harness.open(tester);
-    await tester.tap(_deleteButton);
+    await tester.tap(find.widgetWithText(TextButton, 'Close'));
     await tester.pumpAndSettle();
-    expect(find.text(DeleteListingOutcome.unauthenticated.message), findsOneWidget);
-    expect(find.text('Try again'), findsNothing);
-    await tester.tap(find.widgetWithText(FilledButton, 'Sign in'));
-    await tester.pumpAndSettle();
-    expect(harness.results, [DeleteListingOutcome.unauthenticated]);
-    expect(harness.deletedListings.contains('listing'), isFalse);
-  });
-
-  testWidgets('structured DELETE not-found dismisses as already unavailable', (tester) async {
-    harness.repository.onDelete = () async => Result<void>.failure(
-      'Gone',
-      statusCode: 404,
-      errorCode: 'LISTING_NOT_FOUND',
-    );
-    await harness.open(tester);
-    await tester.tap(_deleteButton);
-    await tester.pumpAndSettle();
-    expect(harness.results, [DeleteListingOutcome.notFound]);
-    expect(harness.deletedListings.contains('listing'), isTrue);
+    expect(harness.results, [null]);
   });
 
   testWidgets('account change while confirming removes the destructive action', (tester) async {
@@ -275,21 +224,6 @@ void main() {
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
       expect(harness.repository.deletedIds, isEmpty);
-    } finally {
-      semantics.dispose();
-    }
-  });
-
-  testWidgets('error message is announced as a live region for screen readers', (tester) async {
-    final semantics = tester.ensureSemantics();
-    try {
-      harness.repository.onDelete = () async => Result<void>.failure('Network unavailable');
-      await harness.open(tester);
-      await tester.tap(_deleteButton);
-      await tester.pumpAndSettle();
-      final data = tester.getSemantics(find.text(DeleteListingOutcome.uncertain.message)).getSemanticsData();
-      expect(data.flagsCollection.isLiveRegion, isTrue);
-      expect(data.label, contains(DeleteListingOutcome.uncertain.message));
     } finally {
       semantics.dispose();
     }

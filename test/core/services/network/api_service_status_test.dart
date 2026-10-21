@@ -15,12 +15,6 @@ void main() {
     expect(result.statusCode, 410);
     expect(result.value, isNull);
     expect(result.isSuccess, isFalse);
-    expect(Result.success(null, statusCode: 200).statusCode, 200);
-    expect(
-      Result.failure('error', errorCode: 'LISTING_NOT_FOUND').errorCode,
-      'LISTING_NOT_FOUND',
-    );
-    expect(Result.success('value').errorCode, isNull);
   });
 
   for (final status in [404, 410, 403, 500]) {

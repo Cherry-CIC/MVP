@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:cherry_mvp/core/config/feature_flags.dart';
 import 'package:cherry_mvp/features/products/deleted_listings.dart';
 import 'package:cherry_mvp/features/products/product_repository.dart';
 import 'package:flutter/foundation.dart';
@@ -50,7 +49,6 @@ class DeleteListingViewModel extends ChangeNotifier {
     required String? Function() currentUserId,
     Stream<String?>? accountChanges,
     this.onAccountChanged,
-    this.enabled = FeatureFlags.enableListingDeletion,
   }) : _readUserId = currentUserId,
        _accountId = currentUserId() {
     _accountSubscription = accountChanges?.listen(_updateAccount);
@@ -58,7 +56,6 @@ class DeleteListingViewModel extends ChangeNotifier {
 
   final ProductRepository repository;
   final DeletedListings deletedListings;
-  final bool enabled;
   final String? Function() _readUserId;
   final VoidCallback? onAccountChanged;
   StreamSubscription<String?>? _accountSubscription;
@@ -86,7 +83,7 @@ class DeleteListingViewModel extends ChangeNotifier {
   bool isPending(String id) => _pending.contains(id);
 
   bool canDelete(String id, {required String? ownerId, required bool knownSold}) =>
-      enabled && owns(ownerId) && !knownSold && !deletedListings.contains(id);
+      owns(ownerId) && !knownSold && !deletedListings.contains(id);
 
   Future<DeleteListingOutcome> delete(
     String id, {
