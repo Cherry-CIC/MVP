@@ -3,7 +3,8 @@ class Result<T> {
   final String? error;
   final bool isSuccess;
   final int? statusCode;
+  final String? errorCode;
 
-  Result.success(this.value) : isSuccess = true, error = null, statusCode = null;
-  Result.failure(this.error, {this.statusCode}) : isSuccess = false, value = null;
+  Result.success(this.value, {this.statusCode}) : isSuccess = true, error = null, errorCode = null;
+  Result.failure(this.error, {this.statusCode, this.errorCode}) : isSuccess = false, value = null;
 }

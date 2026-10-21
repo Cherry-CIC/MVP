@@ -1,6 +1,11 @@
 class FeatureFlags {
   const FeatureFlags._();
 
+  // Enable only for verified staging builds until backend PR #69 is deployed
+  // and the deletion acceptance checks in docs/qa/delete-listing-frontend.md pass.
+  // This is independent of listing editing.
+  static const bool enableListingDeletion = bool.fromEnvironment('ENABLE_LISTING_DELETION', defaultValue: false);
+
   // Hide incomplete inbox and messaging UI for the MVP without removing the code.
   static const bool showInbox = false;
 

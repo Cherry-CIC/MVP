@@ -1,4 +1,5 @@
 import 'package:cherry_mvp/core/models/product.dart';
+import 'package:cherry_mvp/features/products/deleted_listings.dart';
 import 'package:cherry_mvp/features/profile/public_user_profile_repository.dart';
 import 'package:flutter/foundation.dart';
 
@@ -8,8 +9,11 @@ enum PublicProfileStatus { loading, ready, unavailable, error }
 class PublicUserProfileViewModel extends ChangeNotifier {
   final String userId;
   final IPublicUserProfileRepository repository;
+  final DeletedListings? deletedListings;
 
-  PublicUserProfileViewModel({required this.userId, required this.repository});
+  PublicUserProfileViewModel({required this.userId, required this.repository, this.deletedListings}) {
+    deletedListings?.addListener(_removeDeletedListings);
+  }
 
   PublicProfileStatus _status = PublicProfileStatus.loading;
   PublicUser? _user;
@@ -88,10 +92,13 @@ class PublicUserProfileViewModel extends ChangeNotifier {
   void _applyPage(PublicUserProfilePage page, {bool append = false}) {
     _user = page.user;
     final seenIds = <String>{};
-    _products = [
-      if (append) ..._products,
-      ...page.products,
-    ].where((product) => seenIds.add(product.id)).toList(growable: false);
+    _products =
+        [
+              if (append) ..._products,
+              ...page.products,
+            ]
+            .where((product) => deletedListings?.contains(product.id) != true && seenIds.add(product.id))
+            .toList(growable: false);
     final cursor = page.nextCursor?.trim();
     _nextCursor = cursor == null || cursor.isEmpty ? null : cursor;
     _hasMore = page.hasMore && _nextCursor != null;
@@ -110,10 +117,21 @@ class PublicUserProfileViewModel extends ChangeNotifier {
 
   bool _isUnavailable(int? statusCode) => statusCode == 404 || statusCode == 410;
 
+  void _removeDeletedListings() {
+    if (_disposed) return;
+    final products = _products
+        .where((product) => deletedListings?.contains(product.id) != true)
+        .toList(growable: false);
+    if (products.length == _products.length) return;
+    _products = products;
+    notifyListeners();
+  }
+
   @override
   void dispose() {
     _disposed = true;
     _requestSequence++;
+    deletedListings?.removeListener(_removeDeletedListings);
     super.dispose();
   }
 }
