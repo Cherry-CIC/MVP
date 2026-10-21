@@ -45,11 +45,11 @@ class FirebaseEnvironment {
 
   static const FirebaseOptions _devIos = FirebaseOptions(
     apiKey: 'AIzaSyB9jkZAhIsFB-7pmtJT-x3kw7ZLBUxOuHQ',
-    appId: '1:401854471349:ios:def9cbf12536777d85f2fc',
+    appId: '1:401854471349:ios:6f29a0fb34d26a3b85f2fc',
     messagingSenderId: '401854471349',
     projectId: 'cherry-mvp',
     storageBucket: 'cherry-mvp.firebasestorage.app',
-    iosBundleId: 'uk.org.cherry.app.dev',
+    iosBundleId: 'uk.org.cherry.app',
   );
 
   static const FirebaseOptions _prodIos = FirebaseOptions(
