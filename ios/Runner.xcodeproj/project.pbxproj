@@ -398,13 +398,13 @@
 				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
 				DART_DEFINES = "QVBQX0VOVj1kZXY=";
 				ENABLE_BITCODE = NO;
-				GOOGLE_REVERSED_CLIENT_ID = "com.googleusercontent.apps.401854471349-tpobubge18v04dgo4uvc1ebr74qum6kd";
+				GOOGLE_REVERSED_CLIENT_ID = "com.googleusercontent.apps.401854471349-oh11bqm8vk5i5vo8m73mf037qn9lgkoh";
 				INFOPLIST_FILE = Runner/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = uk.org.cherry.app.dev;
+				PRODUCT_BUNDLE_IDENTIFIER = uk.org.cherry.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
@@ -568,13 +568,13 @@
 				CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements;
 				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
 				ENABLE_BITCODE = NO;
-				GOOGLE_REVERSED_CLIENT_ID = "com.googleusercontent.apps.401854471349-tpobubge18v04dgo4uvc1ebr74qum6kd";
+				GOOGLE_REVERSED_CLIENT_ID = "com.googleusercontent.apps.401854471349-oh11bqm8vk5i5vo8m73mf037qn9lgkoh";
 				INFOPLIST_FILE = Runner/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = uk.org.cherry.app.dev;
+				PRODUCT_BUNDLE_IDENTIFIER = uk.org.cherry.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
@@ -639,13 +639,13 @@
 				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
 				DART_DEFINES = "QVBQX0VOVj1kZXY=";
 				ENABLE_BITCODE = NO;
-				GOOGLE_REVERSED_CLIENT_ID = "com.googleusercontent.apps.401854471349-tpobubge18v04dgo4uvc1ebr74qum6kd";
+				GOOGLE_REVERSED_CLIENT_ID = "com.googleusercontent.apps.401854471349-oh11bqm8vk5i5vo8m73mf037qn9lgkoh";
 				INFOPLIST_FILE = Runner/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = uk.org.cherry.app.dev;
+				PRODUCT_BUNDLE_IDENTIFIER = uk.org.cherry.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -679,13 +679,13 @@
 				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
 				DART_DEFINES = "QVBQX0VOVj1kZXY=";
 				ENABLE_BITCODE = NO;
-				GOOGLE_REVERSED_CLIENT_ID = "com.googleusercontent.apps.401854471349-tpobubge18v04dgo4uvc1ebr74qum6kd";
+				GOOGLE_REVERSED_CLIENT_ID = "com.googleusercontent.apps.401854471349-oh11bqm8vk5i5vo8m73mf037qn9lgkoh";
 				INFOPLIST_FILE = Runner/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = uk.org.cherry.app.dev;
+				PRODUCT_BUNDLE_IDENTIFIER = uk.org.cherry.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
@@ -902,13 +902,13 @@
 				DART_DEFINES = "QVBQX0VOVj1kZXY=";
 				DEVELOPMENT_TEAM = 63U2HM4MQA;
 				ENABLE_BITCODE = NO;
-				GOOGLE_REVERSED_CLIENT_ID = "com.googleusercontent.apps.401854471349-tpobubge18v04dgo4uvc1ebr74qum6kd";
+				GOOGLE_REVERSED_CLIENT_ID = "com.googleusercontent.apps.401854471349-oh11bqm8vk5i5vo8m73mf037qn9lgkoh";
 				INFOPLIST_FILE = Runner/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = uk.org.cherry.app.dev;
+				PRODUCT_BUNDLE_IDENTIFIER = uk.org.cherry.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
