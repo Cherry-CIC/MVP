@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:cherry_mvp/core/config/app_colors.dart';
+import 'package:cherry_mvp/features/products/widgets/product_quality_label.dart';
 import 'package:cherry_mvp/core/config/app_images.dart';
 import 'package:cherry_mvp/core/config/feature_flags.dart';
 import 'package:cherry_mvp/core/models/model.dart';
@@ -67,12 +67,7 @@ class ProductInformation extends StatelessWidget {
                 product.size,
                 style: detailStyle.copyWith(color: colours.onSurfaceVariant),
               ),
-              Text(
-                product.quality,
-                style: detailStyle.copyWith(
-                  color: Theme.of(context).brightness == Brightness.dark ? AppColors.green : const Color(0xFF287A20),
-                ),
-              ),
+              ProductQualityLabel(product.quality, style: detailStyle),
               if (FeatureFlags.showProductBadge) Icon(Icons.workspace_premium, color: colours.onSurfaceVariant),
             ],
           ),
