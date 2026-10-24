@@ -1,3 +1,4 @@
+import 'package:cherry_mvp/features/products/widgets/product_quality_label.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cherry_mvp/core/config/app_images.dart';
@@ -180,7 +181,7 @@ class ProductCard extends StatelessWidget {
                     ],
                     Expanded(
                       flex: 2,
-                      child: Text(
+                      child: ProductQualityLabel(
                         product.quality,
                         overflow: TextOverflow.ellipsis,
                         style: Theme.of(
