@@ -1,12 +1,15 @@
 import 'dart:io';
 
 import 'package:cherry_mvp/core/config/app_strings.dart';
+import 'package:cherry_mvp/core/config/app_theme.dart';
 import 'package:cherry_mvp/features/donation/widgets/photo_reorder_strip.dart';
 import 'package:cherry_mvp/features/donation/widgets/photo_upload.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:image_picker/image_picker.dart';
+
+import 'support/photo_reorder_actions.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -58,7 +61,7 @@ void main() {
     });
     await tester.pumpWidget(
       MaterialApp(
-        theme: ThemeData(brightness: brightness),
+        theme: buildTheme(brightness),
         builder: (context, child) => MediaQuery(
           data: MediaQuery.of(context).copyWith(textScaler: TextScaler.linear(textScale)),
           child: child!,
@@ -107,20 +110,21 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets('tap previews, accessible controls reorder, and callback snapshots retain their order', (tester) async {
+  testWidgets('tap previews, screen-reader actions reorder, and callback snapshots retain their order', (tester) async {
     await pump(tester);
     expectPreview(tester, 0, 0);
-    expect(tester.widget<TextButton>(find.widgetWithText(TextButton, AppStrings.movePhotoEarlier)).onPressed, isNull);
+    expect(find.text('Move earlier'), findsNothing);
+    expect(find.text('Move later'), findsNothing);
     await tester.tap(thumbnail(2));
     await tester.pumpAndSettle();
     expectPreview(tester, 2, 2);
-    expect(tester.widget<TextButton>(find.widgetWithText(TextButton, AppStrings.movePhotoLater)).onPressed, isNull);
-    await tester.tap(find.text(AppStrings.movePhotoEarlier));
+
+    await moveSelectedPhoto(tester, earlier: true);
     await tester.pumpAndSettle();
     expect(paths(changes.last), paths([photos[0], photos[2], photos[1]]));
     expectPreview(tester, 2, 1);
     final firstChange = changes.single;
-    await tester.tap(find.text(AppStrings.movePhotoEarlier));
+    await moveSelectedPhoto(tester, earlier: true);
     await tester.pumpAndSettle();
     expect(paths(changes.last), paths([photos[2], photos[0], photos[1]]));
     expect(paths(firstChange), paths([photos[0], photos[2], photos[1]]));
@@ -144,7 +148,7 @@ void main() {
     await pump(tester);
     await tester.tap(thumbnail(2));
     await tester.pumpAndSettle();
-    await tester.tap(find.text(AppStrings.movePhotoEarlier));
+    await moveSelectedPhoto(tester, earlier: true);
     await tester.pumpAndSettle();
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(pickerChannel, (
       call,
@@ -183,7 +187,7 @@ void main() {
   testWidgets('moving beyond the visible row keeps the selected thumbnail in view', (tester) async {
     await pump(tester, initial: photos);
     for (var index = 0; index < photos.length - 1; index++) {
-      await tester.tap(find.text(AppStrings.movePhotoLater));
+      await moveSelectedPhoto(tester, earlier: false);
       await tester.pumpAndSettle();
     }
     expect(paths(changes.last), paths([...photos.skip(1), photos.first]));
@@ -202,8 +206,9 @@ void main() {
     await pump(tester, enabled: false);
     expect(tester.widget<IconButton>(find.widgetWithIcon(IconButton, Icons.close)).onPressed, isNull);
     expect(tester.widget<IconButton>(find.widgetWithIcon(IconButton, Icons.add_a_photo)).onPressed, isNull);
-    expect(tester.widget<TextButton>(find.widgetWithText(TextButton, AppStrings.movePhotoLater)).onPressed, isNull);
+
     await dragPhoto(tester, 2, const Offset(-220, 0));
+    await moveSelectedPhoto(tester, earlier: false);
     expect(changes, isEmpty);
     expect(tester.takeException(), isNull);
   });
@@ -233,7 +238,17 @@ void main() {
 
       await pump(tester, textScale: 2, brightness: brightness);
       expect(find.bySemanticsLabel('Photo 1 of 3, Cover photo'), findsOneWidget);
-      expect(find.bySemanticsLabel(AppStrings.movePhotoLater), findsOneWidget);
+      expect(find.text('Move earlier'), findsNothing);
+      expect(find.text('Move later'), findsNothing);
+      final hint = tester.widget<Text>(find.text(AppStrings.reorderPhotosHint));
+      final theme = Theme.of(tester.element(find.byType(PhotoReorderStrip)));
+      expect(hint.style!.color, theme.colorScheme.onSurfaceVariant);
+      final luminance = hint.style!.color!.computeLuminance();
+      final background = theme.scaffoldBackgroundColor.computeLuminance();
+      final contrast = brightness == Brightness.dark
+          ? (luminance + 0.05) / (background + 0.05)
+          : (background + 0.05) / (luminance + 0.05);
+      expect(contrast, greaterThanOrEqualTo(4.5));
       expect(tester.takeException(), isNull);
       semantics.dispose();
     });

@@ -1,6 +1,6 @@
 # Donation photo ordering
 
-Donors can reorder local photos before submitting a new listing. Hold a thumbnail and drag it along the row, or select it and use **Move earlier** / **Move later**. The first photo is labelled **Cover photo**. Tapping a thumbnail changes the large preview; swiping the large preview still only changes the viewed photo.
+Donors can reorder local photos before submitting a new listing. Hold a thumbnail and drag it along the row. The instruction is shown in readable grey, without visible movement buttons. Screen-reader users can use the thumbnail's native reorder actions. The first photo is labelled **Cover photo**. Tapping a thumbnail changes the large preview; swiping the large preview still only changes the viewed photo.
 
 The demonstration arrow from the design discussion is not part of the interface. Reordering is opt-in on the Donate screen. The existing listing editor retains its current photo controls.
 
@@ -25,9 +25,9 @@ flutter analyze --no-pub
 bash tool/check_safe_logging.sh
 ```
 
-The 13 new tests cover drag moves in both directions, tap preview, accessible movement controls and boundaries, cover changes, adding/removing/clearing, duplicate picker paths, parent synchronisation, longer rows, doubled text size in light/dark themes, submission locking, failure recovery and asynchronous upload ordering.
+The 13 new tests cover drag moves in both directions, tap preview, screen-reader reordering, cover changes, adding/removing/clearing, duplicate picker paths, parent synchronisation, longer rows, doubled text size and hint contrast in light/dark themes, submission locking, failure recovery and asynchronous upload ordering.
 
-The full suite has 409 passing tests and 18 failures. All 18 failures reproduce on untouched `af876c5` with the same SDK: one Create Account password visibility test and 17 product/profile tests. The baseline has 396 passing tests. Full analysis has the same 19 pre-existing findings as the baseline; analysis of the changed Dart files has no findings. The safe logging guard and diff whitespace checks pass.
+The full-suite check at `dbae26f` had 409 passing tests and 18 failures. The button-removal and hint-colour follow-up was checked with the 13 feature tests and focused analysis; the full suite was not rerun for that UI change. All 18 failures reproduce on untouched `af876c5` with the same SDK: one Create Account password visibility test and 17 product/profile tests. The baseline has 396 passing tests. Full analysis has the same 19 pre-existing findings as the baseline; analysis of the changed Dart files has no findings. The safe logging guard and diff whitespace checks pass.
 
 ## Implementation previews
 
@@ -44,7 +44,7 @@ These checks have not been performed on physical devices or the deployed backend
 - [ ] On iOS and Android, add distinct gallery and camera photos. Drag the last photo to the first position and back. Check that ordinary swiping still only changes the preview.
 - [ ] Try enough photos to exceed the visible row. Hold near an edge to scroll while dragging. Verify the desired cover, counter and preview after each move.
 - [ ] Add and remove photos after reordering, including removing the first and final photo. Cancel the picker and return to the form.
-- [ ] Use VoiceOver/TalkBack to select thumbnails and move them using the labelled buttons. Confirm position announcements, focus, disabled boundary actions, larger text and light/dark contrast.
+- [ ] Use VoiceOver/TalkBack to select thumbnails and move them using their native reorder actions (left/right or start/end). Confirm position announcements, focus, available boundary actions and the submission lock, larger text and light/dark contrast.
 - [ ] Submit on staging. Confirm controls cannot change the photo set during upload. Reopen the listing and check its cover and full gallery order against the submitted selection.
 - [ ] Simulate an upload failure. Confirm the order and form values remain available for retry.
 - [ ] Smoke-test Edit listing > Add photos to confirm it keeps the existing editor flow and does not show the new Donate cover badge.

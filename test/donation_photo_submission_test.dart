@@ -24,6 +24,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
+import 'support/photo_reorder_actions.dart';
+
 class _DonationRepository implements IDonationRepository {
   final response = Completer<Result<DonationResponse>>();
   final requests = <DonationRequest>[];
@@ -117,13 +119,6 @@ class _Harness {
 List<String> _formPaths(WidgetTester tester) =>
     tester.widget<DonationForm>(find.byType(DonationForm)).selectedImages!.map((image) => image.path).toList();
 
-Future<void> _move(WidgetTester tester, String label) async {
-  final button = find.widgetWithText(TextButton, label);
-  await tester.ensureVisible(button);
-  await tester.tap(button);
-  await tester.pumpAndSettle();
-}
-
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   late Directory photos;
@@ -161,9 +156,9 @@ void main() {
   ) async {
     final harness = _Harness();
     await harness.pump(tester, images);
-    await _move(tester, AppStrings.movePhotoLater);
-    await _move(tester, AppStrings.movePhotoLater);
-    await _move(tester, AppStrings.movePhotoEarlier);
+    await moveSelectedPhoto(tester, earlier: false);
+    await moveSelectedPhoto(tester, earlier: false);
+    await moveSelectedPhoto(tester, earlier: true);
     final chosenOrder = [images[1].path, images[0].path, images[2].path];
     expect(_formPaths(tester), chosenOrder);
 
@@ -173,9 +168,9 @@ void main() {
     final submitted = harness.repository.requests.single;
     expect(submitted.localImages!.map((image) => image.path), chosenOrder);
     expect(tester.widget<PhotoUpload>(find.byType(PhotoUpload)).enabled, isFalse);
-    for (final label in [AppStrings.movePhotoEarlier, AppStrings.movePhotoLater]) {
-      expect(tester.widget<TextButton>(find.widgetWithText(TextButton, label)).onPressed, isNull);
-    }
+    final strip = tester.widget<PhotoReorderStrip>(find.byType(PhotoReorderStrip));
+    strip.onReorder(1, 0);
+    expect(_formPaths(tester), chosenOrder);
 
     harness.repository.response.complete(Result.failure('Upload failed'));
     await tester.pumpAndSettle();
@@ -183,7 +178,7 @@ void main() {
 
     expect(tester.widget<PhotoUpload>(find.byType(PhotoUpload)).enabled, isTrue);
     expect(_formPaths(tester), chosenOrder);
-    await _move(tester, AppStrings.movePhotoLater);
+    await moveSelectedPhoto(tester, earlier: false);
     expect(_formPaths(tester), [images[1].path, images[2].path, images[0].path]);
     expect(submitted.localImages!.map((image) => image.path), chosenOrder);
     expect(tester.takeException(), isNull);

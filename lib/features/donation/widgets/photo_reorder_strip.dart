@@ -74,8 +74,6 @@ class _PhotoReorderStripState extends State<PhotoReorderStrip> {
     final selectedBorder = Theme.of(context).brightness == Brightness.dark ? colours.primary : AppColors.primaryAction;
     // Leave room for the cover label when the user increases text size.
     final size = _thumbnailSize();
-    final canMoveEarlier = widget.enabled && widget.selectedIndex > 0;
-    final canMoveLater = widget.enabled && widget.selectedIndex < widget.images.length - 1;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -180,28 +178,14 @@ class _PhotoReorderStripState extends State<PhotoReorderStrip> {
         ),
         if (widget.images.length > 1) ...[
           const SizedBox(height: 8),
-          const Text(AppStrings.reorderPhotosHint),
+          Text(
+            AppStrings.reorderPhotosHint,
+            style: TextStyle(color: colours.onSurfaceVariant),
+          ),
           const SizedBox(height: 4),
           Semantics(
             liveRegion: true,
             child: Text(AppStrings.photoPosition(widget.selectedIndex + 1, widget.images.length)),
-          ),
-          Wrap(
-            spacing: 8,
-            children: [
-              TextButton(
-                onPressed: canMoveEarlier
-                    ? () => widget.onReorder(widget.selectedIndex, widget.selectedIndex - 1)
-                    : null,
-                style: TextButton.styleFrom(minimumSize: const Size(48, 48), foregroundColor: colours.onSurface),
-                child: const Text(AppStrings.movePhotoEarlier),
-              ),
-              TextButton(
-                onPressed: canMoveLater ? () => widget.onReorder(widget.selectedIndex, widget.selectedIndex + 1) : null,
-                style: TextButton.styleFrom(minimumSize: const Size(48, 48), foregroundColor: colours.onSurface),
-                child: const Text(AppStrings.movePhotoLater),
-              ),
-            ],
           ),
         ],
       ],

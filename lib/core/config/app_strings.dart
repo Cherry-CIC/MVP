@@ -166,8 +166,6 @@ class AppStrings {
   // Photo Upload
   static const coverPhoto = 'Cover photo';
   static const reorderPhotosHint = 'Hold and drag to reorder photos';
-  static const movePhotoEarlier = 'Move earlier';
-  static const movePhotoLater = 'Move later';
   static const previewPhotoHint = 'Tap to preview this photo';
   static const addMorePhotos = 'Add more photos';
   static const removePhoto = 'Remove photo';
