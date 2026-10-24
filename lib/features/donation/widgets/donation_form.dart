@@ -20,6 +20,7 @@ import 'package:cherry_mvp/features/donation/models/postage_size_info.dart';
 import 'package:cherry_mvp/features/donation/widgets/donation_options.dart';
 import 'package:cherry_mvp/features/donation/widgets/donation_form_field.dart';
 import 'package:cherry_mvp/features/donation/widgets/donation_dropdown_field.dart';
+import 'package:cherry_mvp/features/donation/widgets/donation_field_shimmer.dart';
 
 class DonationForm extends StatefulWidget {
   final List<XFile>? selectedImages;
@@ -161,18 +162,7 @@ class DonationFormState extends State<DonationForm> {
                   final categories = categoryViewModel.categories;
 
                   if (status.type == StatusType.loading) {
-                    return const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 16.0),
-                      child: Center(
-                        child: Column(
-                          children: [
-                            CircularProgressIndicator(),
-                            SizedBox(height: 8),
-                            Text('Loading categories...'),
-                          ],
-                        ),
-                      ),
-                    );
+                    return DonationFieldShimmer(label: categoryHintText);
                   } else if (status.type == StatusType.failure) {
                     return Padding(
                       padding: const EdgeInsets.symmetric(vertical: 16.0),
@@ -223,18 +213,7 @@ class DonationFormState extends State<DonationForm> {
                   final charities = charityViewModel.charities;
 
                   if (status.type == StatusType.loading) {
-                    return const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 16.0),
-                      child: Center(
-                        child: Column(
-                          children: [
-                            CircularProgressIndicator(),
-                            SizedBox(height: 8),
-                            Text(AppStrings.loadCharities),
-                          ],
-                        ),
-                      ),
-                    );
+                    return const DonationFieldShimmer(label: AppStrings.charityText);
                   } else if (status.type == StatusType.failure) {
                     return Padding(
                       padding: const EdgeInsets.symmetric(vertical: 16.0),
