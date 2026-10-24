@@ -164,6 +164,15 @@ class AppStrings {
   static const noCategoriesAvailable = 'No categories available';
 
   // Photo Upload
+  static const coverPhoto = 'Cover photo';
+  static const reorderPhotosHint = 'Hold and drag to reorder photos';
+  static const movePhotoEarlier = 'Move earlier';
+  static const movePhotoLater = 'Move later';
+  static const previewPhotoHint = 'Tap to preview this photo';
+  static const addMorePhotos = 'Add more photos';
+  static const removePhoto = 'Remove photo';
+  static String photoPosition(int position, int total) => 'Photo $position of $total';
+
   static const takePhoto = 'Upload or take new photos';
   static const cameraPhoto = 'Take Photo';
   static const galleryPhoto = 'Choose from Gallery';
