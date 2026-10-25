@@ -19,7 +19,7 @@ class _SelectPaymentTypeBottomSheetState extends State<SelectPaymentTypeBottomSh
         final selected = vm.selectedPaymentType;
 
         return BottomSheet(
-          backgroundColor: Theme.of(context).colorScheme.onTertiary,
+          backgroundColor: Theme.of(context).colorScheme.surface,
           onClosing: () {},
           shape: const BeveledRectangleBorder(),
           builder: (context) => Column(
@@ -89,6 +89,7 @@ class _SelectPaymentTypeBottomSheetState extends State<SelectPaymentTypeBottomSh
                   AppImages.paymentMethodsAppleIcon,
                   width: 24,
                   height: 24,
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
                 title: Text(AppStrings.paymentMethodsApplePay),
                 trailing: RadioGroup<PaymentType>(
