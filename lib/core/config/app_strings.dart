@@ -408,12 +408,16 @@ class AppStrings {
   static const aboutUsText = "About us";
   static const legalInformationText = "Legal information";
   static const privacyPolicyText = "Privacy Policy";
+  static const privacyPolicyUrl = "https://cherry.org.uk/privacypolicy";
   static const termsAndConditionsText = "Terms and Conditions";
   static const communityRulesText = "Community Rules";
+  static const privacyContactEmail = "cherry.community.interest.company@gmail.com";
   static const legalAcceptanceIntroText = "I have read and agree to the";
   static const legalAcceptanceAndText = "and";
   static const legalAcceptanceRequiredText = "You must accept the Terms and Conditions and Community Rules.";
   static const legalDocumentLoadErrorText = "We couldn't load this legal document. Please try again.";
+  static const legalDocumentOnlineText = "Also published online at";
+  static const legalDocumentContactText = "Questions or requests about your data";
   static const cookieSettingsText = "Cookie settings";
   static const logOutText = "Log out";
   static const supportText = "Support";

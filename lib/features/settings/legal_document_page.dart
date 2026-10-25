@@ -6,10 +6,14 @@ class LegalDocumentPage extends StatelessWidget {
     super.key,
     required this.title,
     required this.assetPath,
+    this.onlineUrl,
+    this.contactEmail,
   });
 
   final String title;
   final String assetPath;
+  final String? onlineUrl;
+  final String? contactEmail;
 
   @override
   Widget build(BuildContext context) {
@@ -47,6 +51,8 @@ class LegalDocumentPage extends StatelessWidget {
                   return _LegalDocumentContent(
                     title: title,
                     text: snapshot.data!,
+                    onlineUrl: onlineUrl,
+                    contactEmail: contactEmail,
                   );
                 },
               ),
@@ -67,10 +73,14 @@ class _LegalDocumentContent extends StatelessWidget {
   const _LegalDocumentContent({
     required this.title,
     required this.text,
+    this.onlineUrl,
+    this.contactEmail,
   });
 
   final String title;
   final String text;
+  final String? onlineUrl;
+  final String? contactEmail;
 
   @override
   Widget build(BuildContext context) {
@@ -80,6 +90,59 @@ class _LegalDocumentContent extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           for (final block in blocks) _DocumentBlockView(block: block),
+          if (onlineUrl != null || contactEmail != null) ...[
+            const Divider(height: 32),
+            if (onlineUrl != null)
+              _LegalDocumentLink(
+                label: AppStrings.legalDocumentOnlineText,
+                value: onlineUrl!,
+              ),
+            if (contactEmail != null)
+              _LegalDocumentLink(
+                label: AppStrings.legalDocumentContactText,
+                value: contactEmail!,
+              ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+
+class _LegalDocumentLink extends StatelessWidget {
+  const _LegalDocumentLink({
+    required this.label,
+    required this.value,
+  });
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final colourScheme = Theme.of(context).colorScheme;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: textTheme.labelLarge?.copyWith(
+              color: colourScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: textTheme.bodyMedium?.copyWith(
+              color: colourScheme.primary,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
         ],
       ),
     );

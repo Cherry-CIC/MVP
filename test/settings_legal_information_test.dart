@@ -48,8 +48,8 @@ void main() {
     }
 
     expect(find.text(AppStrings.privacyPolicyText), findsWidgets);
-    expect(find.text('Date last updated: 05.07.2026'), findsOneWidget);
-    expect(find.text('1. General'), findsOneWidget);
+    expect(find.text('Date last updated: 24.10.2026'), findsOneWidget);
+    expect(find.text('1. Who we are'), findsOneWidget);
 
     await tester.pageBack();
     await tester.pumpAndSettle();
