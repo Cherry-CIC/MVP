@@ -155,7 +155,7 @@ class _PhotoUploadState extends State<PhotoUpload> {
       ),
     );
 
-    if (openSettings == true) {
+    if (openSettings == true && mounted && widget.enabled) {
       await AppSettings.openAppSettings();
     }
     return openSettings == true;
@@ -163,7 +163,7 @@ class _PhotoUploadState extends State<PhotoUpload> {
 
   Future<bool> _ensureCameraPermission() async {
     var status = await Permission.camera.status;
-    if (!mounted) return false;
+    if (!mounted || !widget.enabled) return false;
     if (status.isGranted) return true;
 
     if (status.isPermanentlyDenied || status.isRestricted) {
@@ -171,8 +171,12 @@ class _PhotoUploadState extends State<PhotoUpload> {
       return false;
     }
 
+    // Explain the request only when this device still needs camera access.
+    final userConfirmed = await _showCameraPermissionRationaleDialog();
+    if (!mounted || !widget.enabled || !userConfirmed) return false;
+
     status = await Permission.camera.request();
-    if (!mounted) return false;
+    if (!mounted || !widget.enabled) return false;
     if (status.isGranted) return true;
 
     await _showPermissionDeniedDialog(
@@ -272,10 +276,6 @@ class _PhotoUploadState extends State<PhotoUpload> {
           }
         }
       } else {
-        // Single image from camera - show pre-permission rationale dialog
-        final bool userConfirmed = await _showCameraPermissionRationaleDialog();
-        if (!mounted || !widget.enabled || !userConfirmed) return;
-
         if (!await _ensureCameraPermission()) return;
         if (!mounted || !widget.enabled) return;
 
