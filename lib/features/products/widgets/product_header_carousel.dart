@@ -4,6 +4,7 @@ import 'package:cherry_mvp/core/utils/image_provider_helper.dart';
 import 'package:cherry_mvp/core/config/app_images.dart';
 import 'package:cherry_mvp/core/config/app_colors.dart';
 import 'package:cherry_mvp/features/products/product_viewmodel.dart';
+import 'package:cherry_mvp/features/products/widgets/product_photo_viewer.dart';
 import 'package:cherry_mvp/features/products/widgets/product_safety_actions.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -24,6 +25,8 @@ class ProductHeaderCarousel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final images = product.productImages.map(ImageProviderHelper.getImageProvider).toList();
+
     return SliverAppBar(
       toolbarHeight: 72,
       leadingWidth: 80,
@@ -60,7 +63,13 @@ class ProductHeaderCarousel extends StatelessWidget {
             children: [
               Positioned.fill(
                 child: ImageCarousel(
-                  images: product.productImages.map((path) => ImageProviderHelper.getImageProvider(path)).toList(),
+                  images: images,
+                  onImageTap: (index) => Navigator.of(context).push<void>(
+                    MaterialPageRoute(
+                      fullscreenDialog: true,
+                      builder: (_) => ProductPhotoViewer(images: images, initialIndex: index),
+                    ),
+                  ),
                 ),
               ),
               PositionedDirectional(
