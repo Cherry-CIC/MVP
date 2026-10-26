@@ -1,4 +1,8 @@
 import 'package:cherry_mvp/features/shared_widgets/bottom_cta.dart';
+import 'package:cherry_mvp/features/products/deleted_listings.dart';
+import 'package:cherry_mvp/features/products/delete_listing_view_model.dart';
+import 'package:cherry_mvp/features/products/widgets/delete_listing_dialog.dart';
+import 'package:cherry_mvp/features/products/widgets/listing_actions_menu.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cherry_mvp/core/config/feature_flags.dart';
@@ -24,10 +28,11 @@ import 'package:cherry_mvp/features/products/widgets/product_header_carousel.dar
 import 'package:cherry_mvp/features/profile/public_user_profile_repository.dart';
 
 class ProductPage extends StatefulWidget {
-  const ProductPage({super.key, this.product, this.productId});
+  const ProductPage({super.key, this.product, this.productId, this.fromOwnListings = false});
 
   final Product? product;
   final String? productId;
+  final bool fromOwnListings;
 
   @override
   State<ProductPage> createState() => _ProductPageState();
@@ -35,6 +40,7 @@ class ProductPage extends StatefulWidget {
 
 class _ProductPageState extends State<ProductPage> {
   Future<Result<Product>>? _productLoad;
+  String? _requestedProductId;
   String? _sellerRequestId;
   Future<PublicUser?>? _sellerLoad;
 
@@ -54,6 +60,7 @@ class _ProductPageState extends State<ProductPage> {
 
   void _loadProduct() {
     final productId = widget.productId;
+    _requestedProductId = productId;
     _productLoad = productId == null
         ? null
         : context.read<ProductViewModel>().productRepository.fetchProduct(
@@ -63,7 +70,15 @@ class _ProductPageState extends State<ProductPage> {
 
   @override
   Widget build(BuildContext context) {
-    if (widget.productId == null) {
+    final deleted = context.watch<DeletedListings?>();
+    final id = widget.productId ?? widget.product?.id ?? context.read<ProductViewModel>().product?.id;
+    if (id != null && deleted?.contains(id) == true) {
+      return Scaffold(
+        appBar: AppBar(),
+        body: const Center(child: Text('This listing is no longer available.')),
+      );
+    }
+    if (_productLoad == null) {
       return _buildDetails(
         context,
         widget.product ?? context.watch<ProductViewModel>().product,
@@ -98,7 +113,7 @@ class _ProductPageState extends State<ProductPage> {
                     ),
                     const SizedBox(height: 12),
                     OutlinedButton(
-                      onPressed: () => setState(_loadProduct),
+                      onPressed: () => _refreshProduct(_requestedProductId!),
                       child: const Text(AppStrings.retry),
                     ),
                   ],
@@ -124,7 +139,12 @@ class _ProductPageState extends State<ProductPage> {
     final checkoutViewModel = context.watch<CheckoutViewModel>();
     final displayedProduct = product;
     final isOwnListing = checkoutViewModel.isOwnProduct(displayedProduct);
-    final canEdit = isOwnListing && context.read<IEditListingRepository>().canEdit(displayedProduct);
+    final deletion = context.watch<DeleteListingViewModel?>();
+    final actionSession = deletion?.session;
+    final canEdit = isOwnListing && (context.read<IEditListingRepository?>()?.canEdit(displayedProduct) ?? false);
+    final knownSold = displayedProduct.status?.toLowerCase() == 'sold' || displayedProduct.number <= 0;
+    final canDelete =
+        deletion?.canDelete(displayedProduct.id, ownerId: displayedProduct.userId, knownSold: knownSold) ?? false;
     final hasOptionalProductHighlights =
         FeatureFlags.showDonorDiscounts || (!isOwnListing && FeatureFlags.showOtherCharityRequests);
     final sellerId = NavigationProvider.publicProfileUserId(displayedProduct.userId);
@@ -133,13 +153,7 @@ class _ProductPageState extends State<ProductPage> {
 
     return Scaffold(
       bottomNavigationBar: isOwnListing
-          ? (canEdit
-                ? BottomCta(
-                    enabled: true,
-                    text: 'Edit listing',
-                    onPressed: () => _editListing(displayedProduct),
-                  )
-                : null)
+          ? null
           : BottomCta(
               enabled: true,
               text: AppStrings.productPageBuyNow,
@@ -159,6 +173,24 @@ class _ProductPageState extends State<ProductPage> {
           ProductHeaderCarousel(
             displayedProduct,
             canLike: !isOwnListing,
+            ownerActions: canEdit || canDelete
+                ? ListingActionsMenu(
+                    listingName: displayedProduct.name,
+                    busy: deletion?.isPending(displayedProduct.id) ?? false,
+                    onEdit: canEdit ? () => _editListing(displayedProduct) : null,
+                    onDelete: canDelete
+                        ? () => requestListingDeletion(
+                            context,
+                            productId: displayedProduct.id,
+                            ownerId: displayedProduct.userId!,
+                            knownSold: knownSold,
+                            actionSession: actionSession!,
+                            onRemoved: _leaveDeletedListing,
+                            onRefreshDetails: () => _refreshProduct(displayedProduct.id),
+                          )
+                        : null,
+                  )
+                : null,
             showSafetyActions: canUseSafetyActions,
             onSafetyActionSelected: (action) => _handleSafetyAction(
               context,
@@ -291,12 +323,32 @@ class _ProductPageState extends State<ProductPage> {
     return _sellerLoad!;
   }
 
+  void _refreshProduct(String productId) {
+    if (!mounted) return;
+    setState(() {
+      _requestedProductId = productId;
+      _productLoad = context.read<ProductViewModel>().productRepository.fetchProduct(productId);
+    });
+  }
+
+  void _leaveDeletedListing() {
+    if (!mounted || ModalRoute.of(context)?.isCurrent != true) return;
+    final navigator = Navigator.of(context);
+    if (widget.fromOwnListings && navigator.canPop()) {
+      navigator.pop();
+    } else {
+      context.read<NavigationProvider>().replaceWith(AppRoutes.myListings);
+    }
+  }
+
   Future<void> _editListing(Product product) async {
+    final actions = context.read<DeleteListingViewModel?>();
+    final session = actions?.session;
     final result = await context.read<NavigationProvider>().navigateTo(
       AppRoutes.editListing,
       arguments: {'productId': product.id},
     );
-    if (!mounted || result is! EditListingResult) return;
+    if (!mounted || (session != null && !actions!.isCurrent(session)) || result is! EditListingResult) return;
     if (result.product != null) {
       context.read<ProductViewModel>().applyListingUpdate(result.product!);
       ScaffoldMessenger.of(context).showSnackBar(
@@ -307,7 +359,7 @@ class _ProductPageState extends State<ProductPage> {
       context.read<HomeViewModel>().refreshAfterListingEdit(),
       context.read<ProfileListingsViewModel>().refreshAfterListingEdit(),
     ]);
-    if (mounted) setState(_loadProduct);
+    if (mounted) _refreshProduct(product.id);
   }
 
   Future<PublicUser?> _loadPublicSeller(BuildContext context, String? userId) async {

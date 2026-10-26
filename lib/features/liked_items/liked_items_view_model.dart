@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:cherry_mvp/core/models/product.dart';
+import 'package:cherry_mvp/features/products/deleted_listings.dart';
 import 'package:cherry_mvp/features/products/product_repository.dart';
 import 'package:cherry_mvp/features/products/product_viewmodel.dart';
 
@@ -15,14 +16,19 @@ class LikedItemsViewModel extends ChangeNotifier {
   LikedItemsViewModel({
     required this.productRepository,
     required this.productViewModel,
+    this.deletedListings,
   }) {
     _accountStateVersion = productViewModel.accountStateVersion;
     productViewModel.addListener(_handleProductStateChange);
+    deletedListings?.addListener(_removeDeletedListings);
   }
 
   final ProductRepository productRepository;
   final ProductViewModel productViewModel;
+  final DeletedListings? deletedListings;
   late int _accountStateVersion;
+  int _requestSequence = 0;
+  bool _disposed = false;
 
   LikedItemsStatus _status = LikedItemsStatus.initial;
   List<Product> _products = const [];
@@ -33,6 +39,8 @@ class LikedItemsViewModel extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
 
   Future<void> loadLikedProducts() async {
+    if (_disposed) return;
+    final request = ++_requestSequence;
     final accountStateVersion = productViewModel.accountStateVersion;
     _accountStateVersion = accountStateVersion;
     _status = LikedItemsStatus.loading;
@@ -41,6 +49,7 @@ class LikedItemsViewModel extends ChangeNotifier {
 
     final result = await productRepository.fetchLikedProducts();
 
+    if (_disposed || request != _requestSequence) return;
     if (!productViewModel.isAccountStateCurrent(accountStateVersion)) {
       _clearProductsAfterAccountChange();
       return;
@@ -64,17 +73,20 @@ class LikedItemsViewModel extends ChangeNotifier {
   }
 
   Future<bool> unlikeProduct(Product product) async {
-    final index = _products.indexWhere((item) => item.id == product.id);
-    if (index == -1) {
+    if (_disposed) return false;
+    if (!_products.any((item) => item.id == product.id)) {
       return true;
     }
 
     final accountStateVersion = productViewModel.accountStateVersion;
     final result = await productViewModel.setProductLiked(product, false);
+    if (_disposed) return false;
     if (!productViewModel.isAccountStateCurrent(accountStateVersion)) {
       _clearProductsAfterAccountChange();
       return false;
     }
+
+    if (_isDeleted(product.id)) return true;
 
     if (!result.isSuccess) {
       _errorMessage = result.error ?? 'Unable to remove this liked item.';
@@ -82,8 +94,8 @@ class LikedItemsViewModel extends ChangeNotifier {
       return false;
     }
 
-    final nextProducts = List<Product>.from(_products)..removeAt(index);
-    _products = List.unmodifiable(nextProducts);
+    // A deletion may have changed the list while the unlike request was pending.
+    _products = List.unmodifiable(_products.where((item) => item.id != product.id));
     _status = _products.isEmpty ? LikedItemsStatus.empty : LikedItemsStatus.loaded;
     _errorMessage = null;
     notifyListeners();
@@ -95,6 +107,8 @@ class LikedItemsViewModel extends ChangeNotifier {
   }
 
   void _clearProductsAfterAccountChange() {
+    if (_disposed) return;
+    _requestSequence++;
     _accountStateVersion = productViewModel.accountStateVersion;
     _products = const [];
     _status = LikedItemsStatus.empty;
@@ -103,9 +117,12 @@ class LikedItemsViewModel extends ChangeNotifier {
   }
 
   void _handleProductStateChange() {
+    if (_disposed) return;
     if (!productViewModel.isAccountStateCurrent(_accountStateVersion)) {
       _clearProductsAfterAccountChange();
+      return;
     }
+    _removeDeletedListings();
   }
 
   List<Product> _mergeProducts(
@@ -116,7 +133,7 @@ class LikedItemsViewModel extends ChangeNotifier {
     final seenProductIds = <String>{};
 
     for (final product in [...primaryProducts, ...cachedProducts]) {
-      if (product.id.trim().isEmpty || !seenProductIds.add(product.id)) {
+      if (_isDeleted(product.id) || product.id.trim().isEmpty || !seenProductIds.add(product.id)) {
         continue;
       }
       products.add(product);
@@ -125,9 +142,25 @@ class LikedItemsViewModel extends ChangeNotifier {
     return List.unmodifiable(products);
   }
 
+  bool _isDeleted(String id) => deletedListings?.contains(id) == true || productViewModel.isProductDeleted(id);
+
+  void _removeDeletedListings() {
+    if (_disposed) return;
+    final products = _products.where((product) => !_isDeleted(product.id)).toList(growable: false);
+    if (products.length == _products.length) return;
+    _products = List.unmodifiable(products);
+    if (_status == LikedItemsStatus.loaded || _status == LikedItemsStatus.empty) {
+      _status = _products.isEmpty ? LikedItemsStatus.empty : LikedItemsStatus.loaded;
+    }
+    notifyListeners();
+  }
+
   @override
   void dispose() {
+    _disposed = true;
+    _requestSequence++;
     productViewModel.removeListener(_handleProductStateChange);
+    deletedListings?.removeListener(_removeDeletedListings);
     super.dispose();
   }
 }
