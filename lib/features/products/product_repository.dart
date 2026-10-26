@@ -2,6 +2,7 @@ import 'package:cherry_mvp/core/models/product.dart';
 import 'package:cherry_mvp/core/services/network/api_endpoints.dart';
 import 'package:cherry_mvp/core/services/network/api_service.dart';
 import 'package:cherry_mvp/core/utils/result.dart';
+import 'package:cherry_mvp/features/products/deleted_listings.dart';
 
 final class ProductLikeUpdate {
   const ProductLikeUpdate({required this.liked, required this.likes});
@@ -11,17 +12,21 @@ final class ProductLikeUpdate {
 }
 
 class ProductRepository {
-  ProductRepository(this._apiService);
+  ProductRepository(this._apiService, {this.deletedListings});
 
   static const int _likedProductsPageLimit = 50;
   static const String _loadFailureMessage = 'We couldn’t load your liked items.';
 
   final ApiService _apiService;
+  final DeletedListings? deletedListings;
 
   Future<Result<Product>> fetchProduct(String productId) async {
     final validationError = _validateProductId(productId);
     if (validationError != null) {
       return Result.failure(validationError);
+    }
+    if (deletedListings?.contains(productId) ?? false) {
+      return _deletedListingFailure();
     }
 
     const failureMessage = 'We couldn’t load this listing.';
@@ -30,8 +35,16 @@ class ProductRepository {
       final result = await _apiService.get<dynamic>(
         ApiEndpoints.productWithDetailsById(productId),
       );
+      // A response which started before deletion must not restore the listing.
+      if (deletedListings?.contains(productId) ?? false) {
+        return _deletedListingFailure();
+      }
       if (!result.isSuccess) {
-        return Result.failure(result.error ?? failureMessage);
+        return Result.failure(
+          result.error ?? failureMessage,
+          statusCode: result.statusCode,
+          errorCode: result.errorCode,
+        );
       }
 
       final response = result.value;
@@ -58,6 +71,42 @@ class ProductRepository {
       return Result.failure(failureMessage);
     }
   }
+
+  Future<Result<void>> deleteProduct(String productId) async {
+    final validationError = _validateProductId(productId);
+    if (validationError != null) {
+      return Result.failure(validationError);
+    }
+
+    const failureMessage = 'We couldn’t confirm that this listing was deleted.';
+    try {
+      final result = await _apiService.delete<dynamic>(
+        ApiEndpoints.productById(productId),
+      );
+      if (!result.isSuccess) {
+        return Result.failure(
+          failureMessage,
+          statusCode: result.statusCode,
+          errorCode: result.errorCode,
+        );
+      }
+      final response = result.value;
+      if (result.statusCode != 200 || response is! Map || response['success'] != true) {
+        return Result.failure(failureMessage, statusCode: result.statusCode);
+      }
+      // The deletion response deliberately contains data:null. Recording the
+      // tombstone belongs to the caller after checking the account is unchanged.
+      return Result.success(null, statusCode: result.statusCode);
+    } catch (_) {
+      return Result.failure(failureMessage);
+    }
+  }
+
+  Result<Product> _deletedListingFailure() => Result.failure(
+    'This listing is no longer available.',
+    statusCode: 404,
+    errorCode: 'LISTING_NOT_FOUND',
+  );
 
   Future<Result<ProductLikeUpdate>> likeProduct(Product product) async {
     return _setProductLiked(product.id, liked: true);
