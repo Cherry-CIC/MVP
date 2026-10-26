@@ -128,7 +128,9 @@ void main() {
   testWidgets('owner opens editor, saves and refreshes detail, profile and feed', (tester) async {
     final products = _Products(_product());
     final harness = await _open(tester, products);
-    await tester.tap(find.widgetWithText(FilledButton, 'Edit listing'));
+    await tester.tap(find.byTooltip('Manage Blue jumper'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Edit listing'));
     await tester.pumpAndSettle();
     expect(find.byType(EditListingPage), findsOneWidget);
     final title = find.descendant(

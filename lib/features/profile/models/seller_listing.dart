@@ -3,12 +3,21 @@ class SellerListing {
   final String name;
   final List<String> imageUrls;
   final double? price;
+  final String? userId;
+  final String? status;
+  final int? number;
+
+  bool get isKnownSold => status?.toLowerCase() == 'sold' || (number != null && number! <= 0);
+  bool get canEdit => !isKnownSold && (status == 'active' || status == 'unlisted') && number != null && number! > 0;
 
   const SellerListing({
     required this.id,
     required this.name,
     required this.imageUrls,
     required this.price,
+    this.userId,
+    this.status,
+    this.number,
   });
 
   static SellerListing? tryFromJson(dynamic value) {
@@ -36,6 +45,9 @@ class SellerListing {
                 .toList(growable: false)
           : const [],
       price: _parsePrice(json['price']),
+      userId: (json['userId'] ?? json['user_id']) is String ? (json['userId'] ?? json['user_id']) as String : null,
+      status: json['status'] is String ? json['status'] as String : null,
+      number: int.tryParse('${json['number']}'),
     );
   }
 

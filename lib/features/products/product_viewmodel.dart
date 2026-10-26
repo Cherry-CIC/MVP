@@ -3,6 +3,7 @@ import 'package:cherry_mvp/core/models/model.dart';
 import 'package:cherry_mvp/core/router/nav_provider.dart';
 import 'package:cherry_mvp/core/router/nav_routes.dart';
 import 'package:cherry_mvp/core/utils/result.dart';
+import 'package:cherry_mvp/features/products/deleted_listings.dart';
 import 'package:cherry_mvp/features/products/product_repository.dart';
 import 'package:cherry_mvp/features/products/safety_repository.dart';
 
@@ -29,13 +30,17 @@ class ProductViewModel extends ChangeNotifier {
   final ProductRepository productRepository;
   final SafetyRepository? safetyRepository;
   final NavigationProvider navigator;
+  final DeletedListings? deletedListings;
 
   ProductViewModel({
     required this.productRepository,
     required this.navigator,
     this.safetyRepository,
+    this.deletedListings,
     String? Function()? currentUserIdProvider,
-  }) : _currentUserIdProvider = currentUserIdProvider ?? _unauthenticatedUserId;
+  }) : _currentUserIdProvider = currentUserIdProvider ?? _unauthenticatedUserId {
+    deletedListings?.addListener(_removeDeletedListings);
+  }
 
   static String? _unauthenticatedUserId() => null;
 
@@ -45,6 +50,7 @@ class ProductViewModel extends ChangeNotifier {
   }
 
   bool isAccountStateCurrent(int version) {
+    if (_disposed) return false;
     _ensureCurrentAccount();
     return version == _accountStateVersion;
   }
@@ -58,6 +64,7 @@ class ProductViewModel extends ChangeNotifier {
   // Check if a specific product is liked
   bool isProductLiked(String productId) {
     _ensureCurrentAccount();
+    if (isProductDeleted(productId)) return false;
     return _likedProducts[productId] ?? false;
   }
 
@@ -85,6 +92,7 @@ class ProductViewModel extends ChangeNotifier {
   // Get dynamic count for a product
   int getLikesCount(Product product) {
     _ensureCurrentAccount();
+    if (isProductDeleted(product.id)) return 0;
     return _likeCountOverrides[product.id] ?? product.likes;
   }
 
@@ -136,11 +144,13 @@ class ProductViewModel extends ChangeNotifier {
   }
 
   void setProduct(Product product) {
+    if (_disposed || isProductDeleted(product.id)) return;
     _product = product;
     notifyListeners();
   }
 
   void applyListingUpdate(Product product) {
+    if (_disposed || isProductDeleted(product.id)) return;
     if (_product?.id == product.id) {
       _product = product;
       notifyListeners();
@@ -159,7 +169,11 @@ class ProductViewModel extends ChangeNotifier {
     _ensureCurrentAccount();
     final accountStateVersion = _accountStateVersion;
     final id = product.id;
-    if (id.trim().isEmpty || _pendingLikeUpdates.contains(id) || (liked && isOwnProduct(product))) {
+    if (_disposed ||
+        isProductDeleted(id) ||
+        id.trim().isEmpty ||
+        _pendingLikeUpdates.contains(id) ||
+        (liked && isOwnProduct(product))) {
       return Result.failure('Unable to update this liked item.');
     }
 
@@ -168,7 +182,7 @@ class ProductViewModel extends ChangeNotifier {
 
     final result = liked ? await productRepository.likeProduct(product) : await productRepository.unlikeProduct(id);
 
-    if (!isAccountStateCurrent(accountStateVersion)) {
+    if (!isAccountStateCurrent(accountStateVersion) || isProductDeleted(id)) {
       return Result.failure('Unable to update this liked item.');
     }
 
@@ -269,7 +283,7 @@ class ProductViewModel extends ChangeNotifier {
 
   void setCachedLikeState(String productId, bool liked) {
     _ensureCurrentAccount();
-    if (productId.trim().isEmpty) {
+    if (_disposed || isProductDeleted(productId) || productId.trim().isEmpty) {
       return;
     }
 
@@ -281,11 +295,12 @@ class ProductViewModel extends ChangeNotifier {
   }
 
   void cacheLikedProducts(Iterable<Product> products) {
+    if (_disposed) return;
     _ensureCurrentAccount();
     var changed = false;
 
     for (final product in products) {
-      if (product.id.trim().isEmpty) {
+      if (isProductDeleted(product.id) || product.id.trim().isEmpty) {
         continue;
       }
 
@@ -385,14 +400,41 @@ class ProductViewModel extends ChangeNotifier {
   }
 
   void goToProductPage(Product product) async {
+    if (_disposed || isProductDeleted(product.id)) return;
     setProduct(product);
     await navigator.navigateTo(AppRoutes.product, arguments: product);
+  }
+
+  bool isProductDeleted(String productId) => deletedListings?.contains(productId) == true;
+
+  void _removeDeletedListings() {
+    if (_disposed) return;
+    var changed = false;
+    if (_product != null && isProductDeleted(_product!.id)) {
+      _product = null;
+      changed = true;
+    }
+    for (final id in {
+      ..._likedProducts.keys,
+      ..._likedProductCache.keys,
+      ..._likeCountOverrides.keys,
+      ..._pendingLikeUpdates,
+    }) {
+      if (!isProductDeleted(id)) continue;
+      _likedProducts.remove(id);
+      _likedProductCache.remove(id);
+      _likeCountOverrides.remove(id);
+      _pendingLikeUpdates.remove(id);
+      changed = true;
+    }
+    if (changed) notifyListeners();
   }
 
   @override
   void dispose() {
     _disposed = true;
     _accountChangeNotificationPending = false;
+    deletedListings?.removeListener(_removeDeletedListings);
     super.dispose();
   }
 }
