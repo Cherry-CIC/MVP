@@ -254,7 +254,7 @@ class AppStrings {
 
   // Product Page
   static String openPhoto(int number, int total) => 'View full photo $number of $total';
-  static String photoPosition(int number, int total) => '$number of $total';
+  static String photoViewerPosition(int number, int total) => '$number of $total';
   static String photoLabel(int number, int total) => 'Photo $number of $total';
   static const closePhotoViewer = 'Close photo viewer';
   static const previousPhoto = 'Previous photo';
