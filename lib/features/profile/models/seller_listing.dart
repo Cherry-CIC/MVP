@@ -3,13 +3,17 @@ class SellerListing {
   final String name;
   final List<String> imageUrls;
   final double? price;
+  final String? status;
 
   const SellerListing({
     required this.id,
     required this.name,
     required this.imageUrls,
     required this.price,
+    this.status,
   });
+
+  bool get isSold => status == 'sold';
 
   static SellerListing? tryFromJson(dynamic value) {
     if (value is! Map) {
@@ -36,6 +40,7 @@ class SellerListing {
                 .toList(growable: false)
           : const [],
       price: _parsePrice(json['price']),
+      status: json['status'] is String ? json['status'] as String : null,
     );
   }
 

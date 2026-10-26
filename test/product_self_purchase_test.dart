@@ -19,6 +19,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'support/unexpected_api_service.dart';
+import 'support/edit_listing_repository_stub.dart';
 
 class _CheckoutRepositoryStub implements ICheckoutRepository {
   @override
@@ -127,6 +128,7 @@ void main() {
     await tester.pumpWidget(
       MultiProvider(
         providers: [
+          Provider<IEditListingRepository>.value(value: EditListingRepositoryStub()),
           Provider<NavigationProvider>.value(value: navigator),
           ChangeNotifierProvider<ProductViewModel>.value(
             value: productViewModel,
@@ -188,6 +190,7 @@ void main() {
     await tester.pumpWidget(
       MultiProvider(
         providers: [
+          Provider<IEditListingRepository>.value(value: EditListingRepositoryStub()),
           Provider<NavigationProvider>.value(value: navigator),
           ChangeNotifierProvider<ProductViewModel>.value(value: productViewModel),
           ChangeNotifierProvider<CheckoutViewModel>.value(

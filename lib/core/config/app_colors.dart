@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 class AppColors {
   //piechart
   static const green = Color(0xFFB7E885);
+  // White text on this green exceeds WCAG AA for normal-sized text.
+  static const soldGreen = Color(0xFF176B46);
   static const pink = Color(0xfff5B9EC);
   static const red = Color(0xFFF90653);
   static const primaryAction = Color(0xFFCC0041);

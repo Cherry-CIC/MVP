@@ -246,6 +246,9 @@ class AppStrings {
   static const itemUploadedSuccessfully = 'Your Item has been Successfully Uploaded.';
 
   // Product Page
+  static const productSold = 'Sold';
+  static const productSoldCongratulations = 'Congratulations on your sale!';
+  static const productSoldNextSteps = 'Please check your email inbox for updates and instructions on what to do next.';
   static const productPageDescription = "Description";
   static const productPageBuyerDiscountActive = 'Donor discounts active';
   static const productPageDonorDiscountInactive = 'Donor discounts inactive';

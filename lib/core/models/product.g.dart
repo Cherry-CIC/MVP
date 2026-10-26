@@ -24,7 +24,7 @@ Product _$ProductFromJson(Map<String, dynamic> json) => Product(
   charityId: json['charityId'] as String?,
   createdAt: json['createdAt'] as String?,
   updatedAt: json['updatedAt'] as String?,
-  status: json['status'] as String?,
+  status: Product._parseStatus(json['status']),
   category: json['category'] == null ? null : Category.fromJson(json['category'] as Map<String, dynamic>),
   charity: json['charity'] == null ? null : Charity.fromJson(json['charity'] as Map<String, dynamic>),
 );
