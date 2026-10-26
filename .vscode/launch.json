@@ -7,19 +7,34 @@
         {
             "name": "MVP",
             "request": "launch",
-            "type": "dart"
+            "type": "dart",
+            "args": [
+                "--flavor",
+                "dev",
+                "--dart-define=APP_ENV=dev"
+            ]
         },
         {
             "name": "MVP (profile mode)",
             "request": "launch",
             "type": "dart",
-            "flutterMode": "profile"
+            "flutterMode": "profile",
+            "args": [
+                "--flavor",
+                "dev",
+                "--dart-define=APP_ENV=dev"
+            ]
         },
         {
             "name": "MVP (release mode)",
             "request": "launch",
             "type": "dart",
-            "flutterMode": "release"
+            "flutterMode": "release",
+            "args": [
+                "--flavor",
+                "dev",
+                "--dart-define=APP_ENV=dev"
+            ]
         }
     ]
 }
