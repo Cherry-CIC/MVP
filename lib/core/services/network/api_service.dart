@@ -22,7 +22,6 @@ class DioApiService implements ApiService {
   static const Duration _authTokenTimeout = Duration(seconds: 8);
   static const int _maxRetryAttempts = 1;
   static const String _retryAttemptKey = 'retry_attempt';
-  static const String _deleteUserIdKey = 'delete_user_id';
 
   late final Dio _dio;
   final FirebaseAuth _firebaseAuth;
@@ -68,24 +67,16 @@ class DioApiService implements ApiService {
               AppLogEvent.authTokenTimeout,
               level: SafeLogLevel.severe,
             );
-            if (_rejectUnauthenticatedDelete(options, handler)) return;
           } on FirebaseAuthException {
             SafeLog.event(
               AppLogEvent.authTokenFirebaseFailure,
               level: SafeLogLevel.severe,
             );
-            if (_rejectUnauthenticatedDelete(options, handler)) return;
           } catch (_) {
             SafeLog.event(
               AppLogEvent.authTokenUnexpectedFailure,
               level: SafeLogLevel.warning,
             );
-            if (_rejectUnauthenticatedDelete(options, handler)) return;
-          }
-          if (options.method.toUpperCase() == 'DELETE' &&
-              _firebaseAuth.currentUser?.uid != options.extra[_deleteUserIdKey]) {
-            _rejectUnauthenticatedDelete(options, handler);
-            return;
           }
           return handler.next(options);
         },
@@ -184,12 +175,9 @@ class DioApiService implements ApiService {
   @override
   Future<Result<T>> delete<T>(String endpoint) async {
     try {
-      final options = _safeOptions('DELETE', endpoint);
-      // Capture the account before Dio queues its asynchronous interceptors.
-      options.extra![_deleteUserIdKey] = _firebaseAuth.currentUser?.uid ?? '';
       final response = await _dio.delete(
         endpoint,
-        options: options,
+        options: _safeOptions('DELETE', endpoint),
       );
       return Result.success(response.data as T, statusCode: response.statusCode);
     } on DioException catch (e) {
@@ -247,14 +235,9 @@ class DioApiService implements ApiService {
   }
 
   Future<void> _attachAuthHeader(RequestOptions options) async {
-    final isDelete = options.method.toUpperCase() == 'DELETE';
     final user = _firebaseAuth.currentUser;
     if (user == null) {
-      if (isDelete) throw StateError('Authentication is required.');
       return;
-    }
-    if (isDelete && user.uid != options.extra[_deleteUserIdKey]) {
-      throw StateError('The authenticated account changed.');
     }
 
     final idToken = await user.getIdToken().timeout(_authTokenTimeout);
@@ -263,31 +246,7 @@ class DioApiService implements ApiService {
     if (trimmedToken.isEmpty) {
       throw StateError('Firebase returned an empty ID token.');
     }
-    if (isDelete && _firebaseAuth.currentUser?.uid != user.uid) {
-      throw StateError('The authenticated account changed.');
-    }
-
     options.headers['Authorization'] = 'Bearer $trimmedToken';
-  }
-
-  bool _rejectUnauthenticatedDelete(
-    RequestOptions options,
-    RequestInterceptorHandler handler,
-  ) {
-    if (options.method.toUpperCase() != 'DELETE') return false;
-    // Do not send a destructive request with missing or stale authentication.
-    handler.reject(
-      DioException(
-        requestOptions: options,
-        type: DioExceptionType.badResponse,
-        response: Response<dynamic>(
-          requestOptions: options,
-          statusCode: 401,
-          data: const {'code': 'AUTHENTICATION_REQUIRED'},
-        ),
-      ),
-    );
-    return true;
   }
 
   String? _responseErrorCode(dynamic response) {
