@@ -7,8 +7,9 @@ import 'package:flutter/material.dart';
 class SellerListingCard extends StatelessWidget {
   final SellerListing listing;
   final VoidCallback? onTap;
+  final Widget? actions;
 
-  const SellerListingCard({super.key, required this.listing, this.onTap});
+  const SellerListingCard({super.key, required this.listing, this.onTap, this.actions});
 
   @override
   Widget build(BuildContext context) {
@@ -72,14 +73,13 @@ class SellerListingCard extends StatelessWidget {
       ),
     );
 
-    if (onTap == null) return content;
     return Material(
       type: MaterialType.transparency,
-      child: InkWell(
-        onTap: onTap,
-        excludeFromSemantics: true,
-        borderRadius: BorderRadius.circular(8),
-        child: content,
+      child: Stack(
+        children: [
+          content,
+          if (actions != null) PositionedDirectional(top: 8, end: 8, child: actions!),
+        ],
       ),
     );
   }

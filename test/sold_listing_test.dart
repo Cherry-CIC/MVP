@@ -192,7 +192,13 @@ void main() {
         expect(find.text(AppStrings.productSoldCongratulations), isSold && isSeller ? findsOneWidget : findsNothing);
         expect(find.text(AppStrings.productSoldNextSteps), isSold && isSeller ? findsOneWidget : findsNothing);
         expect(find.text(AppStrings.productPageBuyNow), isSold || isSeller ? findsNothing : findsOneWidget);
-        expect(find.text('Edit listing'), !isSold && isSeller ? findsOneWidget : findsNothing);
+        if (!isSold && isSeller) {
+          await tester.tap(find.byTooltip('Manage Cotton shirt'));
+          await tester.pumpAndSettle();
+          expect(find.text('Edit listing'), findsOneWidget);
+        } else {
+          expect(find.byTooltip('Manage Cotton shirt'), findsNothing);
+        }
         expect(tester.takeException(), isNull);
       });
     }

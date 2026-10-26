@@ -116,9 +116,13 @@ class DioApiService implements ApiService {
         queryParameters: queryParameters,
         options: _safeOptions('GET', endpoint),
       );
-      return Result.success(response.data as T);
+      return Result.success(response.data as T, statusCode: response.statusCode);
     } on DioException catch (e) {
-      return Result.failure(_handleDioError(e), statusCode: e.response?.statusCode);
+      return Result.failure(
+        _handleDioError(e),
+        statusCode: e.response?.statusCode,
+        errorCode: _responseErrorCode(e.response?.data),
+      );
     } catch (_) {
       SafeLog.event(
         AppLogEvent.unexpectedGetFailure,
@@ -175,9 +179,13 @@ class DioApiService implements ApiService {
         endpoint,
         options: _safeOptions('DELETE', endpoint),
       );
-      return Result.success(response.data as T);
+      return Result.success(response.data as T, statusCode: response.statusCode);
     } on DioException catch (e) {
-      return Result.failure(_handleDioError(e));
+      return Result.failure(
+        _handleDioError(e),
+        statusCode: e.response?.statusCode,
+        errorCode: _responseErrorCode(e.response?.data),
+      );
     } catch (_) {
       SafeLog.event(
         AppLogEvent.unexpectedDeleteFailure,
@@ -238,8 +246,15 @@ class DioApiService implements ApiService {
     if (trimmedToken.isEmpty) {
       throw StateError('Firebase returned an empty ID token.');
     }
-
     options.headers['Authorization'] = 'Bearer $trimmedToken';
+  }
+
+  String? _responseErrorCode(dynamic response) {
+    if (response is! Map) return null;
+    final code = response['code'];
+    // Keep only short machine codes. Backend messages and nested data stay out
+    // of user-facing errors.
+    return code is String && RegExp(r'^[A-Z][A-Z0-9_]{0,63}$').hasMatch(code) ? code : null;
   }
 
   Future<Response<dynamic>?> _retryRequestIfSafe(DioException error) async {

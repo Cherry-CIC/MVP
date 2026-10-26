@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -29,6 +31,8 @@ import 'package:cherry_mvp/features/forgot_password/forgot_password_viewmodel.da
 import 'package:cherry_mvp/features/orders/orders_repository.dart';
 import 'package:cherry_mvp/features/orders/orders_view_model.dart';
 import 'package:cherry_mvp/features/products/product_repository.dart';
+import 'package:cherry_mvp/features/products/deleted_listings.dart';
+import 'package:cherry_mvp/features/products/delete_listing_view_model.dart';
 import 'package:cherry_mvp/features/products/edit_listing/edit_listing_repository.dart';
 import 'package:cherry_mvp/features/products/product_viewmodel.dart';
 import 'package:cherry_mvp/features/products/safety_repository.dart';
@@ -50,6 +54,8 @@ List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
     Provider<FirebaseFirestore>(create: (_) => FirebaseFirestore.instance),
     Provider(create: (_) => NavigationProvider()),
     ChangeNotifierProvider(create: (_) => ThemeNotifier(prefs)),
+
+    ChangeNotifierProvider(create: (_) => DeletedListings()),
 
     // Add API Service
     Provider<ApiService>(
@@ -113,7 +119,10 @@ List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
     ),
     Provider<DiscoverRepository>(create: (context) => DiscoverRepository()),
     Provider<ProductRepository>(
-      create: (context) => ProductRepository(Provider.of<ApiService>(context, listen: false)),
+      create: (context) => ProductRepository(
+        context.read<ApiService>(),
+        deletedListings: context.read<DeletedListings>(),
+      ),
     ),
     Provider<IEditListingRepository>(
       create: (context) => EditListingRepository(
@@ -213,6 +222,7 @@ List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
     ),
     ChangeNotifierProvider<ProductViewModel>(
       create: (context) => ProductViewModel(
+        deletedListings: context.read<DeletedListings>(),
         productRepository: Provider.of<ProductRepository>(
           context,
           listen: false,
@@ -232,6 +242,7 @@ List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
           listen: false,
         );
         return HomeViewModel(
+          deletedListings: context.read<DeletedListings>(),
           homeRepository: Provider.of<IHomeRepository>(context, listen: false),
           onProductsLoaded: productViewModel.reconcileProductCounts,
         );
@@ -300,11 +311,35 @@ List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
     ),
     ChangeNotifierProvider<ProfileListingsViewModel>(
       create: (context) => ProfileListingsViewModel(
+        deletedListings: context.read<DeletedListings>(),
+        currentUserIdProvider: () => context.read<FirebaseAuth>().currentUser?.uid,
         repository: Provider.of<IProfileListingsRepository>(
           context,
           listen: false,
         ),
       ),
+    ),
+    ChangeNotifierProvider<DeleteListingViewModel>(
+      lazy: false,
+      create: (context) {
+        final auth = context.read<FirebaseAuth>();
+        final profile = context.read<ProfileListingsViewModel>();
+        final products = context.read<ProductViewModel>();
+        return DeleteListingViewModel(
+          repository: context.read<ProductRepository>(),
+          deletedListings: context.read<DeletedListings>(),
+          currentUserId: () => auth.currentUser?.uid,
+          accountChanges: auth.authStateChanges().map((user) => user?.uid).distinct(),
+          onAccountChanged: () {
+            // Invalidate even if the user switched away and back before this
+            // notification: those earlier requests still belong to an old session.
+            profile.clearListings();
+            profile.updateCurrentAccount();
+            products.clearUserState();
+            if (auth.currentUser != null) unawaited(profile.loadInitialListings());
+          },
+        );
+      },
     ),
     ChangeNotifierProvider<EditProfileViewModel>(
       create: (context) => EditProfileViewModel(

@@ -3,6 +3,13 @@ import 'package:cherry_mvp/core/router/router.dart';
 import 'package:cherry_mvp/core/utils/status.dart';
 import 'package:cherry_mvp/features/profile/profile_listings_view_model.dart';
 import 'package:cherry_mvp/features/profile/widgets/seller_listing_card.dart';
+import 'package:cherry_mvp/features/products/delete_listing_view_model.dart';
+import 'package:cherry_mvp/features/products/edit_listing/edit_listing_page.dart';
+import 'package:cherry_mvp/features/products/product_viewmodel.dart';
+import 'package:cherry_mvp/features/products/widgets/delete_listing_dialog.dart';
+import 'package:cherry_mvp/features/products/widgets/listing_actions_menu.dart';
+import 'package:cherry_mvp/features/home/home_viewmodel.dart';
+import 'package:cherry_mvp/features/profile/models/seller_listing.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -39,6 +46,13 @@ class ProfileListingsSection extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 12),
+            if (viewModel.hasRefreshError)
+              Column(
+                children: [
+                  const Text('We could not refresh your listings. Deleted listings remain removed.'),
+                  TextButton(onPressed: viewModel.refreshListings, child: const Text('Refresh again')),
+                ],
+              ),
             _buildContent(context, viewModel),
           ],
         );
@@ -72,7 +86,9 @@ class ProfileListingsSection extends StatelessWidget {
         LayoutBuilder(
           builder: (context, constraints) {
             const spacing = 12.0;
-            final cardWidth = (constraints.maxWidth - spacing) / 2;
+            final largeText = MediaQuery.textScalerOf(context).scale(14) > 22;
+            final columns = constraints.maxWidth < 300 || largeText ? 1 : 2;
+            final cardWidth = (constraints.maxWidth - spacing * (columns - 1)) / columns;
 
             return Wrap(
               spacing: spacing,
@@ -84,9 +100,10 @@ class ProfileListingsSection extends StatelessWidget {
                     width: cardWidth,
                     child: SellerListingCard(
                       listing: listing,
+                      actions: _listingActions(context, viewModel, listing),
                       onTap: () => context.read<NavigationProvider>().navigateTo(
                         AppRoutes.product,
-                        arguments: {'productId': listing.id},
+                        arguments: {'productId': listing.id, 'fromOwnListings': true},
                       ),
                     ),
                   ),
@@ -128,6 +145,46 @@ class ProfileListingsSection extends StatelessWidget {
           ),
       ],
     );
+  }
+
+  Widget? _listingActions(BuildContext context, ProfileListingsViewModel profile, SellerListing listing) {
+    final actions = context.watch<DeleteListingViewModel?>();
+    final ownerId = profile.accountOwnerId;
+    if (actions == null || !actions.owns(ownerId) || (listing.userId != null && listing.userId != ownerId)) return null;
+    final session = actions.session;
+    final canDelete = actions.canDelete(listing.id, ownerId: ownerId, knownSold: listing.isKnownSold);
+    if (!listing.canEdit && !canDelete) return null;
+    return ListingActionsMenu(
+      listingName: listing.name.isEmpty ? AppStrings.profileListingUntitled : listing.name,
+      busy: actions.isPending(listing.id),
+      onEdit: listing.canEdit ? () => _editListing(context, listing.id, session) : null,
+      onDelete: canDelete
+          ? () => requestListingDeletion(
+              context,
+              productId: listing.id,
+              ownerId: ownerId!,
+              knownSold: listing.isKnownSold,
+              actionSession: session,
+            )
+          : null,
+    );
+  }
+
+  Future<void> _editListing(BuildContext context, String id, ListingActionSession session) async {
+    final actions = context.read<DeleteListingViewModel>();
+    if (!actions.isCurrent(session)) return;
+    final navigation = context.read<NavigationProvider>();
+    final profile = context.read<ProfileListingsViewModel>();
+    final home = context.read<HomeViewModel>();
+    final products = context.read<ProductViewModel>();
+    final messenger = ScaffoldMessenger.of(context);
+    final result = await navigation.navigateTo(AppRoutes.editListing, arguments: {'productId': id});
+    if (!actions.isCurrent(session) || result is! EditListingResult) return;
+    if (result.product != null) {
+      products.applyListingUpdate(result.product!);
+      if (messenger.mounted) messenger.showSnackBar(const SnackBar(content: Text('Listing updated')));
+    }
+    await Future.wait([profile.refreshAfterListingEdit(), home.refreshAfterListingEdit()]);
   }
 }
 

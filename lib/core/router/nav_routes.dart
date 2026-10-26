@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cherry_mvp/features/profile/profile_page.dart';
 import 'package:cherry_mvp/core/config/app_strings.dart';
 import 'package:cherry_mvp/core/models/product.dart';
 import 'package:cherry_mvp/core/router/nav_provider.dart';
@@ -55,6 +56,7 @@ class AppRoutes {
   static const String likedItems = '/liked-items';
   static const String editProfile = '/editProfile';
   static const String editListing = '/edit-listing';
+  static const String myListings = '/my-listings';
 
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
@@ -75,6 +77,7 @@ class AppRoutes {
           builder: (_) => ProductPage(
             product: productArgument is Product ? productArgument : null,
             productId: productArgs?['productId'] as String?,
+            fromOwnListings: productArgs?['fromOwnListings'] == true,
           ),
         );
       case publicUserProfile:
@@ -95,6 +98,8 @@ class AppRoutes {
                 )
               : PublicUserProfile(userId: userId),
         );
+      case myListings:
+        return MaterialPageRoute(settings: settings, builder: (_) => const ProfilePage());
       case editListing:
         final args = settings.arguments;
         final productId = args is Map ? args['productId'] : null;

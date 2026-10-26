@@ -8,7 +8,7 @@ This frontend change makes the existing API sale status visible on listing cards
 - Profile cards show a bold white “Sold” label on a green strip beneath the photo. Their screen reader label includes the sold status.
 - General product cards show the same strip within the image area to preserve the existing grid height. The like control moves above it and remains usable, including for removing a liked item.
 - Full product details show the strip below the photo. The authenticated seller also sees “Congratulations on your sale!” and “Please check your email inbox for updates and instructions on what to do next.” Other viewers see only “Sold”.
-- Sold details hide buying, editing, offers and other purchase-related controls. Eligible active listings keep the existing editor. `CheckoutViewModel.addItem` also rejects products already marked sold.
+- Sold details hide buying, editing, offers and other purchase-related controls. Eligible active listings keep the owner menu and editor from #548 and #525. `CheckoutViewModel.addItem` also rejects products already marked sold.
 - The seller's status follows the existing Profile load/pull-to-refresh and product-detail fetch. This change does not add live status listeners or an opening pop-up.
 
 The backend remains responsible for payment verification and stock protection. The UI cannot prevent a previously fetched active listing becoming sold elsewhere; the backend must still enforce availability during checkout.
@@ -27,7 +27,7 @@ Sources inspected on 26 October 2026:
 
 ## Validation
 
-176 targeted tests passed on the PR branch based on main (`7447791`), using Flutter 3.44.4 / Dart 3.12.2, across:
+239 targeted tests passed on the PR branch with main (`8850c35`) merged, using Flutter 3.44.4 / Dart 3.12.2, across:
 
 - `sold_listing_test.dart`
 - `profile_listings_widgets_test.dart`
@@ -43,6 +43,11 @@ Sources inspected on 26 October 2026:
 - `edit_listing_page_test.dart`
 - `edit_listing_view_model_test.dart`
 - `listing_cache_refresh_test.dart`
+- `listing_actions_integration_test.dart`
+- `delete_listing_dialog_test.dart`
+- `delete_listing_view_model_test.dart`
+- `deleted_listing_caches_test.dart`
+- `product_deletion_repository_test.dart`
 
 New coverage includes API decoding, malformed/missing status and zero stock, seller-only guidance, buyer controls, basket rejection, screen reader labelling, 200% text and WCAG AA colour contrast. Light and dark card/detail previews were rendered from Flutter widgets using test fixtures and checked visually.
 
