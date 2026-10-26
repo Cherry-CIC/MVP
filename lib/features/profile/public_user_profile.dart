@@ -1,6 +1,7 @@
 import 'package:cherry_mvp/core/config/app_strings.dart';
 import 'package:cherry_mvp/core/utils/result.dart';
 import 'package:cherry_mvp/features/products/product_viewmodel.dart';
+import 'package:cherry_mvp/features/products/deleted_listings.dart';
 import 'package:cherry_mvp/features/products/widgets/product_safety_actions.dart';
 import 'package:cherry_mvp/features/profile/models/seller_listing.dart';
 import 'package:cherry_mvp/features/profile/public_user_profile_repository.dart';
@@ -32,6 +33,7 @@ class _PublicUserProfileState extends State<PublicUserProfile> {
 
   void _createViewModel() {
     _viewModel = PublicUserProfileViewModel(
+      deletedListings: context.read<DeletedListings?>(),
       userId: widget.userId,
       repository: context.read<IPublicUserProfileRepository>(),
     )..loadProfile();

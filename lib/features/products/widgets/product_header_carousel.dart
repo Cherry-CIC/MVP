@@ -12,6 +12,7 @@ import 'package:provider/provider.dart';
 class ProductHeaderCarousel extends StatelessWidget {
   final Product product;
   final bool canLike;
+  final Widget? ownerActions;
   final bool showSafetyActions;
   final ValueChanged<ProductSafetyMenuAction>? onSafetyActionSelected;
 
@@ -19,6 +20,7 @@ class ProductHeaderCarousel extends StatelessWidget {
     this.product, {
     super.key,
     this.canLike = true,
+    this.ownerActions,
     this.showSafetyActions = false,
     this.onSafetyActionSelected,
   });
@@ -42,6 +44,11 @@ class ProductHeaderCarousel extends StatelessWidget {
         ),
       ),
       actions: [
+        if (ownerActions != null)
+          Padding(
+            padding: const EdgeInsetsDirectional.only(end: 8),
+            child: Center(child: ownerActions!),
+          ),
         if (showSafetyActions && onSafetyActionSelected != null)
           Padding(
             padding: const EdgeInsetsDirectional.only(end: 8),

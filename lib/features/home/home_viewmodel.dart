@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:cherry_mvp/core/services/safe_log.dart';
 import 'package:cherry_mvp/features/home/home_repository.dart';
+import 'package:cherry_mvp/features/products/deleted_listings.dart';
 import 'package:cherry_mvp/core/models/model.dart';
 import 'package:cherry_mvp/core/utils/utils.dart';
 import 'package:flutter/cupertino.dart';
@@ -13,8 +14,11 @@ class HomeViewModel extends ChangeNotifier {
 
   final IHomeRepository homeRepository;
   final void Function(Iterable<Product>)? onProductsLoaded;
+  final DeletedListings? deletedListings;
 
-  HomeViewModel({required this.homeRepository, this.onProductsLoaded});
+  HomeViewModel({required this.homeRepository, this.onProductsLoaded, this.deletedListings}) {
+    deletedListings?.addListener(_removeDeletedListings);
+  }
 
   // Private variables
   Status _status = Status.uninitialized;
@@ -34,6 +38,7 @@ class HomeViewModel extends ChangeNotifier {
   DateTime? _homeLoadMoreRetryAt;
   int _homeRequestSequence = 0;
   int _searchRequestSequence = 0;
+  bool _disposed = false;
 
   // Public getters
   Status get status => _status;
@@ -55,6 +60,7 @@ class HomeViewModel extends ChangeNotifier {
       _searchQuery.isNotEmpty && _searchStatus.type == StatusType.success && _searchProducts.isEmpty;
 
   Future<void> fetchProducts({bool forceRefresh = false}) async {
+    if (_disposed) return;
     if (!forceRefresh && _homeProducts.isNotEmpty && _status.type == StatusType.success) {
       return;
     }
@@ -66,8 +72,20 @@ class HomeViewModel extends ChangeNotifier {
     await _fetchHomeFirstPage(clearProducts: false);
   }
 
+  /// Recheck both visible feeds while retaining surviving home cards on failure.
+  Future<void> refreshAfterListingDeletion() async {
+    if (_disposed) return;
+    _searchDebounce?.cancel();
+    final query = _searchText;
+    await Future.wait([
+      refreshProducts(),
+      if (query.isNotEmpty) _runSearch(query),
+    ]);
+  }
+
   /// Discard pre-edit cards and requests before loading the latest listing data.
   Future<void> refreshAfterListingEdit() async {
+    if (_disposed) return;
     _searchDebounce?.cancel();
     final query = _searchText;
     _searchRequestSequence++;
@@ -86,6 +104,7 @@ class HomeViewModel extends ChangeNotifier {
   }
 
   void updateSearchText(String query) {
+    if (_disposed) return;
     final normalizedQuery = query.trim();
     _searchText = normalizedQuery;
     _searchDebounce?.cancel();
@@ -104,6 +123,7 @@ class HomeViewModel extends ChangeNotifier {
   }
 
   void clearSearch() {
+    if (_disposed) return;
     _searchDebounce?.cancel();
     _searchText = '';
     _searchQuery = '';
@@ -117,7 +137,7 @@ class HomeViewModel extends ChangeNotifier {
   }
 
   Future<void> loadMoreProducts() async {
-    if (_isLoadingMore || !_hasMore || _nextCursor == null) {
+    if (_disposed || _isLoadingMore || !_hasMore || _nextCursor == null) {
       return;
     }
 
@@ -142,9 +162,10 @@ class HomeViewModel extends ChangeNotifier {
         }
         final page = result.value!;
         final existingIds = _homeProducts.map((product) => product.id).toSet();
-        final newProducts = page.products.where((product) => !existingIds.contains(product.id));
+        final visibleProducts = _visibleProducts(page.products);
+        final newProducts = visibleProducts.where((product) => !existingIds.contains(product.id));
         _homeProducts = [..._homeProducts, ...newProducts];
-        onProductsLoaded?.call(page.products);
+        onProductsLoaded?.call(visibleProducts);
         _nextCursor = page.nextCursor;
         _hasMore = page.hasMore;
         _homeLoadMoreRetryAt = null;
@@ -171,7 +192,7 @@ class HomeViewModel extends ChangeNotifier {
   }
 
   Future<void> loadMoreSearchProducts() async {
-    if (_isLoadingMoreSearch || !_searchHasMore || _searchNextCursor == null || _searchQuery.isEmpty) {
+    if (_disposed || _isLoadingMoreSearch || !_searchHasMore || _searchNextCursor == null || _searchQuery.isEmpty) {
       return;
     }
 
@@ -192,9 +213,10 @@ class HomeViewModel extends ChangeNotifier {
         }
         final page = result.value!;
         final existingIds = _searchProducts.map((product) => product.id).toSet();
-        final newProducts = page.products.where((product) => !existingIds.contains(product.id));
+        final visibleProducts = _visibleProducts(page.products);
+        final newProducts = visibleProducts.where((product) => !existingIds.contains(product.id));
         _searchProducts = [..._searchProducts, ...newProducts];
-        onProductsLoaded?.call(page.products);
+        onProductsLoaded?.call(visibleProducts);
         _searchNextCursor = page.nextCursor;
         _searchHasMore = page.hasMore;
       } else {
@@ -218,6 +240,7 @@ class HomeViewModel extends ChangeNotifier {
   }
 
   Future<void> _fetchHomeFirstPage({required bool clearProducts}) async {
+    if (_disposed) return;
     final requestId = ++_homeRequestSequence;
     _isLoadingMore = false;
     if (clearProducts) {
@@ -243,8 +266,8 @@ class HomeViewModel extends ChangeNotifier {
           return;
         }
         final page = result.value!;
-        _homeProducts = page.products;
-        onProductsLoaded?.call(page.products);
+        _homeProducts = _visibleProducts(page.products);
+        onProductsLoaded?.call(_homeProducts);
         _nextCursor = page.nextCursor;
         _hasMore = page.hasMore;
         _status = Status.success;
@@ -285,7 +308,7 @@ class HomeViewModel extends ChangeNotifier {
   }
 
   Future<void> _runSearch(String query) async {
-    if (query != _searchText) {
+    if (_disposed || query != _searchText) {
       return;
     }
 
@@ -309,8 +332,8 @@ class HomeViewModel extends ChangeNotifier {
           return;
         }
         final page = result.value!;
-        _searchProducts = page.products;
-        onProductsLoaded?.call(page.products);
+        _searchProducts = _visibleProducts(page.products);
+        onProductsLoaded?.call(_searchProducts);
         _searchNextCursor = page.nextCursor;
         _searchHasMore = page.hasMore;
         _searchStatus = Status.success;
@@ -343,9 +366,26 @@ class HomeViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  List<Product> _visibleProducts(Iterable<Product> products) =>
+      products.where((product) => deletedListings?.contains(product.id) != true).toList(growable: false);
+
+  void _removeDeletedListings() {
+    if (_disposed) return;
+    final homeProducts = _visibleProducts(_homeProducts);
+    final searchProducts = _visibleProducts(_searchProducts);
+    if (homeProducts.length == _homeProducts.length && searchProducts.length == _searchProducts.length) return;
+    _homeProducts = homeProducts;
+    _searchProducts = searchProducts;
+    notifyListeners();
+  }
+
   @override
   void dispose() {
+    _disposed = true;
+    _homeRequestSequence++;
+    _searchRequestSequence++;
     _searchDebounce?.cancel();
+    deletedListings?.removeListener(_removeDeletedListings);
     super.dispose();
   }
 }

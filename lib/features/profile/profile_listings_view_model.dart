@@ -1,5 +1,6 @@
 import 'package:cherry_mvp/core/services/safe_log.dart';
 import 'package:cherry_mvp/core/utils/status.dart';
+import 'package:cherry_mvp/features/products/deleted_listings.dart';
 import 'package:cherry_mvp/features/profile/models/seller_listing.dart';
 import 'package:cherry_mvp/features/profile/profile_listings_repository.dart';
 import 'package:flutter/foundation.dart';
@@ -8,10 +9,18 @@ class ProfileListingsViewModel extends ChangeNotifier {
   static const int defaultPageSize = 20;
 
   final IProfileListingsRepository repository;
+  final DeletedListings? deletedListings;
+  final String? Function()? _currentUserIdProvider;
+  String? _accountOwnerId;
 
   ProfileListingsViewModel({
     required this.repository,
-  });
+    this.deletedListings,
+    String? Function()? currentUserIdProvider,
+  }) : _currentUserIdProvider = currentUserIdProvider,
+       _accountOwnerId = currentUserIdProvider?.call() {
+    deletedListings?.addListener(_removeDeletedListings);
+  }
 
   Status _status = Status.uninitialized;
   List<SellerListing> _listings = const [];
@@ -21,6 +30,8 @@ class ProfileListingsViewModel extends ChangeNotifier {
   bool _isRefreshing = false;
   bool _isLoadingMore = false;
   bool _hasLoadMoreError = false;
+  bool _hasRefreshError = false;
+  bool _disposed = false;
   int _requestSequence = 0;
 
   Status get status => _status;
@@ -29,6 +40,17 @@ class ProfileListingsViewModel extends ChangeNotifier {
   bool get isRefreshing => _isRefreshing;
   bool get isLoadingMore => _isLoadingMore;
   bool get hasLoadMoreError => _hasLoadMoreError;
+  bool get hasRefreshError => _hasRefreshError;
+  String? get accountOwnerId => _accountOwnerId;
+
+  /// Called on authentication changes as well as before applying a response.
+  void updateCurrentAccount() {
+    if (_disposed || _currentUserIdProvider == null) return;
+    final currentUserId = _currentUserIdProvider();
+    if (_accountOwnerId == currentUserId) return;
+    _accountOwnerId = currentUserId;
+    clearListings();
+  }
 
   Future<void> loadInitialListings() async {
     await _fetchFirstPage(clearListings: true);
@@ -49,6 +71,8 @@ class ProfileListingsViewModel extends ChangeNotifier {
   }
 
   Future<void> loadMoreListings({bool retry = false}) async {
+    updateCurrentAccount();
+    if (_disposed || (_currentUserIdProvider != null && _accountOwnerId == null)) return;
     if (_isFirstPageLoading || _isLoadingMore || !_hasMore || _nextCursor == null || (_hasLoadMoreError && !retry)) {
       return;
     }
@@ -65,7 +89,7 @@ class ProfileListingsViewModel extends ChangeNotifier {
         cursor: cursor,
       );
 
-      if (requestId != _requestSequence) {
+      if (!_isCurrent(requestId)) {
         return;
       }
 
@@ -73,7 +97,7 @@ class ProfileListingsViewModel extends ChangeNotifier {
         final page = result.value!;
         final seenIds = _listings.map((listing) => listing.id).toSet();
         final newListings = page.listings.where(
-          (listing) => seenIds.add(listing.id),
+          (listing) => deletedListings?.contains(listing.id) != true && seenIds.add(listing.id),
         );
         _listings = [..._listings, ...newListings];
         _setPagination(page);
@@ -85,7 +109,7 @@ class ProfileListingsViewModel extends ChangeNotifier {
         );
       }
     } catch (_) {
-      if (requestId == _requestSequence) {
+      if (_isCurrent(requestId)) {
         _hasLoadMoreError = true;
       }
       SafeLog.event(
@@ -93,7 +117,7 @@ class ProfileListingsViewModel extends ChangeNotifier {
         level: SafeLogLevel.severe,
       );
     } finally {
-      if (requestId == _requestSequence) {
+      if (_isCurrent(requestId)) {
         _isLoadingMore = false;
         notifyListeners();
       }
@@ -105,6 +129,7 @@ class ProfileListingsViewModel extends ChangeNotifier {
   }
 
   void clearListings({bool notify = true}) {
+    if (_disposed) return;
     _requestSequence++;
     _status = Status.uninitialized;
     _listings = const [];
@@ -114,6 +139,7 @@ class ProfileListingsViewModel extends ChangeNotifier {
     _isRefreshing = false;
     _isLoadingMore = false;
     _hasLoadMoreError = false;
+    _hasRefreshError = false;
 
     if (notify) {
       notifyListeners();
@@ -121,6 +147,8 @@ class ProfileListingsViewModel extends ChangeNotifier {
   }
 
   Future<void> _fetchFirstPage({required bool clearListings, bool supersedeInFlight = false}) async {
+    updateCurrentAccount();
+    if (_disposed || (_currentUserIdProvider != null && _accountOwnerId == null)) return;
     // A refresh after posting must replace any request started before the post.
     if (_isFirstPageLoading && !supersedeInFlight) {
       return;
@@ -130,6 +158,7 @@ class ProfileListingsViewModel extends ChangeNotifier {
     _isFirstPageLoading = true;
     _isLoadingMore = false;
     _hasLoadMoreError = false;
+    _hasRefreshError = false;
 
     if (clearListings) {
       _listings = const [];
@@ -148,7 +177,7 @@ class ProfileListingsViewModel extends ChangeNotifier {
         limit: defaultPageSize,
       );
 
-      if (requestId != _requestSequence) {
+      if (!_isCurrent(requestId)) {
         return;
       }
 
@@ -157,21 +186,27 @@ class ProfileListingsViewModel extends ChangeNotifier {
         _listings = _deduplicate(page.listings);
         _setPagination(page);
         _status = Status.success;
-      } else if (_listings.isEmpty) {
-        _status = Status.failure(
-          result.error ?? 'Could not load your listings',
-        );
+      } else {
+        _hasRefreshError = !clearListings;
+        if (_listings.isEmpty) {
+          _status = Status.failure(
+            result.error ?? 'Could not load your listings',
+          );
+        }
       }
     } catch (_) {
-      if (requestId == _requestSequence && _listings.isEmpty) {
-        _status = Status.failure('Could not load your listings');
+      if (_isCurrent(requestId)) {
+        _hasRefreshError = !clearListings;
+        if (_listings.isEmpty) {
+          _status = Status.failure('Could not load your listings');
+        }
       }
       SafeLog.event(
         AppLogEvent.profileListingsLoadFailed,
         level: SafeLogLevel.severe,
       );
     } finally {
-      if (requestId == _requestSequence) {
+      if (_isCurrent(requestId)) {
         _isFirstPageLoading = false;
         _isRefreshing = false;
         notifyListeners();
@@ -181,12 +216,36 @@ class ProfileListingsViewModel extends ChangeNotifier {
 
   List<SellerListing> _deduplicate(List<SellerListing> listings) {
     final seenIds = <String>{};
-    return listings.where((listing) => seenIds.add(listing.id)).toList(growable: false);
+    return listings
+        .where((listing) => deletedListings?.contains(listing.id) != true && seenIds.add(listing.id))
+        .toList(growable: false);
   }
 
   void _setPagination(ProfileListingsPage page) {
     final cursor = page.nextCursor?.trim();
     _nextCursor = cursor == null || cursor.isEmpty ? null : cursor;
     _hasMore = page.hasMore && _nextCursor != null;
+  }
+
+  bool _isCurrent(int requestId) {
+    if (_disposed) return false;
+    updateCurrentAccount();
+    return requestId == _requestSequence;
+  }
+
+  void _removeDeletedListings() {
+    if (_disposed) return;
+    final listings = _deduplicate(_listings);
+    if (listings.length == _listings.length) return;
+    _listings = listings;
+    notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _disposed = true;
+    _requestSequence++;
+    deletedListings?.removeListener(_removeDeletedListings);
+    super.dispose();
   }
 }
