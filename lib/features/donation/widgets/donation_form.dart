@@ -20,7 +20,6 @@ import 'package:cherry_mvp/features/donation/models/postage_size_info.dart';
 import 'package:cherry_mvp/features/donation/widgets/donation_options.dart';
 import 'package:cherry_mvp/features/donation/widgets/donation_form_field.dart';
 import 'package:cherry_mvp/features/donation/widgets/donation_dropdown_field.dart';
-import 'package:cherry_mvp/features/donation/widgets/donation_field_shimmer.dart';
 
 class DonationForm extends StatefulWidget {
   final List<XFile>? selectedImages;
@@ -51,21 +50,8 @@ class DonationFormState extends State<DonationForm> {
   bool isSwitchedApplicableBuyerDiscounts = false;
 
   Charity? selectedCharity;
-  bool _hasInitialized = false;
   bool _isSubmitting = false;
   final _hideUnimplementedFeatures = true;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (!_hasInitialized) {
-      _hasInitialized = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        context.read<CharityViewModel>().fetchCharities();
-        context.read<CategoryViewModel>().fetchCategories();
-      });
-    }
-  }
 
   void toggleSwitchOpenToOtherCharity(bool value) {
     setState(() => isSwitchedOpenToOtherCharity = value);
@@ -158,99 +144,36 @@ class DonationFormState extends State<DonationForm> {
 
               Consumer<CategoryViewModel>(
                 builder: (context, categoryViewModel, child) {
-                  final status = categoryViewModel.status;
-                  final categories = categoryViewModel.categories;
+                  return _SelectionField(
+                    label: categoryHintText,
+                    value: selectedCategory.isNotEmpty ? selectedCategory : null,
+                    onTap: () async {
+                      final Category? result = await donationViewModel.navigateToCategoryPage(selectedCategoryId);
 
-                  if (status.type == StatusType.loading) {
-                    return DonationFieldShimmer(label: categoryHintText);
-                  } else if (status.type == StatusType.failure) {
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 16.0),
-                      child: Column(
-                        children: [
-                          const Icon(Icons.error, color: Colors.red, size: 32),
-                          const SizedBox(height: 8),
-                          const Text(
-                            'Error loading categories',
-                            style: TextStyle(color: Colors.red),
-                          ),
-                          const SizedBox(height: 8),
-                          ElevatedButton(
-                            onPressed: () => categoryViewModel.fetchCategories(),
-                            child: const Text(AppStrings.retry),
-                          ),
-                        ],
-                      ),
-                    );
-                  } else if (categories.isEmpty) {
-                    return DonationDropdownField(
-                      formFieldsHintText: categoryHintText,
-                      dropdownList: categoryDropdownList,
-                      onChanged: (val) => setState(() => selectedCategory = val!),
-                    );
-                  } else {
-                    return _SelectionField(
-                      label: categoryHintText,
-                      value: selectedCategory.isNotEmpty ? selectedCategory : null,
-                      onTap: () async {
-                        final Category? result = await donationViewModel.navigateToCategoryPage(selectedCategoryId);
-
-                        if (result != null) {
-                          setState(() {
-                            selectedCategory = result.name;
-                            selectedCategoryId = result.id;
-                          });
-                        }
-                      },
-                    );
-                  }
+                      if (result != null) {
+                        setState(() {
+                          selectedCategory = result.name;
+                          selectedCategoryId = result.id;
+                        });
+                      }
+                    },
+                  );
                 },
               ),
 
               Consumer<CharityViewModel>(
                 builder: (context, charityViewModel, child) {
-                  final status = charityViewModel.status;
-                  final charities = charityViewModel.charities;
+                  return _SelectionField(
+                    label: AppStrings.charityText,
+                    value: selectedCharity?.name,
+                    onTap: () async {
+                      final Charity? result = await donationViewModel.navigateToCharityPage(selectedCharity?.id);
 
-                  if (status.type == StatusType.loading) {
-                    return const DonationFieldShimmer(label: AppStrings.charityText);
-                  } else if (status.type == StatusType.failure) {
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 16.0),
-                      child: Column(
-                        children: [
-                          const Icon(Icons.error, color: Colors.red, size: 32),
-                          const SizedBox(height: 8),
-                          Text(
-                            AppStrings.charityError,
-                            style: const TextStyle(color: Colors.red),
-                          ),
-                          const SizedBox(height: 8),
-                          ElevatedButton(
-                            onPressed: () => charityViewModel.fetchCharities(),
-                            child: const Text(AppStrings.retry),
-                          ),
-                        ],
-                      ),
-                    );
-                  } else if (charities.isEmpty) {
-                    return const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 16.0),
-                      child: Text(AppStrings.noCharitiesAvailable),
-                    );
-                  } else {
-                    return _SelectionField(
-                      label: AppStrings.charityText,
-                      value: selectedCharity?.name,
-                      onTap: () async {
-                        final Charity? result = await donationViewModel.navigateToCharityPage(selectedCharity?.id);
-
-                        if (result != null) {
-                          setState(() => selectedCharity = result);
-                        }
-                      },
-                    );
-                  }
+                      if (result != null) {
+                        setState(() => selectedCharity = result);
+                      }
+                    },
+                  );
                 },
               ),
 
