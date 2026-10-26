@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cherry_mvp/core/config/config.dart';
 import 'package:cherry_mvp/core/models/model.dart';
 import 'package:cherry_mvp/core/services/services.dart';
@@ -108,6 +109,7 @@ class RegisterRepository {
       FirestoreConstants.phone: phone,
       FirestoreConstants.id: uid,
       FirestoreConstants.photoUrl: photo,
+      FirestoreConstants.createdAt: FieldValue.serverTimestamp(),
     };
 
     final result = await _firestoreService.saveDocument(

@@ -76,6 +76,7 @@ class LoginRepository {
         FirestoreConstants.phone: phone,
         FirestoreConstants.id: uId,
         FirestoreConstants.photoUrl: photoUrl,
+        FirestoreConstants.createdAt: FieldValue.serverTimestamp(),
       };
       await _firestoreService.firebaseFirestore
           .collection(FirestoreConstants.pathUserCollection)
