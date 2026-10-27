@@ -10,6 +10,8 @@ class PrivacyPolicyPage extends StatelessWidget {
     return const LegalDocumentPage(
       title: AppStrings.privacyPolicyText,
       assetPath: 'assets/legal/privacy_policy.txt',
+      onlineUrl: AppStrings.privacyPolicyUrl,
+      contactEmail: AppStrings.privacyContactEmail,
     );
   }
 }

@@ -15,6 +15,11 @@ void _navigateToLegalInformation(BuildContext context) {
   final navigator = Provider.of<NavigationProvider>(context, listen: false);
   navigator.navigateTo(AppRoutes.legalInformationPage);
 }
+/// Opens the privacy policy directly from Settings, as required by #503.
+void _navigateToPrivacyPolicy(BuildContext context) {
+  final navigator = Provider.of<NavigationProvider>(context, listen: false);
+  navigator.navigateTo(AppRoutes.privacyPolicyPage);
+}
 
 final dummyAccountSection = [
   if (FeatureFlags.showDeferredControls) ...[
@@ -30,6 +35,11 @@ final dummyAccountSection = [
     title: AppStrings.legalInformationText,
     trailing: '',
     onTap: _navigateToLegalInformation,
+  ),
+  SectionSettingsItem(
+    title: AppStrings.privacyPolicyText,
+    trailing: '',
+    onTap: _navigateToPrivacyPolicy,
   ),
   SectionSettingsItem(title: AppStrings.logOutText, trailing: ''),
 ];

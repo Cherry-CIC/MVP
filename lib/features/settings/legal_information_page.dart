@@ -1,17 +1,17 @@
 import 'package:cherry_mvp/core/config/config.dart';
-import 'package:cherry_mvp/features/settings/community_rules_page.dart';
-import 'package:cherry_mvp/features/settings/privacy_policy_page.dart';
-import 'package:cherry_mvp/features/settings/terms_and_conditions_page.dart';
+import 'package:cherry_mvp/core/router/nav_provider.dart';
+import 'package:cherry_mvp/core/router/nav_routes.dart';
 import 'package:cherry_mvp/features/settings/widgets/settings_item.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class LegalInformationPage extends StatelessWidget {
   const LegalInformationPage({super.key});
 
-  void _navigateToDocument(BuildContext context, Widget page) {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => page),
-    );
+  /// Opens a legal document through the shared named-route navigator.
+  void _navigateToDocument(BuildContext context, String routeName) {
+    final navigator = Provider.of<NavigationProvider>(context, listen: false);
+    navigator.navigateTo(routeName);
   }
 
   @override
@@ -32,7 +32,7 @@ class LegalInformationPage extends StatelessWidget {
               return SettingsItem(
                 title: item.title,
                 trailing: '',
-                onTap: () => _navigateToDocument(context, item.page),
+                onTap: () => _navigateToDocument(context, item.routeName),
               );
             },
           ),
@@ -50,24 +50,26 @@ class LegalInformationPage extends StatelessWidget {
 class _LegalDocumentItem {
   const _LegalDocumentItem({
     required this.title,
-    required this.page,
+    required this.routeName,
   });
 
   final String title;
-  final Widget page;
+
+  /// Named route registered in [AppRoutes.generateRoute].
+  final String routeName;
 }
 
 const _legalDocuments = [
   _LegalDocumentItem(
     title: AppStrings.privacyPolicyText,
-    page: PrivacyPolicyPage(),
+    routeName: AppRoutes.privacyPolicyPage,
   ),
   _LegalDocumentItem(
     title: AppStrings.termsAndConditionsText,
-    page: TermsAndConditionsPage(),
+    routeName: AppRoutes.termsAndConditionsPage,
   ),
   _LegalDocumentItem(
     title: AppStrings.communityRulesText,
-    page: CommunityRulesPage(),
+    routeName: AppRoutes.communityRulesPage,
   ),
 ];
