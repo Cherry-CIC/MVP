@@ -155,8 +155,8 @@ class CheckoutViewModel extends ChangeNotifier {
   String? get lastPaymentIntentId => _lastPaymentIntentId;
   String? get lastOrderId => _lastOrderId;
 
-  /// Whether a payment method has been set
-  bool get hasPaymentMethod => _selectedPaymentType != null || _hasPaymentMethod;
+  /// Whether a method has been set, excluding platform-ineligible selections.
+  bool get hasPaymentMethod => _selectedPaymentType?.isPlatformEligible ?? _hasPaymentMethod;
 
   /// Whether the order is ready for checkout (has both address and payment method)
   bool get canCheckout => hasShippingAddress && hasPaymentMethod && !_containsOwnProduct;
@@ -217,6 +217,11 @@ class CheckoutViewModel extends ChangeNotifier {
   PaymentType? _selectedPaymentType;
 
   PaymentType? get selectedPaymentType => _selectedPaymentType;
+
+  /// Hides unsupported stored choices without changing the user's selection.
+  PaymentType? get eligibleSelectedPaymentType =>
+      _selectedPaymentType?.isPlatformEligible == true ? _selectedPaymentType : null;
+
   // Payment method methods
   void setPaymentType(PaymentType type) {
     _selectedPaymentType = type;
@@ -550,7 +555,7 @@ class CheckoutViewModel extends ChangeNotifier {
       return false;
     }
 
-    if (_selectedPaymentType == null) {
+    if (eligibleSelectedPaymentType == null) {
       _createOrderStatus = Status.failure(
         AppStrings.checkoutPaymentMethodRequired,
       );

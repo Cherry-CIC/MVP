@@ -16,7 +16,7 @@ class _SelectPaymentTypeBottomSheetState extends State<SelectPaymentTypeBottomSh
   Widget build(BuildContext context) {
     return Consumer<CheckoutViewModel>(
       builder: (context, vm, _) {
-        final selected = vm.selectedPaymentType;
+        final selected = vm.eligibleSelectedPaymentType;
 
         return BottomSheet(
           backgroundColor: Theme.of(context).colorScheme.surface,
@@ -66,41 +66,45 @@ class _SelectPaymentTypeBottomSheetState extends State<SelectPaymentTypeBottomSh
               Divider(height: 1, color: AppColors.grey),
 
               /// GOOGLE PAY
-              ListTile(
-                leading: Image.asset(
-                  AppImages.paymentMethodsGoogleIcon,
-                  width: 24,
-                  height: 24,
+              if (PaymentType.google.isPlatformEligible) ...[
+                ListTile(
+                  leading: Image.asset(
+                    AppImages.paymentMethodsGoogleIcon,
+                    width: 24,
+                    height: 24,
+                  ),
+                  title: Text(AppStrings.paymentMethodsGooglePay),
+                  trailing: RadioGroup<PaymentType>(
+                    groupValue: selected,
+                    onChanged: (value) => vm.setPaymentType(value!),
+                    child: Radio.adaptive(value: PaymentType.google),
+                  ),
+                  onTap: () => vm.setPaymentType(PaymentType.google),
                 ),
-                title: Text(AppStrings.paymentMethodsGooglePay),
-                trailing: RadioGroup<PaymentType>(
-                  groupValue: selected,
-                  onChanged: (value) => vm.setPaymentType(value!),
-                  child: Radio.adaptive(value: PaymentType.google),
-                ),
-                onTap: () => vm.setPaymentType(PaymentType.google),
-              ),
 
-              Divider(height: 1, color: AppColors.grey),
+                Divider(height: 1, color: AppColors.grey),
+              ],
 
               /// APPLE PAY
-              ListTile(
-                leading: Image.asset(
-                  AppImages.paymentMethodsAppleIcon,
-                  width: 24,
-                  height: 24,
-                  color: Theme.of(context).colorScheme.onSurface,
+              if (PaymentType.apple.isPlatformEligible) ...[
+                ListTile(
+                  leading: Image.asset(
+                    AppImages.paymentMethodsAppleIcon,
+                    width: 24,
+                    height: 24,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+                  title: Text(AppStrings.paymentMethodsApplePay),
+                  trailing: RadioGroup<PaymentType>(
+                    groupValue: selected,
+                    onChanged: (value) => vm.setPaymentType(value!),
+                    child: Radio.adaptive(value: PaymentType.apple),
+                  ),
+                  onTap: () => vm.setPaymentType(PaymentType.apple),
                 ),
-                title: Text(AppStrings.paymentMethodsApplePay),
-                trailing: RadioGroup<PaymentType>(
-                  groupValue: selected,
-                  onChanged: (value) => vm.setPaymentType(value!),
-                  child: Radio.adaptive(value: PaymentType.apple),
-                ),
-                onTap: () => vm.setPaymentType(PaymentType.apple),
-              ),
 
-              Divider(height: 1, color: AppColors.grey),
+                Divider(height: 1, color: AppColors.grey),
+              ],
               const SizedBox(height: 32),
 
               Container(
