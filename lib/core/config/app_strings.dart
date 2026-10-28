@@ -85,6 +85,8 @@ class AppStrings {
   static const editProfileFirstNameLabel = 'First name';
   static const editProfileUsernameLabel = 'Username';
   static const editProfilePhoneLabel = 'Phone number';
+  static const editProfilePhoneInternationalFormat =
+      'Use +44 instead of the first 0 in your phone number.';
   static const editProfileEmailHelper = 'Email cannot be changed here';
   static const editProfileSave = 'Save changes';
   static const editProfileSaveSuccess = 'Profile updated';
