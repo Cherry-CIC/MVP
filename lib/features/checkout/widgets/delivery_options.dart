@@ -290,7 +290,7 @@ class _DeliveryOptionsState extends State<DeliveryOptions> {
           const SizedBox(height: 8),
           Consumer<CheckoutViewModel>(
             builder: (context, model, _) {
-              final selectedType = model.selectedPaymentType;
+              final selectedType = model.eligibleSelectedPaymentType;
               return Outlined(
                 child: ListTile(
                   contentPadding: const EdgeInsets.symmetric(horizontal: 16),

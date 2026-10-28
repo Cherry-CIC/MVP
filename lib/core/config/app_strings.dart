@@ -249,6 +249,15 @@ class AppStrings {
   static const productSold = 'Sold';
   static const productSoldCongratulations = 'Congratulations on your sale!';
   static const productSoldNextSteps = 'Please check your email inbox for updates and instructions on what to do next.';
+  static String openPhoto(int number, int total) => 'View full photo $number of $total';
+  static String photoPosition(int number, int total) => '$number of $total';
+  static String photoLabel(int number, int total) => 'Photo $number of $total';
+  static const closePhotoViewer = 'Close photo viewer';
+  static const previousPhoto = 'Previous photo';
+  static const nextPhoto = 'Next photo';
+  static const photoViewerDismissHint = 'Swipe up or down to close';
+  static const photoUnavailable = 'This photo could not be loaded.';
+  static const photoLoading = 'Loading photo';
   static const productPageDescription = "Description";
   static const productPageBuyerDiscountActive = 'Donor discounts active';
   static const productPageDonorDiscountInactive = 'Donor discounts inactive';
