@@ -166,6 +166,13 @@ class AppStrings {
   static const noCategoriesAvailable = 'No categories available';
 
   // Photo Upload
+  static const coverPhoto = 'Cover photo';
+  static const reorderPhotosHint = 'Hold and drag to reorder photos';
+  static const previewPhotoHint = 'Tap to preview this photo';
+  static const addMorePhotos = 'Add more photos';
+  static const removePhoto = 'Remove photo';
+  static String photoPosition(int position, int total) => 'Photo $position of $total';
+
   static const takePhoto = 'Upload or take new photos';
   static const cameraPhoto = 'Take Photo';
   static const galleryPhoto = 'Choose from Gallery';
@@ -175,13 +182,13 @@ class AppStrings {
   static const errorPickingImage = 'Error picking image';
   static const cameraPermissionTitle = 'Camera Access Required';
   static const cameraPermissionRationale =
-      'Cherry needs camera access so you can take photos of items to list or donate on the marketplace.';
+      'cherry needs camera access so you can take photos of items to list or donate on the marketplace.';
   static const cameraPermissionDeniedTitle = 'Camera Access Needed';
   static const cameraPermissionDeniedMessage =
       'Camera permission is required to take photos for your item listing. Please allow camera access in your device settings to continue.';
   static const cameraPermissionPermanentlyDeniedTitle = 'Camera Permission Disabled';
   static const cameraPermissionPermanentlyDeniedMessage =
-      'Camera access has been disabled for Cherry. Open Settings and allow camera access, then try again.';
+      'Camera access has been disabled for cherry. Open Settings and allow camera access, then try again.';
   static const permissionTryAgain = 'Try Again';
   static const ok = 'OK';
   static const openSettings = 'Open Settings';
@@ -249,7 +256,7 @@ class AppStrings {
 
   // Product Page
   static String openPhoto(int number, int total) => 'View full photo $number of $total';
-  static String photoPosition(int number, int total) => '$number of $total';
+  static String photoViewerPosition(int number, int total) => '$number of $total';
   static String photoLabel(int number, int total) => 'Photo $number of $total';
   static const closePhotoViewer = 'Close photo viewer';
   static const previousPhoto = 'Previous photo';

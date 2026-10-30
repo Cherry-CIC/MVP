@@ -24,8 +24,9 @@ import 'package:cherry_mvp/features/donation/widgets/donation_dropdown_field.dar
 class DonationForm extends StatefulWidget {
   final List<XFile>? selectedImages;
   final VoidCallback? onClearImages;
+  final ValueChanged<bool>? onSubmittingChanged;
 
-  const DonationForm({super.key, this.selectedImages, this.onClearImages});
+  const DonationForm({super.key, this.selectedImages, this.onClearImages, this.onSubmittingChanged});
 
   @override
   DonationFormState createState() => DonationFormState();
@@ -100,7 +101,7 @@ class DonationFormState extends State<DonationForm> {
       postageSizeId: selectedPostageSize!.id,
       donation: _parseEnteredPrice(),
       price: _parseEnteredPrice(),
-      localImages: widget.selectedImages,
+      localImages: widget.selectedImages == null ? null : List<XFile>.unmodifiable(widget.selectedImages!),
     );
   }
 
@@ -441,6 +442,7 @@ class DonationFormState extends State<DonationForm> {
                               final uploadNavigator = Navigator.of(context);
                               final uploadRoute = ModalRoute.of(context);
                               setState(() => _isSubmitting = true);
+                              widget.onSubmittingChanged?.call(true);
                               try {
                                 await donationViewModel.submitDonation(request);
                                 if (!mounted || uploadRoute?.isActive != true) return;
@@ -472,7 +474,10 @@ class DonationFormState extends State<DonationForm> {
                                   );
                                 }
                               } finally {
-                                if (mounted) setState(() => _isSubmitting = false);
+                                if (mounted) {
+                                  setState(() => _isSubmitting = false);
+                                  widget.onSubmittingChanged?.call(false);
+                                }
                               }
                             }
                           },

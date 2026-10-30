@@ -8,12 +8,21 @@ import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:cherry_mvp/core/config/app_colors.dart';
 import 'package:cherry_mvp/core/config/app_strings.dart';
+import 'package:cherry_mvp/features/donation/widgets/photo_reorder_strip.dart';
 
 class PhotoUpload extends StatefulWidget {
   final Function(List<XFile>)? onImagesChanged;
   final List<XFile>? initialImages;
+  final bool enableReordering;
+  final bool enabled;
 
-  const PhotoUpload({super.key, this.onImagesChanged, this.initialImages});
+  const PhotoUpload({
+    super.key,
+    this.onImagesChanged,
+    this.initialImages,
+    this.enableReordering = false,
+    this.enabled = true,
+  });
 
   @override
   State<PhotoUpload> createState() => _PhotoUploadState();
@@ -26,6 +35,7 @@ class _PhotoUploadState extends State<PhotoUpload> {
   List<XFile> selectedImages = [];
   final PageController _pageController = PageController();
   int _currentImageIndex = 0;
+  bool _syncingPreview = false;
 
   bool _shouldRetryWithoutTransforms(PlatformException error) {
     final message = (error.message ?? '').toLowerCase();
@@ -145,7 +155,7 @@ class _PhotoUploadState extends State<PhotoUpload> {
       ),
     );
 
-    if (openSettings == true) {
+    if (openSettings == true && mounted && widget.enabled) {
       await AppSettings.openAppSettings();
     }
     return openSettings == true;
@@ -153,7 +163,7 @@ class _PhotoUploadState extends State<PhotoUpload> {
 
   Future<bool> _ensureCameraPermission() async {
     var status = await Permission.camera.status;
-    if (!mounted) return false;
+    if (!mounted || !widget.enabled) return false;
     if (status.isGranted) return true;
 
     if (status.isPermanentlyDenied || status.isRestricted) {
@@ -161,8 +171,12 @@ class _PhotoUploadState extends State<PhotoUpload> {
       return false;
     }
 
+    // Explain the request only when this device still needs camera access.
+    final userConfirmed = await _showCameraPermissionRationaleDialog();
+    if (!mounted || !widget.enabled || !userConfirmed) return false;
+
     status = await Permission.camera.request();
-    if (!mounted) return false;
+    if (!mounted || !widget.enabled) return false;
     if (status.isGranted) return true;
 
     await _showPermissionDeniedDialog(
@@ -174,45 +188,76 @@ class _PhotoUploadState extends State<PhotoUpload> {
   @override
   void initState() {
     super.initState();
-    // Initialize with any pre-selected images
-    if (widget.initialImages != null && widget.initialImages!.isNotEmpty) {
-      selectedImages = List.from(widget.initialImages!);
-      _currentImageIndex = selectedImages.length - 1;
-    }
+    selectedImages = List.of(widget.initialImages ?? []);
   }
 
   @override
   void didUpdateWidget(PhotoUpload oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // Update selected images if initialImages changed
-    if (widget.initialImages != oldWidget.initialImages) {
-      if (widget.initialImages != null && widget.initialImages!.isNotEmpty) {
-        setState(() {
-          selectedImages = List.from(widget.initialImages!);
-          _currentImageIndex = selectedImages.isNotEmpty ? selectedImages.length - 1 : 0;
-        });
-      } else if (widget.initialImages == null || widget.initialImages!.isEmpty) {
-        setState(() {
-          selectedImages.clear();
-          _currentImageIndex = 0;
-        });
-      }
+    if (widget.initialImages == oldWidget.initialImages) return;
+    final incoming = widget.initialImages ?? <XFile>[];
+    // Parent echoes must not reset the preview after adding or moving a photo.
+    if (incoming.length == selectedImages.length &&
+        List.generate(
+          incoming.length,
+          (index) => incoming[index].path == selectedImages[index].path,
+        ).every((same) => same)) {
+      return;
     }
+    final currentPath = selectedImages.isEmpty ? null : selectedImages[_currentImageIndex].path;
+    selectedImages = List.of(incoming);
+    final retainedIndex = selectedImages.indexWhere((image) => image.path == currentPath);
+    _currentImageIndex = retainedIndex < 0 ? 0 : retainedIndex;
+    _syncPreview();
+  }
+
+  void _publishImages() {
+    // A submitted request and previous callbacks must retain their own order.
+    widget.onImagesChanged?.call(List<XFile>.unmodifiable(selectedImages));
+  }
+
+  void _syncPreview() {
+    _syncingPreview = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      if (_pageController.hasClients && selectedImages.isNotEmpty) {
+        _pageController.jumpToPage(_currentImageIndex);
+      }
+      _syncingPreview = false;
+    });
+  }
+
+  void _selectImage(int index) {
+    setState(() => _currentImageIndex = index);
+    _syncPreview();
+  }
+
+  void _reorderImages(int oldIndex, int newIndex) {
+    if (!widget.enabled || oldIndex == newIndex) return;
+    final currentPath = selectedImages[_currentImageIndex].path;
+    setState(() {
+      final moved = selectedImages.removeAt(oldIndex);
+      selectedImages.insert(newIndex, moved);
+      _currentImageIndex = selectedImages.indexWhere((image) => image.path == currentPath);
+    });
+    _syncPreview();
+    _publishImages();
   }
 
   Future<void> pickImages(ImageSource source) async {
+    if (!widget.enabled) return;
     try {
       final picker = ImagePicker();
       if (source == ImageSource.gallery) {
         // Allow multiple selection from gallery
         final List<XFile> picked = await _pickGalleryImages(picker);
-        if (!mounted) return;
+        if (!mounted || !widget.enabled) return;
 
         if (picked.isNotEmpty) {
           // Filter out duplicates based on file path
           final List<XFile> newImages = [];
           for (final pickedImage in picked) {
-            final isDuplicate = selectedImages.any(
+            final isDuplicate = [...selectedImages, ...newImages].any(
               (existing) => existing.path == pickedImage.path,
             );
             if (!isDuplicate) {
@@ -225,32 +270,17 @@ class _PhotoUploadState extends State<PhotoUpload> {
               selectedImages.addAll(newImages);
               _currentImageIndex = selectedImages.length - 1;
             });
-            widget.onImagesChanged?.call(selectedImages);
+            _publishImages();
 
-            // Animate to the last added image
-            if (selectedImages.length > 1) {
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (_pageController.hasClients) {
-                  _pageController.animateToPage(
-                    _currentImageIndex,
-                    duration: const Duration(milliseconds: 300),
-                    curve: Curves.easeInOut,
-                  );
-                }
-              });
-            }
+            _syncPreview();
           }
         }
       } else {
-        // Single image from camera - show pre-permission rationale dialog
-        final bool userConfirmed = await _showCameraPermissionRationaleDialog();
-        if (!mounted || !userConfirmed) return;
-
         if (!await _ensureCameraPermission()) return;
-        if (!mounted) return;
+        if (!mounted || !widget.enabled) return;
 
         final XFile? picked = await _pickCameraImage(picker);
-        if (!mounted) return;
+        if (!mounted || !widget.enabled) return;
 
         if (picked != null) {
           // Check for duplicates
@@ -263,20 +293,9 @@ class _PhotoUploadState extends State<PhotoUpload> {
               selectedImages.add(picked);
               _currentImageIndex = selectedImages.length - 1;
             });
-            widget.onImagesChanged?.call(selectedImages);
+            _publishImages();
 
-            // Animate to the newly added image
-            if (selectedImages.length > 1) {
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (_pageController.hasClients) {
-                  _pageController.animateToPage(
-                    _currentImageIndex,
-                    duration: const Duration(milliseconds: 300),
-                    curve: Curves.easeInOut,
-                  );
-                }
-              });
-            }
+            _syncPreview();
           }
         }
       }
@@ -296,6 +315,7 @@ class _PhotoUploadState extends State<PhotoUpload> {
   }
 
   void _removeImage(int index) {
+    if (!widget.enabled) return;
     setState(() {
       selectedImages.removeAt(index);
       if (_currentImageIndex >= selectedImages.length && selectedImages.isNotEmpty) {
@@ -304,23 +324,13 @@ class _PhotoUploadState extends State<PhotoUpload> {
         _currentImageIndex = 0;
       }
     });
-    widget.onImagesChanged?.call(selectedImages);
+    _publishImages();
 
-    // Animate to valid page if needed
-    if (selectedImages.isNotEmpty && _currentImageIndex < selectedImages.length) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (_pageController.hasClients) {
-          _pageController.animateToPage(
-            _currentImageIndex,
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeInOut,
-          );
-        }
-      });
-    }
+    _syncPreview();
   }
 
   void _pickProductImage() async {
+    if (!widget.enabled) return;
     final source = await showModalBottomSheet<ImageSource>(
       context: context,
       builder: (context) => SafeArea(
@@ -342,7 +352,7 @@ class _PhotoUploadState extends State<PhotoUpload> {
         ),
       ),
     );
-    if (!mounted || source == null) return;
+    if (!mounted || !widget.enabled || source == null) return;
     await pickImages(source);
   }
 
@@ -352,7 +362,7 @@ class _PhotoUploadState extends State<PhotoUpload> {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => _PhotoViewerPage(
-          images: selectedImages,
+          images: List<XFile>.unmodifiable(selectedImages),
           initialIndex: initialIndex,
         ),
       ),
@@ -376,6 +386,7 @@ class _PhotoUploadState extends State<PhotoUpload> {
           PageView.builder(
             controller: _pageController,
             onPageChanged: (index) {
+              if (_syncingPreview) return;
               setState(() {
                 _currentImageIndex = index;
               });
@@ -383,6 +394,7 @@ class _PhotoUploadState extends State<PhotoUpload> {
             itemCount: selectedImages.length,
             itemBuilder: (context, index) {
               return GestureDetector(
+                key: ValueKey(selectedImages[index].path),
                 onTap: () => _openImageViewer(index),
                 child: Container(
                   decoration: BoxDecoration(
@@ -408,7 +420,8 @@ class _PhotoUploadState extends State<PhotoUpload> {
               ),
               child: IconButton(
                 icon: const Icon(Icons.close, color: Colors.white),
-                onPressed: () => _removeImage(_currentImageIndex),
+                tooltip: AppStrings.removePhoto,
+                onPressed: widget.enabled ? () => _removeImage(_currentImageIndex) : null,
               ),
             ),
           ),
@@ -424,7 +437,8 @@ class _PhotoUploadState extends State<PhotoUpload> {
               ),
               child: IconButton(
                 icon: const Icon(Icons.add_a_photo, color: Colors.white),
-                onPressed: _pickProductImage,
+                tooltip: AppStrings.addMorePhotos,
+                onPressed: widget.enabled ? _pickProductImage : null,
               ),
             ),
           ),
@@ -488,7 +502,7 @@ class _PhotoUploadState extends State<PhotoUpload> {
       color: AppColors.pinkBg(context),
       borderRadius: BorderRadius.circular(20),
       child: InkWell(
-        onTap: _pickProductImage,
+        onTap: widget.enabled ? _pickProductImage : null,
         borderRadius: BorderRadius.circular(20),
         child: CustomPaint(
           painter: _DashedBorderPainter(
@@ -536,6 +550,14 @@ class _PhotoUploadState extends State<PhotoUpload> {
         children: [
           Text(AppStrings.takePhotoInstruction),
           selectedImages.isNotEmpty ? _buildImageCarousel() : _buildEmptyState(),
+          if (widget.enableReordering && selectedImages.isNotEmpty)
+            PhotoReorderStrip(
+              images: selectedImages,
+              selectedIndex: _currentImageIndex,
+              enabled: widget.enabled,
+              onSelected: _selectImage,
+              onReorder: _reorderImages,
+            ),
         ],
       ),
     );
