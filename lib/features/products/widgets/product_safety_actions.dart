@@ -154,42 +154,61 @@ class _ReportSheetState extends State<_ReportSheet> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(widget.title, style: theme.textTheme.titleLarge),
-          const SizedBox(height: 20),
-          Text(
-            AppStrings.productPageReportReasonPrompt,
-            style: theme.textTheme.titleSmall,
-          ),
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              for (final reason in _reasons)
-                ChoiceChip(
-                  label: Text(reason.label),
-                  selected: _selectedReason == reason.value,
-                  onSelected: (_) {
-                    setState(() {
-                      _selectedReason = reason.value;
-                    });
-                  },
-                ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          TextField(
-            controller: _messageController,
-            minLines: 3,
-            maxLines: 5,
-            maxLength: 500,
-            textInputAction: TextInputAction.newline,
-            decoration: const InputDecoration(
-              labelText: AppStrings.productPageReportMessageLabel,
-              hintText: AppStrings.productPageReportMessageHint,
-              border: OutlineInputBorder(),
+          Flexible(
+            child: SingleChildScrollView(
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(widget.title, style: theme.textTheme.titleLarge),
+                  const SizedBox(height: 20),
+                  Text(
+                    AppStrings.productPageReportReasonPrompt,
+                    style: theme.textTheme.titleSmall,
+                  ),
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      for (final reason in _reasons)
+                        ChoiceChip(
+                          label: Text(reason.label),
+                          selected: _selectedReason == reason.value,
+                          onSelected: (_) {
+                            setState(() {
+                              _selectedReason = reason.value;
+                            });
+                          },
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  TextField(
+                    controller: _messageController,
+                    minLines: 3,
+                    maxLines: 5,
+                    maxLength: 500,
+                    textInputAction: TextInputAction.newline,
+                    decoration: const InputDecoration(
+                      labelText: AppStrings.productPageReportMessageLabel,
+                      hintText: AppStrings.productPageReportMessageHint,
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
+          if (bottomInset > 0)
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                onPressed: () => FocusScope.of(context).unfocus(),
+                child: const Text(AppStrings.productPageReportKeyboardDone),
+              ),
+            ),
           const SizedBox(height: 12),
           SizedBox(
             width: double.infinity,

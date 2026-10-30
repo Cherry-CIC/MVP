@@ -610,6 +610,7 @@ class CheckoutViewModel extends ChangeNotifier {
 
     final selectedShippingMethod = selectedInpostShippingMethod!;
     final selectedPickupPoint = selectedInpost!;
+    var paymentStage = SafePaymentStage.preparation;
 
     try {
       // To create a PaymentIntent and return the client_secret
@@ -630,9 +631,13 @@ class CheckoutViewModel extends ChangeNotifier {
       if (response.isSuccess && response.value != null) {
         final paymentResponse = response.value!;
 
+        paymentStage = SafePaymentStage.settings;
         Stripe.publishableKey = paymentResponse.publishableKey;
+        // Must match the Apple Pay entitlement in ios/Runner/Runner.entitlements.
+        Stripe.merchantIdentifier = 'merchant.uk.org.cherry';
         await Stripe.instance.applySettings();
 
+        paymentStage = SafePaymentStage.initialisation;
         final setupParams = _buildPaymentSheetParameters(
           paymentResponse,
           _selectedPaymentType!,
@@ -643,6 +648,7 @@ class CheckoutViewModel extends ChangeNotifier {
         );
 
         // Present the native PaymentSheet (it will show ApplePay/GooglePay if available)
+        paymentStage = SafePaymentStage.presentation;
         await Stripe.instance.presentPaymentSheet();
         _lastPaymentIntentId = paymentResponse.paymentIntentId;
         _lastOrderId = paymentResponse.orderId;
@@ -650,29 +656,34 @@ class CheckoutViewModel extends ChangeNotifier {
       } else {
         _createOrderStatus = Status.failure('Payment could not be completed. Please try again.');
         _lastPaymentIntentId = null;
-        SafeLog.event(
-          AppLogEvent.checkoutPaymentIntentFailed,
-          level: SafeLogLevel.severe,
-        );
+        SafeLog.paymentFailure(paymentStage, SafePaymentFailure.backendRejected);
         notifyListeners();
         return false;
       }
-    } on StripeException {
-      _createOrderStatus = Status.failure('Payment could not be completed. Please try again.');
-      SafeLog.event(
-        AppLogEvent.checkoutPaymentFailed,
-        level: SafeLogLevel.severe,
-      );
+    } on StripeException catch (error) {
       _lastPaymentIntentId = null;
+      _lastOrderId = null;
+      if (error.error.code == FailureCode.Canceled) {
+        _createOrderStatus = Status.canceled;
+        notifyListeners();
+        return false;
+      }
+      _createOrderStatus = Status.failure('Payment could not be completed. Please try again.');
+      SafeLog.paymentFailure(
+        paymentStage,
+        switch (error.error.code) {
+          FailureCode.Failed => SafePaymentFailure.failed,
+          FailureCode.Timeout => SafePaymentFailure.timeout,
+          _ => SafePaymentFailure.unknown,
+        },
+      );
       notifyListeners();
       return false;
     } catch (_) {
       _createOrderStatus = Status.failure('Payment could not be completed. Please try again.');
-      SafeLog.event(
-        AppLogEvent.checkoutPaymentFailed,
-        level: SafeLogLevel.severe,
-      );
+      SafeLog.paymentFailure(paymentStage, SafePaymentFailure.unknown);
       _lastPaymentIntentId = null;
+      _lastOrderId = null;
       notifyListeners();
       return false;
     }

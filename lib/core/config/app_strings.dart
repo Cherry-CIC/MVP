@@ -85,6 +85,8 @@ class AppStrings {
   static const editProfileFirstNameLabel = 'First name';
   static const editProfileUsernameLabel = 'Username';
   static const editProfilePhoneLabel = 'Phone number';
+  static const editProfilePhoneInternationalFormat =
+      'Use +44 instead of the first 0 in your phone number.';
   static const editProfileEmailHelper = 'Email cannot be changed here';
   static const editProfileSave = 'Save changes';
   static const editProfileSaveSuccess = 'Profile updated';
@@ -278,6 +280,7 @@ class AppStrings {
   static const productPageReportReasonPrompt = 'Choose a reason';
   static const productPageReportMessageLabel = 'Add details';
   static const productPageReportMessageHint = 'Tell us what happened';
+  static const productPageReportKeyboardDone = 'Done';
   static const productPageReportSubmit = 'Submit report';
   static const productPageReportSubmitted = 'Report submitted';
   static const productPageReportFailed = 'Could not submit this report';
@@ -422,9 +425,9 @@ class AppStrings {
   static const privacyPolicyText = "Privacy Policy";
   static const termsAndConditionsText = "Terms and Conditions";
   static const communityRulesText = "Community Rules";
-  static const legalAcceptanceIntroText = "I have read and agree to the";
+  static const legalAcceptanceIntroText = "I confirm I am 18 years of age or older and agree to the";
   static const legalAcceptanceAndText = "and";
-  static const legalAcceptanceRequiredText = "You must accept the Terms and Conditions and Community Rules.";
+  static const legalAcceptanceRequiredText = "You must confirm you are at least 18 years old and accept the Terms and Conditions and Community Rules.";
   static const legalDocumentLoadErrorText = "We couldn't load this legal document. Please try again.";
   static const cookieSettingsText = "Cookie settings";
   static const logOutText = "Log out";
