@@ -19,6 +19,12 @@ class EditProfileRepository implements IEditProfileRepository {
     String? displayName,
     String? phoneNumber,
   }) async {
+    // Only changed fields reach this method. Explain the UK prefix before
+    // sending a number that the backend's international format check rejects.
+    if (phoneNumber?.trim().startsWith('0') == true) {
+      return Result.failure(AppStrings.editProfilePhoneInternationalFormat);
+    }
+
     final result = await apiService.put<Map<String, dynamic>>(
       ApiEndpoints.profile,
       data: {
@@ -28,7 +34,12 @@ class EditProfileRepository implements IEditProfileRepository {
     );
 
     if (!result.isSuccess) {
-      return Result.failure(result.error ?? AppStrings.editProfileSaveFailed);
+      final message = result.error;
+      return Result.failure(
+        message == null || message == ErrorStrings.apiError
+            ? AppStrings.editProfileSaveFailed
+            : message,
+      );
     }
 
     final response = result.value;
