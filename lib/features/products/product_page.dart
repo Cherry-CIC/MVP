@@ -25,6 +25,7 @@ import 'package:cherry_mvp/features/products/widgets/product_information.dart';
 import 'package:cherry_mvp/features/products/widgets/product_safety_actions.dart';
 import 'package:cherry_mvp/features/products/widgets/seller_information.dart';
 import 'package:cherry_mvp/features/products/widgets/product_header_carousel.dart';
+import 'package:cherry_mvp/features/products/widgets/sold_listing_banner.dart';
 import 'package:cherry_mvp/features/profile/public_user_profile_repository.dart';
 
 class ProductPage extends StatefulWidget {
@@ -139,20 +140,25 @@ class _ProductPageState extends State<ProductPage> {
     final checkoutViewModel = context.watch<CheckoutViewModel>();
     final displayedProduct = product;
     final isOwnListing = checkoutViewModel.isOwnProduct(displayedProduct);
+    final canBuy = !isOwnListing && !displayedProduct.isSold;
     final deletion = context.watch<DeleteListingViewModel?>();
     final actionSession = deletion?.session;
-    final canEdit = isOwnListing && (context.read<IEditListingRepository?>()?.canEdit(displayedProduct) ?? false);
+    final canEdit =
+        isOwnListing &&
+        !displayedProduct.isSold &&
+        (context.read<IEditListingRepository?>()?.canEdit(displayedProduct) ?? false);
     final knownSold = displayedProduct.status?.toLowerCase() == 'sold' || displayedProduct.number <= 0;
     final canDelete =
         deletion?.canDelete(displayedProduct.id, ownerId: displayedProduct.userId, knownSold: knownSold) ?? false;
     final hasOptionalProductHighlights =
-        FeatureFlags.showDonorDiscounts || (!isOwnListing && FeatureFlags.showOtherCharityRequests);
+        !displayedProduct.isSold &&
+        (FeatureFlags.showDonorDiscounts || (canBuy && FeatureFlags.showOtherCharityRequests));
     final sellerId = NavigationProvider.publicProfileUserId(displayedProduct.userId);
     final sellerLoad = _sellerFuture(context, sellerId);
     final canUseSafetyActions = !isOwnListing && sellerId != null && sellerId.isNotEmpty;
 
     return Scaffold(
-      bottomNavigationBar: isOwnListing
+      bottomNavigationBar: !canBuy
           ? null
           : BottomCta(
               enabled: true,
@@ -201,6 +207,7 @@ class _ProductPageState extends State<ProductPage> {
           ),
           SliverList.list(
             children: [
+              if (displayedProduct.isSold) SoldListingBanner(showSellerMessage: isOwnListing),
               FutureBuilder<PublicUser?>(
                 future: sellerLoad,
                 builder: (context, snapshot) {
@@ -215,7 +222,7 @@ class _ProductPageState extends State<ProductPage> {
                         ? null
                         : () => context.read<NavigationProvider>().openPublicUserProfile(sellerId),
                     profileImage: profileImageUrl == null ? null : NetworkImage(profileImageUrl),
-                    showAskSeller: !isOwnListing,
+                    showAskSeller: canBuy,
                     user: UserInformation(
                       username: sellerUsername,
                       location: '',
@@ -275,7 +282,7 @@ class _ProductPageState extends State<ProductPage> {
                           );
                         },
                       ),
-                    if (!isOwnListing && FeatureFlags.showOtherCharityRequests)
+                    if (canBuy && FeatureFlags.showOtherCharityRequests)
                       ProductHighlightTile(
                         onTap: () {},
                         leadingText: AppStrings.productPageOpenToOtherCharities,
@@ -289,7 +296,7 @@ class _ProductPageState extends State<ProductPage> {
                 padding: const EdgeInsets.all(16),
                 child: Row(
                   children: [
-                    if (!isOwnListing && FeatureFlags.showOffers) ...[
+                    if (canBuy && FeatureFlags.showOffers) ...[
                       Expanded(
                         child: SizedBox(
                           height: 56,
