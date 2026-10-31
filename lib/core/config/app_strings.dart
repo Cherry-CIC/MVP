@@ -277,6 +277,7 @@ class AppStrings {
   static const productPageReportReasonPrompt = 'Choose a reason';
   static const productPageReportMessageLabel = 'Add details';
   static const productPageReportMessageHint = 'Tell us what happened';
+  static const productPageReportKeyboardDone = 'Done';
   static const productPageReportSubmit = 'Submit report';
   static const productPageReportSubmitted = 'Report submitted';
   static const productPageReportFailed = 'Could not submit this report';
