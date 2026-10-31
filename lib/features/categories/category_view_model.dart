@@ -16,6 +16,7 @@ class CategoryViewModel extends ChangeNotifier {
   Status get status => _status;
 
   List<Category> _categories = [];
+  Future<void>? _categoriesRequest;
 
   List<Category> get categories => _categories;
 
@@ -49,10 +50,31 @@ class CategoryViewModel extends ChangeNotifier {
     });
   }
 
-  Future<void> fetchCategories() async {
+  Future<void> ensureCategoriesLoaded() {
+    if (_status.type == StatusType.success) {
+      return Future<void>.value();
+    }
+    return fetchCategories();
+  }
+
+  Future<void> fetchCategories() {
+    final request = _categoriesRequest;
+    if (request != null) return request;
+
     _status = Status.loading;
     notifyListeners();
 
+    final newRequest = _loadCategories();
+    _categoriesRequest = newRequest;
+    newRequest.whenComplete(() {
+      if (identical(_categoriesRequest, newRequest)) {
+        _categoriesRequest = null;
+      }
+    });
+    return newRequest;
+  }
+
+  Future<void> _loadCategories() async {
     try {
       final result = await categoryRepository.fetchCategories();
       if (result.isSuccess && result.value != null) {

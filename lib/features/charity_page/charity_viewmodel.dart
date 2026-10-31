@@ -14,15 +14,37 @@ class CharityViewModel extends ChangeNotifier {
   // Private variables
   Status _status = Status.uninitialized;
   List<Charity> _charities = [];
+  Future<void>? _charitiesRequest;
 
   // Public getters
   Status get status => _status;
   List<Charity> get charities => _charities;
 
-  Future<void> fetchCharities() async {
+  Future<void> ensureCharitiesLoaded() {
+    if (_status.type == StatusType.success) {
+      return Future<void>.value();
+    }
+    return fetchCharities();
+  }
+
+  Future<void> fetchCharities() {
+    final request = _charitiesRequest;
+    if (request != null) return request;
+
     _status = Status.loading;
     notifyListeners();
 
+    final newRequest = _loadCharities();
+    _charitiesRequest = newRequest;
+    newRequest.whenComplete(() {
+      if (identical(_charitiesRequest, newRequest)) {
+        _charitiesRequest = null;
+      }
+    });
+    return newRequest;
+  }
+
+  Future<void> _loadCharities() async {
     try {
       final result = await charityRepository.fetchCharities();
 

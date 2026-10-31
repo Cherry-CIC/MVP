@@ -6,6 +6,7 @@ import 'package:cherry_mvp/core/utils/utils.dart';
 import 'package:cherry_mvp/features/categories/category_view_model.dart';
 import 'package:cherry_mvp/features/categories/widget/category_empty_widget.dart';
 import 'package:cherry_mvp/features/categories/widget/category_error_widget.dart';
+import 'package:cherry_mvp/features/categories/widget/category_loading_widget.dart';
 import 'package:cherry_mvp/features/search/widgets/category_tile_widget.dart';
 
 class CategoryPage extends StatefulWidget {
@@ -34,8 +35,8 @@ class CategoryPageState extends State<CategoryPage> {
         context,
         listen: false,
       );
-      if (categoryViewModel.categories.isEmpty) {
-        categoryViewModel.fetchCategories();
+      if (categoryViewModel.status.type == StatusType.uninitialized) {
+        categoryViewModel.ensureCategoriesLoaded();
       }
     }
   }
@@ -71,7 +72,7 @@ class CategoryPageState extends State<CategoryPage> {
             final categories = categoryViewModel.categories;
 
             if (status.type == StatusType.loading) {
-              return const Center(child: CircularProgressIndicator());
+              return const CategoryLoadingWidget();
             }
 
             if (status.type == StatusType.failure) {
