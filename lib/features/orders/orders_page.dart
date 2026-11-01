@@ -44,74 +44,6 @@ class _MyOrdersPageState extends State<MyOrdersPage> {
     super.dispose();
   }
 
-  Future<void> _handleOrderTap(BuildContext context, OrderSummary order) async {
-    final state = order.deliveryState.trim().toLowerCase();
-    if (state != 'awaiting_confirmation' && state != 'delivered') {
-      return;
-    }
-
-    final action = await showDialog<ConfirmItemAction>(
-      context: context,
-      builder: (dialogContext) => ConfirmItemDialog(order: order),
-    );
-
-    if (!mounted || action == null) {
-      return;
-    }
-
-    if (action == ConfirmItemAction.dispute) {
-      await _openDisputeDialog(context, order);
-      return;
-    }
-
-    final result = await _viewModel?.confirmOrderReceived(order.id);
-    if (!mounted) {
-      return;
-    }
-
-    if (result?.isSuccess == true) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Receipt confirmed')),
-      );
-      return;
-    }
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(result?.error ?? 'Could not confirm this item')),
-    );
-  }
-
-  Future<void> _openDisputeDialog(BuildContext context, OrderSummary order) async {
-    final result = await showDialog<_DisputeChoice>(
-      context: context,
-      builder: (dialogContext) => _DisputeDialog(order: order),
-    );
-
-    if (!mounted || result == null) {
-      return;
-    }
-
-    final submitResult = await _viewModel?.submitOrderDispute(
-      order.id,
-      reason: result.reason,
-      message: result.message,
-    );
-    if (!mounted) {
-      return;
-    }
-
-    if (submitResult?.isSuccess == true) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Dispute submitted')),
-      );
-      return;
-    }
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(submitResult?.error ?? 'Could not submit the dispute')),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -320,7 +252,7 @@ class _OrderListItem extends StatelessWidget {
     return OrderCard(
       key: ValueKey(order.id),
       order: order,
-      onTap: () => _OrdersListState.handleOrderAction(context, order, viewModel),
+      onTap: () => OrderActions.viewItem(context, order, viewModel),
     );
   }
 }
@@ -402,8 +334,8 @@ class _DisputeDialogState extends State<_DisputeDialog> {
   }
 }
 
-class _OrdersListState {
-  static Future<void> handleOrderAction(
+class OrderActions {
+  static Future<void> viewItem(
     BuildContext context,
     OrderSummary order,
     OrdersViewModel viewModel,
@@ -417,38 +349,12 @@ class _OrdersListState {
       context: context,
       builder: (dialogContext) => ConfirmItemDialog(order: order),
     );
-    if (action == null) {
+    if (!context.mounted || action == null) {
       return;
     }
 
     if (action == ConfirmItemAction.dispute) {
-      final disputeChoice = await showDialog<_DisputeChoice>(
-        context: context,
-        builder: (dialogContext) => _DisputeDialog(order: order),
-      );
-      if (disputeChoice == null) {
-        return;
-      }
-
-      final disputeResult = await viewModel.submitOrderDispute(
-        order.id,
-        reason: disputeChoice.reason,
-        message: disputeChoice.message,
-      );
-      if (!context.mounted) {
-        return;
-      }
-      if (disputeResult.isSuccess) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Dispute submitted')),
-        );
-        return;
-      }
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(disputeResult.error ?? 'Could not submit the dispute'),
-        ),
-      );
+      await reportProblem(context, order, viewModel);
       return;
     }
 
@@ -464,6 +370,36 @@ class _OrdersListState {
     }
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(confirmResult.error ?? 'Could not confirm this item')),
+    );
+  }
+
+  static Future<void> reportProblem(BuildContext context, OrderSummary order, OrdersViewModel viewModel) async {
+    final disputeChoice = await showDialog<_DisputeChoice>(
+      context: context,
+      builder: (dialogContext) => _DisputeDialog(order: order),
+    );
+    if (!context.mounted || disputeChoice == null) {
+      return;
+    }
+
+    final disputeResult = await viewModel.submitOrderDispute(
+      order.id,
+      reason: disputeChoice.reason,
+      message: disputeChoice.message,
+    );
+    if (!context.mounted) {
+      return;
+    }
+    if (disputeResult.isSuccess) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Dispute submitted')),
+      );
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(disputeResult.error ?? 'Could not submit the dispute'),
+      ),
     );
   }
 }

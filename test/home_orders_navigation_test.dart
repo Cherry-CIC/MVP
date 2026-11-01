@@ -59,7 +59,7 @@ class _OrdersRepositoryStub extends Fake implements IOrdersRepository {
   }
 
   @override
-  Future<Result<List<OrderSummary>>> fetchOrders() async {
+  Future<Result<List<OrderSummary>>> fetchOrders({bool deliveryRemindersOnly = false}) async {
     return Result.success(const []);
   }
 
