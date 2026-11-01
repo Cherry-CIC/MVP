@@ -3,7 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:cherry_mvp/core/config/app_strings.dart';
 import 'package:cherry_mvp/features/donation/widgets/photo_tips_bar.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
 import 'widgets/donation_form.dart';
+import '../categories/category_view_model.dart';
+import '../charity_page/charity_viewmodel.dart';
 
 class DonationPage extends StatefulWidget {
   const DonationPage({super.key});
@@ -15,6 +18,16 @@ class DonationPage extends StatefulWidget {
 class _DonationPageState extends State<DonationPage> {
   List<XFile> selectedImages = [];
   final GlobalKey<DonationFormState> _formKey = GlobalKey<DonationFormState>();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      context.read<CategoryViewModel>().ensureCategoriesLoaded();
+      context.read<CharityViewModel>().ensureCharitiesLoaded();
+    });
+  }
 
   void _handleImagesChanged(List<XFile> images) {
     setState(() {
