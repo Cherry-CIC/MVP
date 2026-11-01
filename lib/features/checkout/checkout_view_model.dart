@@ -168,7 +168,7 @@ class CheckoutViewModel extends ChangeNotifier {
 
   // Existing basket methods
   bool addItem(Product product) {
-    if (isOwnProduct(product)) {
+    if (isOwnProduct(product) || product.isSold) {
       return false;
     }
 

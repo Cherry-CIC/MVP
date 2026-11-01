@@ -30,6 +30,7 @@ class Product {
   final String? charityId;
   final String? createdAt;
   final String? updatedAt;
+  @JsonKey(fromJson: _parseStatus)
   final String? status;
   final Category? category;
   final Charity? charity;
@@ -59,6 +60,11 @@ class Product {
 
   // Computed property for charityImage
   String get charityImage => charity?.imageUrl ?? '';
+
+  // Trust the API status; missing stock or unknown states do not prove a sale.
+  bool get isSold => status == 'sold';
+
+  static String? _parseStatus(dynamic value) => value is String ? value : null;
 
   factory Product.fromJson(Map<String, dynamic> json) {
     // Handle fallback for product_images vs images
