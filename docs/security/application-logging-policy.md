@@ -15,11 +15,14 @@ Application code may log only:
 - an HTTP status code;
 - elapsed milliseconds;
 - a fixed error category;
+- a fixed checkout stage from `SafePaymentStage` and failure code from `SafePaymentFailure`;
 - a non-sensitive count.
 
 Unknown HTTP endpoints must be recorded as `unclassified_request`. They must never fall back to the original URL or path.
 
 All application diagnostics must use `SafeLog`. HTTP diagnostics must pass a `SafeHttpLogRecord` to the sink. The sink cannot accept a Dio request, response or exception object.
+
+`SafeLog.paymentFailure` retains only a fixed event, stage and failure code in release console logs so TestFlight checkout failures can be diagnosed. It accepts enums only. It never accepts provider messages or identifiers. Cancellation is not logged as a payment failure. Other `SafeLog` calls remain debug-only. Device verification is still needed to confirm these entries are available in the distributed app's console.
 
 ## Prohibited data
 

@@ -87,6 +87,31 @@ jobs:
             DEVELOPMENT_TEAM="$APPLE_TEAM_ID" \
             archive
 
+      - name: Verify signed Apple Pay entitlements
+        env:
+          CONFIGURATION: ${{ steps.config.outputs.configuration }}
+          APPLE_TEAM_ID: ${{ vars.APPLE_TEAM_ID }}
+        run: |
+          app_path="build/ios/archive/Cherry-${CONFIGURATION}.xcarchive/Products/Applications/Runner.app"
+          codesign --display --entitlements - --xml "$app_path" > "$RUNNER_TEMP/apple-pay-entitlements.plist"
+          python3 - <<'PY'
+          import os
+          import plistlib
+          from pathlib import Path
+
+          with (Path(os.environ["RUNNER_TEMP"]) / "apple-pay-entitlements.plist").open("rb") as source:
+              entitlements = plistlib.load(source)
+          merchant_ids = entitlements.get("com.apple.developer.in-app-payments", [])
+          if not isinstance(merchant_ids, list) or "merchant.uk.org.cherry" not in merchant_ids:
+              raise SystemExit("Signed app is missing the cherry Apple Pay merchant entitlement")
+          team_id = os.environ["APPLE_TEAM_ID"]
+          if entitlements.get("com.apple.developer.team-identifier") != team_id:
+              raise SystemExit("Signed app has an unexpected Apple Developer team")
+          if entitlements.get("application-identifier") != f"{team_id}.uk.org.cherry.app":
+              raise SystemExit("Signed app has an unexpected application identifier")
+          print("Signed Apple Pay merchant, team and application entitlements verified")
+          PY
+
       - name: Export App Store IPA
         id: export
         env:

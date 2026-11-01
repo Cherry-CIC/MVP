@@ -27,7 +27,13 @@ class UserInformationSection extends StatelessWidget {
         final username = auth.userCredentials?.username?.trim();
         final firstName = auth.userCredentials?.firstname?.trim();
         final email = auth.userCredentials?.email?.trim();
+        final photoUrl = auth.userCredentials?.photoUrl?.trim();
         final emailName = (email != null && email.contains('@')) ? email.split('@').first : email;
+        final profilePlaceholder = Image.asset(
+          AppImages.profileProfileIcon,
+          height: 48,
+          width: 48,
+        );
 
         final name = (username != null && username.isNotEmpty)
             ? username
@@ -55,10 +61,16 @@ class UserInformationSection extends StatelessWidget {
             ListTile(
               contentPadding: EdgeInsets.zero,
               onTap: onProfilePressed,
-              leading: Image.asset(
-                AppImages.profileProfileIcon,
-                height: 48,
-                width: 48,
+              leading: ClipOval(
+                child: (photoUrl != null && photoUrl.isNotEmpty)
+                    ? Image.network(
+                        photoUrl,
+                        height: 48,
+                        width: 48,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, _, _) => profilePlaceholder,
+                      )
+                    : profilePlaceholder,
               ),
               title: Text(name),
               titleTextStyle: Theme.of(context).textTheme.titleSmall,

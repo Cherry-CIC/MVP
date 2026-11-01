@@ -61,6 +61,10 @@ enum AppLogEvent {
 
 enum SafeLogLevel { info, warning, severe }
 
+enum SafePaymentStage { preparation, settings, initialisation, presentation }
+
+enum SafePaymentFailure { backendRejected, failed, timeout, unknown }
+
 enum SafeHttpMethod { get, post, put, delete, patch, head, options, other }
 
 enum SafeHttpOperation {
@@ -133,6 +137,15 @@ class SafeHttpLogRecord {
 class SafeLog {
   const SafeLog._();
 
+  /// Fixed categories only: safe to retain in TestFlight/release console logs.
+  /// Never accept SDK messages, payment identifiers, keys or customer details.
+  static void paymentFailure(SafePaymentStage stage, SafePaymentFailure code) {
+    _write(
+      'SEVERE event=checkout_payment_failed stage=${stage.name} code=${code.name}',
+      includeRelease: true,
+    );
+  }
+
   static void event(
     AppLogEvent event, {
     SafeLogLevel level = SafeLogLevel.info,
@@ -153,8 +166,8 @@ class SafeLog {
     _write(record.toLogLine());
   }
 
-  static void _write(String message) {
-    if (!kDebugMode) {
+  static void _write(String message, {bool includeRelease = false}) {
+    if (!kDebugMode && !includeRelease) {
       return;
     }
 

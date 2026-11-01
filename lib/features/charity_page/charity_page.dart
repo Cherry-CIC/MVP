@@ -31,7 +31,10 @@ class CharityPageState extends State<CharityPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!_hasInitialized) {
         _hasInitialized = true;
-        context.read<CharityViewModel>().fetchCharities();
+        final viewModel = context.read<CharityViewModel>();
+        if (viewModel.status.type == StatusType.uninitialized) {
+          viewModel.ensureCharitiesLoaded();
+        }
       }
     });
   }
