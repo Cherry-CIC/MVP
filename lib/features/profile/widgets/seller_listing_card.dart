@@ -1,6 +1,7 @@
 import 'package:cherry_mvp/core/config/app_strings.dart';
 import 'package:cherry_mvp/core/utils/image_provider_helper.dart';
 import 'package:cherry_mvp/features/profile/models/seller_listing.dart';
+import 'package:cherry_mvp/features/products/widgets/sold_listing_banner.dart';
 import 'package:flutter/material.dart';
 
 class SellerListingCard extends StatelessWidget {
@@ -19,7 +20,7 @@ class SellerListingCard extends StatelessWidget {
 
     final content = Semantics(
       container: true,
-      label: '$displayName. $priceLabel.',
+      label: '$displayName. $priceLabel.${listing.isSold ? ' ${AppStrings.productSold}.' : ''}',
       button: onTap != null,
       onTap: onTap,
       child: InkWell(
@@ -49,6 +50,7 @@ class SellerListingCard extends StatelessWidget {
                   ),
                 ),
               ),
+              if (listing.isSold) const SoldListingBanner(),
               const SizedBox(height: 8),
               Text(
                 displayName,

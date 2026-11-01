@@ -255,6 +255,9 @@ class AppStrings {
   static const itemUploadedSuccessfully = 'Your Item has been Successfully Uploaded.';
 
   // Product Page
+  static const productSold = 'Sold';
+  static const productSoldCongratulations = 'Congratulations on your sale!';
+  static const productSoldNextSteps = 'Please check your email inbox for updates and instructions on what to do next.';
   static String openPhoto(int number, int total) => 'View full photo $number of $total';
   static String photoViewerPosition(int number, int total) => '$number of $total';
   static String photoLabel(int number, int total) => 'Photo $number of $total';

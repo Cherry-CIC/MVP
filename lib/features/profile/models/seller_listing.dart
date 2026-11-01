@@ -7,6 +7,9 @@ class SellerListing {
   final String? status;
   final int? number;
 
+  // A sale notice requires the API's explicit sold status.
+  bool get isSold => status == 'sold';
+
   bool get isKnownSold => status?.toLowerCase() == 'sold' || (number != null && number! <= 0);
   bool get canEdit => !isKnownSold && (status == 'active' || status == 'unlisted') && number != null && number! > 0;
 

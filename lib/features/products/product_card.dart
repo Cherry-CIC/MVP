@@ -7,6 +7,7 @@ import 'package:cherry_mvp/core/config/app_spacing.dart';
 import 'package:cherry_mvp/core/models/model.dart';
 import 'package:cherry_mvp/core/utils/image_provider_helper.dart';
 import 'package:cherry_mvp/features/products/product_viewmodel.dart';
+import 'package:cherry_mvp/features/products/widgets/sold_listing_banner.dart';
 
 class ProductCard extends StatelessWidget {
   final Product product;
@@ -96,7 +97,8 @@ class ProductCard extends StatelessWidget {
                         ),
                       ),
                       if (!viewModel.isOwnProduct(product)) Positioned(
-                        bottom: 16,
+                        top: product.isSold ? 16 : null,
+                        bottom: product.isSold ? null : 16,
                         right: 16,
                         child: Semantics(
                           key: ValueKey('product-like-${product.id}'),
@@ -145,6 +147,13 @@ class ProductCard extends StatelessWidget {
                           ),
                         ),
                       ),
+                      if (product.isSold)
+                        const Positioned(
+                          left: 0,
+                          right: 0,
+                          bottom: 0,
+                          child: SoldListingBanner(),
+                        ),
                     ],
                   ),
                 ),
