@@ -66,7 +66,7 @@ class _ProductPhotoViewerState extends State<ProductPhotoViewer> {
                       label: AppStrings.photoLabel(_currentIndex + 1, widget.images.length),
                       excludeSemantics: true,
                       child: Text(
-                        AppStrings.photoPosition(_currentIndex + 1, widget.images.length),
+                        AppStrings.photoViewerPosition(_currentIndex + 1, widget.images.length),
                         textAlign: TextAlign.center,
                         style: const TextStyle(color: AppColors.white, fontSize: 16),
                       ),

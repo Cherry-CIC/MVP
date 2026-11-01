@@ -17,6 +17,7 @@ class DonationPage extends StatefulWidget {
 
 class _DonationPageState extends State<DonationPage> {
   List<XFile> selectedImages = [];
+  bool _isSubmitting = false;
   final GlobalKey<DonationFormState> _formKey = GlobalKey<DonationFormState>();
 
   @override
@@ -57,6 +58,9 @@ class _DonationPageState extends State<DonationPage> {
           children: [
             PhotoUpload(
               onImagesChanged: _handleImagesChanged,
+              initialImages: selectedImages,
+              enableReordering: true,
+              enabled: !_isSubmitting,
             ),
             const PhotoTipsBar(),
             const SizedBox(height: 16),
@@ -64,6 +68,7 @@ class _DonationPageState extends State<DonationPage> {
               key: _formKey,
               selectedImages: selectedImages,
               onClearImages: _clearImages,
+              onSubmittingChanged: (value) => setState(() => _isSubmitting = value),
             ),
           ],
         ),
