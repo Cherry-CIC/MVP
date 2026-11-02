@@ -31,6 +31,7 @@ dependencies:
   http: ^1.6.0
   flutter_stripe: ^12.6.0
   flutter_native_splash: ^2.4.8
+  url_launcher: ^6.3.3
 
 dev_dependencies:
   flutter_test:
