@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:cherry_mvp/features/orders/models/order_summary.dart';
 import 'package:cherry_mvp/features/orders/orders_page.dart';
 import 'package:cherry_mvp/features/orders/orders_repository.dart';
 import 'package:cherry_mvp/features/orders/orders_view_model.dart';
 import 'package:cherry_mvp/features/orders/widgets/delivery_reminder_dialog.dart';
+import 'package:cherry_mvp/features/orders/widgets/delivery_timer_bubble.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -10,16 +13,23 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// Checks on entry and foregrounding. If another screen is open, wait until
 /// the buyer returns before presenting a modal over their home screen.
 class DeliveryReminderHost extends StatefulWidget {
-  const DeliveryReminderHost({super.key, required this.userId, required this.child});
+  const DeliveryReminderHost({super.key, required this.userId, required this.builder});
 
   final String userId;
-  final Widget child;
+  final Widget Function(BuildContext context, Widget? timer) builder;
 
   @override
   State<DeliveryReminderHost> createState() => _DeliveryReminderHostState();
 }
 
 class _DeliveryReminderHostState extends State<DeliveryReminderHost> with WidgetsBindingObserver {
+  List<OrderSummary> _eligible = [];
+  Set<String> _dismissed = {};
+  final Set<String> _resolved = {};
+  late final StreamSubscription<String> _resolutionSubscription;
+
+  String get _preferenceKey => 'deliveryReminder.${widget.userId}';
+
   bool _pending = true;
   int _generation = 0;
   DialogRoute<DeliveryReminderAction>? _dialog;
@@ -28,6 +38,9 @@ class _DeliveryReminderHostState extends State<DeliveryReminderHost> with Widget
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _resolutionSubscription = context.read<OrdersViewModel>().resolvedOrders.listen((id) {
+      if (mounted) setState(() => _resolved.add(id));
+    });
   }
 
   @override
@@ -67,7 +80,7 @@ class _DeliveryReminderHostState extends State<DeliveryReminderHost> with Widget
 
   Future<void> _check(int generation) async {
     final result = await context.read<IOrdersRepository>().fetchOrders(deliveryRemindersOnly: true);
-    if (!mounted || generation != _generation || !result.isSuccess || (result.value?.isEmpty ?? true)) return;
+    if (!mounted || generation != _generation || !result.isSuccess) return;
     final prefs = await SharedPreferences.getInstance();
     if (!mounted || generation != _generation) return;
     if (ModalRoute.of(context)?.isCurrent != true) {
@@ -75,28 +88,47 @@ class _DeliveryReminderHostState extends State<DeliveryReminderHost> with Widget
       return;
     }
 
-    final key = 'deliveryReminder.${widget.userId}';
-    final dismissed = prefs.getStringList(key) ?? const <String>[];
     final now = DateTime.now();
-    final eligible = result.value!.where((order) => order.canShowDeliveryReminder(now)).toList();
+    final eligible =
+        (result.value ?? const <OrderSummary>[])
+            .where((order) => order.canShowDeliveryReminder(now) && !_resolved.contains(order.id))
+            .toList()
+          ..sort((a, b) => a.confirmationDeadline!.compareTo(b.confirmationDeadline!));
+    final saved = prefs.getStringList(_preferenceKey) ?? const <String>[];
     final activeIds = eligible.map((order) => order.id).toSet();
-    final remembered = dismissed.where(activeIds.contains).toSet();
-    eligible.removeWhere((order) => remembered.contains(order.id));
-    eligible.sort((a, b) => a.confirmationDeadline!.compareTo(b.confirmationDeadline!));
-    if (eligible.isEmpty) return;
-    final OrderSummary order = eligible.first;
+    setState(() {
+      _eligible = eligible;
+      _dismissed = saved.where(activeIds.contains).toSet();
+    });
+    final unseen = eligible.where((order) => !_dismissed.contains(order.id)).firstOrNull;
+    if (unseen != null) await _showReminder(unseen);
+  }
+
+  Future<void> _showReminder(OrderSummary order) async {
+    if (_dialog != null ||
+        ModalRoute.of(context)?.isCurrent != true ||
+        _resolved.contains(order.id) ||
+        !order.canShowDeliveryReminder(DateTime.now())) {
+      return;
+    }
     final route = DialogRoute<DeliveryReminderAction>(
       context: context,
       builder: (_) => DeliveryReminderDialog(order: order),
     );
-    _dialog = route;
+    setState(() => _dialog = route);
     final action = await Navigator.of(context).push(route);
-    _dialog = null;
-    if (!mounted || action == DeliveryReminderAction.interrupted) return;
-    // The preference is local to the buyer and this device. Dismissal is
-    // independent of confirming receipt or submitting a dispute.
-    remembered.add(order.id);
-    await prefs.setStringList(key, remembered.toList());
+    if (!mounted) return;
+    final remember = action != DeliveryReminderAction.interrupted && !_dismissed.contains(order.id);
+    setState(() {
+      _dialog = null;
+      if (remember) _dismissed.add(order.id);
+    });
+    if (action == DeliveryReminderAction.interrupted) return;
+    if (remember) {
+      final prefs = await SharedPreferences.getInstance();
+      if (!mounted) return;
+      await prefs.setStringList(_preferenceKey, _dismissed.toList());
+    }
     if (!mounted || ModalRoute.of(context)?.isCurrent != true || !order.canShowDeliveryReminder(DateTime.now())) return;
     final orders = context.read<OrdersViewModel>();
     if (action == DeliveryReminderAction.view) {
@@ -108,6 +140,7 @@ class _DeliveryReminderHostState extends State<DeliveryReminderHost> with Widget
 
   @override
   void dispose() {
+    _resolutionSubscription.cancel();
     WidgetsBinding.instance.removeObserver(this);
     final dialog = _dialog;
     if (dialog != null) {
@@ -119,5 +152,25 @@ class _DeliveryReminderHostState extends State<DeliveryReminderHost> with Widget
   }
 
   @override
-  Widget build(BuildContext context) => widget.child;
+  Widget build(BuildContext context) {
+    final now = DateTime.now();
+    final order = _eligible
+        .where(
+          (order) =>
+              _dismissed.contains(order.id) && !_resolved.contains(order.id) && order.canShowDeliveryReminder(now),
+        )
+        .firstOrNull;
+
+    return widget.builder(
+      context,
+      order == null || _dialog != null
+          ? null
+          : DeliveryTimerBubble(
+              key: const ValueKey('delivery-timer-bubble'),
+              deadline: order.confirmationDeadline!,
+              onTap: () => _showReminder(order),
+              onExpired: () => setState(() => _eligible.removeWhere((item) => item.id == order.id)),
+            ),
+    );
+  }
 }

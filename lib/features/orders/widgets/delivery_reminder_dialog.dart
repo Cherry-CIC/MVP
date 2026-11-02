@@ -3,6 +3,7 @@ import 'dart:ui' show ImageFilter;
 
 import 'package:cherry_mvp/core/config/app_colors.dart';
 import 'package:cherry_mvp/core/utils/image_provider_helper.dart';
+import 'package:cherry_mvp/features/orders/delivery_countdown.dart';
 import 'package:cherry_mvp/features/orders/models/order_summary.dart';
 import 'package:cherry_mvp/features/orders/order_currency_formatter.dart';
 import 'package:flutter/material.dart';
@@ -46,9 +47,6 @@ class _DeliveryReminderDialogState extends State<DeliveryReminderDialog> {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final remaining = _remaining;
-    final seconds = remaining.isNegative ? 0 : (remaining.inMilliseconds + 999) ~/ 1000;
-    String two(int n) => n.toString().padLeft(2, '0');
-    final time = '${two(seconds ~/ 3600)}:${two(seconds ~/ 60 % 60)}:${two(seconds % 60)}';
     final accent = theme.brightness == Brightness.dark ? scheme.onPrimaryContainer : AppColors.primaryAction;
     final shape = RoundedRectangleBorder(borderRadius: BorderRadius.circular(16));
 
@@ -80,8 +78,8 @@ class _DeliveryReminderDialogState extends State<DeliveryReminderDialog> {
                   TextSpan(
                     children: [
                       TextSpan(
-                        text: time,
-                        semanticsLabel: '${seconds ~/ 3600} hours and ${seconds ~/ 60 % 60} minutes',
+                        text: remaining.countdownText,
+                        semanticsLabel: remaining.spokenCountdown,
                         style: TextStyle(color: accent, fontWeight: FontWeight.bold, fontSize: 20),
                       ),
                       const TextSpan(text: ' left to check and confirm your item.'),
@@ -99,7 +97,9 @@ class _DeliveryReminderDialogState extends State<DeliveryReminderDialog> {
                     textStyle: theme.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold),
                     shape: shape,
                   ),
-                  onPressed: seconds == 0 ? null : () => Navigator.pop(context, DeliveryReminderAction.view),
+                  onPressed: remaining <= Duration.zero
+                      ? null
+                      : () => Navigator.pop(context, DeliveryReminderAction.view),
                   child: const Text('View item'),
                 ),
                 const SizedBox(height: 8),
@@ -111,7 +111,9 @@ class _DeliveryReminderDialogState extends State<DeliveryReminderDialog> {
                     textStyle: theme.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold),
                     shape: shape,
                   ),
-                  onPressed: seconds == 0 ? null : () => Navigator.pop(context, DeliveryReminderAction.report),
+                  onPressed: remaining <= Duration.zero
+                      ? null
+                      : () => Navigator.pop(context, DeliveryReminderAction.report),
                   child: const Text('Something’s not right'),
                 ),
               ],

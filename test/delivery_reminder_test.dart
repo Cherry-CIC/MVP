@@ -2,8 +2,11 @@ import 'package:cherry_mvp/core/utils/result.dart';
 import 'package:cherry_mvp/features/orders/models/order_summary.dart';
 import 'package:cherry_mvp/features/orders/orders_repository.dart';
 import 'package:cherry_mvp/features/orders/orders_view_model.dart';
+import 'package:cherry_mvp/features/orders/widgets/delivery_reminder_dialog.dart';
 import 'package:cherry_mvp/features/orders/widgets/delivery_reminder_host.dart';
+import 'package:cherry_mvp/features/orders/widgets/delivery_timer_bubble.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -40,7 +43,7 @@ OrderSummary order(String id, {int? hours = 12, String state = 'awaiting_confirm
       if (hours != null) 'confirmationDeadline': DateTime.now().toUtc().add(Duration(hours: hours)).toIso8601String(),
     })!.copyWith(size: 'L');
 
-Future<void> open(WidgetTester tester, _Repository repo, {String userId = 'buyer'}) async {
+Future<void> _open(WidgetTester tester, _Repository repo, {String userId = 'buyer'}) async {
   tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
   await tester.pumpWidget(
     MultiProvider(
@@ -52,7 +55,7 @@ Future<void> open(WidgetTester tester, _Repository repo, {String userId = 'buyer
         home: DeliveryReminderHost(
           key: ValueKey(userId),
           userId: userId,
-          child: const Scaffold(body: Text('Home')),
+          builder: (_, timer) => Scaffold(body: const Text('Home'), floatingActionButton: timer),
         ),
       ),
     ),
@@ -69,10 +72,25 @@ Future<void> resume(WidgetTester tester) async {
   await tester.pumpAndSettle();
 }
 
+Finder get timerBubble => find.byKey(const ValueKey('delivery-timer-bubble'));
+
+Future<void> dismissReminder(WidgetTester tester) async {
+  await tester.tapAt(const Offset(10, 10));
+  await tester.pumpAndSettle();
+  expect(find.byType(DeliveryReminderDialog), findsNothing);
+}
+
+Future<void> reopenReminder(WidgetTester tester) async {
+  await tester.tap(timerBubble);
+  await tester.pumpAndSettle();
+  expect(find.byType(DeliveryReminderDialog), findsOneWidget);
+}
+
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
   testWidgets('cold start uses earliest active deadline and outside dismissal survives reopening', (tester) async {
+    final first = order('first');
     final repo = _Repository()
       ..orders = [
         order('old', hours: -1),
@@ -80,9 +98,9 @@ void main() {
         order('confirmed', state: 'confirmed'),
         order('disputed', state: 'disputed'),
         order('later', hours: 24),
-        order('first'),
+        first,
       ];
-    await open(tester, repo);
+    await _open(tester, repo);
     expect(find.text('Item FIRST'), findsOneWidget);
     final countdown = tester.widget<Text>(
       find.byWidgetPredicate(
@@ -90,21 +108,31 @@ void main() {
       ),
     );
     expect(countdown.textSpan!.toPlainText(includeSemanticsLabels: false), matches(RegExp(r'^(12:00:00|11:59:\d{2})')));
-    await tester.tapAt(const Offset(10, 10));
-    await tester.pumpAndSettle();
-    expect(find.text('Your item has arrived'), findsNothing);
+    await dismissReminder(tester);
+    expect(timerBubble, findsOneWidget);
     expect(repo.confirmed, isNull);
-    repo.orders = [order('first')];
+    await reopenReminder(tester);
+    final reopened = tester.widget<DeliveryReminderDialog>(find.byType(DeliveryReminderDialog));
+    expect(reopened.order.id, first.id);
+    expect(reopened.order.confirmationDeadline, first.confirmationDeadline);
+    await dismissReminder(tester);
+
+    repo.orders = [first];
     await tester.pumpWidget(const SizedBox.shrink());
-    await open(tester, repo);
+    await _open(tester, repo);
     expect(find.text('Your item has arrived'), findsNothing);
-    await open(tester, repo, userId: 'another-buyer');
+    expect(timerBubble, findsOneWidget);
+    await reopenReminder(tester);
+    expect(find.text('Item FIRST'), findsOneWidget);
+    await dismissReminder(tester);
+
+    await _open(tester, repo, userId: 'another-buyer');
     expect(find.text('Your item has arrived'), findsOneWidget);
   });
 
   testWidgets('delivery while away appears on resume and View item requires explicit confirmation', (tester) async {
     final repo = _Repository();
-    await open(tester, repo);
+    await _open(tester, repo);
     expect(find.text('Your item has arrived'), findsNothing);
     background(tester);
     repo.orders = [order('delivered')];
@@ -116,11 +144,12 @@ void main() {
     await tester.tap(find.text('Yes, all good'));
     await tester.pumpAndSettle();
     expect(repo.confirmed, 'delivered');
+    expect(timerBubble, findsNothing);
   });
 
   testWidgets('a reminder open in the background is revalidated when the buyer returns', (tester) async {
     final repo = _Repository()..orders = [order('a')];
-    await open(tester, repo);
+    await _open(tester, repo);
     expect(find.text('Your item has arrived'), findsOneWidget);
     background(tester);
     repo.orders = [order('a', hours: -1)];
@@ -128,15 +157,103 @@ void main() {
     expect(find.text('Your item has arrived'), findsNothing);
   });
 
+  testWidgets('cancelling the receipt action keeps the timer available', (tester) async {
+    final repo = _Repository()..orders = [order('a')];
+    await _open(tester, repo);
+    await dismissReminder(tester);
+    await reopenReminder(tester);
+    await tester.tap(find.text('View item'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Cancel'));
+    await tester.pumpAndSettle();
+    expect(repo.confirmed, isNull);
+    await reopenReminder(tester);
+    expect(find.text('Item A'), findsOneWidget);
+  });
+
+  testWidgets('on resume a dismissed timer follows the earliest remaining eligible order', (tester) async {
+    SharedPreferences.setMockInitialValues({
+      'deliveryReminder.buyer': ['first', 'next'],
+    });
+    final next = order('next', hours: 24);
+    final repo = _Repository()..orders = [next, order('first')];
+    await _open(tester, repo);
+    await reopenReminder(tester);
+    expect(find.text('Item FIRST'), findsOneWidget);
+    await dismissReminder(tester);
+
+    background(tester);
+    repo.orders = [next, order('first', hours: -1)];
+    await resume(tester);
+    await reopenReminder(tester);
+    expect(find.text('Item NEXT'), findsOneWidget);
+    await dismissReminder(tester);
+
+    background(tester);
+    repo.orders = [order('next', state: 'confirmed')];
+    await resume(tester);
+    expect(timerBubble, findsNothing);
+    expect(find.byType(DeliveryReminderDialog), findsNothing);
+  });
+
+  testWidgets('corner timer ticks down, exposes a tap action at large text sizes and expires once', (tester) async {
+    tester.view.physicalSize = const Size(320, 640);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    tester.platformDispatcher.textScaleFactorTestValue = 2;
+    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+
+    var now = DateTime.utc(2026, 11, 1, 12);
+    final deadline = now.add(const Duration(seconds: 3));
+    var expires = 0;
+    var taps = 0;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          floatingActionButton: DeliveryTimerBubble(
+            deadline: deadline,
+            now: () => now,
+            onTap: () => taps++,
+            onExpired: () => expires++,
+          ),
+        ),
+      ),
+    );
+    expect(find.text('00:00:03'), findsOneWidget);
+    expect(
+      find.semantics.byPredicate((node) {
+        final data = node.getSemanticsData();
+        return data.label.contains('left to confirm') && data.hasAction(SemanticsAction.tap);
+      }),
+      findsOne,
+    );
+    expect(tester.getSize(find.byType(DeliveryTimerBubble)).height, greaterThanOrEqualTo(48));
+
+    now = now.add(const Duration(seconds: 1));
+    await tester.pump(const Duration(seconds: 1));
+    expect(find.text('00:00:02'), findsOneWidget);
+    await tester.tap(find.text('00:00:02'));
+    expect(taps, 1);
+    now = deadline;
+    await tester.tap(find.text('00:00:02'));
+    expect(taps, 1);
+    await tester.pump(const Duration(seconds: 2));
+    expect(find.text('left to confirm'), findsNothing);
+    await tester.pump(const Duration(seconds: 5));
+    expect(expires, 1);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('problem action opens the dispute form for the displayed order', (tester) async {
     final repo = _Repository()..orders = [order('a')];
-    await open(tester, repo);
+    await _open(tester, repo);
     await tester.tap(find.text('Something’s not right'));
     await tester.pumpAndSettle();
     expect(find.text('Raise dispute'), findsOneWidget);
     await tester.tap(find.text('Submit'));
     await tester.pumpAndSettle();
     expect(repo.disputed, 'a');
+    expect(timerBubble, findsNothing);
     expect(repo.confirmed, isNull);
   });
 }

@@ -49,7 +49,11 @@ class _PostAuthUsernameGateState extends State<PostAuthUsernameGate> {
 
         final username = snapshot.data?.trim();
         if (username != null && username.isNotEmpty) {
-          return DeliveryReminderHost(key: ValueKey(currentUser.uid), userId: currentUser.uid, child: const HomePage());
+          return DeliveryReminderHost(
+            key: ValueKey(currentUser.uid),
+            userId: currentUser.uid,
+            builder: (_, timer) => HomePage(deliveryTimer: timer),
+          );
         }
 
         return const UsernameSetupPage();
