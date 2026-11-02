@@ -3,6 +3,7 @@ import 'package:cherry_mvp/core/router/router.dart';
 import 'package:cherry_mvp/core/theme/theme_notifier.dart';
 import 'package:cherry_mvp/features/settings/settings_page.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -42,17 +43,21 @@ void main() {
     expect(find.text(AppStrings.termsAndConditionsText), findsOneWidget);
     expect(find.text(AppStrings.communityRulesText), findsOneWidget);
 
+    MethodCall? launch;
+    const channel = MethodChannel('plugins.flutter.io/url_launcher');
+    final messenger = tester.binding.defaultBinaryMessenger;
+    messenger.setMockMethodCallHandler(channel, (call) async {
+      launch = call;
+      return true;
+    });
+    addTearDown(() => messenger.setMockMethodCallHandler(channel, null));
+
     await tester.tap(find.text(AppStrings.privacyPolicyText));
-    for (var i = 0; i < 10; i++) {
-      await tester.pump(const Duration(milliseconds: 100));
-    }
-
-    expect(find.text(AppStrings.privacyPolicyText), findsWidgets);
-    expect(find.text('Date last updated: 05.07.2026'), findsOneWidget);
-    expect(find.text('1. General'), findsOneWidget);
-
-    await tester.pageBack();
     await tester.pumpAndSettle();
+    expect(launch?.method, 'launch');
+    expect(launch?.arguments['url'], 'https://cherry.org.uk/privacypolicy');
+    expect(launch?.arguments['useSafariVC'], false);
+    expect(launch?.arguments['useWebView'], false);
 
     await tester.tap(find.text(AppStrings.termsAndConditionsText));
     for (var i = 0; i < 10; i++) {
