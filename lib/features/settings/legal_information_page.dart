@@ -24,17 +24,22 @@ class LegalInformationPage extends StatelessWidget {
             floating: true,
             snap: true,
           ),
-          SliverList.separated(
-            itemCount: _legalDocuments.length,
-            separatorBuilder: (context, index) => const Divider(height: 1),
-            itemBuilder: (context, index) {
-              final item = _legalDocuments[index];
-              return SettingsItem(
-                title: item.title,
+          SliverList.list(
+            children: [
+              const PrivacyPolicyLink(),
+              const Divider(height: 1),
+              SettingsItem(
+                title: AppStrings.termsAndConditionsText,
                 trailing: '',
-                onTap: () => _navigateToDocument(context, item.page),
-              );
-            },
+                onTap: () => _navigateToDocument(context, const TermsAndConditionsPage()),
+              ),
+              const Divider(height: 1),
+              SettingsItem(
+                title: AppStrings.communityRulesText,
+                trailing: '',
+                onTap: () => _navigateToDocument(context, const CommunityRulesPage()),
+              ),
+            ],
           ),
           SliverPadding(
             padding: EdgeInsets.only(
@@ -46,28 +51,3 @@ class LegalInformationPage extends StatelessWidget {
     );
   }
 }
-
-class _LegalDocumentItem {
-  const _LegalDocumentItem({
-    required this.title,
-    required this.page,
-  });
-
-  final String title;
-  final Widget page;
-}
-
-const _legalDocuments = [
-  _LegalDocumentItem(
-    title: AppStrings.privacyPolicyText,
-    page: PrivacyPolicyPage(),
-  ),
-  _LegalDocumentItem(
-    title: AppStrings.termsAndConditionsText,
-    page: TermsAndConditionsPage(),
-  ),
-  _LegalDocumentItem(
-    title: AppStrings.communityRulesText,
-    page: CommunityRulesPage(),
-  ),
-];
