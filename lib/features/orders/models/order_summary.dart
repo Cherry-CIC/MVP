@@ -13,6 +13,14 @@ class OrderSummary {
   final String currency;
   final String deliveryState;
   final String deliveryLabel;
+  final DateTime? confirmationDeadline;
+  final DateTime? collectedAt;
+  final String condition;
+
+  bool canShowDeliveryReminder(DateTime now) =>
+      collectedAt != null &&
+      (deliveryState == 'awaiting_confirmation' || deliveryState == 'collected') &&
+      confirmationDeadline?.isAfter(now) == true;
 
   const OrderSummary({
     required this.id,
@@ -26,6 +34,9 @@ class OrderSummary {
     required this.currency,
     required this.deliveryState,
     required this.deliveryLabel,
+    this.confirmationDeadline,
+    this.collectedAt,
+    this.condition = '',
   });
 
   static OrderSummary? tryFromOrderJson(dynamic value) {
@@ -58,6 +69,8 @@ class OrderSummary {
         json['status'],
       ]),
       deliveryLabel: _readString(json['deliveryLabel']),
+      confirmationDeadline: DateTime.tryParse(_readString(json['confirmationDeadline'])),
+      collectedAt: DateTime.tryParse(_readString(json['collectedAt'])),
     );
   }
 
@@ -71,6 +84,7 @@ class OrderSummary {
     String? imageUrl,
     String? size,
     String? charityLogoUrl,
+    String? condition,
     String? deliveryState,
     String? deliveryLabel,
   }) {
@@ -84,6 +98,9 @@ class OrderSummary {
       itemPriceMinor: itemPriceMinor,
       totalAmountMinor: totalAmountMinor,
       currency: currency,
+      confirmationDeadline: confirmationDeadline,
+      collectedAt: collectedAt,
+      condition: condition ?? this.condition,
       deliveryState: deliveryState ?? this.deliveryState,
       deliveryLabel: deliveryLabel ?? this.deliveryLabel,
     );
