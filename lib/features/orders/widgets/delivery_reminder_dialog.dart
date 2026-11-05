@@ -69,7 +69,7 @@ class _DeliveryReminderDialogState extends State<DeliveryReminderDialog> {
                 Semantics(
                   header: true,
                   child: Text(
-                    'Your item has arrived',
+                    'Your item has been collected',
                     style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                   ),
                 ),
@@ -87,7 +87,7 @@ class _DeliveryReminderDialogState extends State<DeliveryReminderDialog> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                const Text('The 48 hours started when your parcel arrived at the collection point.'),
+                const Text('The 48 hours started when you collected your parcel.'),
                 const SizedBox(height: 20),
                 FilledButton(
                   style: FilledButton.styleFrom(
@@ -173,7 +173,7 @@ class _ItemSummary extends StatelessWidget {
               child: const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 6, vertical: 3),
                 child: Text(
-                  'Delivered',
+                  'Collected',
                   style: TextStyle(color: Color(0xff205b12), fontSize: 12, fontWeight: FontWeight.bold),
                 ),
               ),

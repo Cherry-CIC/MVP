@@ -341,7 +341,7 @@ class OrderActions {
     OrdersViewModel viewModel,
   ) async {
     final state = order.deliveryState.trim().toLowerCase();
-    if (state != 'awaiting_confirmation' && state != 'delivered') {
+    if (state != 'awaiting_confirmation' && state != 'delivered' && state != 'collected') {
       return;
     }
 

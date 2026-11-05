@@ -40,6 +40,7 @@ OrderSummary order(String id, {int? hours = 12, String state = 'awaiting_confirm
       'id': id,
       'productName': 'Item ${id.toUpperCase()}',
       'deliveryState': state,
+      'collectedAt': DateTime.now().toUtc().subtract(const Duration(hours: 36)).toIso8601String(),
       if (hours != null) 'confirmationDeadline': DateTime.now().toUtc().add(Duration(hours: hours)).toIso8601String(),
     })!.copyWith(size: 'L');
 
@@ -89,6 +90,37 @@ Future<void> reopenReminder(WidgetTester tester) async {
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
+  testWidgets('locker arrival never starts a timer and customer collection does', (tester) async {
+    final arrival = OrderSummary.tryFromOrderJson({
+      'id': 'a',
+      'productName': 'Item A',
+      'deliveryState': 'awaiting_collection',
+      'lockerDeliveredAt': DateTime.now().toUtc().toIso8601String(),
+      'confirmationDeadline': DateTime.now().add(const Duration(hours: 48)).toUtc().toIso8601String(),
+    })!;
+    final repo = _Repository()..orders = [arrival];
+    await _open(tester, repo);
+    expect(find.byType(DeliveryReminderDialog), findsNothing);
+    expect(timerBubble, findsNothing);
+
+    // An older API may still supply an arrival-based deadline.
+    background(tester);
+    repo.orders = [arrival.copyWith(deliveryState: 'awaiting_confirmation')];
+    await resume(tester);
+    expect(find.byType(DeliveryReminderDialog), findsNothing);
+    expect(timerBubble, findsNothing);
+
+    background(tester);
+    repo.orders = [order('a', hours: 48, state: 'collected')];
+    await resume(tester);
+    expect(find.text('Your item has been collected'), findsOneWidget);
+    expect(find.text('The 48 hours started when you collected your parcel.'), findsOneWidget);
+    await dismissReminder(tester);
+    expect(timerBubble, findsOneWidget);
+    await reopenReminder(tester);
+    expect(find.text('Item A'), findsOneWidget);
+  });
+
   testWidgets('cold start uses earliest active deadline and outside dismissal survives reopening', (tester) async {
     final first = order('first');
     final repo = _Repository()
@@ -120,20 +152,20 @@ void main() {
     repo.orders = [first];
     await tester.pumpWidget(const SizedBox.shrink());
     await _open(tester, repo);
-    expect(find.text('Your item has arrived'), findsNothing);
+    expect(find.text('Your item has been collected'), findsNothing);
     expect(timerBubble, findsOneWidget);
     await reopenReminder(tester);
     expect(find.text('Item FIRST'), findsOneWidget);
     await dismissReminder(tester);
 
     await _open(tester, repo, userId: 'another-buyer');
-    expect(find.text('Your item has arrived'), findsOneWidget);
+    expect(find.text('Your item has been collected'), findsOneWidget);
   });
 
   testWidgets('delivery while away appears on resume and View item requires explicit confirmation', (tester) async {
     final repo = _Repository();
     await _open(tester, repo);
-    expect(find.text('Your item has arrived'), findsNothing);
+    expect(find.text('Your item has been collected'), findsNothing);
     background(tester);
     repo.orders = [order('delivered')];
     await resume(tester);
@@ -150,11 +182,11 @@ void main() {
   testWidgets('a reminder open in the background is revalidated when the buyer returns', (tester) async {
     final repo = _Repository()..orders = [order('a')];
     await _open(tester, repo);
-    expect(find.text('Your item has arrived'), findsOneWidget);
+    expect(find.text('Your item has been collected'), findsOneWidget);
     background(tester);
     repo.orders = [order('a', hours: -1)];
     await resume(tester);
-    expect(find.text('Your item has arrived'), findsNothing);
+    expect(find.text('Your item has been collected'), findsNothing);
   });
 
   testWidgets('cancelling the receipt action keeps the timer available', (tester) async {

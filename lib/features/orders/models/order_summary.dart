@@ -14,10 +14,12 @@ class OrderSummary {
   final String deliveryState;
   final String deliveryLabel;
   final DateTime? confirmationDeadline;
+  final DateTime? collectedAt;
   final String condition;
 
   bool canShowDeliveryReminder(DateTime now) =>
-      (deliveryState == 'awaiting_confirmation' || deliveryState == 'delivered') &&
+      collectedAt != null &&
+      (deliveryState == 'awaiting_confirmation' || deliveryState == 'collected') &&
       confirmationDeadline?.isAfter(now) == true;
 
   const OrderSummary({
@@ -33,6 +35,7 @@ class OrderSummary {
     required this.deliveryState,
     required this.deliveryLabel,
     this.confirmationDeadline,
+    this.collectedAt,
     this.condition = '',
   });
 
@@ -67,6 +70,7 @@ class OrderSummary {
       ]),
       deliveryLabel: _readString(json['deliveryLabel']),
       confirmationDeadline: DateTime.tryParse(_readString(json['confirmationDeadline'])),
+      collectedAt: DateTime.tryParse(_readString(json['collectedAt'])),
     );
   }
 
@@ -95,6 +99,7 @@ class OrderSummary {
       totalAmountMinor: totalAmountMinor,
       currency: currency,
       confirmationDeadline: confirmationDeadline,
+      collectedAt: collectedAt,
       condition: condition ?? this.condition,
       deliveryState: deliveryState ?? this.deliveryState,
       deliveryLabel: deliveryLabel ?? this.deliveryLabel,
