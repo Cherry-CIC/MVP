@@ -15,6 +15,7 @@ import 'package:cherry_mvp/features/profile/widgets/seller_listing_card.dart';
 import 'package:cherry_mvp/features/profile/public_user_profile.dart';
 import 'package:cherry_mvp/features/profile/public_user_profile_repository.dart';
 import 'package:cherry_mvp/features/shared_widgets/bottom_cta.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
@@ -93,6 +94,11 @@ Product _product({
   postageSizeId: 'small',
 );
 
+class _SignedOutAuth extends Fake implements FirebaseAuth {
+  @override
+  User? get currentUser => null;
+}
+
 Future<({NavigationProvider navigator, ProductViewModel products, CheckoutViewModel checkout})> _pumpApp(
   WidgetTester tester, {
   required _PublicProfileRepository repository,
@@ -117,6 +123,7 @@ Future<({NavigationProvider navigator, ProductViewModel products, CheckoutViewMo
   await tester.pumpWidget(
     MultiProvider(
       providers: [
+        Provider<FirebaseAuth>.value(value: _SignedOutAuth()),
         Provider<NavigationProvider>.value(value: navigator),
         Provider<IPublicUserProfileRepository>.value(value: repository),
         ChangeNotifierProvider<ProductViewModel>.value(value: products),
