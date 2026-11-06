@@ -5,11 +5,17 @@ import 'package:cherry_mvp/core/utils/result.dart';
 import 'package:cherry_mvp/features/profile/public_user_profile.dart';
 import 'package:cherry_mvp/features/profile/public_user_profile_repository.dart';
 import 'package:cherry_mvp/features/profile/widgets/seller_listing_card.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
 import 'support/public_profile_fixtures.dart';
+
+class _SignedOutAuth extends Fake implements FirebaseAuth {
+  @override
+  User? get currentUser => null;
+}
 
 Future<void> pumpProfile(
   WidgetTester tester,
@@ -17,8 +23,11 @@ Future<void> pumpProfile(
   String userId = 'seller',
   double textScale = 1,
 }) => tester.pumpWidget(
-  Provider<IPublicUserProfileRepository>.value(
-    value: repository,
+  MultiProvider(
+    providers: [
+      Provider<FirebaseAuth>.value(value: _SignedOutAuth()),
+      Provider<IPublicUserProfileRepository>.value(value: repository),
+    ],
     child: MaterialApp(
       builder: (context, child) => MediaQuery(
         data: MediaQuery.of(context).copyWith(textScaler: TextScaler.linear(textScale)),
@@ -91,6 +100,8 @@ void main() {
       matchesSemantics(
         label: 'Listing one. £10.00.',
         isButton: true,
+        isFocusable: true,
+        hasFocusAction: true,
         hasTapAction: true,
       ),
     );

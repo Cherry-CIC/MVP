@@ -123,6 +123,11 @@ void main() {
     }
 
     await _enterText(tester, 'Confirm Password', 'Example password 123!');
+    // Registration also requires acceptance of the legal documents.
+    expect(form.validate(), isFalse);
+    await tester.ensureVisible(find.byType(Checkbox));
+    await tester.tap(find.byType(Checkbox));
+    await tester.pump();
     expect(form.validate(), isTrue);
     await tester.pump();
     expect(find.text('Passwords do not match'), findsNothing);
