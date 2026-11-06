@@ -29,9 +29,18 @@ void main() async {
   /// Load environment variables
   await dotenv.load(fileName: FirebaseEnvironment.envFile);
 
-  await Firebase.initializeApp(
-    options: FirebaseEnvironment.currentPlatform,
-  );
+  try {
+    if (Firebase.apps.isEmpty) {
+      await Firebase.initializeApp(
+        options: FirebaseEnvironment.currentPlatform,
+      );
+    }
+  } on FirebaseException catch (e) {
+    if (e.code != 'duplicate-app') {
+      rethrow;
+    }
+  }
+
   await _configureFirebaseEmulators();
 
   SharedPreferences prefs = await SharedPreferences.getInstance();
