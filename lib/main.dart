@@ -29,10 +29,11 @@ void main() async {
   /// Load environment variables
   await dotenv.load(fileName: FirebaseEnvironment.envFile);
 
+  final expectedFirebaseOptions = FirebaseEnvironment.currentPlatform;
   try {
     if (Firebase.apps.isEmpty) {
       await Firebase.initializeApp(
-        options: FirebaseEnvironment.currentPlatform,
+        options: expectedFirebaseOptions,
       );
     }
   } on FirebaseException catch (e) {
@@ -40,12 +41,27 @@ void main() async {
       rethrow;
     }
   }
-
+  _verifyFirebaseAppOptions(Firebase.app().options, expectedFirebaseOptions);
   await _configureFirebaseEmulators();
 
   SharedPreferences prefs = await SharedPreferences.getInstance();
 
   runApp(MultiProvider(providers: [...buildProviders(prefs)], child: MyApp()));
+}
+
+void _verifyFirebaseAppOptions(
+  FirebaseOptions actual,
+  FirebaseOptions expected,
+) {
+  if (actual.projectId != expected.projectId ||
+      actual.appId != expected.appId ||
+      actual.apiKey != expected.apiKey) {
+    throw StateError(
+      'Firebase app configuration mismatch: initialized '
+      '${actual.projectId} (${actual.appId}), expected '
+      '${expected.projectId} (${expected.appId}).',
+    );
+  }
 }
 
 Future<void> _configureFirebaseEmulators() async {
