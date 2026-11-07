@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cherry_mvp/core/config/config.dart';
+import 'package:cherry_mvp/core/services/app_info_provider.dart';
 import 'package:cherry_mvp/features/auth/auth_view_model.dart';
 
 class SettingsFooter extends StatefulWidget {
@@ -38,6 +39,8 @@ class _SettingsFooterState extends State<SettingsFooter> {
 
   @override
   Widget build(BuildContext context) {
+    final appInfo = context.watch<AppInfoProvider>();
+
     return SliverList.list(
       children: [
         ListTile(
@@ -72,7 +75,7 @@ class _SettingsFooterState extends State<SettingsFooter> {
         ListTile(
           title: Text(AppStrings.appName),
           titleTextStyle: Theme.of(context).textTheme.titleMedium,
-          subtitle: Text(AppStrings.appVersion),
+          subtitle: Text('${AppStrings.appVersion}${appInfo.formattedVersion}'),
           subtitleTextStyle: Theme.of(context).textTheme.labelLarge,
         ),
       ],
