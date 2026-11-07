@@ -39,7 +39,7 @@ class _SettingsFooterState extends State<SettingsFooter> {
 
   @override
   Widget build(BuildContext context) {
-    final appInfo = context.watch<AppInfoProvider>();
+    final appInfo = context.watch<AppInfoProvider?>();
 
     return SliverList.list(
       children: [
@@ -75,7 +75,7 @@ class _SettingsFooterState extends State<SettingsFooter> {
         ListTile(
           title: Text(AppStrings.appName),
           titleTextStyle: Theme.of(context).textTheme.titleMedium,
-          subtitle: Text('${AppStrings.appVersion}${appInfo.formattedVersion}'),
+          subtitle: Text('${AppStrings.appVersion}${appInfo?.formattedVersion ?? ''}'),
           subtitleTextStyle: Theme.of(context).textTheme.labelLarge,
         ),
       ],

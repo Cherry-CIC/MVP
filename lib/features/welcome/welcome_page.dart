@@ -57,7 +57,7 @@ class _WelcomePageState extends State<WelcomePage> {
 
   @override
   Widget build(BuildContext context) {
-    final appInfo = context.watch<AppInfoProvider>();
+    final appInfo = context.watch<AppInfoProvider?>();
     final double cardHeight = 400;
     return Scaffold(
       body: Stack(
@@ -91,7 +91,7 @@ class _WelcomePageState extends State<WelcomePage> {
                     ),
                   ),
                   Text(
-                    '${AppStrings.appVersion}${appInfo.formattedVersion}',
+                    '${AppStrings.appVersion}${appInfo?.formattedVersion ?? ''}',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
