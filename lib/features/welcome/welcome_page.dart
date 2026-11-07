@@ -5,7 +5,6 @@ import 'package:cherry_mvp/features/login/login_viewmodel.dart';
 import 'package:cherry_mvp/core/services/app_info_provider.dart';
 import 'package:cherry_mvp/features/welcome/widgets/signup_card.dart';
 import 'package:flutter/material.dart';
-import 'package:cherry_mvp/core/config/config.dart';
 import 'package:provider/provider.dart';
 
 enum AuthMode { login, signup }
