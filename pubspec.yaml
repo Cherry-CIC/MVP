@@ -1,6 +1,6 @@
 name: cherry_mvp
 description: Cherry MVP
-version: 0.1.1+10
+version: 0.1.1+11
 
 environment:
   sdk: '^3.12.0'
