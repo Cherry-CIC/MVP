@@ -3,6 +3,7 @@ import 'package:cherry_mvp/features/orders/models/order_summary.dart';
 import 'package:cherry_mvp/features/orders/orders_repository.dart';
 import 'package:cherry_mvp/features/orders/orders_view_model.dart';
 import 'package:cherry_mvp/features/orders/widgets/delivery_reminder_dialog.dart';
+import 'package:cherry_mvp/features/orders/widgets/ready_to_collect_dialog.dart';
 import 'package:cherry_mvp/features/orders/widgets/delivery_reminder_host.dart';
 import 'package:cherry_mvp/features/orders/widgets/delivery_timer_bubble.dart';
 import 'package:flutter/material.dart';
@@ -44,7 +45,12 @@ OrderSummary order(String id, {int? hours = 12, String state = 'awaiting_confirm
       if (hours != null) 'confirmationDeadline': DateTime.now().toUtc().add(Duration(hours: hours)).toIso8601String(),
     })!.copyWith(size: 'L');
 
-Future<void> _open(WidgetTester tester, _Repository repo, {String userId = 'buyer'}) async {
+Future<void> _open(
+  WidgetTester tester,
+  _Repository repo, {
+  String userId = 'buyer',
+  Future<bool> Function(Uri)? openLink,
+}) async {
   tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
   await tester.pumpWidget(
     MultiProvider(
@@ -56,6 +62,7 @@ Future<void> _open(WidgetTester tester, _Repository repo, {String userId = 'buye
         home: DeliveryReminderHost(
           key: ValueKey(userId),
           userId: userId,
+          openLink: openLink,
           builder: (_, timer) => Scaffold(body: const Text('Home'), floatingActionButton: timer),
         ),
       ),
@@ -86,6 +93,24 @@ Future<void> reopenReminder(WidgetTester tester) async {
   await tester.pumpAndSettle();
   expect(find.byType(DeliveryReminderDialog), findsOneWidget);
 }
+
+OrderSummary collectionOrder({String state = 'awaiting_collection', int hours = 72, bool map = true}) =>
+    OrderSummary.tryFromOrderJson({
+      'id': 'collection',
+      'productName': 'Collection shirt',
+      'deliveryState': state,
+      'readyForCollectionAt': DateTime.now().toUtc().subtract(const Duration(minutes: 1)).toIso8601String(),
+      'collectionDeadline': DateTime.now().toUtc().add(Duration(hours: hours)).toIso8601String(),
+      'trackingUrl': 'https://tracking.inpost.co.uk/parcel',
+      if (map)
+        'collectionPoint': {
+          'name': 'InPost locker',
+          'addressLine1': '1 High Street',
+          'city': 'London',
+          'postalCode': 'SW1A 1AA',
+          'country': 'GB',
+        },
+    })!;
 
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
@@ -287,5 +312,127 @@ void main() {
     expect(repo.disputed, 'a');
     expect(timerBubble, findsNothing);
     expect(repo.confirmed, isNull);
+  });
+  testWidgets('collection dismissal survives relaunch without hiding the later confirmation stage', (tester) async {
+    final ready = collectionOrder();
+    final repo = _Repository()..orders = [ready];
+    await _open(tester, repo);
+    expect(find.text('Ready to collect'), findsOneWidget);
+    expect(find.byType(DeliveryReminderDialog), findsNothing);
+    expect(
+      tester.widget<ReadyToCollectDialog>(find.byType(ReadyToCollectDialog)).collectionDeadline,
+      ready.collectionDeadline,
+    );
+    await tester.tap(find.text('Not yet'));
+    await tester.pumpAndSettle();
+    await tester.pumpWidget(const SizedBox.shrink());
+    await _open(tester, repo);
+    expect(find.byType(ReadyToCollectDialog), findsNothing);
+    background(tester);
+    repo.orders = [order('collection')];
+    await resume(tester);
+    expect(find.byType(ReadyToCollectDialog), findsNothing);
+    expect(find.byType(DeliveryReminderDialog), findsOneWidget);
+  });
+
+  testWidgets('an open collection dialog hands over on foreground refresh', (tester) async {
+    final repo = _Repository()..orders = [collectionOrder()];
+    await _open(tester, repo);
+    repo.orders = [order('collection')];
+    await tester.pump(const Duration(minutes: 1));
+    await tester.pumpAndSettle();
+    expect(find.byType(ReadyToCollectDialog), findsNothing);
+    expect(find.byType(DeliveryReminderDialog), findsOneWidget);
+  });
+
+  for (final state in ['returned', 'returning', 'cancelled', 'failed', 'confirmed']) {
+    testWidgets('$state clears an open collection dialog on resume', (tester) async {
+      final repo = _Repository()..orders = [collectionOrder()];
+      await _open(tester, repo);
+      background(tester);
+      repo.orders = [collectionOrder(state: state)];
+      await resume(tester);
+      expect(find.byType(ReadyToCollectDialog), findsNothing);
+      expect(find.byType(DeliveryReminderDialog), findsNothing);
+      expect(timerBubble, findsNothing);
+    });
+  }
+
+  testWidgets('expiry has its own dismissal and does not claim a return', (tester) async {
+    final repo = _Repository()..orders = [collectionOrder()];
+    await _open(tester, repo);
+    await tester.tap(find.text('Not yet'));
+    await tester.pumpAndSettle();
+    background(tester);
+    repo.orders = [collectionOrder(hours: -1)];
+    await resume(tester);
+    expect(find.text('Collection window ended'), findsOneWidget);
+    expect(find.textContaining('returned'), findsNothing);
+    await tester.tap(find.text('I understand'));
+    await tester.pumpAndSettle();
+    background(tester);
+    await resume(tester);
+    expect(find.byType(ReadyToCollectDialog), findsNothing);
+  });
+
+  testWidgets('map and tracking use API destinations without confirming receipt', (tester) async {
+    final repo = _Repository()..orders = [collectionOrder()];
+    final opened = <Uri>[];
+    await _open(
+      tester,
+      repo,
+      openLink: (uri) async {
+        opened.add(uri);
+        return true;
+      },
+    );
+    await tester.tap(find.text('Open map'));
+    await tester.pumpAndSettle();
+    expect(opened.single.host, 'www.google.com');
+    expect(opened.single.queryParameters['query'], contains('1 High Street'));
+    expect(repo.confirmed, isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
+    repo.orders = [collectionOrder(map: false)];
+    await _open(
+      tester,
+      repo,
+      userId: 'second-buyer',
+      openLink: (uri) async {
+        opened.add(uri);
+        return true;
+      },
+    );
+    await tester.tap(find.text('Track parcel'));
+    await tester.pumpAndSettle();
+    expect(opened.last.toString(), 'https://tracking.inpost.co.uk/parcel');
+  });
+
+  testWidgets('failed external link offers a working retry', (tester) async {
+    final repo = _Repository()..orders = [collectionOrder()];
+    await _open(tester, repo, openLink: (_) async => false);
+    await tester.tap(find.text('Open map'));
+    await tester.pumpAndSettle();
+    expect(find.text('Could not open this link. Please try again.'), findsOneWidget);
+    await tester.tap(find.text('Try again'));
+    await tester.pumpAndSettle();
+    expect(find.byType(ReadyToCollectDialog), findsOneWidget);
+  });
+
+  test('collection API parsing keeps UTC deadlines through enrichment and rejects unsafe links', () {
+    final parsed = collectionOrder();
+    expect(parsed.copyWith(productName: 'Updated').collectionDeadline, parsed.collectionDeadline);
+    expect(parsed.collectionDeadline!.isUtc, isTrue);
+    expect(parsed.canShowCollectionReminder, isTrue);
+    final invalid = OrderSummary.tryFromOrderJson({
+      'id': 'unsafe',
+      'deliveryState': 'awaiting_collection',
+      'readyForCollectionAt': '2026-11-07T09:00:00',
+      'collectionDeadline': '2026-11-10T09:00:00',
+      'trackingUrl': 'javascript:alert(1)',
+      'collectionPoint': {'name': 'Locker'},
+    })!;
+    expect(invalid.canShowCollectionReminder, isFalse);
+    expect(invalid.trackingUri, isNull);
+    expect(invalid.collectionMapUri, isNull);
   });
 }

@@ -89,7 +89,7 @@ final class OrdersRepository implements IOrdersRepository {
       final orders = rawOrders
           .map(OrderSummary.tryFromOrderJson)
           .whereType<OrderSummary>()
-          .where((order) => !deliveryRemindersOnly || order.canShowDeliveryReminder(now))
+          .where((order) => !deliveryRemindersOnly || order.canShowAnyReminder(now))
           .toList(growable: false);
       if (orders.isEmpty) {
         return Result.success(const []);
