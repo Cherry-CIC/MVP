@@ -2,8 +2,10 @@ import 'dart:ui';
 import 'package:cherry_mvp/core/config/config.dart';
 import 'package:cherry_mvp/core/utils/status.dart';
 import 'package:cherry_mvp/features/login/login_viewmodel.dart';
+import 'package:cherry_mvp/core/services/app_info_provider.dart';
 import 'package:cherry_mvp/features/welcome/widgets/signup_card.dart';
 import 'package:flutter/material.dart';
+import 'package:cherry_mvp/core/config/config.dart';
 import 'package:provider/provider.dart';
 
 enum AuthMode { login, signup }
@@ -56,6 +58,7 @@ class _WelcomePageState extends State<WelcomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final appInfo = context.watch<AppInfoProvider>();
     final double cardHeight = 400;
     return Scaffold(
       body: Stack(
@@ -85,6 +88,12 @@ class _WelcomePageState extends State<WelcomePage> {
                   Text(
                     AppStrings.giveInStyle,
                     style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  Text(
+                    '${AppStrings.appVersion}${appInfo.formattedVersion}',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ),

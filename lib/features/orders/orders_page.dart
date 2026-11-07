@@ -44,74 +44,6 @@ class _MyOrdersPageState extends State<MyOrdersPage> {
     super.dispose();
   }
 
-  Future<void> _handleOrderTap(BuildContext context, OrderSummary order) async {
-    final state = order.deliveryState.trim().toLowerCase();
-    if (state != 'awaiting_confirmation' && state != 'delivered') {
-      return;
-    }
-
-    final action = await showDialog<ConfirmItemAction>(
-      context: context,
-      builder: (dialogContext) => ConfirmItemDialog(order: order),
-    );
-
-    if (!mounted || action == null) {
-      return;
-    }
-
-    if (action == ConfirmItemAction.dispute) {
-      await _openDisputeDialog(context, order);
-      return;
-    }
-
-    final result = await _viewModel?.confirmOrderReceived(order.id);
-    if (!mounted) {
-      return;
-    }
-
-    if (result?.isSuccess == true) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Receipt confirmed')),
-      );
-      return;
-    }
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(result?.error ?? 'Could not confirm this item')),
-    );
-  }
-
-  Future<void> _openDisputeDialog(BuildContext context, OrderSummary order) async {
-    final result = await showDialog<_DisputeChoice>(
-      context: context,
-      builder: (dialogContext) => _DisputeDialog(order: order),
-    );
-
-    if (!mounted || result == null) {
-      return;
-    }
-
-    final submitResult = await _viewModel?.submitOrderDispute(
-      order.id,
-      reason: result.reason,
-      message: result.message,
-    );
-    if (!mounted) {
-      return;
-    }
-
-    if (submitResult?.isSuccess == true) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Dispute submitted')),
-      );
-      return;
-    }
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(submitResult?.error ?? 'Could not submit the dispute')),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -361,7 +293,7 @@ class _DisputeDialogState extends State<_DisputeDialog> {
           mainAxisSize: MainAxisSize.min,
           children: [
             DropdownButtonFormField<String>(
-              value: _reason,
+              initialValue: _reason,
               items: const [
                 DropdownMenuItem(value: 'wrong_item', child: Text('Wrong item')),
                 DropdownMenuItem(value: 'item_not_as_described', child: Text('Item not as described')),
@@ -422,6 +354,9 @@ class _OrdersListState {
     }
 
     if (action == ConfirmItemAction.dispute) {
+      if (!context.mounted) {
+        return;
+      }
       final disputeChoice = await showDialog<_DisputeChoice>(
         context: context,
         builder: (dialogContext) => _DisputeDialog(order: order),
