@@ -1,20 +1,20 @@
-# Ready to collect: pop-up stage
+# Ready to collect: connected pop-up
 
-This change implements the collection dialog and a local preview. It does not yet show the dialog automatically for real orders. It is deliberately separate from the existing post-collection confirmation host.
+The collection dialog now uses buyer order API data through the existing reminder host. It appears on entry or app resume when a stored arrival and collection deadline are available, then hands over to confirmation after customer collection. A separate local preview remains available for design review.
 
 ![Ready to collect dialog with sample item details](images/ready-to-collect.png)
 
 ## Dependencies and scope
 
 - Frontend PR #564: https://github.com/Cherry-CIC/MVP/pull/564. This branch is based on that PR and reuses its item summary and countdown formatter.
-- Backend PR #74: https://github.com/Cherry-CIC/cherry-Backend/pull/74. Later collection integration must retain its separate collection and confirmation states and timestamp ordering.
-- This draft covers the first UI stage. Backend storage, live eligibility, Home countdown, dismissal persistence between stages, push notifications and the collection-to-confirmation handover remain later work. No backend change or deployment is included.
+- Backend PR #74: https://github.com/Cherry-CIC/cherry-Backend/pull/74 supplies the confirmation foundation. [Backend PR #75](https://github.com/Cherry-CIC/cherry-Backend/pull/75), stacked on #74, adds arrival, deadline and locker details.
+- This draft covers the pop-up and API integration. The collection Home countdown and push notifications remain separate work. The existing confirmation Home timer is preserved. Neither PR has been merged or deployed.
 
 ## Agreed 72-hour rule
 
 On 6 November 2026 the product owner chose a flat 72-hour collection window from recorded locker arrival. `collectionDeadlineFromArrival` normalises the recorded arrival to UTC and adds 72 elapsed hours. The dialog accepts an absolute deadline. It never calculates a new window from the time it opens.
 
-The eventual backend must persist the arrival and deadline and preserve them across retries and app launches. Keep Sendcloud's update-ordering timestamp separate from the carrier event timestamp. Do not use historical locker-arrival fields without checking their meaning.
+The companion backend persists the arrival and deadline across retries and app launches. The Flutter app reads these values and does not calculate a window when it opens. Keep Sendcloud's update-ordering timestamp separate from the carrier event timestamp. Do not use historical locker-arrival fields without checking their meaning.
 
 InPost documents the usual 72-hour window and an exception for grouped parcels, where the window starts from its notification that everything is ready. The flat rule is an agreed MVP assumption, not a verified per-parcel deadline from Sendcloud. Follow-up integration must document this limitation and allow a future carrier deadline to take precedence.
 
@@ -30,7 +30,11 @@ The returned `ReadyToCollectAction` is `openMap`, `trackParcel` or `dismiss`. Ba
 
 Before expiry, show Open map when available, otherwise Track parcel when available, plus Not yet. On expiry, replace the countdown with Collection window ended, optionally show Track parcel, and offer I understand. Expiry alone does not claim that the parcel was returned or alter the order status.
 
-The parent remains responsible for refreshing order state and removing or replacing an open dialog after collection, cancellation or return. A notification tap must refresh current state before presenting the dialog. Collection dismissal must not hide the later confirmation reminder.
+The host refreshes on entry/resume and every minute while Home or its dialog is visible. It replaces a changed dialog or removes one after cancellation, return or resolution. Concurrent fetches are guarded and backgrounded responses are invalidated. Collection-ready, collection-expired and confirmation dismissals use separate identities in per-buyer device preferences; legacy confirmation dismissals remain valid.
+
+Map links use only the saved locker address, never the buyer's delivery address. Incomplete addresses hide the map action; a valid HTTPS tracking URL provides a fallback. Links open externally, and a failed launch offers a retry. See [Google Maps URLs](https://developers.google.com/maps/documentation/urls/get-started). Notification permissions are not involved in this flow. A later notification tap must refresh state before presenting any reminder.
+
+Missing carrier arrival/deadline fields suppress the timed collection reminder. No historical arrival backfill or fresh 72-hour window is invented. Expired awaiting-collection orders receive neutral expiry copy, not an assertion that a return has occurred.
 
 ## Design and accessibility
 
@@ -40,7 +44,7 @@ The local preview uses sample data and bundled images. Its map/tracking actions 
 
 ## Review and verification
 
-Validation on 6 November 2026: 78 focused tests passed (14 new collection tests and 64 existing order/confirmation tests); the render check passed for light, expired and dark states. Static analysis passed for all changed Dart files. The widget tests include 320-pixel width at 200% text, spoken countdown labels, tap targets and light/dark contrast. Physical screen-reader use is still outstanding.
+Validation on 7 November 2026: 90 focused tests passed, including 12 new API/host integration tests; the render check passed for light, expired and dark states. Static analysis passed for all changed Dart files. The widget tests include 320-pixel width at 200% text, spoken countdown labels, tap targets and light/dark contrast. Physical screen-reader use is still outstanding.
 
 Local validation used Flutter 3.44.4 / Dart 3.12.2. Offline dependency resolution adjusted four transitive test dependencies for this installed SDK; the repository lockfile was restored and no dependency changes are included.
 
@@ -56,4 +60,4 @@ flutter run -d chrome -t tool/ready_to_collect_preview.dart
 
 The render tool writes ready, expired and dark previews to `build/collection-preview/`. It makes no network or backend requests.
 
-Live InPost events, map navigation, push delivery, physical-device layout, VoiceOver/TalkBack and the complete collection-to-confirmation lifecycle still need verification during integration.
+Live InPost events, external map/tracking launch on devices, physical-device layout, VoiceOver/TalkBack and the full deployed collection-to-confirmation lifecycle still need verification. Polling means foreground state may take up to a minute to refresh after the backend processes an event; push delivery is not included.

@@ -8,10 +8,11 @@ import 'package:cherry_mvp/features/orders/orders_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 typedef _GetHandler = FutureOr<Result<dynamic>> Function(String endpoint);
-typedef _PostHandler = FutureOr<Result<dynamic>> Function(
-  String endpoint,
-  dynamic data,
-);
+typedef _PostHandler =
+    FutureOr<Result<dynamic>> Function(
+      String endpoint,
+      dynamic data,
+    );
 
 class _FakeApiService implements ApiService {
   final _GetHandler _handler;
@@ -20,8 +21,7 @@ class _FakeApiService implements ApiService {
   String? postedEndpoint;
   dynamic postedData;
 
-  _FakeApiService(this._handler, { _PostHandler? postHandler })
-      : _postHandler = postHandler;
+  _FakeApiService(this._handler, {this._postHandler});
 
   @override
   Future<Result<T>> get<T>(
@@ -52,6 +52,61 @@ class _FakeApiService implements ApiService {
 }
 
 void main() {
+  test('reminder fetch retains collection deadlines and destinations through enrichment', () async {
+    final deadline = DateTime.now().toUtc().add(const Duration(hours: 72)).toIso8601String();
+    final api = _FakeApiService((endpoint) {
+      if (endpoint == ApiEndpoints.myOrders) {
+        return Result.success({
+          'success': true,
+          'data': {
+            'orders': [
+              {
+                'id': 'ready',
+                'productId': 'shirt',
+                'deliveryState': 'awaiting_collection',
+                'readyForCollectionAt': '2026-11-07T09:00:00Z',
+                'collectionDeadline': deadline,
+                'collectionPoint': {
+                  'name': 'Locker',
+                  'addressLine1': '1 High Street',
+                  'postalCode': 'SW1A 1AA',
+                  'country': 'GB',
+                },
+                'trackingUrl': 'https://tracking.inpost.co.uk/parcel',
+              },
+              {
+                'id': 'expired',
+                'deliveryState': 'awaiting_collection',
+                'readyForCollectionAt': '2020-01-01T09:00:00Z',
+                'collectionDeadline': '2020-01-04T09:00:00Z',
+              },
+              {'id': 'missing', 'deliveryState': 'awaiting_collection'},
+              {
+                'id': 'returned',
+                'deliveryState': 'returned',
+                'readyForCollectionAt': '2026-11-07T09:00:00Z',
+                'collectionDeadline': deadline,
+              },
+            ],
+          },
+        });
+      }
+      if (endpoint == ApiEndpoints.charities) return Result.success({'success': true, 'data': []});
+      return Result.success({
+        'success': true,
+        'data': {'name': 'Shirt', 'size': 'L', 'quality': 'Good condition'},
+      });
+    });
+    final result = await OrdersRepository(api).fetchOrders(deliveryRemindersOnly: true);
+    expect(result.isSuccess, isTrue);
+    expect(result.value!.map((order) => order.id), ['ready', 'expired']);
+    final ready = result.value!.first;
+    expect(ready.collectionDeadline, DateTime.parse(deadline));
+    expect(ready.collectionMapUri!.queryParameters['query'], contains('1 High Street'));
+    expect(ready.trackingUri!.host, 'tracking.inpost.co.uk');
+    expect(ready.size, 'L');
+  });
+
   group('OrderSummary', () {
     test('parses documented order fields without converting minor units', () {
       final order = OrderSummary.tryFromOrderJson({
@@ -135,7 +190,7 @@ void main() {
     test('posts receipt confirmation without a request body', () async {
       final apiService = _FakeApiService(
         (_) => Result.failure('Unexpected GET'),
-        postHandler: (_, __) => Result.success({}),
+        postHandler: (_, _) => Result.success({}),
       );
 
       final result = await OrdersRepository(apiService).confirmOrderReceived('order / one');
@@ -148,7 +203,7 @@ void main() {
     test('posts a trimmed dispute message and required reason', () async {
       final apiService = _FakeApiService(
         (_) => Result.failure('Unexpected GET'),
-        postHandler: (_, __) => Result.success({}),
+        postHandler: (_, _) => Result.success({}),
       );
 
       final result = await OrdersRepository(apiService).submitOrderDispute(
@@ -168,7 +223,7 @@ void main() {
     test('omits a blank optional dispute message', () async {
       final apiService = _FakeApiService(
         (_) => Result.failure('Unexpected GET'),
-        postHandler: (_, __) => Result.success({}),
+        postHandler: (_, _) => Result.success({}),
       );
 
       await OrdersRepository(apiService).submitOrderDispute(

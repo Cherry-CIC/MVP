@@ -15,6 +15,18 @@ class OrderSummary {
   final String deliveryLabel;
   final DateTime? confirmationDeadline;
   final DateTime? collectedAt;
+  final DateTime? readyForCollectionAt;
+  final DateTime? collectionDeadline;
+  final Uri? collectionMapUri;
+  final Uri? trackingUri;
+
+  bool get canShowCollectionReminder =>
+      deliveryState == 'awaiting_collection' &&
+      collectedAt == null &&
+      readyForCollectionAt != null &&
+      collectionDeadline != null;
+  bool canShowAnyReminder(DateTime now) => canShowCollectionReminder || canShowDeliveryReminder(now);
+  DateTime? get reminderDeadline => canShowCollectionReminder ? collectionDeadline : confirmationDeadline;
   final String condition;
 
   bool canShowDeliveryReminder(DateTime now) =>
@@ -36,6 +48,10 @@ class OrderSummary {
     required this.deliveryLabel,
     this.confirmationDeadline,
     this.collectedAt,
+    this.readyForCollectionAt,
+    this.collectionDeadline,
+    this.collectionMapUri,
+    this.trackingUri,
     this.condition = '',
   });
 
@@ -71,6 +87,10 @@ class OrderSummary {
       deliveryLabel: _readString(json['deliveryLabel']),
       confirmationDeadline: DateTime.tryParse(_readString(json['confirmationDeadline'])),
       collectedAt: DateTime.tryParse(_readString(json['collectedAt'])),
+      readyForCollectionAt: _readInstant(json['readyForCollectionAt']),
+      collectionDeadline: _readInstant(json['collectionDeadline']),
+      collectionMapUri: _mapUri(json['collectionPoint']),
+      trackingUri: _trackingUri(json['trackingUrl']),
     );
   }
 
@@ -100,10 +120,43 @@ class OrderSummary {
       currency: currency,
       confirmationDeadline: confirmationDeadline,
       collectedAt: collectedAt,
+      readyForCollectionAt: readyForCollectionAt,
+      collectionDeadline: collectionDeadline,
+      collectionMapUri: collectionMapUri,
+      trackingUri: trackingUri,
       condition: condition ?? this.condition,
       deliveryState: deliveryState ?? this.deliveryState,
       deliveryLabel: deliveryLabel ?? this.deliveryLabel,
     );
+  }
+
+  // API instants must carry a timezone; never interpret an ambiguous local date.
+  static DateTime? _readInstant(dynamic value) {
+    final text = _readString(value);
+    if (!RegExp(r'(Z|[+-]\d{2}:\d{2})$', caseSensitive: false).hasMatch(text)) return null;
+    return DateTime.tryParse(text)?.toUtc();
+  }
+
+  static Uri? _trackingUri(dynamic value) {
+    final uri = Uri.tryParse(_readString(value));
+    return uri != null && uri.scheme == 'https' && uri.host.isNotEmpty && uri.userInfo.isEmpty ? uri : null;
+  }
+
+  static Uri? _mapUri(dynamic value) {
+    if (value is! Map) return null;
+    final address = _readString(value['addressLine1']);
+    final postcode = _readString(value['postalCode']);
+    final country = _readString(value['country']);
+    if (address.isEmpty || postcode.isEmpty || country.isEmpty) return null;
+    final query = [
+      _readString(value['name']),
+      address,
+      _readString(value['city']),
+      postcode,
+      country,
+    ].where((part) => part.isNotEmpty).join(', ');
+    final uri = Uri.https('www.google.com', '/maps/search/', {'api': '1', 'query': query});
+    return uri.toString().length <= 2048 ? uri : null;
   }
 
   static String? _readRequiredString(dynamic value) {
