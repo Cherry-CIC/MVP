@@ -150,7 +150,8 @@ void main() {
     expect(find.text(_product.description), findsOneWidget);
     expect(find.text(_product.size), findsOneWidget);
     expect(find.text(_product.quality), findsOneWidget);
-    expect(find.text('£20.00'), findsNWidgets(2));
+    expect(find.text('£20.00'), findsOneWidget); // raised proceeds
+    expect(find.text('£22.00'), findsOneWidget); // incl. £2.00 PSF
     expect(find.text('0'), findsOneWidget);
 
     await tester.tap(find.byIcon(Icons.favorite_outline));
