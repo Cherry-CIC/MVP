@@ -27,7 +27,6 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: stable
-          flutter-version: 3.44.4
           cache: true
 
       - name: Prepare public test configuration
