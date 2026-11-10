@@ -26,7 +26,7 @@ class _QueuedOrdersRepository implements IOrdersRepository {
   });
 
   @override
-  Future<Result<List<OrderSummary>>> fetchOrders() async {
+  Future<Result<List<OrderSummary>>> fetchOrders({bool deliveryRemindersOnly = false}) async {
     requestCount++;
     return responses.removeAt(0);
   }

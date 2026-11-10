@@ -10,7 +10,9 @@ import 'package:cherry_mvp/features/profile/profile_page.dart';
 import 'package:cherry_mvp/features/profile/profile_listings_view_model.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  const HomePage({super.key, this.deliveryTimer});
+
+  final Widget? deliveryTimer;
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -137,6 +139,7 @@ class _HomePageState extends State<HomePage> {
             ),
           ],
         ),
+        floatingActionButton: _selectedIndex == _homeNavIndex ? widget.deliveryTimer : null,
         bottomNavigationBar: CherryBottomNavBar(
           selectedIndex: _selectedIndex,
           onItemSelected: _onItemTapped,
