@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:cherry_mvp/core/models/model.dart';
 import 'package:cherry_mvp/core/services/error_string.dart';
 import 'package:cherry_mvp/core/services/google_auth_service.dart';
@@ -24,8 +25,14 @@ enum RevokeAppleTokenResult {
 
 class FirebaseAuthService {
   final FirebaseAuth firebaseAuth;
+  final int maxRevokeAttempts;
+  final Duration revokeRetryDelay;
 
-  FirebaseAuthService({required this.firebaseAuth});
+  FirebaseAuthService({
+    required this.firebaseAuth,
+    this.maxRevokeAttempts = 3,
+    this.revokeRetryDelay = const Duration(milliseconds: 100),
+  });
 
   late final GoogleAuthService _googleAuthService = GoogleAuthService();
 
@@ -179,29 +186,17 @@ class FirebaseAuthService {
       return RevokeAppleTokenResult.skipped;
     }
 
+    final UserCredential userCredential;
     try {
       final appleProvider = AppleAuthProvider();
       appleProvider.addScope('email');
       appleProvider.addScope('name');
 
-      final UserCredential userCredential;
       if (kIsWeb) {
         userCredential = await user.reauthenticateWithPopup(appleProvider);
       } else {
         userCredential = await user.reauthenticateWithProvider(appleProvider);
       }
-
-      final authorizationCode = userCredential.additionalUserInfo?.authorizationCode;
-      if (authorizationCode != null && authorizationCode.isNotEmpty) {
-        await firebaseAuth.revokeTokenWithAuthorizationCode(authorizationCode);
-        return RevokeAppleTokenResult.success;
-      }
-
-      SafeLog.event(
-        AppLogEvent.authenticationOperationFailed,
-        level: SafeLogLevel.warning,
-      );
-      return RevokeAppleTokenResult.failedNonBlocking;
     } on FirebaseAuthException catch (e) {
       if (_isCancellationCode(e.code)) {
         return RevokeAppleTokenResult.userCancelled;
@@ -211,8 +206,8 @@ class FirebaseAuthService {
         level: SafeLogLevel.warning,
       );
       return RevokeAppleTokenResult.failedNonBlocking;
-    } catch (e) {
-      if (e.toString().toLowerCase().contains('cancel')) {
+    } on PlatformException catch (e) {
+      if (_isCancellationCode(e.code)) {
         return RevokeAppleTokenResult.userCancelled;
       }
       SafeLog.event(
@@ -220,14 +215,88 @@ class FirebaseAuthService {
         level: SafeLogLevel.warning,
       );
       return RevokeAppleTokenResult.failedNonBlocking;
+    } catch (_) {
+      SafeLog.event(
+        AppLogEvent.authenticationOperationFailed,
+        level: SafeLogLevel.warning,
+      );
+      return RevokeAppleTokenResult.failedNonBlocking;
     }
+
+    final authorizationCode = userCredential.additionalUserInfo?.authorizationCode;
+    if (authorizationCode == null || authorizationCode.isEmpty) {
+      SafeLog.event(
+        AppLogEvent.authenticationOperationFailed,
+        level: SafeLogLevel.warning,
+      );
+      return RevokeAppleTokenResult.failedNonBlocking;
+    }
+
+    final revokeSuccess = await _revokeTokenWithRetry(authorizationCode);
+    if (revokeSuccess) {
+      return RevokeAppleTokenResult.success;
+    }
+
+    SafeLog.event(
+      AppLogEvent.authenticationOperationFailed,
+      level: SafeLogLevel.warning,
+    );
+    return RevokeAppleTokenResult.failedNonBlocking;
+  }
+
+  Future<bool> _revokeTokenWithRetry(String authorizationCode) async {
+    for (var attempt = 1; attempt <= maxRevokeAttempts; attempt++) {
+      try {
+        await firebaseAuth.revokeTokenWithAuthorizationCode(authorizationCode);
+        return true;
+      } catch (error) {
+        final isTransient = _isTransientRevocationError(error);
+        final hasMoreAttempts = attempt < maxRevokeAttempts;
+
+        if (isTransient && hasMoreAttempts) {
+          SafeLog.event(AppLogEvent.networkRetryStarted);
+          if (revokeRetryDelay > Duration.zero) {
+            await Future<void>.delayed(revokeRetryDelay);
+          }
+          continue;
+        }
+
+        if (isTransient && !hasMoreAttempts) {
+          SafeLog.event(
+            AppLogEvent.networkRetryFailed,
+            level: SafeLogLevel.warning,
+          );
+        }
+        return false;
+      }
+    }
+    return false;
+  }
+
+  static bool _isTransientRevocationError(Object error) {
+    if (error is FirebaseAuthException) {
+      final code = error.code.toLowerCase();
+      return code == 'network-request-failed' ||
+          code == 'timeout' ||
+          code == 'too-many-requests' ||
+          code == 'internal-error';
+    }
+    if (error is TimeoutException) return true;
+    final errStr = error.toString().toLowerCase();
+    return errStr.contains('socket') ||
+        errStr.contains('timeout') ||
+        errStr.contains('connection');
   }
 
   static bool _isCancellationCode(String code) {
     final normalized = code.toLowerCase();
     return normalized == 'canceled' ||
         normalized == 'user-cancelled' ||
+        normalized == 'user-canceled' ||
         normalized == 'popup-closed-by-user' ||
-        normalized == 'web-context-cancelled';
+        normalized == 'web-context-canceled' ||
+        normalized == 'web-context-cancelled' ||
+        normalized == '1001' ||
+        normalized == 'error_cancel';
   }
 }

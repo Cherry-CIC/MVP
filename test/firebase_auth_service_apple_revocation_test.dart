@@ -1,5 +1,6 @@
 import 'package:cherry_mvp/core/services/firebase_auth_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 class _FakeUserInfo implements UserInfo {
@@ -65,6 +66,7 @@ class _TestFirebaseAuth implements FirebaseAuth {
   int revokeCalls = 0;
   String? lastRevokedCode;
   Exception? revokeError;
+  List<Exception?> revokeErrorsSequence = [];
 
   _TestFirebaseAuth({this.user});
 
@@ -75,6 +77,13 @@ class _TestFirebaseAuth implements FirebaseAuth {
   Future<void> revokeTokenWithAuthorizationCode(String authorizationCode) async {
     revokeCalls += 1;
     lastRevokedCode = authorizationCode;
+    if (revokeErrorsSequence.isNotEmpty) {
+      final err = revokeErrorsSequence.removeAt(0);
+      if (err != null) {
+        throw err;
+      }
+      return;
+    }
     if (revokeError != null) {
       throw revokeError!;
     }
@@ -194,6 +203,40 @@ void main() {
       expect(auth.revokeCalls, 0);
     });
 
+    test('revokeAppleAccessIfLinked returns userCancelled on Android web-context-canceled', () async {
+      final auth = _TestFirebaseAuth();
+      final user = _FakeUser(
+        providerData: [_FakeUserInfo('apple.com')],
+        reauthHandler: (_) async => throw FirebaseAuthException(
+          code: 'web-context-canceled',
+        ),
+      );
+      auth.user = user;
+      final service = FirebaseAuthService(firebaseAuth: auth);
+
+      final result = await service.revokeAppleAccessIfLinked();
+
+      expect(result, RevokeAppleTokenResult.userCancelled);
+      expect(auth.revokeCalls, 0);
+    });
+
+    test('revokeAppleAccessIfLinked returns userCancelled on user-canceled', () async {
+      final auth = _TestFirebaseAuth();
+      final user = _FakeUser(
+        providerData: [_FakeUserInfo('apple.com')],
+        reauthHandler: (_) async => throw FirebaseAuthException(
+          code: 'user-canceled',
+        ),
+      );
+      auth.user = user;
+      final service = FirebaseAuthService(firebaseAuth: auth);
+
+      final result = await service.revokeAppleAccessIfLinked();
+
+      expect(result, RevokeAppleTokenResult.userCancelled);
+      expect(auth.revokeCalls, 0);
+    });
+
     test('revokeAppleAccessIfLinked returns failedNonBlocking on technical error', () async {
       final auth = _TestFirebaseAuth();
       final user = _FakeUser(
@@ -245,6 +288,125 @@ void main() {
       );
       auth.user = user;
       final service = FirebaseAuthService(firebaseAuth: auth);
+
+      final result = await service.revokeAppleAccessIfLinked();
+
+      expect(result, RevokeAppleTokenResult.failedNonBlocking);
+      expect(auth.revokeCalls, 1);
+    });
+
+    test('revokeAppleAccessIfLinked returns userCancelled on PlatformException with code 1001', () async {
+      final auth = _TestFirebaseAuth();
+      final user = _FakeUser(
+        providerData: [_FakeUserInfo('apple.com')],
+        reauthHandler: (_) async => throw PlatformException(
+          code: '1001',
+          message: 'The operation was canceled.',
+        ),
+      );
+      auth.user = user;
+      final service = FirebaseAuthService(firebaseAuth: auth);
+
+      final result = await service.revokeAppleAccessIfLinked();
+
+      expect(result, RevokeAppleTokenResult.userCancelled);
+      expect(auth.revokeCalls, 0);
+    });
+
+    test('revokeAppleAccessIfLinked returns failedNonBlocking when revoke call fails with error containing cancel', () async {
+      final auth = _TestFirebaseAuth();
+      // Revoke error that happens to have the word "cancel" in it
+      auth.revokeError = Exception('HTTP request cancelled by peer');
+      final user = _FakeUser(
+        providerData: [_FakeUserInfo('apple.com')],
+        reauthHandler: (_) async => _FakeUserCredential(
+          additionalUserInfo: _FakeAdditionalUserInfo(
+            authorizationCode: 'valid-code',
+          ),
+        ),
+      );
+      auth.user = user;
+      final service = FirebaseAuthService(firebaseAuth: auth);
+
+      final result = await service.revokeAppleAccessIfLinked();
+
+      // Must be failedNonBlocking so it does not block account deletion!
+      expect(result, RevokeAppleTokenResult.failedNonBlocking);
+      expect(auth.revokeCalls, 1);
+    });
+
+    test('revokeAppleAccessIfLinked retries on transient error and succeeds if next attempt passes', () async {
+      final auth = _TestFirebaseAuth();
+      auth.revokeErrorsSequence = [
+        FirebaseAuthException(code: 'network-request-failed'),
+        null, // Succeeds on 2nd attempt
+      ];
+      final user = _FakeUser(
+        providerData: [_FakeUserInfo('apple.com')],
+        reauthHandler: (_) async => _FakeUserCredential(
+          additionalUserInfo: _FakeAdditionalUserInfo(
+            authorizationCode: 'valid-code',
+          ),
+        ),
+      );
+      auth.user = user;
+      final service = FirebaseAuthService(
+        firebaseAuth: auth,
+        maxRevokeAttempts: 3,
+        revokeRetryDelay: Duration.zero,
+      );
+
+      final result = await service.revokeAppleAccessIfLinked();
+
+      expect(result, RevokeAppleTokenResult.success);
+      expect(auth.revokeCalls, 2);
+    });
+
+    test('revokeAppleAccessIfLinked retries transient error up to maxAttempts and exhausts cleanly to failedNonBlocking', () async {
+      final auth = _TestFirebaseAuth();
+      auth.revokeErrorsSequence = [
+        FirebaseAuthException(code: 'network-request-failed'),
+        FirebaseAuthException(code: 'timeout'),
+        FirebaseAuthException(code: 'internal-error'),
+      ];
+      final user = _FakeUser(
+        providerData: [_FakeUserInfo('apple.com')],
+        reauthHandler: (_) async => _FakeUserCredential(
+          additionalUserInfo: _FakeAdditionalUserInfo(
+            authorizationCode: 'valid-code',
+          ),
+        ),
+      );
+      auth.user = user;
+      final service = FirebaseAuthService(
+        firebaseAuth: auth,
+        maxRevokeAttempts: 3,
+        revokeRetryDelay: Duration.zero,
+      );
+
+      final result = await service.revokeAppleAccessIfLinked();
+
+      expect(result, RevokeAppleTokenResult.failedNonBlocking);
+      expect(auth.revokeCalls, 3);
+    });
+
+    test('revokeAppleAccessIfLinked does not retry non-transient errors', () async {
+      final auth = _TestFirebaseAuth();
+      auth.revokeError = FirebaseAuthException(code: 'invalid-credential');
+      final user = _FakeUser(
+        providerData: [_FakeUserInfo('apple.com')],
+        reauthHandler: (_) async => _FakeUserCredential(
+          additionalUserInfo: _FakeAdditionalUserInfo(
+            authorizationCode: 'valid-code',
+          ),
+        ),
+      );
+      auth.user = user;
+      final service = FirebaseAuthService(
+        firebaseAuth: auth,
+        maxRevokeAttempts: 3,
+        revokeRetryDelay: Duration.zero,
+      );
 
       final result = await service.revokeAppleAccessIfLinked();
 

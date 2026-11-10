@@ -56,7 +56,8 @@ This repository implements token revocation during account deletion in complianc
 ---
 
 ## Error Handling & Resiliency
-- **Non-blocking deletion**: A transient network failure or server-side Apple configuration issue must never trap users in an undeletable account state. Technical failures are logged safely and account deletion continues.
+- **Bounded Retry for Transient Errors**: If `revokeTokenWithAuthorizationCode` encounters a transient network or server error (e.g. `network-request-failed`, `timeout`, `internal-error`), it executes a bounded retry (up to 3 total attempts) with safe logging (`AppLogEvent.networkRetryStarted` / `networkRetryFailed`). Permanent errors (e.g. `invalid-credential`) fail immediately on the first attempt without redundant retries.
+- **Non-blocking Deletion**: If retries are exhausted or a non-retryable technical failure occurs, the error is safely caught and mapped to `failedNonBlocking`. This ensures account deletion proceeds smoothly on the backend so users are never trapped in an undeletable account state.
 - **Safe Logging**: Authorization codes, client secrets, and sensitive tokens are strictly excluded from logs and error payloads.
 
 ---
