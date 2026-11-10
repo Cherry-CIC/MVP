@@ -104,4 +104,8 @@ class LoginRepository {
   Future<Result<void>> logout() async {
     return await _authService.logout();
   }
+
+  Future<RevokeAppleTokenResult> revokeAppleAccessIfLinked() async {
+    return await _authService.revokeAppleAccessIfLinked();
+  }
 }
