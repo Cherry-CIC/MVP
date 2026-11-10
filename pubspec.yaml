@@ -22,6 +22,8 @@ dependencies:
       url: https://github.com/taufiqsejati/FlutterToast.git
       ref: master
   image_picker: ^1.2.4
+  image_picker_android: ^0.8.13+25
+  image_picker_platform_interface: ^2.11.2
   app_settings: ^9.0.1
   permission_handler: ^12.0.3
   flutter_dotenv: ^6.0.1
@@ -41,10 +43,10 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  mockito: ^5.8.1
+  mockito: ^5.7.0
   flutter_lints: ^6.0.0
-  json_serializable: ^6.15.2
-  build_runner: ^2.16.2
+  json_serializable: ^6.14.0
+  build_runner: ^2.15.0
   flutter_launcher_icons: ^0.14.4
 
 flutter:
