@@ -1,4 +1,5 @@
 import 'package:cherry_mvp/core/config/config.dart';
+import 'package:cherry_mvp/core/services/google_auth_service.dart';
 import 'package:cherry_mvp/core/services/services.dart';
 import 'package:cherry_mvp/core/utils/result.dart';
 import 'package:cherry_mvp/features/auth/username_setup_page.dart';
@@ -6,11 +7,15 @@ import 'package:cherry_mvp/features/home/home_page.dart';
 import 'package:cherry_mvp/features/welcome/welcome_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class PostAuthUsernameGate extends StatefulWidget {
   final Future<Result<String?>> Function(String uid)? usernameResolver;
   final User? currentUserOverride;
   final Future<void> Function()? signOutHandler;
+  final FirebaseAuth? firebaseAuth;
+  final GoogleAuthService? googleAuthService;
+  final SharedPreferences? preferences;
   final WidgetBuilder? homeBuilder;
   final WidgetBuilder? usernameSetupBuilder;
 
@@ -19,6 +24,9 @@ class PostAuthUsernameGate extends StatefulWidget {
     this.usernameResolver,
     this.currentUserOverride,
     this.signOutHandler,
+    this.firebaseAuth,
+    this.googleAuthService,
+    this.preferences,
     this.homeBuilder,
     this.usernameSetupBuilder,
   });
@@ -43,8 +51,12 @@ class _PostAuthUsernameGateState extends State<PostAuthUsernameGate> {
   }
 
   Future<void> _handleSignOut() async {
-    final handler = widget.signOutHandler ?? FirebaseAuth.instance.signOut;
-    await handler();
+    final handler = widget.signOutHandler;
+    if (handler != null) {
+      await handler();
+    } else {
+      await _defaultSignOut();
+    }
     if (!mounted) return;
     setState(() {
       _uid = null;
@@ -52,9 +64,27 @@ class _PostAuthUsernameGateState extends State<PostAuthUsernameGate> {
     });
   }
 
+  Future<void> _defaultSignOut() async {
+    try {
+      final auth = widget.firebaseAuth ?? FirebaseAuth.instance;
+      await auth.signOut();
+    } catch (_) {}
+
+    try {
+      final googleAuth = widget.googleAuthService ?? GoogleAuthService();
+      await googleAuth.signOut();
+    } catch (_) {}
+
+    try {
+      final prefs = widget.preferences ?? await SharedPreferences.getInstance();
+      await prefs.clear();
+    } catch (_) {}
+  }
+
   @override
   Widget build(BuildContext context) {
-    final currentUser = widget.currentUserOverride ?? FirebaseAuth.instance.currentUser;
+    final currentUser = widget.currentUserOverride ??
+        (widget.firebaseAuth ?? FirebaseAuth.instance).currentUser;
 
     if (currentUser == null) {
       return const WelcomePage();

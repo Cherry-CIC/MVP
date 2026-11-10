@@ -6,6 +6,7 @@ import 'dart:convert';
 import 'package:cherry_mvp/core/config/config.dart';
 import 'package:cherry_mvp/core/router/nav_provider.dart';
 import 'package:cherry_mvp/core/services/firestore_service.dart';
+import 'package:cherry_mvp/core/services/google_auth_service.dart';
 import 'package:cherry_mvp/core/services/username_service.dart';
 import 'package:cherry_mvp/core/utils/result.dart';
 import 'package:cherry_mvp/features/welcome/widgets/post_auth_username_gate.dart';
@@ -27,6 +28,36 @@ class _FakeUser implements User {
 }
 
 class _FakeFirebaseAuth implements FirebaseAuth {
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class _FakeGoogleAuthService implements GoogleAuthService {
+  bool signedOut = false;
+
+  @override
+  Future<void> signOut() async {
+    signedOut = true;
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class _SignOutTrackingFirebaseAuth implements FirebaseAuth {
+  bool signedOut = false;
+  final bool shouldThrowOnSignOut;
+
+  _SignOutTrackingFirebaseAuth({this.shouldThrowOnSignOut = false});
+
+  @override
+  Future<void> signOut() async {
+    if (shouldThrowOnSignOut) {
+      throw FirebaseAuthException(code: 'network-request-failed', message: 'Offline');
+    }
+    signedOut = true;
+  }
+
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
@@ -233,6 +264,9 @@ void main() {
       required Future<Result<String?>> Function(String uid) resolver,
       User? user,
       Future<void> Function()? onSignOut,
+      FirebaseAuth? firebaseAuth,
+      GoogleAuthService? googleAuthService,
+      SharedPreferences? preferences,
     }) {
       return MultiProvider(
         providers: [
@@ -243,6 +277,9 @@ void main() {
             currentUserOverride: user ?? _FakeUser(uid: 'test_uid'),
             usernameResolver: resolver,
             signOutHandler: onSignOut,
+            firebaseAuth: firebaseAuth,
+            googleAuthService: googleAuthService,
+            preferences: preferences,
             homeBuilder: (_) => const Scaffold(body: Text('HomePageMock')),
             usernameSetupBuilder: (_) => const Scaffold(body: Text('UsernameSetupPageMock')),
           ),
@@ -337,6 +374,57 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(signedOut, isTrue);
+    });
+
+    testWidgets('default sign out cleans up Firebase, Google, and SharedPreferences', (tester) async {
+      SharedPreferences.setMockInitialValues({'test_token': '12345', 'username': 'cached_name'});
+      final prefs = await SharedPreferences.getInstance();
+      final fakeFirebase = _SignOutTrackingFirebaseAuth();
+      final fakeGoogle = _FakeGoogleAuthService();
+
+      await tester.pumpWidget(
+        createWidget(
+          resolver: (_) async => Result.failure('Offline'),
+          firebaseAuth: fakeFirebase,
+          googleAuthService: fakeGoogle,
+          preferences: prefs,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('post_auth_sign_out_button')), findsOneWidget);
+      await tester.tap(find.byKey(const Key('post_auth_sign_out_button')));
+      await tester.pumpAndSettle();
+
+      expect(fakeFirebase.signedOut, isTrue);
+      expect(fakeGoogle.signedOut, isTrue);
+      expect(prefs.getKeys(), isEmpty);
+    });
+
+    testWidgets('default sign out handles partial failures and still cleans up Google and SharedPreferences', (tester) async {
+      SharedPreferences.setMockInitialValues({'test_token': '12345', 'username': 'cached_name'});
+      final prefs = await SharedPreferences.getInstance();
+      final failingFirebase = _SignOutTrackingFirebaseAuth(shouldThrowOnSignOut: true);
+      final fakeGoogle = _FakeGoogleAuthService();
+
+      await tester.pumpWidget(
+        createWidget(
+          resolver: (_) async => Result.failure('Offline'),
+          firebaseAuth: failingFirebase,
+          googleAuthService: fakeGoogle,
+          preferences: prefs,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('post_auth_sign_out_button')), findsOneWidget);
+      await tester.tap(find.byKey(const Key('post_auth_sign_out_button')));
+      await tester.pumpAndSettle();
+
+      // Firebase failed, but Google sign out and prefs clear must still have executed!
+      expect(failingFirebase.signedOut, isFalse);
+      expect(fakeGoogle.signedOut, isTrue);
+      expect(prefs.getKeys(), isEmpty);
     });
   });
 }
