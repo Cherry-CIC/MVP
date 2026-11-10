@@ -1,8 +1,10 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:http/http.dart' as http;
 import 'package:cherry_mvp/core/models/model.dart';
 import 'package:cherry_mvp/core/services/error_string.dart';
 import 'package:cherry_mvp/core/services/google_auth_service.dart';
@@ -27,12 +29,22 @@ class FirebaseAuthService {
   final FirebaseAuth firebaseAuth;
   final int maxRevokeAttempts;
   final Duration revokeRetryDelay;
+  final bool _isWeb;
+  final TargetPlatform? _targetPlatformOverride;
+  final http.Client? httpClient;
 
   FirebaseAuthService({
     required this.firebaseAuth,
     this.maxRevokeAttempts = 3,
     this.revokeRetryDelay = const Duration(milliseconds: 100),
-  });
+    bool? isWeb,
+    TargetPlatform? targetPlatform,
+    this.httpClient,
+  }) : _isWeb = isWeb ?? kIsWeb,
+       _targetPlatformOverride = targetPlatform;
+
+  TargetPlatform get _effectivePlatform =>
+      _targetPlatformOverride ?? defaultTargetPlatform;
 
   late final GoogleAuthService _googleAuthService = GoogleAuthService();
 
@@ -137,7 +149,7 @@ class FirebaseAuthService {
       appleProvider.addScope('email');
       appleProvider.addScope('name');
       final UserCredential userCredential;
-      if (kIsWeb) {
+      if (_isWeb) {
         userCredential = await firebaseAuth.signInWithPopup(appleProvider);
       } else {
         userCredential = await firebaseAuth.signInWithProvider(appleProvider);
@@ -192,7 +204,7 @@ class FirebaseAuthService {
       appleProvider.addScope('email');
       appleProvider.addScope('name');
 
-      if (kIsWeb) {
+      if (_isWeb) {
         userCredential = await user.reauthenticateWithPopup(appleProvider);
       } else {
         userCredential = await user.reauthenticateWithProvider(appleProvider);
@@ -223,16 +235,45 @@ class FirebaseAuthService {
       return RevokeAppleTokenResult.failedNonBlocking;
     }
 
-    final authorizationCode = userCredential.additionalUserInfo?.authorizationCode;
-    if (authorizationCode == null || authorizationCode.isEmpty) {
-      SafeLog.event(
-        AppLogEvent.authenticationOperationFailed,
-        level: SafeLogLevel.warning,
+    final Future<void> Function() revokeAction;
+    if (_isWeb) {
+      final accessToken = userCredential.credential?.accessToken;
+      if (accessToken == null || accessToken.isEmpty) {
+        SafeLog.event(
+          AppLogEvent.authenticationOperationFailed,
+          level: SafeLogLevel.warning,
+        );
+        return RevokeAppleTokenResult.failedNonBlocking;
+      }
+      revokeAction = () => _revokeWebAppleToken(
+        user: user,
+        accessToken: accessToken,
       );
-      return RevokeAppleTokenResult.failedNonBlocking;
+    } else if (_effectivePlatform == TargetPlatform.android) {
+      final accessToken = userCredential.credential?.accessToken;
+      if (accessToken == null || accessToken.isEmpty) {
+        SafeLog.event(
+          AppLogEvent.authenticationOperationFailed,
+          level: SafeLogLevel.warning,
+        );
+        return RevokeAppleTokenResult.failedNonBlocking;
+      }
+      revokeAction = () => firebaseAuth.revokeAccessToken(accessToken);
+    } else {
+      final authorizationCode =
+          userCredential.additionalUserInfo?.authorizationCode;
+      if (authorizationCode == null || authorizationCode.isEmpty) {
+        SafeLog.event(
+          AppLogEvent.authenticationOperationFailed,
+          level: SafeLogLevel.warning,
+        );
+        return RevokeAppleTokenResult.failedNonBlocking;
+      }
+      revokeAction = () =>
+          firebaseAuth.revokeTokenWithAuthorizationCode(authorizationCode);
     }
 
-    final revokeSuccess = await _revokeTokenWithRetry(authorizationCode);
+    final revokeSuccess = await _revokeTokenWithRetry(revokeAction);
     if (revokeSuccess) {
       return RevokeAppleTokenResult.success;
     }
@@ -244,10 +285,12 @@ class FirebaseAuthService {
     return RevokeAppleTokenResult.failedNonBlocking;
   }
 
-  Future<bool> _revokeTokenWithRetry(String authorizationCode) async {
+  Future<bool> _revokeTokenWithRetry(
+    Future<void> Function() revokeAction,
+  ) async {
     for (var attempt = 1; attempt <= maxRevokeAttempts; attempt++) {
       try {
-        await firebaseAuth.revokeTokenWithAuthorizationCode(authorizationCode);
+        await revokeAction();
         return true;
       } catch (error) {
         final isTransient = _isTransientRevocationError(error);
@@ -273,6 +316,69 @@ class FirebaseAuthService {
     return false;
   }
 
+  Future<void> _revokeWebAppleToken({
+    required User user,
+    required String accessToken,
+  }) async {
+    final idToken = await user.getIdToken();
+    if (idToken == null || idToken.isEmpty) {
+      throw FirebaseAuthException(
+        code: 'invalid-user-token',
+        message: 'Missing Firebase ID token for Apple token revocation.',
+      );
+    }
+
+    final apiKey = firebaseAuth.app.options.apiKey;
+    if (apiKey.isEmpty) {
+      throw FirebaseAuthException(
+        code: 'invalid-api-key',
+        message: 'Missing Firebase API key for Apple token revocation.',
+      );
+    }
+
+    final tenantId = firebaseAuth.tenantId;
+    final payload = <String, dynamic>{
+      'providerId': 'apple.com',
+      'tokenType': 'ACCESS_TOKEN',
+      'token': accessToken,
+      'idToken': idToken,
+      if (tenantId != null && tenantId.isNotEmpty) 'tenantId': tenantId,
+    };
+
+    final uri = Uri.https(
+      'identitytoolkit.googleapis.com',
+      '/v2/accounts:revokeToken',
+      <String, String>{'key': apiKey},
+    );
+
+    final client = httpClient ?? http.Client();
+    final shouldCloseClient = httpClient == null;
+    try {
+      final response = await client.post(
+        uri,
+        headers: const <String, String>{'Content-Type': 'application/json'},
+        body: jsonEncode(payload),
+      );
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return;
+      }
+
+      if (response.statusCode == 429) {
+        throw FirebaseAuthException(code: 'too-many-requests');
+      }
+      if (response.statusCode >= 500) {
+        throw FirebaseAuthException(code: 'internal-error');
+      }
+
+      throw FirebaseAuthException(code: 'invalid-credential');
+    } finally {
+      if (shouldCloseClient) {
+        client.close();
+      }
+    }
+  }
+
   static bool _isTransientRevocationError(Object error) {
     if (error is FirebaseAuthException) {
       final code = error.code.toLowerCase();
@@ -281,7 +387,9 @@ class FirebaseAuthService {
           code == 'too-many-requests' ||
           code == 'internal-error';
     }
-    if (error is TimeoutException) return true;
+    if (error is TimeoutException || error is http.ClientException) {
+      return true;
+    }
     final errStr = error.toString().toLowerCase();
     return errStr.contains('socket') ||
         errStr.contains('timeout') ||

@@ -25,10 +25,13 @@ This repository implements token revocation during account deletion in complianc
         │                                                          │
         ├── Technical error / failed ─► [Log Safe Warning] ────────┤
         │                                                          │
-        └── Success (authorizationCode obtained)                   │
+        └── Success (platform token/code obtained)                 │
                │                                                   │
                ▼                                                   │
-    [Call firebaseAuth.revokeTokenWithAuthorizationCode(code)]     │
+    [Revoke Apple Token (Platform-Specific)]                       │
+        ├── iOS / macOS: revokeTokenWithAuthorizationCode(code)    │
+        ├── Android:     revokeAccessToken(accessToken)            │
+        └── Web:         Identity Toolkit v2/accounts:revokeToken  │
                │                                                   │
                ▼                                                   │
     [Proceed to Backend Deletion: ApiEndpoints.deleteAccount] ◄────┘
@@ -43,8 +46,11 @@ This repository implements token revocation during account deletion in complianc
 ### Components
 1. **`FirebaseAuthService.revokeAppleAccessIfLinked()`**:
    - Inspects `user.providerData` for `'apple.com'`.
-   - Prompts for Apple re-authentication (`reauthenticateWithProvider` or `reauthenticateWithPopup` on Web) to obtain an ephemeral `authorizationCode`.
-   - Calls `firebaseAuth.revokeTokenWithAuthorizationCode(authorizationCode)`.
+   - Prompts for Apple re-authentication (`reauthenticateWithProvider` on native platforms or `reauthenticateWithPopup` on Web).
+   - Executes platform-specific token revocation with bounded retries:
+     - **iOS / macOS**: Extracts `userCredential.additionalUserInfo?.authorizationCode` and calls `firebaseAuth.revokeTokenWithAuthorizationCode(authorizationCode)`.
+     - **Android**: Extracts `userCredential.credential?.accessToken` (since Android's `AdditionalUserInfo` does not populate `authorizationCode`) and calls `firebaseAuth.revokeAccessToken(accessToken)`.
+     - **Web**: Extracts `userCredential.credential?.accessToken` and revokes it via the Firebase Identity Toolkit REST endpoint (`POST https://identitytoolkit.googleapis.com/v2/accounts:revokeToken`) with `tokenType: 'ACCESS_TOKEN'`.
    - Classifies outcome into `RevokeAppleTokenResult`: `skipped`, `success`, `userCancelled`, or `failedNonBlocking`.
 2. **`LoginRepository.revokeAppleAccessIfLinked()`**:
    - Exposes revocation to domain and presentation layers.
@@ -56,7 +62,7 @@ This repository implements token revocation during account deletion in complianc
 ---
 
 ## Error Handling & Resiliency
-- **Bounded Retry for Transient Errors**: If `revokeTokenWithAuthorizationCode` encounters a transient network or server error (e.g. `network-request-failed`, `timeout`, `internal-error`), it executes a bounded retry (up to 3 total attempts) with safe logging (`AppLogEvent.networkRetryStarted` / `networkRetryFailed`). Permanent errors (e.g. `invalid-credential`) fail immediately on the first attempt without redundant retries.
+- **Bounded Retry for Transient Errors**: If token revocation (`revokeTokenWithAuthorizationCode`, `revokeAccessToken`, or the Web Identity Toolkit request) encounters a transient network or server error (e.g. `network-request-failed`, `timeout`, `internal-error`, `too-many-requests`), it executes a bounded retry (up to 3 total attempts) with safe logging (`AppLogEvent.networkRetryStarted` / `networkRetryFailed`). Permanent errors (e.g. `invalid-credential`) fail immediately on the first attempt without redundant retries.
 - **Non-blocking Deletion**: If retries are exhausted or a non-retryable technical failure occurs, the error is safely caught and mapped to `failedNonBlocking`. This ensures account deletion proceeds smoothly on the backend so users are never trapped in an undeletable account state.
 - **Safe Logging**: Authorization codes, client secrets, and sensitive tokens are strictly excluded from logs and error payloads.
 

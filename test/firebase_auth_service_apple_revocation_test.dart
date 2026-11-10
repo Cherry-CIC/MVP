@@ -1,7 +1,11 @@
+import 'dart:convert';
+
 import 'package:cherry_mvp/core/services/firebase_auth_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:http/http.dart' as http;
 
 class _FakeUserInfo implements UserInfo {
   @override
@@ -23,11 +27,22 @@ class _FakeAdditionalUserInfo implements AdditionalUserInfo {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
+class _FakeOAuthCredential extends OAuthCredential {
+  _FakeOAuthCredential({super.accessToken})
+    : super(
+        providerId: 'apple.com',
+        signInMethod: 'oauth',
+      );
+}
+
 class _FakeUserCredential implements UserCredential {
   @override
   final AdditionalUserInfo? additionalUserInfo;
 
-  _FakeUserCredential({this.additionalUserInfo});
+  @override
+  final AuthCredential? credential;
+
+  _FakeUserCredential({this.additionalUserInfo, this.credential});
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -38,11 +53,19 @@ class _FakeUser implements User {
   final List<UserInfo> providerData;
 
   final Future<UserCredential> Function(AuthProvider provider)? reauthHandler;
+  final String? idToken;
+  int reauthWithProviderCalls = 0;
+  int reauthWithPopupCalls = 0;
 
-  _FakeUser({required this.providerData, this.reauthHandler});
+  _FakeUser({
+    required this.providerData,
+    this.reauthHandler,
+    this.idToken = 'fake-firebase-id-token',
+  });
 
   @override
   Future<UserCredential> reauthenticateWithProvider(AuthProvider provider) {
+    reauthWithProviderCalls += 1;
     if (reauthHandler != null) {
       return reauthHandler!(provider);
     }
@@ -51,11 +74,32 @@ class _FakeUser implements User {
 
   @override
   Future<UserCredential> reauthenticateWithPopup(AuthProvider provider) {
+    reauthWithPopupCalls += 1;
     if (reauthHandler != null) {
       return reauthHandler!(provider);
     }
     throw StateError('reauthHandler not configured');
   }
+
+  @override
+  Future<String?> getIdToken([bool forceRefresh = false]) async => idToken;
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class _FakeFirebaseApp implements FirebaseApp {
+  final String apiKey;
+
+  _FakeFirebaseApp({this.apiKey = 'test-firebase-api-key'});
+
+  @override
+  FirebaseOptions get options => FirebaseOptions(
+    apiKey: apiKey,
+    appId: 'test-app-id',
+    messagingSenderId: 'test-sender-id',
+    projectId: 'test-project-id',
+  );
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -65,10 +109,17 @@ class _TestFirebaseAuth implements FirebaseAuth {
   _FakeUser? user;
   int revokeCalls = 0;
   String? lastRevokedCode;
+  int revokeAccessTokenCalls = 0;
+  String? lastRevokedAccessToken;
   Exception? revokeError;
   List<Exception?> revokeErrorsSequence = [];
+  @override
+  FirebaseApp app;
+  @override
+  String? tenantId;
 
-  _TestFirebaseAuth({this.user});
+  _TestFirebaseAuth({this.user, FirebaseApp? app, this.tenantId})
+    : app = app ?? _FakeFirebaseApp();
 
   @override
   User? get currentUser => user;
@@ -90,7 +141,47 @@ class _TestFirebaseAuth implements FirebaseAuth {
   }
 
   @override
+  Future<void> revokeAccessToken(String accessToken) async {
+    revokeAccessTokenCalls += 1;
+    lastRevokedAccessToken = accessToken;
+    if (revokeErrorsSequence.isNotEmpty) {
+      final err = revokeErrorsSequence.removeAt(0);
+      if (err != null) {
+        throw err;
+      }
+      return;
+    }
+    if (revokeError != null) {
+      throw revokeError!;
+    }
+  }
+
+  @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class _FakeHttpClient extends http.BaseClient {
+  final Future<http.Response> Function(http.BaseRequest request) handler;
+  int requestCount = 0;
+  Uri? lastUri;
+  Map<String, dynamic>? lastJsonBody;
+
+  _FakeHttpClient(this.handler);
+
+  @override
+  Future<http.StreamedResponse> send(http.BaseRequest request) async {
+    requestCount += 1;
+    lastUri = request.url;
+    if (request is http.Request && request.body.isNotEmpty) {
+      lastJsonBody = jsonDecode(request.body) as Map<String, dynamic>;
+    }
+    final response = await handler(request);
+    return http.StreamedResponse(
+      Stream<List<int>>.value(response.bodyBytes),
+      response.statusCode,
+      headers: response.headers,
+    );
+  }
 }
 
 void main() {
@@ -159,7 +250,10 @@ void main() {
         ),
       );
       auth.user = user;
-      final service = FirebaseAuthService(firebaseAuth: auth);
+      final service = FirebaseAuthService(
+        firebaseAuth: auth,
+        targetPlatform: TargetPlatform.iOS,
+      );
 
       final result = await service.revokeAppleAccessIfLinked();
 
@@ -264,7 +358,10 @@ void main() {
         ),
       );
       auth.user = user;
-      final service = FirebaseAuthService(firebaseAuth: auth);
+      final service = FirebaseAuthService(
+        firebaseAuth: auth,
+        targetPlatform: TargetPlatform.iOS,
+      );
 
       final result = await service.revokeAppleAccessIfLinked();
 
@@ -287,7 +384,10 @@ void main() {
         ),
       );
       auth.user = user;
-      final service = FirebaseAuthService(firebaseAuth: auth);
+      final service = FirebaseAuthService(
+        firebaseAuth: auth,
+        targetPlatform: TargetPlatform.iOS,
+      );
 
       final result = await service.revokeAppleAccessIfLinked();
 
@@ -326,7 +426,10 @@ void main() {
         ),
       );
       auth.user = user;
-      final service = FirebaseAuthService(firebaseAuth: auth);
+      final service = FirebaseAuthService(
+        firebaseAuth: auth,
+        targetPlatform: TargetPlatform.iOS,
+      );
 
       final result = await service.revokeAppleAccessIfLinked();
 
@@ -352,6 +455,7 @@ void main() {
       auth.user = user;
       final service = FirebaseAuthService(
         firebaseAuth: auth,
+        targetPlatform: TargetPlatform.iOS,
         maxRevokeAttempts: 3,
         revokeRetryDelay: Duration.zero,
       );
@@ -380,6 +484,7 @@ void main() {
       auth.user = user;
       final service = FirebaseAuthService(
         firebaseAuth: auth,
+        targetPlatform: TargetPlatform.iOS,
         maxRevokeAttempts: 3,
         revokeRetryDelay: Duration.zero,
       );
@@ -404,6 +509,7 @@ void main() {
       auth.user = user;
       final service = FirebaseAuthService(
         firebaseAuth: auth,
+        targetPlatform: TargetPlatform.iOS,
         maxRevokeAttempts: 3,
         revokeRetryDelay: Duration.zero,
       );
@@ -412,6 +518,183 @@ void main() {
 
       expect(result, RevokeAppleTokenResult.failedNonBlocking);
       expect(auth.revokeCalls, 1);
+    });
+
+    test('Android: revokes token using credential.accessToken and revokeAccessToken when authorizationCode is null', () async {
+      final auth = _TestFirebaseAuth();
+      final user = _FakeUser(
+        providerData: [_FakeUserInfo('apple.com')],
+        reauthHandler: (_) async => _FakeUserCredential(
+          additionalUserInfo: _FakeAdditionalUserInfo(authorizationCode: null),
+          credential: _FakeOAuthCredential(
+            accessToken: 'android-apple-access-token-xyz',
+          ),
+        ),
+      );
+      auth.user = user;
+      final service = FirebaseAuthService(
+        firebaseAuth: auth,
+        targetPlatform: TargetPlatform.android,
+      );
+
+      final result = await service.revokeAppleAccessIfLinked();
+
+      expect(result, RevokeAppleTokenResult.success);
+      expect(auth.revokeAccessTokenCalls, 1);
+      expect(auth.lastRevokedAccessToken, 'android-apple-access-token-xyz');
+      expect(auth.revokeCalls, 0);
+    });
+
+    test('Android: returns failedNonBlocking when credential.accessToken is null or empty', () async {
+      final auth = _TestFirebaseAuth();
+      final user = _FakeUser(
+        providerData: [_FakeUserInfo('apple.com')],
+        reauthHandler: (_) async => _FakeUserCredential(
+          additionalUserInfo: _FakeAdditionalUserInfo(authorizationCode: null),
+          credential: _FakeOAuthCredential(accessToken: ''),
+        ),
+      );
+      auth.user = user;
+      final service = FirebaseAuthService(
+        firebaseAuth: auth,
+        targetPlatform: TargetPlatform.android,
+      );
+
+      final result = await service.revokeAppleAccessIfLinked();
+
+      expect(result, RevokeAppleTokenResult.failedNonBlocking);
+      expect(auth.revokeAccessTokenCalls, 0);
+      expect(auth.revokeCalls, 0);
+    });
+
+    test('Android: retries revokeAccessToken on transient error and succeeds on subsequent attempt', () async {
+      final auth = _TestFirebaseAuth();
+      auth.revokeErrorsSequence = [
+        FirebaseAuthException(code: 'network-request-failed'),
+        null,
+      ];
+      final user = _FakeUser(
+        providerData: [_FakeUserInfo('apple.com')],
+        reauthHandler: (_) async => _FakeUserCredential(
+          additionalUserInfo: _FakeAdditionalUserInfo(authorizationCode: null),
+          credential: _FakeOAuthCredential(
+            accessToken: 'android-apple-access-token-retry',
+          ),
+        ),
+      );
+      auth.user = user;
+      final service = FirebaseAuthService(
+        firebaseAuth: auth,
+        targetPlatform: TargetPlatform.android,
+        maxRevokeAttempts: 3,
+        revokeRetryDelay: Duration.zero,
+      );
+
+      final result = await service.revokeAppleAccessIfLinked();
+
+      expect(result, RevokeAppleTokenResult.success);
+      expect(auth.revokeAccessTokenCalls, 2);
+      expect(auth.lastRevokedAccessToken, 'android-apple-access-token-retry');
+    });
+
+    test('Web: reauthenticates with popup and revokes accessToken via Identity Toolkit endpoint', () async {
+      final auth = _TestFirebaseAuth(
+        app: _FakeFirebaseApp(apiKey: 'web-api-key-123'),
+        tenantId: 'tenant-abc',
+      );
+      final user = _FakeUser(
+        providerData: [_FakeUserInfo('apple.com')],
+        idToken: 'web-firebase-id-token-999',
+        reauthHandler: (_) async => _FakeUserCredential(
+          additionalUserInfo: _FakeAdditionalUserInfo(authorizationCode: null),
+          credential: _FakeOAuthCredential(
+            accessToken: 'web-apple-access-token-456',
+          ),
+        ),
+      );
+      auth.user = user;
+      final fakeHttp = _FakeHttpClient((_) async => http.Response('{}', 200));
+      final service = FirebaseAuthService(
+        firebaseAuth: auth,
+        isWeb: true,
+        httpClient: fakeHttp,
+      );
+
+      final result = await service.revokeAppleAccessIfLinked();
+
+      expect(result, RevokeAppleTokenResult.success);
+      expect(user.reauthWithPopupCalls, 1);
+      expect(user.reauthWithProviderCalls, 0);
+      expect(fakeHttp.requestCount, 1);
+      expect(
+        fakeHttp.lastUri.toString(),
+        'https://identitytoolkit.googleapis.com/v2/accounts:revokeToken?key=web-api-key-123',
+      );
+      expect(fakeHttp.lastJsonBody, <String, dynamic>{
+        'providerId': 'apple.com',
+        'tokenType': 'ACCESS_TOKEN',
+        'token': 'web-apple-access-token-456',
+        'idToken': 'web-firebase-id-token-999',
+        'tenantId': 'tenant-abc',
+      });
+      expect(auth.revokeCalls, 0);
+      expect(auth.revokeAccessTokenCalls, 0);
+    });
+
+    test('Web: retries transient HTTP 503 failure and succeeds on retry', () async {
+      final auth = _TestFirebaseAuth();
+      final user = _FakeUser(
+        providerData: [_FakeUserInfo('apple.com')],
+        reauthHandler: (_) async => _FakeUserCredential(
+          credential: _FakeOAuthCredential(
+            accessToken: 'web-apple-access-token-retry',
+          ),
+        ),
+      );
+      auth.user = user;
+      var callIndex = 0;
+      final fakeHttp = _FakeHttpClient((_) async {
+        callIndex += 1;
+        if (callIndex == 1) {
+          return http.Response('Service Unavailable', 503);
+        }
+        return http.Response('{}', 200);
+      });
+      final service = FirebaseAuthService(
+        firebaseAuth: auth,
+        isWeb: true,
+        httpClient: fakeHttp,
+        maxRevokeAttempts: 3,
+        revokeRetryDelay: Duration.zero,
+      );
+
+      final result = await service.revokeAppleAccessIfLinked();
+
+      expect(result, RevokeAppleTokenResult.success);
+      expect(fakeHttp.requestCount, 2);
+    });
+
+    test('Web: returns failedNonBlocking when credential.accessToken is missing', () async {
+      final auth = _TestFirebaseAuth();
+      final user = _FakeUser(
+        providerData: [_FakeUserInfo('apple.com')],
+        reauthHandler: (_) async => _FakeUserCredential(
+          additionalUserInfo: _FakeAdditionalUserInfo(authorizationCode: null),
+          credential: _FakeOAuthCredential(accessToken: null),
+        ),
+      );
+      auth.user = user;
+      final fakeHttp = _FakeHttpClient((_) async => http.Response('{}', 200));
+      final service = FirebaseAuthService(
+        firebaseAuth: auth,
+        isWeb: true,
+        httpClient: fakeHttp,
+      );
+
+      final result = await service.revokeAppleAccessIfLinked();
+
+      expect(result, RevokeAppleTokenResult.failedNonBlocking);
+      expect(fakeHttp.requestCount, 0);
     });
   });
 }
