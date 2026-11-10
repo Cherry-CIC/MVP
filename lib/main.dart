@@ -16,10 +16,12 @@ import 'package:cherry_mvp/core/utils/dependency.dart';
 import 'package:cherry_mvp/features/welcome/widgets/auth_gate.dart';
 import 'package:cherry_mvp/core/theme/theme_notifier.dart';
 import 'package:cherry_mvp/core/config/firebase_environment.dart';
+import 'package:cherry_mvp/core/config/system_photo_picker.dart';
 
 void main() async {
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
+  configureSystemPhotoPicker();
 
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
