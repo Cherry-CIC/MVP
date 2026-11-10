@@ -11,41 +11,69 @@ import 'package:cherry_mvp/core/utils/result.dart';
 // TODO as we need to get other details like user photo etc for other parts of the app.
 class UsernameService {
   static const _usernameCacheByUidKey = 'username_cache_by_uid';
-  static const Duration _readTimeout = Duration(seconds: 6);
-  static const Duration _writeTimeout = Duration(seconds: 8);
+  static const Duration _readTimeout = Duration(seconds: 15);
+  static const Duration _writeTimeout = Duration(seconds: 15);
 
-  static Future<String?> getUsername(String uid) async {
+  static Future<Result<String?>> resolveUsername(
+    String uid, {
+    FirebaseFirestore? firestore,
+    SharedPreferences? preferences,
+    Duration readTimeout = _readTimeout,
+  }) async {
     final trimmedUid = uid.trim();
-    if (trimmedUid.isEmpty) return null;
+    if (trimmedUid.isEmpty) {
+      return Result.failure('User id is required.');
+    }
 
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = preferences ?? await SharedPreferences.getInstance();
+    final cached = _getCachedUsername(prefs, trimmedUid);
+    if (cached != null && cached.isNotEmpty) {
+      return Result.success(cached);
+    }
 
     try {
-      final doc = await FirebaseFirestore.instance
+      final db = firestore ?? FirebaseFirestore.instance;
+      final doc = await db
           .collection(FirestoreConstants.pathUserCollection)
           .doc(trimmedUid)
           .get()
-          .timeout(_readTimeout);
+          .timeout(readTimeout);
 
       final data = doc.data();
       final username = (data?[FirestoreConstants.username] as String?)?.trim();
 
       if (username != null && username.isNotEmpty) {
-        await _cacheUsernameForUid(prefs, trimmedUid, username);
-        return username;
+        await cacheUsernameForUid(prefs, trimmedUid, username);
+        return Result.success(username);
       }
-    } catch (_) {
-      // Fall back to local cache if Firestore read fails.
-    }
 
-    final cached = _readCachedUsernames(prefs)[trimmedUid]?.trim();
-    if (cached == null || cached.isEmpty) return null;
-    return cached;
+      // Document exists (or does not), but has no username set yet.
+      return Result.success(null);
+    } on TimeoutException {
+      final fallback = _getCachedUsername(prefs, trimmedUid);
+      if (fallback != null && fallback.isNotEmpty) {
+        return Result.success(fallback);
+      }
+      return Result.failure(ErrorStrings.timeoutError);
+    } catch (e) {
+      final fallback = _getCachedUsername(prefs, trimmedUid);
+      if (fallback != null && fallback.isNotEmpty) {
+        return Result.success(fallback);
+      }
+      return Result.failure(e.toString());
+    }
+  }
+
+  static Future<String?> getUsername(String uid) async {
+    final result = await resolveUsername(uid);
+    return result.value;
   }
 
   static Future<Result<bool>> isUsernameTaken(
     String username, {
     String? excludeUid,
+    FirebaseFirestore? firestore,
+    Duration readTimeout = _readTimeout,
   }) async {
     final trimmedUsername = username.trim();
     if (trimmedUsername.isEmpty) {
@@ -53,12 +81,13 @@ class UsernameService {
     }
 
     try {
-      final query = await FirebaseFirestore.instance
+      final db = firestore ?? FirebaseFirestore.instance;
+      final query = await db
           .collection(FirestoreConstants.pathUserCollection)
           .where(FirestoreConstants.username, isEqualTo: trimmedUsername)
           .limit(5)
           .get()
-          .timeout(_readTimeout);
+          .timeout(readTimeout);
 
       final isTaken = query.docs.any((doc) => doc.id != excludeUid);
       return Result.success(isTaken);
@@ -69,7 +98,13 @@ class UsernameService {
     }
   }
 
-  static Future<Result<void>> saveUsername(String uid, String username) async {
+  static Future<Result<void>> saveUsername(
+    String uid,
+    String username, {
+    FirebaseFirestore? firestore,
+    SharedPreferences? preferences,
+    Duration writeTimeout = _writeTimeout,
+  }) async {
     final trimmedUid = uid.trim();
     final trimmedUsername = username.trim();
 
@@ -81,23 +116,39 @@ class UsernameService {
     }
 
     try {
-      await FirebaseFirestore.instance
+      final db = firestore ?? FirebaseFirestore.instance;
+      await db
           .collection(FirestoreConstants.pathUserCollection)
           .doc(trimmedUid)
           .set({
             FirestoreConstants.username: trimmedUsername,
           }, SetOptions(merge: true))
-          .timeout(_writeTimeout);
+          .timeout(writeTimeout);
 
-      final prefs = await SharedPreferences.getInstance();
-      await _cacheUsernameForUid(prefs, trimmedUid, trimmedUsername);
-      await prefs.setString(FirestoreConstants.username, trimmedUsername);
+      final prefs = preferences ?? await SharedPreferences.getInstance();
+      await cacheUsernameForUid(prefs, trimmedUid, trimmedUsername);
       return Result.success(null);
     } on TimeoutException {
       return Result.failure(ErrorStrings.timeoutError);
     } catch (e) {
       return Result.failure(e.toString());
     }
+  }
+
+  static String? _getCachedUsername(SharedPreferences prefs, String uid) {
+    final cachedFromMap = _readCachedUsernames(prefs)[uid]?.trim();
+    if (cachedFromMap != null && cachedFromMap.isNotEmpty) {
+      return cachedFromMap;
+    }
+
+    final storedUid = prefs.getString(FirestoreConstants.id)?.trim();
+    if (storedUid == uid) {
+      final fallback = prefs.getString(FirestoreConstants.username)?.trim();
+      if (fallback != null && fallback.isNotEmpty) {
+        return fallback;
+      }
+    }
+    return null;
   }
 
   static Map<String, String> _readCachedUsernames(SharedPreferences prefs) {
@@ -120,13 +171,19 @@ class UsernameService {
     }
   }
 
-  static Future<void> _cacheUsernameForUid(
+  static Future<void> cacheUsernameForUid(
     SharedPreferences prefs,
     String uid,
     String username,
   ) async {
+    final trimmedUid = uid.trim();
+    final trimmedUsername = username.trim();
+    if (trimmedUid.isEmpty || trimmedUsername.isEmpty) return;
+
     final cache = _readCachedUsernames(prefs);
-    cache[uid] = username;
+    cache[trimmedUid] = trimmedUsername;
     await prefs.setString(_usernameCacheByUidKey, jsonEncode(cache));
+    await prefs.setString(FirestoreConstants.username, trimmedUsername);
+    await prefs.setString(FirestoreConstants.id, trimmedUid);
   }
 }
