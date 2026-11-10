@@ -113,6 +113,7 @@ class _TestFirebaseAuth implements FirebaseAuth {
   String? lastRevokedAccessToken;
   Exception? revokeError;
   List<Exception?> revokeErrorsSequence = [];
+  Future<void> Function(String code)? onRevokeWithCode;
   @override
   FirebaseApp app;
   @override
@@ -128,6 +129,9 @@ class _TestFirebaseAuth implements FirebaseAuth {
   Future<void> revokeTokenWithAuthorizationCode(String authorizationCode) async {
     revokeCalls += 1;
     lastRevokedCode = authorizationCode;
+    if (onRevokeWithCode != null) {
+      await onRevokeWithCode!(authorizationCode);
+    }
     if (revokeErrorsSequence.isNotEmpty) {
       final err = revokeErrorsSequence.removeAt(0);
       if (err != null) {
@@ -695,6 +699,34 @@ void main() {
 
       expect(result, RevokeAppleTokenResult.failedNonBlocking);
       expect(fakeHttp.requestCount, 0);
+    });
+
+    test('retries on revocation timeout and exhausts cleanly to failedNonBlocking', () async {
+      final auth = _TestFirebaseAuth();
+      final user = _FakeUser(
+        providerData: [_FakeUserInfo('apple.com')],
+        reauthHandler: (_) async => _FakeUserCredential(
+          additionalUserInfo: _FakeAdditionalUserInfo(
+            authorizationCode: 'valid-code',
+          ),
+        ),
+      );
+      auth.user = user;
+      auth.onRevokeWithCode = (code) async {
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+      };
+      final service = FirebaseAuthService(
+        firebaseAuth: auth,
+        targetPlatform: TargetPlatform.iOS,
+        maxRevokeAttempts: 2,
+        revokeRetryDelay: Duration.zero,
+        revokeTimeout: const Duration(milliseconds: 10),
+      );
+
+      final result = await service.revokeAppleAccessIfLinked();
+
+      expect(result, RevokeAppleTokenResult.failedNonBlocking);
+      expect(auth.revokeCalls, 2);
     });
   });
 }

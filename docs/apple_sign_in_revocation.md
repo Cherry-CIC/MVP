@@ -62,7 +62,7 @@ This repository implements token revocation during account deletion in complianc
 ---
 
 ## Error Handling & Resiliency
-- **Bounded Retry for Transient Errors**: If token revocation (`revokeTokenWithAuthorizationCode`, `revokeAccessToken`, or the Web Identity Toolkit request) encounters a transient network or server error (e.g. `network-request-failed`, `timeout`, `internal-error`, `too-many-requests`), it executes a bounded retry (up to 3 total attempts) with safe logging (`AppLogEvent.networkRetryStarted` / `networkRetryFailed`). Permanent errors (e.g. `invalid-credential`) fail immediately on the first attempt without redundant retries.
+- **Bounded Timeout and Retry for Transient Errors**: Each revocation call has a bounded per-attempt timeout (15 seconds by default) so stalled requests cannot hang account deletion indefinitely. If token revocation (`revokeTokenWithAuthorizationCode`, `revokeAccessToken`, or the Web Identity Toolkit request) encounters a transient network or server error (e.g. `network-request-failed`, `timeout`, `internal-error`, `too-many-requests`), it executes a bounded retry (up to 3 total attempts) with safe logging (`AppLogEvent.networkRetryStarted` / `networkRetryFailed`). Permanent errors (e.g. `invalid-credential`) fail immediately on the first attempt without redundant retries.
 - **Non-blocking Deletion**: If retries are exhausted or a non-retryable technical failure occurs, the error is safely caught and mapped to `failedNonBlocking`. This ensures account deletion proceeds smoothly on the backend so users are never trapped in an undeletable account state.
 - **Safe Logging**: Authorization codes, client secrets, and sensitive tokens are strictly excluded from logs and error payloads.
 

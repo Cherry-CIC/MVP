@@ -29,6 +29,7 @@ class FirebaseAuthService {
   final FirebaseAuth firebaseAuth;
   final int maxRevokeAttempts;
   final Duration revokeRetryDelay;
+  final Duration revokeTimeout;
   final bool _isWeb;
   final TargetPlatform? _targetPlatformOverride;
   final http.Client? httpClient;
@@ -37,6 +38,7 @@ class FirebaseAuthService {
     required this.firebaseAuth,
     this.maxRevokeAttempts = 3,
     this.revokeRetryDelay = const Duration(milliseconds: 100),
+    this.revokeTimeout = const Duration(seconds: 15),
     bool? isWeb,
     TargetPlatform? targetPlatform,
     this.httpClient,
@@ -290,7 +292,7 @@ class FirebaseAuthService {
   ) async {
     for (var attempt = 1; attempt <= maxRevokeAttempts; attempt++) {
       try {
-        await revokeAction();
+        await revokeAction().timeout(revokeTimeout);
         return true;
       } catch (error) {
         final isTransient = _isTransientRevocationError(error);
