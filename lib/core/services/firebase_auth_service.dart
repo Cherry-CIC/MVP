@@ -8,6 +8,20 @@ import 'package:cherry_mvp/core/services/google_auth_service.dart';
 import 'package:cherry_mvp/core/services/safe_log.dart';
 import 'package:cherry_mvp/core/utils/result.dart';
 
+enum RevokeAppleTokenResult {
+  /// Apple is not linked to the account; revocation was skipped.
+  skipped,
+
+  /// Apple authorization token was successfully revoked.
+  success,
+
+  /// User explicitly cancelled the Apple reauthentication prompt.
+  userCancelled,
+
+  /// Revocation failed due to technical error, but account deletion should not be blocked.
+  failedNonBlocking,
+}
+
 class FirebaseAuthService {
   final FirebaseAuth firebaseAuth;
 
@@ -151,5 +165,69 @@ class FirebaseAuthService {
     } catch (_) {
       return Result.failure(ErrorStrings.friendlyError);
     }
+  }
+
+  bool isAppleLinked([User? user]) {
+    final targetUser = user ?? firebaseAuth.currentUser;
+    if (targetUser == null) return false;
+    return targetUser.providerData.any((info) => info.providerId == 'apple.com');
+  }
+
+  Future<RevokeAppleTokenResult> revokeAppleAccessIfLinked() async {
+    final user = firebaseAuth.currentUser;
+    if (user == null || !isAppleLinked(user)) {
+      return RevokeAppleTokenResult.skipped;
+    }
+
+    try {
+      final appleProvider = AppleAuthProvider();
+      appleProvider.addScope('email');
+      appleProvider.addScope('name');
+
+      final UserCredential userCredential;
+      if (kIsWeb) {
+        userCredential = await user.reauthenticateWithPopup(appleProvider);
+      } else {
+        userCredential = await user.reauthenticateWithProvider(appleProvider);
+      }
+
+      final authorizationCode = userCredential.additionalUserInfo?.authorizationCode;
+      if (authorizationCode != null && authorizationCode.isNotEmpty) {
+        await firebaseAuth.revokeTokenWithAuthorizationCode(authorizationCode);
+        return RevokeAppleTokenResult.success;
+      }
+
+      SafeLog.event(
+        AppLogEvent.authenticationOperationFailed,
+        level: SafeLogLevel.warning,
+      );
+      return RevokeAppleTokenResult.failedNonBlocking;
+    } on FirebaseAuthException catch (e) {
+      if (_isCancellationCode(e.code)) {
+        return RevokeAppleTokenResult.userCancelled;
+      }
+      SafeLog.event(
+        AppLogEvent.authenticationOperationFailed,
+        level: SafeLogLevel.warning,
+      );
+      return RevokeAppleTokenResult.failedNonBlocking;
+    } catch (e) {
+      if (e.toString().toLowerCase().contains('cancel')) {
+        return RevokeAppleTokenResult.userCancelled;
+      }
+      SafeLog.event(
+        AppLogEvent.authenticationOperationFailed,
+        level: SafeLogLevel.warning,
+      );
+      return RevokeAppleTokenResult.failedNonBlocking;
+    }
+  }
+
+  static bool _isCancellationCode(String code) {
+    final normalized = code.toLowerCase();
+    return normalized == 'canceled' ||
+        normalized == 'user-cancelled' ||
+        normalized == 'popup-closed-by-user' ||
+        normalized == 'web-context-cancelled';
   }
 }
