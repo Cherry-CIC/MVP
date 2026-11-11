@@ -39,6 +39,7 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: stable
+          flutter-version: '3.47.9'
           cache: true
 
       - name: Install dependencies
@@ -50,7 +51,7 @@ jobs:
       - name: Build Android APK
         env:
           APP_ENV: ${{ steps.config.outputs.app_env }}
-        run: flutter build apk --debug --flavor "$APP_ENV" --dart-define=APP_ENV="$APP_ENV" --android-skip-build-dependency-validation
+        run: flutter build apk --debug --flavor "$APP_ENV" --dart-define=APP_ENV="$APP_ENV"
 
   build-ios-simulator:
     name: iOS simulator build (${{ inputs.environment || (github.ref_name == 'main' && 'prod' || 'dev') }})
@@ -70,6 +71,7 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: stable
+          flutter-version: '3.47.9'
           cache: true
 
       - name: Use Swift Package Manager for iOS plugins
