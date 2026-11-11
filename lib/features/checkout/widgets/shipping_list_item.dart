@@ -21,19 +21,21 @@ class ShippingListItem<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Outlined(
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-        leading: Icon(icon),
-        title: Text(title),
-        subtitle: Text(subtitle),
-        trailing: RadioGroup(
-          groupValue: groupValue,
-          onChanged: onChanged,
-          child: Radio.adaptive(value: value),
+    return MergeSemantics(
+      child: Outlined(
+        child: ListTile(
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+          leading: ExcludeSemantics(child: Icon(icon)),
+          title: Text(title),
+          subtitle: Text(subtitle),
+          trailing: RadioGroup(
+            groupValue: groupValue,
+            onChanged: onChanged,
+            child: Radio.adaptive(value: value),
+          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          onTap: () => onChanged(value),
         ),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        onTap: () => onChanged(value),
       ),
     );
   }

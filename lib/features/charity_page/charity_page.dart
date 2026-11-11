@@ -49,8 +49,11 @@ class CharityPageState extends State<CharityPage> {
         return Scaffold(
           appBar: AppBar(
             leading: IconButton(
-              icon: ImageProviderHelper.buildImage(
-                imagePath: AppImages.backIcon,
+              tooltip: AppStrings.back,
+              icon: ExcludeSemantics(
+                child: ImageProviderHelper.buildImage(
+                  imagePath: AppImages.backIcon,
+                ),
               ),
               onPressed: () => viewModel.goBack(),
             ),
@@ -110,22 +113,31 @@ class CharityPageState extends State<CharityPage> {
   ) {
     // Show loading widget when fetching data
     if (status.type == StatusType.loading) {
-      return const Center(child: CircularProgressIndicator());
+      return Center(
+        child: Semantics(
+          label: AppStrings.loading,
+          liveRegion: true,
+          child: const CircularProgressIndicator(),
+        ),
+      );
     }
 
     // Show error widget if failed
     if (status.type == StatusType.failure) {
       return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text('${AppStrings.charityError}: ${status.message}'),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () => viewModel.fetchCharities(),
-              child: Text(AppStrings.retry),
-            ),
-          ],
+        child: Semantics(
+          liveRegion: true,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text('${AppStrings.charityError}: ${status.message}'),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () => viewModel.fetchCharities(),
+                child: Text(AppStrings.retry),
+              ),
+            ],
+          ),
         ),
       );
     }
@@ -137,21 +149,27 @@ class CharityPageState extends State<CharityPage> {
         itemBuilder: (context, index) {
           final charity = charities[index];
           final isSelected = widget.selectionMode && charity.id == _initialId;
-          return InkWell(
-            onTap: () => _handleCharityTap(charity),
-            child: Stack(
-              children: [
-                CharityCard(charity: charity),
-                if (isSelected)
-                  Positioned(
-                    right: 16,
-                    top: 16,
-                    child: Icon(
-                      Icons.check_circle,
-                      color: Theme.of(context).colorScheme.primary,
+          return Semantics(
+            button: widget.selectionMode,
+            selected: widget.selectionMode ? isSelected : null,
+            child: InkWell(
+              onTap: () => _handleCharityTap(charity),
+              child: Stack(
+                children: [
+                  CharityCard(charity: charity),
+                  if (isSelected)
+                    Positioned(
+                      right: 16,
+                      top: 16,
+                      child: ExcludeSemantics(
+                        child: Icon(
+                          Icons.check_circle,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                      ),
                     ),
-                  ),
-              ],
+                ],
+              ),
             ),
           );
         },

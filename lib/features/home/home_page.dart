@@ -140,8 +140,6 @@ class _HomePageState extends State<HomePage> {
         bottomNavigationBar: CherryBottomNavBar(
           selectedIndex: _selectedIndex,
           onItemSelected: _onItemTapped,
-          selectedColor: Theme.of(context).colorScheme.primary,
-          unselectedColor: Theme.of(context).colorScheme.secondary,
         ),
       ),
     );

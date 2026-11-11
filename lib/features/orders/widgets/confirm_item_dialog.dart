@@ -33,7 +33,8 @@ class ConfirmItemDialog extends StatelessWidget {
                   child: Image.network(
                     order.imageUrl,
                     fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                    excludeFromSemantics: true,
+                    errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
                   ),
                 ),
               ),

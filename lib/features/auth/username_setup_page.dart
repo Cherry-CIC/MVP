@@ -117,15 +117,21 @@ class _UsernameSetupPageState extends State<UsernameSetupPage> {
                 Row(
                   children: [
                     IconButton(
+                      tooltip: AppStrings.back,
                       onPressed: _isSubmitting ? null : _handleBack,
                       icon: Image.asset(
                         AppImages.backIcon,
                         width: 24,
                         height: 24,
+                        excludeFromSemantics: true,
                       ),
                     ),
                     const Spacer(),
-                    Image.asset(AppImages.cherryLogo, width: 86),
+                    Image.asset(
+                      AppImages.cherryLogo,
+                      width: 86,
+                      excludeFromSemantics: true,
+                    ),
                   ],
                 ),
                 const SizedBox(height: 22),
@@ -143,18 +149,24 @@ class _UsernameSetupPageState extends State<UsernameSetupPage> {
                   ),
                 ),
                 const SizedBox(height: 22),
-                TextField(
-                  controller: _usernameController,
-                  enabled: !_isSubmitting,
-                  onChanged: (_) {
-                    setState(() {
-                      _errorText = null;
-                    });
-                  },
-                  decoration: InputDecoration(
-                    hintText: AppStrings.usernameSetupHint,
-                    prefixIcon: const Icon(Icons.person_outline),
-                    errorText: _errorText,
+                Semantics(
+                  label: AppStrings.usernameSetupHint,
+                  liveRegion: _errorText != null,
+                  child: TextField(
+                    controller: _usernameController,
+                    enabled: !_isSubmitting,
+                    onChanged: (_) {
+                      setState(() {
+                        _errorText = null;
+                      });
+                    },
+                    decoration: InputDecoration(
+                      hintText: AppStrings.usernameSetupHint,
+                      prefixIcon: const ExcludeSemantics(
+                        child: Icon(Icons.person_outline),
+                      ),
+                      errorText: _errorText,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 18),
@@ -162,7 +174,23 @@ class _UsernameSetupPageState extends State<UsernameSetupPage> {
                   width: double.infinity,
                   height: 56,
                   child: _isSubmitting
-                      ? const Center(child: CircularProgressIndicator())
+                      ? Semantics(
+                          button: true,
+                          enabled: false,
+                          label: AppStrings.loadingButton(AppStrings.nextButton),
+                          excludeSemantics: true,
+                          child: FilledButton(
+                            onPressed: null,
+                            child: SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 3,
+                                color: Theme.of(context).colorScheme.onPrimary,
+                              ),
+                            ),
+                          ),
+                        )
                       : FilledButton(
                           onPressed: _isValid ? _saveUsername : null,
                           child: const Text(AppStrings.nextButton),

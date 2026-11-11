@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cherry_mvp/features/products/widgets/product_quality_label.dart';
+import 'package:cherry_mvp/core/config/app_colors.dart';
 import 'package:cherry_mvp/core/config/app_images.dart';
 import 'package:cherry_mvp/core/config/feature_flags.dart';
 import 'package:cherry_mvp/core/models/model.dart';
@@ -16,6 +17,8 @@ class ProductInformation extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colours = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primaryPriceColor = isDark ? colours.primary : AppColors.primaryAction;
     const detailStyle = TextStyle(
       fontFamily: 'Raleway',
       fontWeight: FontWeight.w800,
@@ -38,30 +41,39 @@ class ProductInformation extends StatelessWidget {
             spacing: 24,
             runSpacing: 12,
             children: [
-              GestureDetector(
-                onTap: context.read<ProductViewModel>().showPurchaseSecurity,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  spacing: 4,
-                  children: [
-                    Text(
-                      '£${product.donation.toStringAsFixed(2)}',
-                      style: priceStyle.copyWith(color: colours.onSurfaceVariant),
-                    ),
-                    Wrap(
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                      spacing: 4,
-                      runSpacing: 4,
-                      children: [
-                        Text(
-                          '£${product.priceIncludingSecurityFee.toStringAsFixed(2)}',
-                          style: priceStyle.copyWith(color: colours.primary),
-                        ),
-                        Image.asset(AppImages.shieldTick, width: 20, height: 20),
-                      ],
-                    ),
-                  ],
+              Semantics(
+                button: true,
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: context.read<ProductViewModel>().showPurchaseSecurity,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    spacing: 4,
+                    children: [
+                      Text(
+                        '£${product.donation.toStringAsFixed(2)}',
+                        style: priceStyle.copyWith(color: colours.onSurfaceVariant),
+                      ),
+                      Wrap(
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        spacing: 4,
+                        runSpacing: 4,
+                        children: [
+                          Text(
+                            '£${product.priceIncludingSecurityFee.toStringAsFixed(2)}',
+                            style: priceStyle.copyWith(color: primaryPriceColor),
+                          ),
+                          Image.asset(
+                            AppImages.shieldTick,
+                            width: 20,
+                            height: 20,
+                            excludeFromSemantics: true,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
               Text(

@@ -15,32 +15,35 @@ class CheckoutActionButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Expanded(
-      child: Material(
-        borderRadius: BorderRadius.circular(12),
-        color: Theme.of(context).colorScheme.surfaceContainerHighest,
-        child: InkWell(
+      child: Semantics(
+        button: true,
+        child: Material(
           borderRadius: BorderRadius.circular(12),
-          onTap: onPressed,
-          child: Stack(
-            children: [
-              Positioned(
-                top: 12,
-                left: 12,
-                right: 24,
-                child: DefaultTextStyle(
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                  child: label,
-                ),
-              ),
-              if (icon != null)
+          color: Theme.of(context).colorScheme.surfaceContainerHighest,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(12),
+            onTap: onPressed,
+            child: Stack(
+              children: [
                 Positioned(
-                  bottom: 12,
-                  right: 12,
-                  child: icon!,
+                  top: 12,
+                  left: 12,
+                  right: 24,
+                  child: DefaultTextStyle(
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                    child: label,
+                  ),
                 ),
-            ],
+                if (icon != null)
+                  Positioned(
+                    bottom: 12,
+                    right: 12,
+                    child: ExcludeSemantics(child: icon!),
+                  ),
+              ],
+            ),
           ),
         ),
       ),

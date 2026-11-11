@@ -23,47 +23,57 @@ class DonationFormField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final hasTitle = (title ?? "").isNotEmpty;
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
 
         spacing: 4,
         children: [
-          if ((title ?? "").isNotEmpty)
-            Text(
-              title!,
-              style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
+          if (hasTitle)
+            ExcludeSemantics(
+              child: Text(
+                title!,
+                style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
               ),
             ),
           Padding(
-            padding: EdgeInsets.only(bottom: 10),
-            child: TextFormField(
-              maxLines: null,
-              controller: controller,
-              minLines: minLines,
-              validator: validator ?? validateDonationFormFields,
-              decoration: InputDecoration(
-                hintText: hintText,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(
-                    color: Theme.of(context).colorScheme.outline,
+            padding: const EdgeInsets.only(bottom: 10),
+            child: Semantics(
+              label: hasTitle ? title : hintText,
+              child: TextFormField(
+                maxLines: null,
+                controller: controller,
+                minLines: minLines,
+                validator: validator ?? validateDonationFormFields,
+                decoration: InputDecoration(
+                  hintText: hintText,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
                   ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                      color: Theme.of(context).colorScheme.outline,
+                    ),
+                  ),
+                  prefixIcon: hintIcon != null
+                      ? ExcludeSemantics(
+                          child: Icon(
+                            hintIcon,
+                            color: Theme.of(context).colorScheme.secondary,
+                          ),
+                        )
+                      : null,
+                  suffixIcon: suffixIcon != null
+                      ? ExcludeSemantics(child: Icon(suffixIcon))
+                      : null,
                 ),
-                prefixIcon: hintIcon != null
-                    ? Icon(
-                        hintIcon,
-                        color: Theme.of(context).colorScheme.secondary,
-                      )
-                    : null,
-                suffixIcon: suffixIcon != null ? Icon(suffixIcon) : null,
+                onTapUpOutside: (_) => FocusManager.instance.primaryFocus?.unfocus(),
               ),
-              onTapUpOutside: (_) => FocusManager.instance.primaryFocus?.unfocus(),
             ),
           ),
         ],

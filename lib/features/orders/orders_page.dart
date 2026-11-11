@@ -163,6 +163,7 @@ class _OrdersLoading extends StatelessWidget {
   Widget build(BuildContext context) {
     return Semantics(
       label: AppStrings.myOrdersLoading,
+      liveRegion: true,
       child: const Center(child: CircularProgressIndicator()),
     );
   }
@@ -177,29 +178,34 @@ class _OrdersFailure extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.receipt_long_outlined,
-              size: 48,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              AppStrings.myOrdersLoadFailed,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            const SizedBox(height: 16),
-            OutlinedButton(
-              onPressed: onRetry,
-              child: const Text(AppStrings.retry),
-            ),
-          ],
+    return Semantics(
+      liveRegion: true,
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ExcludeSemantics(
+                child: Icon(
+                  Icons.receipt_long_outlined,
+                  size: 48,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                AppStrings.myOrdersLoadFailed,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 16),
+              OutlinedButton(
+                onPressed: onRetry,
+                child: const Text(AppStrings.retry),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -228,10 +234,12 @@ class _OrdersEmpty extends StatelessWidget {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(
-                      Icons.shopping_bag_outlined,
-                      size: 48,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ExcludeSemantics(
+                      child: Icon(
+                        Icons.shopping_bag_outlined,
+                        size: 48,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                     ),
                     const SizedBox(height: 16),
                     Text(

@@ -27,12 +27,14 @@ class PurchaseSecurity extends StatelessWidget {
                       AppImages.checkoutPurchaseSecurityShield,
                       width: 114,
                       height: 126,
+                      excludeFromSemantics: true,
                     ),
                   ),
                   Center(
                     child: Text(
                       AppStrings.purchaseSecurityHeading,
-                      style: TextStyle(
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
                       ),
@@ -41,6 +43,7 @@ class PurchaseSecurity extends StatelessWidget {
                   Center(
                     child: Text(
                       AppStrings.purchaseSecuritySubHeading,
+                      textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 11,
                         decoration: TextDecoration.underline,
@@ -48,7 +51,7 @@ class PurchaseSecurity extends StatelessWidget {
                       ),
                     ),
                   ),
-                  SizedBox(height: 30),
+                  const SizedBox(height: 30),
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.start,
@@ -58,6 +61,7 @@ class PurchaseSecurity extends StatelessWidget {
                         AppImages.refundPolicy,
                         width: 30,
                         height: 30,
+                        excludeFromSemantics: true,
                       ),
                       Expanded(
                         child: Column(
@@ -129,6 +133,7 @@ class PurchaseSecurity extends StatelessWidget {
                         AppImages.secureTransactions,
                         width: 30,
                         height: 30,
+                        excludeFromSemantics: true,
                       ),
                       SizedBox(width: 20),
                       Expanded(
@@ -156,8 +161,13 @@ class PurchaseSecurity extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.start,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Image.asset(AppImages.yourSupport, width: 30, height: 30),
-                      SizedBox(width: 20),
+                      Image.asset(
+                        AppImages.yourSupport,
+                        width: 30,
+                        height: 30,
+                        excludeFromSemantics: true,
+                      ),
+                      const SizedBox(width: 20),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -172,7 +182,7 @@ class PurchaseSecurity extends StatelessWidget {
                       ),
                     ],
                   ),
-                  SizedBox(height: 30),
+                  const SizedBox(height: 30),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.start,
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -181,17 +191,18 @@ class PurchaseSecurity extends StatelessWidget {
                         AppImages.supportOurMission,
                         width: 30,
                         height: 30,
+                        excludeFromSemantics: true,
                       ),
-                      SizedBox(width: 20),
+                      const SizedBox(width: 20),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
                               AppStrings.supportMissionHeading,
-                              style: _sectionHeadingStyle.copyWith(color: AppColors.red),
+                              style: _sectionHeadingStyle.copyWith(color: AppColors.primaryAction),
                             ),
-                            Text.rich(
+                            const Text.rich(
                               TextSpan(
                                 children: [
                                   TextSpan(
@@ -206,7 +217,7 @@ class PurchaseSecurity extends StatelessWidget {
                                 ],
                               ),
                             ),
-                            Text.rich(
+                            const Text.rich(
                               TextSpan(
                                 children: [
                                   TextSpan(
@@ -214,7 +225,7 @@ class PurchaseSecurity extends StatelessWidget {
                                   ),
                                   TextSpan(
                                     text: AppStrings.supportMissionPinkText,
-                                    style: TextStyle(color: AppColors.red),
+                                    style: TextStyle(color: AppColors.primaryAction),
                                   ),
                                 ],
                               ),

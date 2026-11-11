@@ -52,8 +52,9 @@ class UserInformationSection extends StatelessWidget {
               title: Text("${AppStrings.greeting}, $name!"),
               titleTextStyle: Theme.of(context).textTheme.titleLarge,
               trailing: IconButton(
+                tooltip: AppStrings.settingsText,
                 onPressed: onSettingsPressed,
-                icon: Icon(Icons.settings),
+                icon: const Icon(Icons.settings),
                 color: Theme.of(context).colorScheme.primary,
               ),
             ),
@@ -61,16 +62,18 @@ class UserInformationSection extends StatelessWidget {
             ListTile(
               contentPadding: EdgeInsets.zero,
               onTap: onProfilePressed,
-              leading: ClipOval(
-                child: (photoUrl != null && photoUrl.isNotEmpty)
-                    ? Image.network(
-                        photoUrl,
-                        height: 48,
-                        width: 48,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, _, _) => profilePlaceholder,
-                      )
-                    : profilePlaceholder,
+              leading: ExcludeSemantics(
+                child: ClipOval(
+                  child: (photoUrl != null && photoUrl.isNotEmpty)
+                      ? Image.network(
+                          photoUrl,
+                          height: 48,
+                          width: 48,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, _, _) => profilePlaceholder,
+                        )
+                      : profilePlaceholder,
+                ),
               ),
               title: Text(name),
               titleTextStyle: Theme.of(context).textTheme.titleSmall,
@@ -95,9 +98,11 @@ class UserInformationSection extends StatelessWidget {
                       ],
                     )
                   : null,
-              trailing: Icon(
-                Icons.chevron_right,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              trailing: ExcludeSemantics(
+                child: Icon(
+                  Icons.chevron_right,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
               ),
             ),
             const SizedBox(height: 20),

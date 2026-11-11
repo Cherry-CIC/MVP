@@ -59,31 +59,50 @@ class DiscoverCharityCardState extends State<DiscoverCharityCard> {
               ),
             ),
             Positioned(
-              width: 35,
-              height: 25,
-              bottom: 9,
-              right: 9,
-              child: GestureDetector(
+              bottom: 0,
+              right: 0,
+              child: Semantics(
+                button: true,
+                toggled: isLiked,
+                label: isLiked
+                    ? 'Unlike ${widget.title}, ${widget.likes} likes'
+                    : 'Like ${widget.title}, ${widget.likes} likes',
+                excludeSemantics: true,
                 onTap: toggleLiked,
-                child: Container(
-                  padding: EdgeInsets.all(2),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(5),
-                    color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.15),
-                        blurRadius: 4,
-                        offset: Offset(0, 2),
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: toggleLiked,
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(
+                      minWidth: kMinInteractiveDimension,
+                      minHeight: kMinInteractiveDimension,
+                    ),
+                    child: Center(
+                      widthFactor: 1,
+                      heightFactor: 1,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(5),
+                          color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.15),
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            isLiked ? const Icon(Icons.favorite, size: 16) : const Icon(Icons.favorite_border, size: 16),
+                            const SizedBox(width: 4),
+                            Text('${widget.likes}'),
+                          ],
+                        ),
                       ),
-                    ],
-                  ),
-                  child: Row(
-                    children: [
-                      isLiked ? Icon(Icons.favorite, size: 16) : Icon(Icons.favorite_border, size: 16),
-                      SizedBox(width: 4),
-                      Text('${widget.likes}'),
-                    ],
+                    ),
                   ),
                 ),
               ),
@@ -116,6 +135,7 @@ class _CharityLogoBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     return Semantics(
       label: logoPath == null ? 'Temporary logo for $title' : '$title logo',
+      excludeSemantics: true,
       child: Container(
         width: 72,
         height: 48,

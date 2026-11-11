@@ -73,60 +73,72 @@ class _SearchState extends State<Search> {
                 AppImages.icSearch,
                 width: 24,
                 height: 24,
-                color: Theme.of(context).colorScheme.secondary,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                excludeFromSemantics: true,
               );
             }
 
-            return Material(
-              color: Theme.of(context).colorScheme.surfaceContainerHighest,
-              elevation: 1,
-              shape: const StadiumBorder(),
-              child: InkWell(
-                customBorder: const StadiumBorder(),
-                onTap: controller.openView,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.search,
-                        size: 16,
-                        color: Theme.of(context).colorScheme.secondary,
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          label,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.secondary,
+            final hintColor = Theme.of(context).colorScheme.onSurfaceVariant;
+
+            return Semantics(
+              button: true,
+              label: label,
+              child: Material(
+                color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                elevation: 1,
+                shape: const StadiumBorder(),
+                child: InkWell(
+                  customBorder: const StadiumBorder(),
+                  onTap: controller.openView,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                    child: Row(
+                      children: [
+                        ExcludeSemantics(
+                          child: Icon(
+                            Icons.search,
+                            size: 16,
+                            color: hintColor,
                           ),
                         ),
-                      ),
-                      if (activeQuery.isNotEmpty) ...[
                         const SizedBox(width: 8),
-                        IconButton(
-                          visualDensity: VisualDensity.compact,
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(
-                            minWidth: 32,
-                            minHeight: 32,
-                          ),
-                          onPressed: () {
-                            controller.clear();
-                            context.read<HomeViewModel>().clearSearch();
-                          },
-                          icon: Icon(
-                            Icons.close,
-                            size: 18,
-                            color: Theme.of(context).colorScheme.secondary,
+                        Expanded(
+                          child: ExcludeSemantics(
+                            child: Text(
+                              label,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: hintColor,
+                              ),
+                            ),
                           ),
                         ),
+                        if (activeQuery.isNotEmpty) ...[
+                          const SizedBox(width: 8),
+                          IconButton(
+                            tooltip: 'Clear search',
+                            visualDensity: VisualDensity.compact,
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(
+                              minWidth: 32,
+                              minHeight: 32,
+                            ),
+                            onPressed: () {
+                              controller.clear();
+                              context.read<HomeViewModel>().clearSearch();
+                            },
+                            icon: Icon(
+                              Icons.close,
+                              size: 18,
+                              color: hintColor,
+                            ),
+                          ),
+                        ],
                       ],
-                    ],
+                    ),
                   ),
                 ),
               ),
@@ -153,16 +165,21 @@ class _SearchSuggestions extends StatelessWidget {
         if (isWaitingForSearch) {
           return const Padding(
             padding: EdgeInsets.all(24),
-            child: Center(child: CircularProgressIndicator()),
+            child: Center(
+              child: CircularProgressIndicator(
+                semanticsLabel: AppStrings.loading,
+              ),
+            ),
           );
         }
 
         if (query.isNotEmpty && homeViewModel.searchStatus.type == StatusType.failure) {
           return ListTile(
-            leading: const Icon(Icons.error_outline),
+            leading: const ExcludeSemantics(child: Icon(Icons.error_outline)),
             title: const Text('Search failed'),
             subtitle: Text(homeViewModel.searchStatus.message ?? ''),
             trailing: IconButton(
+              tooltip: AppStrings.retry,
               icon: const Icon(Icons.refresh),
               onPressed: () => homeViewModel.updateSearchText(query),
             ),
@@ -171,7 +188,7 @@ class _SearchSuggestions extends StatelessWidget {
 
         if (query.isNotEmpty && homeViewModel.isSearchEmpty) {
           return ListTile(
-            leading: const Icon(Icons.search_off),
+            leading: const ExcludeSemantics(child: Icon(Icons.search_off)),
             title: Text('No products found for "$query"'),
           );
         }
@@ -216,27 +233,29 @@ class _ProductSuggestionTile extends StatelessWidget {
       onTap: () {
         context.read<ProductViewModel>().goToProductPage(product);
       },
-      leading: ClipRRect(
-        borderRadius: BorderRadius.circular(6),
-        child: imageUrl == null
-            ? Container(
-                width: 40,
-                height: 40,
-                color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                child: const Icon(Icons.image_not_supported_outlined, size: 20),
-              )
-            : Image.network(
-                imageUrl,
-                width: 40,
-                height: 40,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => Container(
+      leading: ExcludeSemantics(
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(6),
+          child: imageUrl == null
+              ? Container(
                   width: 40,
                   height: 40,
                   color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                  child: const Icon(Icons.broken_image, color: AppColors.red),
+                  child: const Icon(Icons.image_not_supported_outlined, size: 20),
+                )
+              : Image.network(
+                  imageUrl,
+                  width: 40,
+                  height: 40,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) => Container(
+                    width: 40,
+                    height: 40,
+                    color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                    child: const Icon(Icons.broken_image, color: AppColors.red),
+                  ),
                 ),
-              ),
+        ),
       ),
       title: Text(product.name, maxLines: 1, overflow: TextOverflow.ellipsis),
       subtitle: Text(
@@ -244,7 +263,7 @@ class _ProductSuggestionTile extends StatelessWidget {
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
       ),
-      trailing: const Icon(Icons.chevron_right),
+      trailing: const ExcludeSemantics(child: Icon(Icons.chevron_right)),
     );
   }
 }

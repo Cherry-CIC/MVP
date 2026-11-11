@@ -82,7 +82,7 @@ class _DashboardPageState extends State<DashboardPage> {
         }
 
         final size = MediaQuery.sizeOf(context);
-        final textScale = MediaQuery.textScalerOf(context).scale(1.0).clamp(1.0, 1.4);
+        final textScale = MediaQuery.textScalerOf(context).scale(1.0).clamp(1.0, 2.0);
 
         final cardWidth = (size.width - 24 - 12) / 2;
         const imageAspectRatio = AppSpacing.imageContainerAspectRatio;
@@ -104,7 +104,11 @@ class _DashboardPageState extends State<DashboardPage> {
                 if (homeViewModel.isLoadingMore && index == totalCount - 1) {
                   return const Padding(
                     padding: EdgeInsets.symmetric(vertical: 24),
-                    child: Center(child: CircularProgressIndicator()),
+                    child: Center(
+                      child: CircularProgressIndicator(
+                        semanticsLabel: 'Loading more products',
+                      ),
+                    ),
                   );
                 }
 
@@ -167,15 +171,13 @@ class _DashboardPageState extends State<DashboardPage> {
     ProductViewModel productViewModel,
     NavigationProvider navigator,
   ) {
-    return GestureDetector(
+    return ProductCard(
+      key: ValueKey(product.id),
+      product: product,
       onTap: () {
         productViewModel.setProduct(product);
         navigator.navigateTo(AppRoutes.product);
       },
-      child: ProductCard(
-        key: ValueKey(product.id),
-        product: product,
-      ),
     );
   }
 }

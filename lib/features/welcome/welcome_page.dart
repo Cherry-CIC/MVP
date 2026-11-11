@@ -51,51 +51,63 @@ class _WelcomePageState extends State<WelcomePage> {
             child: Image.asset(
               AppImages.welcomeBg,
               fit: BoxFit.cover,
+              excludeFromSemantics: true,
             ),
           ),
 
-          Center(
-            child: FittedBox(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  AnimatedOpacity(
-                    duration: const Duration(milliseconds: 450),
-                    curve: Curves.easeInOut,
-                    opacity: _logoVisible ? 1.0 : 0.0,
-                    child: Image.asset(
-                      AppImages.cherryLogo,
-                      width: 350,
+          ExcludeSemantics(
+            excluding: showBottomCard,
+            child: Center(
+              child: FittedBox(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    AnimatedOpacity(
+                      duration: const Duration(milliseconds: 450),
+                      curve: Curves.easeInOut,
+                      opacity: _logoVisible ? 1.0 : 0.0,
+                      child: Image.asset(
+                        AppImages.cherryLogo,
+                        width: 350,
+                        semanticLabel: AppStrings.cherryLogo,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    AppStrings.giveInStyle,
-                    style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    const SizedBox(height: 8),
+                    Text(
+                      AppStrings.giveInStyle,
+                      style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                     ),
-                  ),
-                  SizedBox(
-                    height: showBottomCard ? MediaQuery.of(context).size.height * 0.1 : 0,
-                  ),
-                ],
+                    SizedBox(
+                      height: showBottomCard ? MediaQuery.of(context).size.height * 0.1 : 0,
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
           if (showBottomCard)
-            AnimatedOpacity(
-              duration: const Duration(milliseconds: 300),
-              opacity: showBottomCard ? 1.0 : 0.0,
-              child: GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: closeCard, // This will close the card
-                child: Container(
-                  // ignore: deprecated_member_use
-                  color: Colors.black.withOpacity(0.3), // dim color
-                  child: BackdropFilter(
-                    filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+            Positioned.fill(
+              child: AnimatedOpacity(
+                duration: const Duration(milliseconds: 300),
+                opacity: showBottomCard ? 1.0 : 0.0,
+                child: Semantics(
+                  button: true,
+                  label: AppStrings.closeAuthMenu,
+                  onTap: closeCard,
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: closeCard, // This will close the card
                     child: Container(
-                      color: Colors.transparent,
+                      // ignore: deprecated_member_use
+                      color: Colors.black.withOpacity(0.3), // dim color
+                      child: BackdropFilter(
+                        filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+                        child: Container(
+                          color: Colors.transparent,
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -107,46 +119,66 @@ class _WelcomePageState extends State<WelcomePage> {
             bottom: MediaQuery.of(context).padding.bottom + 24,
             left: 16,
             right: 16,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                SizedBox(
-                  height: 50,
-                  width: double.infinity,
-                  child: FilledButton(
-                    onPressed: () {
-                      toggleCard(AuthMode.login);
-                    },
-                    child: Text(AppStrings.login),
-                  ),
-                ),
+            child: ExcludeSemantics(
+              excluding: showBottomCard,
+              child: IgnorePointer(
+                ignoring: showBottomCard,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(
+                      height: 50,
+                      width: double.infinity,
+                      child: FilledButton(
+                        onPressed: () {
+                          toggleCard(AuthMode.login);
+                        },
+                        child: Text(AppStrings.login),
+                      ),
+                    ),
 
-                const SizedBox(height: 20),
+                    const SizedBox(height: 20),
 
-                // Register Button
-                GestureDetector(
-                  onTap: () {
-                    toggleCard(AuthMode.signup);
-                  },
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        AppStrings.createAccount,
-                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: AppColors.primaryAction,
+                    // Register Button
+                    Semantics(
+                      button: true,
+                      label: AppStrings.createAccount,
+                      excludeSemantics: true,
+                      onTap: () => toggleCard(AuthMode.signup),
+                      child: GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: () {
+                          toggleCard(AuthMode.signup);
+                        },
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(
+                            minWidth: kMinInteractiveDimension,
+                            minHeight: kMinInteractiveDimension,
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                AppStrings.createAccount,
+                                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                  color: AppColors.primaryAction,
+                                ),
+                              ),
+                              const SizedBox(width: 5),
+                              Image.asset(
+                                AppImages.icButton,
+                                width: 30,
+                                height: 30,
+                                excludeFromSemantics: true,
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                      const SizedBox(width: 5),
-                      Image.asset(
-                        AppImages.icButton,
-                        width: 30,
-                        height: 30,
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
           AnimatedPositioned(
@@ -155,9 +187,15 @@ class _WelcomePageState extends State<WelcomePage> {
             left: 0,
             right: 0,
             bottom: showBottomCard ? 0 : -cardHeight,
-            child: AuthCard(
-              onClose: closeCard,
-              mode: authMode ?? AuthMode.login,
+            child: ExcludeSemantics(
+              excluding: !showBottomCard,
+              child: IgnorePointer(
+                ignoring: !showBottomCard,
+                child: AuthCard(
+                  onClose: closeCard,
+                  mode: authMode ?? AuthMode.login,
+                ),
+              ),
             ),
           ),
         ],

@@ -6,21 +6,26 @@ class CategoryLoadingWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
+    return Center(
       child: Padding(
-        padding: EdgeInsets.all(40.0),
-        child: Column(
-          children: [
-            CircularProgressIndicator(),
-            SizedBox(height: 16),
-            Text(
-              AppStrings.loadingCategories,
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey,
+        padding: const EdgeInsets.all(40.0),
+        child: Semantics(
+          liveRegion: true,
+          child: Column(
+            children: [
+              const ExcludeSemantics(
+                child: CircularProgressIndicator(),
               ),
-            ),
-          ],
+              const SizedBox(height: 16),
+              Text(
+                AppStrings.loadingCategories,
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

@@ -11,8 +11,24 @@ class AppStrings {
   static const retry = 'Retry';
   static const share = 'Share';
   static const cancel = 'Cancel';
+  static const close = 'Close';
   static const back = 'Back';
   static const nextButton = 'Next';
+
+  // Accessibility
+  static const loading = 'Loading';
+  static const cherryLogo = 'Cherry logo';
+  static const closeAuthMenu = 'Close authentication menu';
+  static const uploadProfilePicture = 'Upload profile picture';
+  static const changeProfilePicture = 'Change profile picture';
+  static const alreadyHaveAccountLogin = 'Already have an account? Login';
+  static String loadingButton(String label) => '$label, loading';
+  static String starRatingLabel(double rating, int maxRating) {
+    final value = rating == rating.roundToDouble() ? rating.toInt().toString() : rating.toString();
+    return '$value out of $maxRating stars';
+  }
+
+  static String likeItemLabel(int likes) => likes == 1 ? 'Like this item, 1 like' : 'Like this item, $likes likes';
 
   // Auth & Login
   static const login = 'Login';

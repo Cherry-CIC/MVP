@@ -35,13 +35,15 @@ class CharityCardState extends State<CharityCard> {
                   ],
                 ),
                 child: widget.charity.imageUrl.isNotEmpty
-                    ? ImageProviderHelper.buildImage(
-                        imagePath: widget.charity.imageUrl,
-                        height: 80,
-                        width: 80,
-                        borderRadius: BorderRadius.circular(12),
+                    ? ExcludeSemantics(
+                        child: ImageProviderHelper.buildImage(
+                          imagePath: widget.charity.imageUrl,
+                          height: 80,
+                          width: 80,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       )
-                    : SizedBox(height: 80, width: 80),
+                    : const SizedBox(height: 80, width: 80),
               ),
               const SizedBox(width: 15),
               Expanded(

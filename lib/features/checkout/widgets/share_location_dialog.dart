@@ -23,8 +23,8 @@ class ShareLocationDialog extends StatelessWidget {
         ],
       ),
       actions: [
-        SizedBox(
-          height: 43,
+        ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 48),
           child: OutlinedButton(
             onPressed: () => Navigator.pop(context),
             child: Text(AppStrings.cancel),
@@ -32,7 +32,7 @@ class ShareLocationDialog extends StatelessWidget {
         ),
         FilledButton(
           onPressed: () => context.read<CheckoutViewModel>().onConfirmLocation(postcode, country),
-          child: Text("Ok"),
+          child: const Text("Ok"),
         ),
       ],
     );

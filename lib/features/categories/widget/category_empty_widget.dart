@@ -6,22 +6,24 @@ class CategoryEmptyWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
+    return Center(
       child: Padding(
-        padding: EdgeInsets.all(40.0),
+        padding: const EdgeInsets.all(40.0),
         child: Column(
           children: [
-            Icon(
-              Icons.category_outlined,
-              size: 48,
-              color: Colors.grey,
+            ExcludeSemantics(
+              child: Icon(
+                Icons.category_outlined,
+                size: 48,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             Text(
               AppStrings.noCategoriesAvailable,
               style: TextStyle(
                 fontSize: 16,
-                color: Colors.grey,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ),
           ],

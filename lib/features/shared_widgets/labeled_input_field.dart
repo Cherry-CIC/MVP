@@ -51,33 +51,40 @@ class _LabeledInputFieldState extends State<LabeledInputField> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(widget.label, style: const TextStyle(fontWeight: FontWeight.bold)),
+        // The visible label is a separate Text, so expose it to screen readers
+        // through the field itself rather than announcing it as loose text.
+        ExcludeSemantics(
+          child: Text(widget.label, style: const TextStyle(fontWeight: FontWeight.bold)),
+        ),
         const SizedBox(height: 8),
-        TextFormField(
-          controller: widget.controller,
-          obscureText: widget.obscureText && !_passwordVisible,
-          // Keep password keyboard protections active when the text is visible.
-          autocorrect: !widget.obscureText,
-          enableSuggestions: !widget.obscureText,
-          enableIMEPersonalizedLearning: !widget.obscureText,
-          smartDashesType: widget.obscureText ? SmartDashesType.disabled : null,
-          smartQuotesType: widget.obscureText ? SmartQuotesType.disabled : null,
-          validator: widget.validator,
-          keyboardType: inputType,
-          textInputAction: widget.isLastField ? TextInputAction.done : TextInputAction.next,
-          decoration: InputDecoration(
-            hintText: widget.hint,
-            prefixIcon: widget.prefixIcon != null ? Icon(widget.prefixIcon) : null,
-            suffixIcon: widget.obscureText
-                ? IconButton(
-                    tooltip: _passwordVisible
-                        ? AppStrings.hidePassword(widget.label)
-                        : AppStrings.showPassword(widget.label),
-                    onPressed: () => setState(() => _passwordVisible = !_passwordVisible),
-                    icon: Icon(_passwordVisible ? Icons.visibility_off : Icons.visibility),
-                  )
-                : null,
-            border: const OutlineInputBorder(),
+        Semantics(
+          label: widget.label,
+          child: TextFormField(
+            controller: widget.controller,
+            obscureText: widget.obscureText && !_passwordVisible,
+            // Keep password keyboard protections active when the text is visible.
+            autocorrect: !widget.obscureText,
+            enableSuggestions: !widget.obscureText,
+            enableIMEPersonalizedLearning: !widget.obscureText,
+            smartDashesType: widget.obscureText ? SmartDashesType.disabled : null,
+            smartQuotesType: widget.obscureText ? SmartQuotesType.disabled : null,
+            validator: widget.validator,
+            keyboardType: inputType,
+            textInputAction: widget.isLastField ? TextInputAction.done : TextInputAction.next,
+            decoration: InputDecoration(
+              hintText: widget.hint,
+              prefixIcon: widget.prefixIcon != null ? ExcludeSemantics(child: Icon(widget.prefixIcon)) : null,
+              suffixIcon: widget.obscureText
+                  ? IconButton(
+                      tooltip: _passwordVisible
+                          ? AppStrings.hidePassword(widget.label)
+                          : AppStrings.showPassword(widget.label),
+                      onPressed: () => setState(() => _passwordVisible = !_passwordVisible),
+                      icon: Icon(_passwordVisible ? Icons.visibility_off : Icons.visibility),
+                    )
+                  : null,
+              border: const OutlineInputBorder(),
+            ),
           ),
         ),
       ],

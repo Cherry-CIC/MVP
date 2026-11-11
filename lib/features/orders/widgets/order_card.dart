@@ -22,6 +22,8 @@ class OrderCard extends StatelessWidget {
 
     return Semantics(
       container: true,
+      button: onTap != null,
+      onTap: onTap,
       label:
           '${order.productName}. Size $sizeLabel. '
           '$priceLabel. $statusLabel.',

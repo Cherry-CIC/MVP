@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:cherry_mvp/core/config/app_colors.dart';
 import 'package:cherry_mvp/core/config/app_images.dart';
 import 'package:cherry_mvp/core/config/app_strings.dart';
 import 'package:cherry_mvp/core/router/nav_provider.dart';
@@ -16,64 +17,70 @@ class DiscoverButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final radius = 28.0;
-    return ConstrainedBox(
-      constraints: BoxConstraints(minHeight: 156),
-      child: Material(
-        color: Theme.of(context).colorScheme.primary,
-        borderRadius: BorderRadius.circular(radius),
-        child: InkWell(
+    return Semantics(
+      button: true,
+      label: '${AppStrings.exploreText}. ${AppStrings.discoverSomethingText}',
+      child: ConstrainedBox(
+        constraints: BoxConstraints(minHeight: 156),
+        child: Material(
+          color: AppColors.primaryAction,
           borderRadius: BorderRadius.circular(radius),
-          onTap: () => _navigate(context),
-          child: SizedBox(
-            width: double.infinity,
-            child: Padding(
-              padding: EdgeInsets.fromLTRB(16, 8, 8, 8),
-              child: Row(
-                children: [
-                  Expanded(
-                    flex: 3,
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          AppStrings.exploreText,
-                          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                            fontFamily: 'InstrumentSansPricing',
-                            fontSize: 32,
-                            height: 1,
-                            color: Theme.of(context).colorScheme.onPrimary,
-                            fontWeight: FontWeight.w700,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(radius),
+            onTap: () => _navigate(context),
+            child: SizedBox(
+              width: double.infinity,
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(16, 8, 8, 8),
+                child: Row(
+                  children: [
+                    Expanded(
+                      flex: 3,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            AppStrings.exploreText,
+                            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                              fontFamily: 'InstrumentSansPricing',
+                              fontSize: 32,
+                              height: 1,
+                              color: Theme.of(context).colorScheme.onPrimary,
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          AppStrings.discoverSomethingText,
-                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                            fontFamily: 'InstrumentSansPricing',
-                            fontWeight: FontWeight.w700,
-                            fontSize: 14,
-                            height: 1.2,
-                            color: Theme.of(context).colorScheme.onPrimary,
+                          const SizedBox(height: 6),
+                          Text(
+                            AppStrings.discoverSomethingText,
+                            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                              fontFamily: 'InstrumentSansPricing',
+                              fontWeight: FontWeight.w700,
+                              fontSize: 14,
+                              height: 1.2,
+                              color: Theme.of(context).colorScheme.onPrimary,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    flex: 2,
-                    child: AspectRatio(
-                      aspectRatio: 1,
-                      child: Ink(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(radius),
-                          image: DecorationImage(fit: BoxFit.cover, image: AssetImage(AppImages.exploreCharities)),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      flex: 2,
+                      child: AspectRatio(
+                        aspectRatio: 1,
+                        child: ExcludeSemantics(
+                          child: Ink(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(radius),
+                              image: DecorationImage(fit: BoxFit.cover, image: AssetImage(AppImages.exploreCharities)),
+                            ),
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),

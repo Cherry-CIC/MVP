@@ -94,7 +94,11 @@ class _ProductPageState extends State<ProductPage> {
         if (snapshot.connectionState != ConnectionState.done) {
           return Scaffold(
             appBar: AppBar(),
-            body: const Center(child: CircularProgressIndicator()),
+            body: const Center(
+              child: CircularProgressIndicator(
+                semanticsLabel: AppStrings.loading,
+              ),
+            ),
           );
         }
 
@@ -108,9 +112,12 @@ class _ProductPageState extends State<ProductPage> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Text(
-                      AppStrings.productPageLoadFailed,
-                      textAlign: TextAlign.center,
+                    Semantics(
+                      liveRegion: true,
+                      child: const Text(
+                        AppStrings.productPageLoadFailed,
+                        textAlign: TextAlign.center,
+                      ),
                     ),
                     const SizedBox(height: 12),
                     OutlinedButton(

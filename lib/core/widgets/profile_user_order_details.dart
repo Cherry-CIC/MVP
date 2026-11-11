@@ -40,6 +40,7 @@ class UserOrderTile extends StatelessWidget {
                 assetPath,
                 height: iconSize,
                 width: iconSize,
+                excludeFromSemantics: true,
               ),
             ),
           ],

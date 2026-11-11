@@ -23,8 +23,12 @@ class CherryBottomNavBar extends StatelessWidget {
     const giveIndex = FeatureFlags.showInbox ? 2 : 1;
     const profileIndex = giveIndex + (FeatureFlags.showSearchNavigation ? 2 : 1);
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final selectedColor = this.selectedColor ?? Theme.of(context).colorScheme.primary;
-    final unselectedColor = this.unselectedColor ?? Theme.of(context).colorScheme.onSurfaceVariant;
+    // These sit on a pink gradient, so the stock primary / onSurfaceVariant
+    // colours fall below WCAG AA (4.5:1) for the 12sp labels. Ratios are
+    // measured against the darkest point of each gradient.
+    final selectedColor = this.selectedColor ?? (isDark ? const Color(0xFFFF5C8A) : const Color(0xFFB00038));
+    final unselectedColor = this.unselectedColor ??
+        (isDark ? Theme.of(context).colorScheme.onSurfaceVariant : const Color(0xFF4A4A4A));
     final gradientColors = isDark
         ? const [Color(0xFF2E1A22), Color(0xFF18181B)]
         : const [Color(0xFFFFC0D4), Color(0xFFFFF2F6)];
@@ -58,6 +62,7 @@ class CherryBottomNavBar extends StatelessWidget {
               AppImages.icHome,
               width: 24,
               height: 24,
+              excludeFromSemantics: true,
               color: selectedIndex == 0 ? selectedColor : unselectedColor,
             ),
             label: 'Home',
@@ -68,6 +73,7 @@ class CherryBottomNavBar extends StatelessWidget {
                 AppImages.icMessage,
                 width: 24,
                 height: 24,
+                excludeFromSemantics: true,
                 color: selectedIndex == 1 ? selectedColor : unselectedColor,
               ),
               label: 'Inbox',
@@ -77,6 +83,7 @@ class CherryBottomNavBar extends StatelessWidget {
               AppImages.icAdd,
               width: 24,
               height: 24,
+              excludeFromSemantics: true,
               color: selectedIndex == giveIndex ? selectedColor : unselectedColor,
             ),
             label: 'Give',
@@ -87,6 +94,7 @@ class CherryBottomNavBar extends StatelessWidget {
               AppImages.icProfile,
               width: 24,
               height: 24,
+              excludeFromSemantics: true,
               color: selectedIndex == profileIndex ? selectedColor : unselectedColor,
             ),
             label: 'Profile',

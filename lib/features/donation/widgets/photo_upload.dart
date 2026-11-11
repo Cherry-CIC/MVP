@@ -393,15 +393,20 @@ class _PhotoUploadState extends State<PhotoUpload> {
             },
             itemCount: selectedImages.length,
             itemBuilder: (context, index) {
-              return GestureDetector(
-                key: ValueKey(selectedImages[index].path),
-                onTap: () => _openImageViewer(index),
-                child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(20),
-                    image: DecorationImage(
-                      image: FileImage(File(selectedImages[index].path)),
-                      fit: BoxFit.cover,
+              return Semantics(
+                button: true,
+                image: true,
+                label: 'Open photo ${index + 1} of ${selectedImages.length}',
+                child: GestureDetector(
+                  key: ValueKey(selectedImages[index].path),
+                  onTap: () => _openImageViewer(index),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(20),
+                      image: DecorationImage(
+                        image: FileImage(File(selectedImages[index].path)),
+                        fit: BoxFit.cover,
+                      ),
                     ),
                   ),
                 ),
@@ -476,17 +481,19 @@ class _PhotoUploadState extends State<PhotoUpload> {
               bottom: 50,
               left: 0,
               right: 0,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(
-                  selectedImages.length,
-                  (index) => Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 3),
-                    width: 8,
-                    height: 8,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: _currentImageIndex == index ? Colors.white : Colors.white54,
+              child: ExcludeSemantics(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(
+                    selectedImages.length,
+                    (index) => Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 3),
+                      width: 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: _currentImageIndex == index ? Colors.white : Colors.white54,
+                      ),
                     ),
                   ),
                 ),
@@ -498,41 +505,47 @@ class _PhotoUploadState extends State<PhotoUpload> {
   }
 
   Widget _buildEmptyState() {
-    return Material(
-      color: AppColors.pinkBg(context),
-      borderRadius: BorderRadius.circular(20),
-      child: InkWell(
-        onTap: widget.enabled ? _pickProductImage : null,
+    return Semantics(
+      button: true,
+      enabled: widget.enabled,
+      child: Material(
+        color: AppColors.pinkBg(context),
         borderRadius: BorderRadius.circular(20),
-        child: CustomPaint(
-          painter: _DashedBorderPainter(
-            color: const Color(0xFFFF0050),
-            strokeWidth: 1,
-            gap: 4,
-            dash: 4,
-            radius: 20,
-          ),
-          child: Container(
-            height: 160,
-            width: double.infinity,
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.image_outlined,
-                  size: 48,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  AppStrings.takePhoto,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+        child: InkWell(
+          onTap: widget.enabled ? _pickProductImage : null,
+          borderRadius: BorderRadius.circular(20),
+          child: CustomPaint(
+            painter: _DashedBorderPainter(
+              color: const Color(0xFFFF0050),
+              strokeWidth: 1,
+              gap: 4,
+              dash: 4,
+              radius: 20,
+            ),
+            child: Container(
+              constraints: const BoxConstraints(minHeight: 160),
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ExcludeSemantics(
+                    child: Icon(
+                      Icons.image_outlined,
+                      size: 48,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+                    ),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 8),
+                  Text(
+                    AppStrings.takePhoto,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),

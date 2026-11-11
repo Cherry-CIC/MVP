@@ -21,6 +21,7 @@ class EmptyStateCard extends StatelessWidget {
             width: double.infinity,
             AppImages.emptyStateBg,
             fit: BoxFit.cover,
+            excludeFromSemantics: true,
           ),
           Center(
             child: Text(
