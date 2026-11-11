@@ -253,6 +253,7 @@ class _RegisterFormState extends State<RegisterForm> {
                             ? Semantics(
                                 button: true,
                                 enabled: false,
+                                liveRegion: true,
                                 label: AppStrings.loadingButton('Submit'),
                                 excludeSemantics: true,
                                 child: FilledButton(
@@ -262,7 +263,7 @@ class _RegisterFormState extends State<RegisterForm> {
                                     height: 24,
                                     child: CircularProgressIndicator(
                                       strokeWidth: 3,
-                                      color: Theme.of(context).colorScheme.onPrimary,
+                                      color: Theme.of(context).colorScheme.onSurface,
                                     ),
                                   ),
                                 ),

@@ -69,6 +69,12 @@ void main() {
     test('primaryAction keeps white text above 4.5:1', () {
       expect(_contrast(Colors.white, AppColors.primaryAction), greaterThanOrEqualTo(4.5));
     });
+
+    test('unselected tabs and search hint meet WCAG AA on surfaceContainerHighest', () {
+      final theme = buildTheme(Brightness.light);
+      const foreground = Color(0xFF5C5C60);
+      expect(_contrast(foreground, theme.colorScheme.surfaceContainerHighest), greaterThanOrEqualTo(4.5));
+    });
   });
 
   group('BottomCta', () {

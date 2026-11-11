@@ -78,7 +78,10 @@ class _SearchState extends State<Search> {
               );
             }
 
-            final hintColor = Theme.of(context).colorScheme.onSurfaceVariant;
+            final isDark = Theme.of(context).brightness == Brightness.dark;
+            final hintColor = isDark
+                ? Theme.of(context).colorScheme.onSurfaceVariant
+                : const Color(0xFF5C5C60);
 
             return Semantics(
               button: true,

@@ -129,6 +129,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                               ? Semantics(
                                   button: true,
                                   enabled: false,
+                                  liveRegion: true,
                                   label: AppStrings.loadingButton('Send Reset Email'),
                                   excludeSemantics: true,
                                   child: FilledButton(
@@ -138,7 +139,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                                       height: 24,
                                       child: CircularProgressIndicator(
                                         strokeWidth: 3,
-                                        color: Theme.of(context).colorScheme.onPrimary,
+                                        color: Theme.of(context).colorScheme.onSurface,
                                       ),
                                     ),
                                   ),

@@ -179,6 +179,7 @@ class _UsernameSetupPageState extends State<UsernameSetupPage> {
                       ? Semantics(
                           button: true,
                           enabled: false,
+                          liveRegion: true,
                           label: AppStrings.loadingButton(AppStrings.nextButton),
                           excludeSemantics: true,
                           child: FilledButton(
@@ -188,7 +189,7 @@ class _UsernameSetupPageState extends State<UsernameSetupPage> {
                               height: 24,
                               child: CircularProgressIndicator(
                                 strokeWidth: 3,
-                                color: Theme.of(context).colorScheme.onPrimary,
+                                color: Theme.of(context).colorScheme.onSurface,
                               ),
                             ),
                           ),

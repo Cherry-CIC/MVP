@@ -184,6 +184,7 @@ void main() {
       final loadingButton = find.bySemanticsLabel(AppStrings.loadingButton('Submit'));
       expect(loadingButton, findsOneWidget);
       expect(tester.getSemantics(loadingButton).flagsCollection.isEnabled, Tristate.isFalse);
+      expect(tester.getSemantics(loadingButton).flagsCollection.isLiveRegion, isTrue);
 
       repo.pendingLogin!.complete(Result.failure('Invalid email or password'));
       await tester.pump();
