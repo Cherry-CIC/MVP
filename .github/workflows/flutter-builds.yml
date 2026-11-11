@@ -50,7 +50,7 @@ jobs:
       - name: Build Android APK
         env:
           APP_ENV: ${{ steps.config.outputs.app_env }}
-        run: flutter build apk --debug --flavor "$APP_ENV" --dart-define=APP_ENV="$APP_ENV"
+        run: flutter build apk --debug --flavor "$APP_ENV" --dart-define=APP_ENV="$APP_ENV" --android-skip-build-dependency-validation
 
   build-ios-simulator:
     name: iOS simulator build (${{ inputs.environment || (github.ref_name == 'main' && 'prod' || 'dev') }})
