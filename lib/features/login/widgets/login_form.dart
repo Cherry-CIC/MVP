@@ -127,6 +127,7 @@ class LoginFormState extends State<LoginForm> {
                             ? Semantics(
                                 button: true,
                                 enabled: false,
+                                liveRegion: true,
                                 label: AppStrings.loadingButton('Submit'),
                                 excludeSemantics: true,
                                 child: FilledButton(
@@ -136,7 +137,7 @@ class LoginFormState extends State<LoginForm> {
                                     height: 24,
                                     child: CircularProgressIndicator(
                                       strokeWidth: 3,
-                                      color: Theme.of(context).colorScheme.onPrimary,
+                                      color: Theme.of(context).colorScheme.onSurface,
                                     ),
                                   ),
                                 ),

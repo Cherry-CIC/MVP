@@ -13,6 +13,9 @@ class PurchaseSecurity extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final missionAccent = Theme.of(context).brightness == Brightness.dark
+        ? AppColors.red
+        : AppColors.primaryAction;
     return Scaffold(
       appBar: AppBar(leading: const CloseButton()),
       body: Container(
@@ -200,7 +203,7 @@ class PurchaseSecurity extends StatelessWidget {
                           children: [
                             Text(
                               AppStrings.supportMissionHeading,
-                              style: _sectionHeadingStyle.copyWith(color: AppColors.primaryAction),
+                              style: _sectionHeadingStyle.copyWith(color: missionAccent),
                             ),
                             const Text.rich(
                               TextSpan(
@@ -217,15 +220,15 @@ class PurchaseSecurity extends StatelessWidget {
                                 ],
                               ),
                             ),
-                            const Text.rich(
+                            Text.rich(
                               TextSpan(
                                 children: [
-                                  TextSpan(
+                                  const TextSpan(
                                     text: AppStrings.supportMissionPlainText,
                                   ),
                                   TextSpan(
                                     text: AppStrings.supportMissionPinkText,
-                                    style: TextStyle(color: AppColors.primaryAction),
+                                    style: TextStyle(color: missionAccent),
                                   ),
                                 ],
                               ),

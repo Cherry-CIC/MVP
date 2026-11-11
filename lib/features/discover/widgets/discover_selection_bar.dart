@@ -58,6 +58,7 @@ class _TabButton extends StatelessWidget {
     final colourScheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final selectedTextColor = isDark ? colourScheme.primary : AppColors.primaryAction;
+    final unselectedTextColor = isDark ? colourScheme.onSurfaceVariant : const Color(0xFF5C5C60);
 
     return Expanded(
       child: Semantics(
@@ -84,7 +85,7 @@ class _TabButton extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      color: isSelected ? selectedTextColor : colourScheme.onSurfaceVariant,
+                      color: isSelected ? selectedTextColor : unselectedTextColor,
                     ),
                     textAlign: TextAlign.center,
                   ),

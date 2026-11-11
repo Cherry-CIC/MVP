@@ -19,7 +19,6 @@ class CategoryTileWidget extends StatelessWidget {
     return Semantics(
       button: true,
       label: text,
-      excludeSemantics: true,
       child: InkWell(
         onTap: onTap,
         child: ConstrainedBox(

@@ -12,13 +12,14 @@ class BasketListItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final textScale = MediaQuery.textScalerOf(context).scale(1.0).clamp(1.0, 1.5);
     return Container(
-      height: 140 * textScale,
+      constraints: BoxConstraints(minHeight: 140 * textScale),
       margin: const EdgeInsets.all(16),
       child: Row(
         spacing: 16,
         children: [
-          AspectRatio(
-            aspectRatio: 1,
+          SizedBox(
+            width: 100,
+            height: 100,
             child: Container(
               decoration: BoxDecoration(
                 border: Border.all(

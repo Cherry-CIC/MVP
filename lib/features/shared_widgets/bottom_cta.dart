@@ -32,9 +32,9 @@ class BottomCta extends StatelessWidget {
               height: 24,
               child: CircularProgressIndicator(
                 strokeWidth: 3,
-                // The default (theme primary) is invisible on the filled
-                // primary button background.
-                color: Theme.of(context).colorScheme.onPrimary,
+                // The loading button is disabled, so the spinner sits on the
+                // disabled onSurface tint, not the primary action color.
+                color: Theme.of(context).colorScheme.onSurface,
               ),
             )
           : Text(

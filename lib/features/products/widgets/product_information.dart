@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:cherry_mvp/features/products/widgets/product_quality_label.dart';
 import 'package:cherry_mvp/core/config/app_colors.dart';
 import 'package:cherry_mvp/core/config/app_images.dart';
+import 'package:cherry_mvp/core/config/app_strings.dart';
 import 'package:cherry_mvp/core/config/feature_flags.dart';
 import 'package:cherry_mvp/core/models/model.dart';
 import 'package:cherry_mvp/core/utils/security_fee.dart';
@@ -43,6 +44,7 @@ class ProductInformation extends StatelessWidget {
             children: [
               Semantics(
                 button: true,
+                hint: AppStrings.purchaseSecurityHeading,
                 child: GestureDetector(
                   behavior: HitTestBehavior.opaque,
                   onTap: context.read<ProductViewModel>().showPurchaseSecurity,

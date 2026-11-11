@@ -397,15 +397,20 @@ class _PhotoUploadState extends State<PhotoUpload> {
                 button: true,
                 image: true,
                 label: 'Open photo ${index + 1} of ${selectedImages.length}',
-                child: GestureDetector(
+                child: Material(
                   key: ValueKey(selectedImages[index].path),
-                  onTap: () => _openImageViewer(index),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(20),
-                      image: DecorationImage(
-                        image: FileImage(File(selectedImages[index].path)),
-                        fit: BoxFit.cover,
+                  color: Colors.transparent,
+                  borderRadius: BorderRadius.circular(20),
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(20),
+                    onTap: () => _openImageViewer(index),
+                    child: Ink(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(20),
+                        image: DecorationImage(
+                          image: FileImage(File(selectedImages[index].path)),
+                          fit: BoxFit.cover,
+                        ),
                       ),
                     ),
                   ),

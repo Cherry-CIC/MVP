@@ -97,7 +97,7 @@ class CategoryPageState extends State<CategoryPage> {
                 return Padding(
                   padding: const EdgeInsets.symmetric(vertical: 4),
                   child: Semantics(
-                    selected: widget.selectionMode && isSelected,
+                    selected: widget.selectionMode ? isSelected : null,
                     child: CategoryTileWidget(
                       onTap: () => _handleCategoryTap(category),
                       image: category.imageUrl,
