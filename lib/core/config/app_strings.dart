@@ -296,7 +296,7 @@ class AppStrings {
   static const productPageBlockSellerSuccess = 'Seller blocked';
   static const productPageBlockSellerFailed = 'Could not block this seller';
   static const productPageCancel = 'Cancel';
-  static const giveInStyle = 'Give in style';
+  static const giveInStyle = 'Give in Style!';
   static const productIncl = 'Incl.';
   static const askSeller = 'Ask seller';
   static const likeProduct = 'Like product';
