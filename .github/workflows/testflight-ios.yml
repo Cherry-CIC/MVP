@@ -42,6 +42,7 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: stable
+          flutter-version: '3.50.0'
           cache: true
 
       - name: Use Swift Package Manager for iOS plugins
