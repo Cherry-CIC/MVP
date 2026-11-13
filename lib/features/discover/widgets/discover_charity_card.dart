@@ -1,3 +1,5 @@
+import 'package:cherry_mvp/core/router/nav_provider.dart';
+import 'package:cherry_mvp/features/charity_page/charity_profile_args.dart';
 import 'package:flutter/material.dart';
 
 const hasUserLiked = false;
@@ -59,14 +61,13 @@ class DiscoverCharityCardState extends State<DiscoverCharityCard> {
               ),
             ),
             Positioned(
-              width: 35,
-              height: 25,
               bottom: 9,
               right: 9,
               child: GestureDetector(
                 onTap: toggleLiked,
                 child: Container(
-                  padding: EdgeInsets.all(2),
+                  constraints: const BoxConstraints(minWidth: 35, minHeight: 25),
+                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(5),
                     color: Theme.of(context).colorScheme.surfaceContainerHighest,
@@ -115,24 +116,36 @@ class _CharityLogoBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Semantics(
+      button: true,
       label: logoPath == null ? 'Temporary logo for $title' : '$title logo',
-      child: Container(
-        width: 72,
-        height: 48,
-        padding: const EdgeInsets.all(4),
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(8),
-          color: useDarkBackground ? Colors.black : Theme.of(context).colorScheme.surface,
+      child: GestureDetector(
+        key: ValueKey('discover-charity-logo-$title'),
+        behavior: HitTestBehavior.opaque,
+        onTap: () => NavigationProvider.openCharityProfileFromContext(
+          context,
+          CharityProfileArgs(
+            charityName: title,
+            charityImageUrl: logoPath,
+          ),
         ),
-        clipBehavior: Clip.antiAlias,
-        child: logoPath == null
-            ? _TemporaryLogoMark(title: title)
-            : Image.asset(
-                logoPath!,
-                fit: BoxFit.contain,
-                errorBuilder: (context, error, stackTrace) => _TemporaryLogoMark(title: title),
-              ),
+        child: Container(
+          width: 72,
+          height: 48,
+          padding: const EdgeInsets.all(4),
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(8),
+            color: useDarkBackground ? Colors.black : Theme.of(context).colorScheme.surface,
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: logoPath == null
+              ? _TemporaryLogoMark(title: title)
+              : Image.asset(
+                  logoPath!,
+                  fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace) => _TemporaryLogoMark(title: title),
+                ),
+        ),
       ),
     );
   }

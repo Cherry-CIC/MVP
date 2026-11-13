@@ -7,6 +7,19 @@ enum ProductSafetyMenuAction {
   blockSeller,
 }
 
+/// Actions offered in the triple-dot menu on [CharityProfilePage].
+enum CharitySafetyMenuAction {
+  reportCharity,
+  blockCharity,
+}
+
+class ReportReasonOption {
+  const ReportReasonOption(this.value, this.label);
+
+  final String value;
+  final String label;
+}
+
 class ReportDraft {
   const ReportDraft({
     required this.reason,
@@ -60,6 +73,46 @@ class ProductSafetyActionsButton extends StatelessWidget {
   }
 }
 
+/// Overflow safety menu used on a charity's profile header.
+class CharitySafetyActionsButton extends StatelessWidget {
+  const CharitySafetyActionsButton({
+    super.key,
+    required this.onSelected,
+    this.iconColor,
+  });
+
+  final ValueChanged<CharitySafetyMenuAction> onSelected;
+  final Color? iconColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return PopupMenuButton<CharitySafetyMenuAction>(
+      tooltip: AppStrings.productPageMoreActions,
+      icon: Icon(
+        Icons.more_vert,
+        color: iconColor ?? Theme.of(context).colorScheme.primary,
+      ),
+      onSelected: onSelected,
+      itemBuilder: (context) => const [
+        PopupMenuItem(
+          value: CharitySafetyMenuAction.reportCharity,
+          child: _ProductSafetyMenuItem(
+            icon: Icons.flag_outlined,
+            label: AppStrings.reportCharityMenuLabel,
+          ),
+        ),
+        PopupMenuItem(
+          value: CharitySafetyMenuAction.blockCharity,
+          child: _ProductSafetyMenuItem(
+            icon: Icons.block,
+            label: AppStrings.blockCharityMenuLabel,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class _ProductSafetyMenuItem extends StatelessWidget {
   const _ProductSafetyMenuItem({
     required this.icon,
@@ -82,25 +135,48 @@ class _ProductSafetyMenuItem extends StatelessWidget {
   }
 }
 
+const List<ReportReasonOption> defaultProductReportReasons = [
+  ReportReasonOption('misleading_listing', 'Misleading listing'),
+  ReportReasonOption('prohibited_item', 'Prohibited item'),
+  ReportReasonOption('harassment_or_abuse', 'Harassment or abuse'),
+  ReportReasonOption('scam_or_fraud', 'Scam or fraud'),
+  ReportReasonOption('other', 'Other'),
+];
+
+const List<ReportReasonOption> charityReportReasons = [
+  ReportReasonOption('misleading_information', 'Misleading information'),
+  ReportReasonOption('inappropriate_content', 'Inappropriate content'),
+  ReportReasonOption('scam_or_fraud', 'Scam or fraud'),
+  ReportReasonOption('harassment_or_abuse', 'Harassment or abuse'),
+  ReportReasonOption('other', 'Other'),
+];
+
 Future<ReportDraft?> showReportProductSheet(
   BuildContext context, {
   required String title,
+  List<ReportReasonOption> reasons = defaultProductReportReasons,
 }) {
   return showModalBottomSheet<ReportDraft>(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
     showDragHandle: true,
-    builder: (context) => _ReportSheet(title: title),
+    builder: (context) => _ReportSheet(title: title, reasons: reasons),
   );
 }
 
-Future<bool> showBlockSellerDialog(BuildContext context) async {
+/// Shared confirmation dialog preventing accidental report or block actions.
+Future<bool> showSafetyConfirmationDialog(
+  BuildContext context, {
+  required String title,
+  required String message,
+  required String confirmLabel,
+}) async {
   final result = await showDialog<bool>(
     context: context,
     builder: (context) => AlertDialog(
-      title: const Text(AppStrings.productPageBlockSellerTitle),
-      content: const Text(AppStrings.productPageBlockSellerMessage),
+      title: Text(title),
+      content: Text(message),
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(false),
@@ -108,7 +184,7 @@ Future<bool> showBlockSellerDialog(BuildContext context) async {
         ),
         FilledButton(
           onPressed: () => Navigator.of(context).pop(true),
-          child: const Text(AppStrings.productPageBlockSellerConfirm),
+          child: Text(confirmLabel),
         ),
       ],
     ),
@@ -116,10 +192,43 @@ Future<bool> showBlockSellerDialog(BuildContext context) async {
   return result ?? false;
 }
 
+Future<bool> showBlockSellerDialog(BuildContext context) {
+  return showSafetyConfirmationDialog(
+    context,
+    title: AppStrings.productPageBlockSellerTitle,
+    message: AppStrings.productPageBlockSellerMessage,
+    confirmLabel: AppStrings.productPageBlockSellerConfirm,
+  );
+}
+
+/// Prompts the user to confirm before opening the report charity form.
+Future<bool> showReportCharityConfirmationDialog(BuildContext context) {
+  return showSafetyConfirmationDialog(
+    context,
+    title: AppStrings.reportCharityConfirmTitle,
+    message: AppStrings.reportCharityConfirmBody,
+    confirmLabel: AppStrings.reportCharityConfirmAction,
+  );
+}
+
+/// Prompts the user to confirm before blocking a charity.
+Future<bool> showBlockCharityDialog(BuildContext context) {
+  return showSafetyConfirmationDialog(
+    context,
+    title: AppStrings.blockCharityConfirmTitle,
+    message: AppStrings.blockCharityConfirmBody,
+    confirmLabel: AppStrings.blockCharityConfirmAction,
+  );
+}
+
 class _ReportSheet extends StatefulWidget {
-  const _ReportSheet({required this.title});
+  const _ReportSheet({
+    required this.title,
+    required this.reasons,
+  });
 
   final String title;
+  final List<ReportReasonOption> reasons;
 
   @override
   State<_ReportSheet> createState() => _ReportSheetState();
@@ -128,14 +237,6 @@ class _ReportSheet extends StatefulWidget {
 class _ReportSheetState extends State<_ReportSheet> {
   final TextEditingController _messageController = TextEditingController();
   String? _selectedReason;
-
-  static const List<_ReportReason> _reasons = [
-    _ReportReason('misleading_listing', 'Misleading listing'),
-    _ReportReason('prohibited_item', 'Prohibited item'),
-    _ReportReason('harassment_or_abuse', 'Harassment or abuse'),
-    _ReportReason('scam_or_fraud', 'Scam or fraud'),
-    _ReportReason('other', 'Other'),
-  ];
 
   @override
   void dispose() {
@@ -172,7 +273,7 @@ class _ReportSheetState extends State<_ReportSheet> {
                     spacing: 8,
                     runSpacing: 8,
                     children: [
-                      for (final reason in _reasons)
+                      for (final reason in widget.reasons)
                         ChoiceChip(
                           label: Text(reason.label),
                           selected: _selectedReason == reason.value,
@@ -234,11 +335,4 @@ class _ReportSheetState extends State<_ReportSheet> {
       ),
     );
   }
-}
-
-class _ReportReason {
-  const _ReportReason(this.value, this.label);
-
-  final String value;
-  final String label;
 }

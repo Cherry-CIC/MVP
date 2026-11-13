@@ -65,4 +65,47 @@ void main() {
     expect(result.isSuccess, isFalse);
     expect(apiService.lastPostEndpoint, isNull);
   });
+
+  test('submits charity reports with targetType charity', () async {
+    final apiService = _RecordingApiService();
+    final repository = SafetyRepository(apiService);
+
+    final result = await repository.submitReport(
+      targetType: ReportTargetType.charity,
+      targetId: 'dogs-trust',
+      reason: 'misleading_information',
+      message: 'Outdated mission details',
+    );
+
+    expect(result.isSuccess, isTrue);
+    expect(apiService.lastPostEndpoint, ApiEndpoints.reports);
+    expect(apiService.lastPostData, {
+      'targetType': 'charity',
+      'targetId': 'dogs-trust',
+      'reason': 'misleading_information',
+      'message': 'Outdated mission details',
+    });
+  });
+
+  test('blocks charities with the encoded charity block route', () async {
+    final apiService = _RecordingApiService();
+    final repository = SafetyRepository(apiService);
+
+    final result = await repository.blockCharity('dogs trust');
+
+    expect(result.isSuccess, isTrue);
+    expect(apiService.lastPostEndpoint, '/api/blocks/charities/dogs%20trust');
+    expect(apiService.lastPostData, isNull);
+  });
+
+  test('rejects unsafe charity identifiers before calling block endpoint', () async {
+    final apiService = _RecordingApiService();
+    final repository = SafetyRepository(apiService);
+
+    for (final invalidId in ['', '  ', '.', '..', 'dogs/trust']) {
+      final result = await repository.blockCharity(invalidId);
+      expect(result.isSuccess, isFalse);
+      expect(apiService.lastPostEndpoint, isNull);
+    }
+  });
 }

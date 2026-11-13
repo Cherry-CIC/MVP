@@ -1,7 +1,10 @@
 import 'package:cherry_mvp/core/config/app_images.dart';
+import 'package:cherry_mvp/core/config/app_strings.dart';
 import 'package:cherry_mvp/core/config/app_theme.dart';
 import 'package:cherry_mvp/core/models/user_section.dart';
+import 'package:cherry_mvp/core/router/nav_routes.dart';
 import 'package:cherry_mvp/features/charity_page/charity_model.dart';
+import 'package:cherry_mvp/features/charity_page/charity_profile_args.dart';
 import 'package:cherry_mvp/features/discover/discover_repository.dart';
 import 'package:cherry_mvp/features/products/widgets/charity_details_dialog.dart';
 import 'package:cherry_mvp/features/products/widgets/seller_information.dart';
@@ -144,4 +147,51 @@ void main() {
       expect(find.byType(CharityDetailsDialog), findsNothing);
     });
   }
+
+  testWidgets('shows branded View Charity Profile button and navigates to CharityProfilePage', (tester) async {
+    final targetCharity = charity(name: 'Dogs Trust');
+    CharityProfileArgs? capturedArgs;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: buildTheme(Brightness.light),
+        onGenerateRoute: (settings) {
+          if (settings.name == AppRoutes.charityProfile) {
+            capturedArgs = CharityProfileArgs.fromRouteArgument(settings.arguments);
+            return MaterialPageRoute(
+              builder: (_) => const Scaffold(body: Text('Charity Profile Destination')),
+            );
+          }
+          return MaterialPageRoute(
+            builder: (context) => Scaffold(
+              body: TextButton(
+                onPressed: () => showDialog<void>(
+                  context: context,
+                  builder: (_) => CharityDetailsDialog(charity: targetCharity),
+                ),
+                child: const Text('Open'),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+
+    await tester.tap(find.text('Open'));
+    await tester.pumpAndSettle();
+
+    final buttonFinder = find.widgetWithText(
+      FilledButton,
+      AppStrings.charityProfileViewButton,
+    );
+    expect(buttonFinder, findsOneWidget);
+
+    await tester.tap(buttonFinder);
+    await tester.pumpAndSettle();
+
+    expect(find.byType(CharityDetailsDialog), findsNothing);
+    expect(find.text('Charity Profile Destination'), findsOneWidget);
+    expect(capturedArgs?.charityId, targetCharity.id);
+    expect(capturedArgs?.charityName, 'Dogs Trust');
+  });
 }

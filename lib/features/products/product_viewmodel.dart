@@ -244,6 +244,31 @@ class ProductViewModel extends ChangeNotifier {
     );
   }
 
+  /// Submits an abuse or accuracy report against [charityId].
+  Future<Result<void>> reportCharity(
+    String charityId, {
+    required String reason,
+    String? message,
+  }) {
+    return _runSafetyAction(
+      'report-charity:$charityId',
+      () => _requireSafetyRepository().submitReport(
+        targetType: ReportTargetType.charity,
+        targetId: charityId,
+        reason: reason,
+        message: message,
+      ),
+    );
+  }
+
+  /// Blocks [charityId] for the current user account.
+  Future<Result<void>> blockCharity(String charityId) {
+    return _runSafetyAction(
+      'block-charity:$charityId',
+      () => _requireSafetyRepository().blockCharity(charityId),
+    );
+  }
+
   Future<Result<void>> _runSafetyAction(
     String key,
     Future<Result<void>> Function() action,

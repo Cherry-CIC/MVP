@@ -26,5 +26,20 @@ void main() {
       ApiEndpoints.blockUser('user/with spaces'),
       '/api/blocks/user%2Fwith%20spaces',
     );
+    expect(
+      ApiEndpoints.blockCharity('charity/with spaces'),
+      '/api/blocks/charities/charity%2Fwith%20spaces',
+    );
+  });
+
+  test('encodes charity identifiers in charity profile and products routes', () {
+    expect(
+      ApiEndpoints.charityById('charity/with spaces'),
+      '/api/charities/charity%2Fwith%20spaces',
+    );
+    expect(
+      ApiEndpoints.charityProducts('charity/with spaces'),
+      '/api/charities/charity%2Fwith%20spaces/products',
+    );
   });
 }

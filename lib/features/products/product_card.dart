@@ -5,8 +5,10 @@ import 'package:cherry_mvp/core/config/app_images.dart';
 import 'package:cherry_mvp/core/config/app_strings.dart';
 import 'package:cherry_mvp/core/config/app_spacing.dart';
 import 'package:cherry_mvp/core/models/model.dart';
+import 'package:cherry_mvp/core/router/nav_provider.dart';
 import 'package:cherry_mvp/core/utils/image_provider_helper.dart';
 import 'package:cherry_mvp/core/utils/security_fee.dart';
+import 'package:cherry_mvp/features/charity_page/charity_profile_args.dart';
 import 'package:cherry_mvp/features/products/product_viewmodel.dart';
 import 'package:cherry_mvp/features/products/widgets/sold_listing_banner.dart';
 
@@ -14,12 +16,16 @@ class ProductCard extends StatelessWidget {
   final Product product;
   final VoidCallback? onTap;
   final VoidCallback? onLikePressed;
+  final VoidCallback? onCharityTap;
+  final bool enableCharityTap;
 
   const ProductCard({
     super.key,
     required this.product,
     this.onTap,
     this.onLikePressed,
+    this.onCharityTap,
+    this.enableCharityTap = true,
   });
 
   static const _sizeAbbreviations = {
@@ -248,12 +254,7 @@ class ProductCard extends StatelessWidget {
                       ),
                     ),
                     if (product.charityImage.isNotEmpty)
-                      ImageProviderHelper.buildImage(
-                        imagePath: product.charityImage,
-                        height: 35,
-                        width: 35,
-                        fit: BoxFit.cover,
-                      ),
+                      _buildCharityLogo(context),
                   ],
                 ),
               ],
@@ -261,6 +262,48 @@ class ProductCard extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildCharityLogo(BuildContext context) {
+    final logo = ImageProviderHelper.buildImage(
+      imagePath: product.charityImage,
+      height: 35,
+      width: 35,
+      fit: BoxFit.cover,
+    );
+
+    final charityName = product.charity?.name.trim() ?? '';
+    final hasCharityTarget =
+        CharityProfileArgs.safeIdentifier(product.charityId) != null ||
+        charityName.isNotEmpty;
+    if (!enableCharityTap || (!hasCharityTarget && onCharityTap == null)) {
+      return logo;
+    }
+
+    return Semantics(
+      button: true,
+      label: charityName.isEmpty
+          ? AppStrings.charityProfileViewButton
+          : charityName,
+      child: GestureDetector(
+        key: ValueKey('product-card-charity-logo-${product.id}'),
+        behavior: HitTestBehavior.opaque,
+        onTap: onCharityTap ?? () => _openCharityProfile(context),
+        child: logo,
+      ),
+    );
+  }
+
+  void _openCharityProfile(BuildContext context) {
+    NavigationProvider.openCharityProfileFromContext(
+      context,
+      CharityProfileArgs(
+        charity: product.charity,
+        charityId: product.charityId,
+        charityName: product.charity?.name,
+        charityImageUrl: product.charityImage,
+      ),
     );
   }
 }

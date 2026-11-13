@@ -1,12 +1,20 @@
+import 'package:cherry_mvp/core/config/app_strings.dart';
+import 'package:cherry_mvp/core/router/nav_provider.dart';
 import 'package:cherry_mvp/core/utils/image_provider_helper.dart';
 import 'package:cherry_mvp/features/charity_page/charity_model.dart';
+import 'package:cherry_mvp/features/charity_page/charity_profile_args.dart';
 import 'package:cherry_mvp/features/discover/discover_repository.dart';
 import 'package:flutter/material.dart';
 
 class CharityDetailsDialog extends StatelessWidget {
-  const CharityDetailsDialog({super.key, required this.charity});
+  const CharityDetailsDialog({
+    super.key,
+    required this.charity,
+    this.onViewProfile,
+  });
 
   final Charity charity;
+  final VoidCallback? onViewProfile;
 
   @override
   Widget build(BuildContext context) {
@@ -56,6 +64,32 @@ class CharityDetailsDialog extends StatelessWidget {
                   ],
                 ),
               ),
+            ),
+            const SizedBox(height: 20),
+            FilledButton(
+              key: const ValueKey('charity-details-view-profile'),
+              style: FilledButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.primary,
+                foregroundColor: Theme.of(context).colorScheme.onPrimary,
+              ),
+              onPressed: () {
+                if (onViewProfile != null) {
+                  onViewProfile!();
+                  return;
+                }
+                final rootContext = Navigator.of(context).context;
+                Navigator.of(context).pop();
+                NavigationProvider.openCharityProfileFromContext(
+                  rootContext,
+                  CharityProfileArgs(
+                    charity: charity,
+                    charityId: charity.id,
+                    charityName: charity.name,
+                    charityImageUrl: charity.imageUrl,
+                  ),
+                );
+              },
+              child: const Text(AppStrings.charityProfileViewButton),
             ),
           ],
         ),

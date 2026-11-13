@@ -1,5 +1,7 @@
 import 'package:cherry_mvp/core/config/app_strings.dart';
+import 'package:cherry_mvp/core/router/nav_provider.dart';
 import 'package:cherry_mvp/core/utils/image_provider_helper.dart';
+import 'package:cherry_mvp/features/charity_page/charity_profile_args.dart';
 import 'package:cherry_mvp/features/orders/models/order_summary.dart';
 import 'package:cherry_mvp/features/orders/order_currency_formatter.dart';
 import 'package:flutter/material.dart';
@@ -269,7 +271,11 @@ class _OrderImage extends StatelessWidget {
               Positioned(
                 left: 4,
                 bottom: 4,
-                child: _CharityLogo(imageUrl: order.charityLogoUrl),
+                child: _CharityLogo(
+                  orderId: order.id,
+                  charityId: order.charityId,
+                  imageUrl: order.charityLogoUrl,
+                ),
               ),
             ],
           ),
@@ -324,13 +330,19 @@ class _ProductImagePlaceholder extends StatelessWidget {
 }
 
 class _CharityLogo extends StatelessWidget {
+  final String orderId;
+  final String charityId;
   final String imageUrl;
 
-  const _CharityLogo({required this.imageUrl});
+  const _CharityLogo({
+    required this.orderId,
+    required this.charityId,
+    required this.imageUrl,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    final badge = Container(
       width: 44,
       height: 30,
       padding: const EdgeInsets.all(3),
@@ -356,6 +368,28 @@ class _CharityLogo extends StatelessWidget {
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ),
+    );
+
+    final validCharityId = CharityProfileArgs.safeIdentifier(charityId);
+    if (validCharityId == null) {
+      return badge;
+    }
+
+    return Semantics(
+      button: true,
+      label: AppStrings.charityProfileViewButton,
+      child: GestureDetector(
+        key: ValueKey('order-charity-logo-$orderId'),
+        behavior: HitTestBehavior.opaque,
+        onTap: () => NavigationProvider.openCharityProfileFromContext(
+          context,
+          CharityProfileArgs(
+            charityId: validCharityId,
+            charityImageUrl: imageUrl.trim().isEmpty ? null : imageUrl.trim(),
+          ),
+        ),
+        child: badge,
+      ),
     );
   }
 }

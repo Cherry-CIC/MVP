@@ -297,7 +297,7 @@ class AppStrings {
   static const productPageBlockSellerSuccess = 'Seller blocked';
   static const productPageBlockSellerFailed = 'Could not block this seller';
   static const productPageCancel = 'Cancel';
-  static const giveInStyle = 'Give in Style!';
+  static const giveInStyle = 'Give in style';
   static const productIncl = 'Incl.';
   static const askSeller = 'Ask seller';
   static const likeProduct = 'Like product';
@@ -512,4 +512,31 @@ class AppStrings {
   static const refundPolicyQuestion = 'What’s the refund policy?';
   static const refundPolicyAnswer =
       'Your order is protected when paying through Cherry, and you\'ll get a refund if your item doesn\'t arrive, is damaged in transit, or is significantly not as described (SNAD). You must submit a claim within 7 days of being notified the item should have been delivered or seems lost. Unless otherwise agreed, the buyer must cover the cost of the return';
+
+  // Charity Profile
+  static const charityProfileTitle = 'Charity';
+  static const charityProfileLocation = 'United Kingdom';
+  static const charityProfileViewButton = 'View Charity Profile';
+  static const charityProfileNoDescription =
+      'A description is not available for this charity yet.';
+  static const charityProfileEmptyListings =
+      'No items are currently listed on behalf of this charity.';
+  static const charityProfileUnavailable =
+      'This charity profile is unavailable.';
+  static const charityProfileLoadError =
+      'Unable to load this charity profile right now.';
+  static const charityProfileBlockedMessage =
+      'You have blocked this charity. Their listings are hidden for your account.';
+  static const reportCharityMenuLabel = 'Report charity';
+  static const blockCharityMenuLabel = 'Block charity';
+  static const reportCharityConfirmTitle = 'Report charity?';
+  static const reportCharityConfirmBody =
+      'Would you like to report this charity for review by our team?';
+  static const reportCharityConfirmAction = 'Continue to report';
+  static const blockCharityConfirmTitle = 'Block charity?';
+  static const blockCharityConfirmBody =
+      'Are you sure you want to block this charity? You will no longer see listings on behalf of this charity.';
+  static const blockCharityConfirmAction = 'Block charity';
+  static const charityBlockedFeedback = 'Charity blocked.';
+  static const charityReportedFeedback = 'Thank you for your report.';
 }

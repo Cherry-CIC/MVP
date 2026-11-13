@@ -108,6 +108,7 @@ final class OrdersRepository implements IOrdersRepository {
                   : order.productName,
               imageUrl: product.imageUrl,
               size: product.size,
+              charityId: product.charityId,
               charityLogoUrl: charityLogos[product.charityId] ?? '',
             );
           })
