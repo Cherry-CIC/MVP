@@ -8,7 +8,7 @@ The collection dialog now uses buyer order API data through the existing reminde
 
 - Frontend PR #564: https://github.com/Cherry-CIC/MVP/pull/564. This branch is based on that PR and reuses its item summary and countdown formatter.
 - Backend PR #74: https://github.com/Cherry-CIC/cherry-Backend/pull/74 supplies the confirmation foundation. [Backend PR #75](https://github.com/Cherry-CIC/cherry-Backend/pull/75), stacked on #74, adds arrival, deadline and locker details.
-- This draft covers the pop-up and API integration. The collection Home countdown and push notifications remain separate work. The existing confirmation Home timer is preserved. Neither PR has been merged or deployed.
+- This draft covers the pop-up and API integration. The collection Home countdown is included; push notifications remain separate work. The existing confirmation Home timer is preserved. Neither PR has been merged or deployed.
 
 ## Agreed 72-hour rule
 
@@ -61,3 +61,14 @@ flutter run -d chrome -t tool/ready_to_collect_preview.dart
 The render tool writes ready, expired and dark previews to `build/collection-preview/`. It makes no network or backend requests.
 
 Live InPost events, external map/tracking launch on devices, physical-device layout, VoiceOver/TalkBack and the full deployed collection-to-confirmation lifecycle still need verification. Polling means foreground state may take up to a minute to refresh after the backend processes an event; push delivery is not included.
+
+
+## Home timer (13 November 2026)
+
+After dismissal, Home displays the earliest active collection or confirmation deadline in one tappable pill. Tapping reopens the matching order. Equal deadlines use order ID as a stable tie-breaker. Collection uses the pale-pink stopwatch design and “left to collect”; confirmation retains its existing wording. Dismissal and deadlines survive relaunch without restarting either window.
+
+At zero, the timer disappears and requests fresh order data. Collection or return reported by the API takes precedence over an expiry notice. Background expiry waits for foregrounding before fetching. A failed refresh does not invent a shipment outcome. The timer stays above Home navigation and is hidden on other tabs.
+
+![Home collection timer using sample data](images/collection-home-timer.png)
+
+Validation: all 110 focused Flutter tests pass; static analysis passes for all seven changed Dart files. Six visual previews pass, including light/dark timers and 320-pixel width with 200% text. A width constraint preserves screen margins at large text sizes. Physical-device and live-courier verification remain outstanding. No backend changes or push notifications are part of this stage.

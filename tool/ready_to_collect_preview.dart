@@ -3,14 +3,22 @@ import 'package:cherry_mvp/core/config/app_theme.dart';
 import 'package:cherry_mvp/features/orders/collection_deadline.dart';
 import 'package:cherry_mvp/features/orders/models/order_summary.dart';
 import 'package:cherry_mvp/features/orders/widgets/ready_to_collect_dialog.dart';
+import 'package:cherry_mvp/features/orders/widgets/delivery_timer_bubble.dart';
 import 'package:flutter/material.dart';
 
 void main() => runApp(const ReadyToCollectPreview());
 
 class ReadyToCollectPreview extends StatelessWidget {
-  const ReadyToCollectPreview({super.key, this.expired = false, this.dark = false, this.fontFamily});
+  const ReadyToCollectPreview({
+    super.key,
+    this.expired = false,
+    this.dark = false,
+    this.showTimer = false,
+    this.fontFamily,
+  });
   final bool expired;
   final bool dark;
+  final bool showTimer;
   final String? fontFamily;
 
   @override
@@ -19,14 +27,15 @@ class ReadyToCollectPreview extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: theme.copyWith(textTheme: theme.textTheme.apply(fontFamily: fontFamily)),
-      home: _PreviewHome(expired: expired),
+      home: _PreviewHome(expired: expired, showTimer: showTimer),
     );
   }
 }
 
 class _PreviewHome extends StatefulWidget {
-  const _PreviewHome({required this.expired});
+  const _PreviewHome({required this.expired, required this.showTimer});
   final bool expired;
+  final bool showTimer;
 
   @override
   State<_PreviewHome> createState() => _PreviewHomeState();
@@ -34,6 +43,9 @@ class _PreviewHome extends StatefulWidget {
 
 class _PreviewHomeState extends State<_PreviewHome> {
   late final DateTime _deadline;
+  bool _dialogOpen = false;
+  bool _dismissed = false;
+  bool _timerExpired = false;
   // Fixture data uses the existing bundled catalogue and charity assets.
   static const _order = OrderSummary(
     id: 'CH123456',
@@ -55,13 +67,20 @@ class _PreviewHomeState extends State<_PreviewHome> {
     super.initState();
     _deadline = collectionDeadlineFromArrival(
       DateTime.now().subtract(
-        widget.expired ? const Duration(hours: 73) : const Duration(minutes: 1),
+        widget.expired
+            ? const Duration(hours: 73)
+            : widget.showTimer
+            ? const Duration(hours: 48, seconds: 49)
+            : const Duration(minutes: 1),
       ),
     );
-    WidgetsBinding.instance.addPostFrameCallback((_) => _open());
+    _timerExpired = widget.expired;
+    if (!widget.showTimer) WidgetsBinding.instance.addPostFrameCallback((_) => _open());
   }
 
   Future<void> _open() async {
+    if (_dialogOpen) return;
+    setState(() => _dialogOpen = true);
     final action = await showDialog<ReadyToCollectAction>(
       context: context,
       builder: (_) => ReadyToCollectDialog(
@@ -71,7 +90,13 @@ class _PreviewHomeState extends State<_PreviewHome> {
         canTrackParcel: true,
       ),
     );
-    if (!mounted || action == null || action == ReadyToCollectAction.dismiss) return;
+    if (!mounted) return;
+    setState(() {
+      _dialogOpen = false;
+      _dismissed = true;
+      _timerExpired = !_deadline.isAfter(DateTime.now());
+    });
+    if (action == null || action == ReadyToCollectAction.dismiss) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
@@ -84,79 +109,113 @@ class _PreviewHomeState extends State<_PreviewHome> {
   }
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('cherry · collection preview')),
-    body: ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        Container(
-          height: 145,
-          decoration: BoxDecoration(color: const Color(0xFFF90653), borderRadius: BorderRadius.circular(24)),
-          clipBehavior: Clip.antiAlias,
-          child: Row(
-            children: [
-              const Expanded(
-                child: Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
+  Widget build(BuildContext context) {
+    final largeText = MediaQuery.textScalerOf(context).scale(1) > 1.3;
+    return Scaffold(
+      appBar: AppBar(title: const Text('cherry · collection preview', maxLines: 1, overflow: TextOverflow.ellipsis)),
+      floatingActionButton: !_dialogOpen && !_timerExpired && (_dismissed || widget.showTimer)
+          ? DeliveryTimerBubble(
+              deadline: _deadline,
+              purpose: DeliveryTimerPurpose.collection,
+              onTap: _open,
+              onExpired: () => setState(() => _timerExpired = true),
+            )
+          : null,
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          Container(
+            height: largeText ? null : 145,
+            decoration: BoxDecoration(color: const Color(0xFFF90653), borderRadius: BorderRadius.circular(24)),
+            clipBehavior: Clip.antiAlias,
+            child: largeText
+                ? const Padding(
+                    padding: EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Explore Charities',
+                          style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold),
+                        ),
+                        SizedBox(height: 8),
+                        Text('Discover something beautiful here.', style: TextStyle(color: Colors.white, fontSize: 12)),
+                      ],
+                    ),
+                  )
+                : Row(
                     children: [
-                      Text(
-                        'Explore\nCharities',
-                        style: TextStyle(color: Colors.white, fontSize: 28, height: 1, fontWeight: FontWeight.bold),
+                      const Expanded(
+                        child: Padding(
+                          padding: EdgeInsets.all(16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                'Explore\nCharities',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 28,
+                                  height: 1,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              SizedBox(height: 8),
+                              Text(
+                                'Discover something\nbeautiful here.',
+                                style: TextStyle(color: Colors.white, fontSize: 12),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
-                      SizedBox(height: 8),
-                      Text('Discover something\nbeautiful here.', style: TextStyle(color: Colors.white, fontSize: 12)),
+                      Expanded(child: Image.asset('assets/images/explore_image.png', fit: BoxFit.cover, height: 145)),
                     ],
                   ),
-                ),
-              ),
-              Expanded(child: Image.asset('assets/images/explore_image.png', fit: BoxFit.cover, height: 145)),
-            ],
           ),
-        ),
-        const SizedBox(height: 20),
-        GridView.count(
-          crossAxisCount: 2,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          crossAxisSpacing: 16,
-          mainAxisSpacing: 16,
-          childAspectRatio: 0.68,
-          children: [2, 3, 4, 1]
-              .map(
-                (i) => Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: Image.asset('assets/images/product$i.png', width: double.infinity, fit: BoxFit.cover),
+          const SizedBox(height: 20),
+          GridView.count(
+            crossAxisCount: 2,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            crossAxisSpacing: 16,
+            mainAxisSpacing: 16,
+            childAspectRatio: largeText ? 0.45 : 0.68,
+            children: [2, 3, 4, 1]
+                .map(
+                  (i) => Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Image.asset('assets/images/product$i.png', width: double.infinity, fit: BoxFit.cover),
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(i == 4 ? 'Beige cargo shirt' : 'Pre-loved clothing'),
-                    const Text('£8.00'),
-                  ],
-                ),
-              )
-              .toList(),
-        ),
-        FilledButton(onPressed: _open, child: const Text('Preview collection pop-up')),
-      ],
-    ),
-    bottomNavigationBar: const BottomAppBar(
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          Icon(Icons.home_outlined),
-          Icon(Icons.mail_outline),
-          Icon(Icons.add),
-          Icon(Icons.search),
-          Icon(Icons.person_outline),
+                      const SizedBox(height: 6),
+                      Text(i == 4 ? 'Beige cargo shirt' : 'Pre-loved clothing'),
+                      const Text('£8.00'),
+                    ],
+                  ),
+                )
+                .toList(),
+          ),
+          FilledButton(onPressed: _open, child: const Text('Preview collection pop-up')),
         ],
       ),
-    ),
-  );
+      bottomNavigationBar: const BottomAppBar(
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            Icon(Icons.home_outlined),
+            Icon(Icons.mail_outline),
+            Icon(Icons.add),
+            Icon(Icons.search),
+            Icon(Icons.person_outline),
+          ],
+        ),
+      ),
+    );
+  }
 }

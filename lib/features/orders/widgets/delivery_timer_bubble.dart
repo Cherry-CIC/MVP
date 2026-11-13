@@ -4,6 +4,8 @@ import 'package:cherry_mvp/core/config/app_colors.dart';
 import 'package:cherry_mvp/features/orders/delivery_countdown.dart';
 import 'package:flutter/material.dart';
 
+enum DeliveryTimerPurpose { confirmation, collection }
+
 class DeliveryTimerBubble extends StatefulWidget {
   const DeliveryTimerBubble({
     super.key,
@@ -11,9 +13,11 @@ class DeliveryTimerBubble extends StatefulWidget {
     required this.onTap,
     required this.onExpired,
     this.now = DateTime.now,
+    this.purpose = DeliveryTimerPurpose.confirmation,
   });
 
   final DateTime deadline;
+  final DeliveryTimerPurpose purpose;
   final DateTime Function() now;
   final VoidCallback onTap;
   final VoidCallback onExpired;
@@ -68,15 +72,18 @@ class _DeliveryTimerBubbleState extends State<DeliveryTimerBubble> {
     final theme = Theme.of(context);
     final colours = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
+    final isCollection = widget.purpose == DeliveryTimerPurpose.collection;
+    final verb = isCollection ? 'collect' : 'confirm';
+    final availableWidth = MediaQuery.sizeOf(context).width - MediaQuery.paddingOf(context).horizontal - 32;
     final accent = isDark ? colours.onPrimaryContainer : AppColors.primaryAction;
     return Semantics(
       button: true,
-      label: 'Delivery reminder, ${remaining.spokenCountdown} left to confirm',
-      hint: 'Open delivery details',
+      label: '${isCollection ? 'Collection' : 'Delivery'} reminder, ${remaining.spokenCountdown} left to $verb',
+      hint: isCollection ? 'Open collection details' : 'Open delivery details',
       child: Material(
         shape: const StadiumBorder(),
         color: isDark ? colours.surfaceContainerHigh : AppColors.pinkBackground,
-        elevation: 4,
+        elevation: isCollection ? 3 : 4,
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           customBorder: const StadiumBorder(),
@@ -85,13 +92,18 @@ class _DeliveryTimerBubbleState extends State<DeliveryTimerBubble> {
           },
           child: ExcludeSemantics(
             child: ConstrainedBox(
-              constraints: const BoxConstraints(minHeight: 48),
+              constraints: BoxConstraints(
+                minHeight: isCollection ? 56 : 48,
+                // Scaffold offsets an end-floating control from the screen edge.
+                // Leave room for both margins when enlarged text needs to wrap.
+                maxWidth: availableWidth > 0 ? availableWidth : 0,
+              ),
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.timer_outlined, size: 30, color: accent),
+                    Icon(Icons.timer_outlined, size: isCollection ? 34 : 30, color: accent),
                     const SizedBox(width: 6),
                     Flexible(
                       child: Column(
@@ -102,11 +114,17 @@ class _DeliveryTimerBubbleState extends State<DeliveryTimerBubble> {
                             remaining.countdownText,
                             style: theme.textTheme.titleMedium?.copyWith(
                               fontWeight: FontWeight.bold,
+                              fontSize: isCollection ? 20 : null,
                               color: accent,
                               fontFeatures: const [FontFeature.tabularFigures()],
                             ),
                           ),
-                          Text('left to confirm', style: theme.textTheme.bodySmall?.copyWith(color: colours.onSurface)),
+                          Text(
+                            'left to $verb',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: isCollection ? colours.onSurfaceVariant : colours.onSurface,
+                            ),
+                          ),
                         ],
                       ),
                     ),

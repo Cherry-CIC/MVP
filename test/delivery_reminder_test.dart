@@ -14,11 +14,15 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class _Repository extends Fake implements IOrdersRepository {
   List<OrderSummary> orders = [];
+  int fetchCount = 0;
+  bool failFetch = false;
   String? confirmed;
   String? disputed;
 
   @override
   Future<Result<List<OrderSummary>>> fetchOrders({bool deliveryRemindersOnly = false}) async {
+    fetchCount++;
+    if (failFetch) return Result.failure('Offline');
     expect(deliveryRemindersOnly, isTrue);
     return Result.success(orders);
   }
@@ -49,6 +53,7 @@ Future<void> _open(
   WidgetTester tester,
   _Repository repo, {
   String userId = 'buyer',
+  DateTime Function() now = DateTime.now,
   Future<bool> Function(Uri)? openLink,
 }) async {
   tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
@@ -62,6 +67,7 @@ Future<void> _open(
         home: DeliveryReminderHost(
           key: ValueKey(userId),
           userId: userId,
+          now: now,
           openLink: openLink,
           builder: (_, timer) => Scaffold(body: const Text('Home'), floatingActionButton: timer),
         ),
@@ -434,5 +440,217 @@ void main() {
     expect(invalid.canShowCollectionReminder, isFalse);
     expect(invalid.trackingUri, isNull);
     expect(invalid.collectionMapUri, isNull);
+  });
+  testWidgets('collection timer reopens the same deadline after dismissal and relaunch', (tester) async {
+    final ready = collectionOrder();
+    final repo = _Repository()..orders = [ready];
+    await _open(tester, repo);
+    expect(timerBubble, findsNothing);
+    await tester.tap(find.text('Not yet'));
+    await tester.pumpAndSettle();
+    expect(find.text('left to collect'), findsOneWidget);
+    expect(tester.widget<DeliveryTimerBubble>(timerBubble).deadline, ready.collectionDeadline);
+    await tester.tap(timerBubble);
+    await tester.pumpAndSettle();
+    expect(timerBubble, findsNothing);
+    expect(tester.widget<ReadyToCollectDialog>(find.byType(ReadyToCollectDialog)).order.id, ready.id);
+    await tester.tap(find.text('Not yet'));
+    await tester.pumpAndSettle();
+    await tester.pumpWidget(const SizedBox.shrink());
+    await _open(tester, repo);
+    expect(find.byType(ReadyToCollectDialog), findsNothing);
+    expect(tester.widget<DeliveryTimerBubble>(timerBubble).deadline, ready.collectionDeadline);
+  });
+
+  testWidgets('earliest dismissed timer wins across stages and switches when it clears', (tester) async {
+    final collect = collectionOrder(hours: 12);
+    final confirm = order('confirmation', hours: 2);
+    SharedPreferences.setMockInitialValues({
+      'deliveryReminder.buyer': ['collection:collection:ready', 'confirmation'],
+    });
+    final repo = _Repository()..orders = [collect, confirm];
+    await _open(tester, repo);
+    expect(find.text('left to confirm'), findsOneWidget);
+    expect(tester.widget<DeliveryTimerBubble>(timerBubble).deadline, confirm.confirmationDeadline);
+    background(tester);
+    repo.orders = [collect];
+    await resume(tester);
+    expect(find.text('left to collect'), findsOneWidget);
+    await tester.tap(timerBubble);
+    await tester.pumpAndSettle();
+    expect(find.text('Collection shirt'), findsOneWidget);
+  });
+
+  testWidgets('equal collection deadlines select the same parcel regardless of API ordering', (tester) async {
+    final deadline = DateTime.now().toUtc().add(const Duration(hours: 12));
+    OrderSummary ready(String id) => OrderSummary.tryFromOrderJson({
+      'id': id,
+      'productName': 'Parcel $id',
+      'deliveryState': 'awaiting_collection',
+      'readyForCollectionAt': DateTime.now().toUtc().toIso8601String(),
+      'collectionDeadline': deadline.toIso8601String(),
+    })!;
+    final a = ready('a');
+    final b = ready('b');
+    SharedPreferences.setMockInitialValues({
+      'deliveryReminder.buyer': ['collection:a:ready', 'collection:b:ready'],
+    });
+    final repo = _Repository()..orders = [b, a];
+    await _open(tester, repo);
+    await tester.tap(timerBubble);
+    await tester.pumpAndSettle();
+    expect(find.text('Parcel a'), findsOneWidget);
+    await tester.tap(find.text('Not yet'));
+    await tester.pumpAndSettle();
+    background(tester);
+    repo.orders = [a, b];
+    await resume(tester);
+    await tester.tap(timerBubble);
+    await tester.pumpAndSettle();
+    expect(find.text('Parcel a'), findsOneWidget);
+  });
+
+  for (final state in ['returned', 'returning', 'cancelled', 'failed']) {
+    testWidgets('$state removes a dismissed collection timer on refresh', (tester) async {
+      final ready = collectionOrder();
+      SharedPreferences.setMockInitialValues({
+        'deliveryReminder.buyer': ['collection:collection:ready'],
+      });
+      final repo = _Repository()..orders = [ready];
+      await _open(tester, repo);
+      expect(find.text('left to collect'), findsOneWidget);
+      background(tester);
+      repo.orders = [ready.copyWith(deliveryState: state)];
+      await resume(tester);
+      expect(timerBubble, findsNothing);
+      expect(find.byType(ReadyToCollectDialog), findsNothing);
+    });
+  }
+
+  testWidgets('collection timer hands over to confirmation with its own fixed deadline', (tester) async {
+    SharedPreferences.setMockInitialValues({
+      'deliveryReminder.buyer': ['collection:collection:ready'],
+    });
+    final repo = _Repository()..orders = [collectionOrder()];
+    await _open(tester, repo);
+    final confirmed = order('collection', hours: 47);
+    background(tester);
+    repo.orders = [confirmed];
+    await resume(tester);
+    expect(find.text('left to collect'), findsNothing);
+    expect(find.byType(DeliveryReminderDialog), findsOneWidget);
+    expect(timerBubble, findsNothing);
+    await dismissReminder(tester);
+    expect(find.text('left to confirm'), findsOneWidget);
+    expect(tester.widget<DeliveryTimerBubble>(timerBubble).deadline, confirmed.confirmationDeadline);
+  });
+
+  testWidgets('collection timer expires once and refreshes before choosing expiry or confirmation', (tester) async {
+    var now = DateTime.now().toUtc();
+    final deadline = now.add(const Duration(seconds: 3));
+    final ready = OrderSummary.tryFromOrderJson({
+      'id': 'collection',
+      'deliveryState': 'awaiting_collection',
+      'readyForCollectionAt': now.subtract(const Duration(hours: 72)).toIso8601String(),
+      'collectionDeadline': deadline.toIso8601String(),
+    })!;
+    SharedPreferences.setMockInitialValues({
+      'deliveryReminder.buyer': ['collection:collection:ready'],
+    });
+    final repo = _Repository()..orders = [ready];
+    await _open(tester, repo, now: () => now);
+    expect(find.text('00:00:03'), findsOneWidget);
+    now = deadline;
+    await tester.pump(const Duration(seconds: 3));
+    await tester.pumpAndSettle();
+    expect(repo.fetchCount, 2);
+    expect(timerBubble, findsNothing);
+    expect(find.text('Collection window ended'), findsOneWidget);
+    expect(find.textContaining('returned'), findsNothing);
+    await tester.tap(find.text('I understand'));
+    await tester.pumpAndSettle();
+    await tester.pump(const Duration(seconds: 5));
+    expect(repo.fetchCount, 2);
+  });
+
+  testWidgets('failed expiry refresh hides the timer without inventing a shipment outcome', (tester) async {
+    var now = DateTime.now().toUtc();
+    final deadline = now.add(const Duration(seconds: 2));
+    final ready = OrderSummary.tryFromOrderJson({
+      'id': 'collection',
+      'deliveryState': 'awaiting_collection',
+      'readyForCollectionAt': now.subtract(const Duration(hours: 72)).toIso8601String(),
+      'collectionDeadline': deadline.toIso8601String(),
+    })!;
+    SharedPreferences.setMockInitialValues({
+      'deliveryReminder.buyer': ['collection:collection:ready'],
+    });
+    final repo = _Repository()..orders = [ready];
+    await _open(tester, repo, now: () => now);
+    repo.failFetch = true;
+    now = deadline;
+    await tester.pump(const Duration(seconds: 2));
+    await tester.pumpAndSettle();
+    expect(timerBubble, findsNothing);
+    expect(find.byType(ReadyToCollectDialog), findsNothing);
+    expect(find.byType(DeliveryReminderDialog), findsNothing);
+    repo.failFetch = false;
+    background(tester);
+    await resume(tester);
+    expect(find.text('Collection window ended'), findsOneWidget);
+  });
+  testWidgets('expiry while backgrounded waits for resume and honours a returned status', (tester) async {
+    var now = DateTime.now().toUtc();
+    final deadline = now.add(const Duration(seconds: 2));
+    final ready = OrderSummary.tryFromOrderJson({
+      'id': 'collection',
+      'deliveryState': 'awaiting_collection',
+      'readyForCollectionAt': now.subtract(const Duration(hours: 72)).toIso8601String(),
+      'collectionDeadline': deadline.toIso8601String(),
+    })!;
+    SharedPreferences.setMockInitialValues({
+      'deliveryReminder.buyer': ['collection:collection:ready'],
+    });
+    final repo = _Repository()..orders = [ready];
+    await _open(tester, repo, now: () => now);
+    background(tester);
+    now = deadline;
+    await tester.pump(const Duration(seconds: 3));
+    await tester.pumpAndSettle();
+    expect(repo.fetchCount, 1);
+    // Flutter does not render new frames while paused; check the visible UI after resume.
+    repo.orders = [ready.copyWith(deliveryState: 'returned')];
+    await resume(tester);
+    expect(repo.fetchCount, 2);
+    expect(find.byType(ReadyToCollectDialog), findsNothing);
+    expect(find.byType(DeliveryReminderDialog), findsNothing);
+    expect(timerBubble, findsNothing);
+  });
+
+  testWidgets('collection reported at expiry opens confirmation instead of an expired collection notice', (
+    tester,
+  ) async {
+    var now = DateTime.now().toUtc();
+    final deadline = now.add(const Duration(seconds: 2));
+    final ready = OrderSummary.tryFromOrderJson({
+      'id': 'collection',
+      'deliveryState': 'awaiting_collection',
+      'readyForCollectionAt': now.subtract(const Duration(hours: 72)).toIso8601String(),
+      'collectionDeadline': deadline.toIso8601String(),
+    })!;
+    SharedPreferences.setMockInitialValues({
+      'deliveryReminder.buyer': ['collection:collection:ready'],
+    });
+    final repo = _Repository()..orders = [ready];
+    await _open(tester, repo, now: () => now);
+    now = deadline;
+    repo.orders = [order('collection', hours: 48)];
+    await tester.pump(const Duration(seconds: 2));
+    await tester.pumpAndSettle();
+    expect(repo.fetchCount, 2);
+    expect(find.text('Collection window ended'), findsNothing);
+    expect(find.byType(ReadyToCollectDialog), findsNothing);
+    expect(find.byType(DeliveryReminderDialog), findsOneWidget);
+    expect(timerBubble, findsNothing);
   });
 }

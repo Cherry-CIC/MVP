@@ -15,9 +15,16 @@ import 'package:cherry_mvp/features/orders/widgets/ready_to_collect_dialog.dart'
 /// Checks on entry and foregrounding. If another screen is open, wait until
 /// the buyer returns before presenting a modal over their home screen.
 class DeliveryReminderHost extends StatefulWidget {
-  const DeliveryReminderHost({super.key, required this.userId, required this.builder, this.openLink});
+  const DeliveryReminderHost({
+    super.key,
+    required this.userId,
+    required this.builder,
+    this.openLink,
+    this.now = DateTime.now,
+  });
 
   final String userId;
+  final DateTime Function() now;
   final Future<bool> Function(Uri)? openLink;
   final Widget Function(BuildContext context, Widget? timer) builder;
 
@@ -41,7 +48,7 @@ class _DeliveryReminderHostState extends State<DeliveryReminderHost> with Widget
   bool _fetching = false;
 
   String _dismissalId(OrderSummary order) => order.canShowCollectionReminder
-      ? 'collection:${order.id}:${order.collectionDeadline!.isAfter(DateTime.now()) ? 'ready' : 'expired'}'
+      ? 'collection:${order.id}:${order.collectionDeadline!.isAfter(widget.now()) ? 'ready' : 'expired'}'
       : order.id;
 
   @override
@@ -109,12 +116,15 @@ class _DeliveryReminderHostState extends State<DeliveryReminderHost> with Widget
         _pending = true;
         return;
       }
-      final now = DateTime.now();
+      final now = widget.now();
       final eligible =
           (result.value ?? const <OrderSummary>[])
               .where((order) => order.canShowAnyReminder(now) && !_resolved.contains(order.id))
               .toList()
-            ..sort((a, b) => a.reminderDeadline!.compareTo(b.reminderDeadline!));
+            ..sort((a, b) {
+              final deadlineOrder = a.reminderDeadline!.compareTo(b.reminderDeadline!);
+              return deadlineOrder != 0 ? deadlineOrder : a.id.compareTo(b.id);
+            });
       final saved = prefs.getStringList(_preferenceKey) ?? const <String>[];
       setState(() {
         _eligible = eligible;
@@ -148,7 +158,7 @@ class _DeliveryReminderHostState extends State<DeliveryReminderHost> with Widget
     if (_dialog != null ||
         ModalRoute.of(context)?.isCurrent != true ||
         _resolved.contains(order.id) ||
-        !order.canShowAnyReminder(DateTime.now())) {
+        !order.canShowAnyReminder(widget.now())) {
       return;
     }
     final route = DialogRoute<Object>(
@@ -157,6 +167,7 @@ class _DeliveryReminderHostState extends State<DeliveryReminderHost> with Widget
           ? ReadyToCollectDialog(
               order: order,
               collectionDeadline: order.collectionDeadline!,
+              now: widget.now,
               canOpenMap: order.collectionMapUri != null,
               canTrackParcel: order.trackingUri != null,
             )
@@ -184,7 +195,7 @@ class _DeliveryReminderHostState extends State<DeliveryReminderHost> with Widget
       if (!mounted) return;
       await prefs.setStringList(_preferenceKey, _dismissed.toList());
     }
-    if (!mounted || ModalRoute.of(context)?.isCurrent != true || !order.canShowAnyReminder(DateTime.now())) return;
+    if (!mounted || ModalRoute.of(context)?.isCurrent != true || !order.canShowAnyReminder(widget.now())) return;
     if (order.canShowCollectionReminder) {
       final uri = action == ReadyToCollectAction.openMap
           ? order.collectionMapUri
@@ -233,11 +244,14 @@ class _DeliveryReminderHostState extends State<DeliveryReminderHost> with Widget
 
   @override
   Widget build(BuildContext context) {
-    final now = DateTime.now();
+    final now = widget.now();
     final order = _eligible
         .where(
           (order) =>
-              _dismissed.contains(order.id) && !_resolved.contains(order.id) && order.canShowDeliveryReminder(now),
+              _dismissed.contains(_dismissalId(order)) &&
+              !_resolved.contains(order.id) &&
+              order.canShowAnyReminder(now) &&
+              order.reminderDeadline!.isAfter(now),
         )
         .firstOrNull;
 
@@ -247,9 +261,21 @@ class _DeliveryReminderHostState extends State<DeliveryReminderHost> with Widget
           ? null
           : DeliveryTimerBubble(
               key: const ValueKey('delivery-timer-bubble'),
-              deadline: order.confirmationDeadline!,
+              deadline: order.reminderDeadline!,
+              now: widget.now,
+              purpose: order.canShowCollectionReminder
+                  ? DeliveryTimerPurpose.collection
+                  : DeliveryTimerPurpose.confirmation,
               onTap: () => _showReminder(order),
-              onExpired: () => setState(() => _eligible.removeWhere((item) => item.id == order.id)),
+              onExpired: () {
+                setState(() {
+                  if (!order.canShowCollectionReminder) _eligible.removeWhere((item) => item.id == order.id);
+                  _pending = true;
+                });
+                // Refresh before choosing an expired notice or the next stage.
+                // Reaching zero alone does not establish collection or return.
+                _scheduleCheck();
+              },
             ),
     );
   }

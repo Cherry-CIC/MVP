@@ -248,6 +248,32 @@ void main() {
     expect(timer, findsNothing);
   });
 
+  testWidgets('collection timer sits above navigation on Home and returns after switching tabs', (tester) async {
+    SharedPreferences.setMockInitialValues({
+      'deliveryReminder.buyer': ['collection:ready:ready'],
+    });
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    final order = OrderSummary.tryFromOrderJson({
+      'id': 'ready',
+      'deliveryState': 'awaiting_collection',
+      'readyForCollectionAt': DateTime.now().toUtc().toIso8601String(),
+      'collectionDeadline': DateTime.now().toUtc().add(const Duration(hours: 72)).toIso8601String(),
+    })!;
+    await _pumpHomePage(tester, ordersRepository: _OrdersRepositoryStub([order]));
+    final timer = find.byType(DeliveryTimerBubble);
+    final bar = find.byType(BottomNavigationBar);
+    expect(find.text('left to collect'), findsOneWidget);
+    expect(tester.getBottomRight(timer).dy, lessThan(tester.getTopLeft(bar).dy));
+    expect(tester.getCenter(timer).dx, greaterThan(tester.getCenter(bar).dx));
+    await tester.tap(find.text('Profile'));
+    await tester.pumpAndSettle();
+    expect(timer, findsNothing);
+    await tester.tap(find.text('Home'));
+    await tester.pumpAndSettle();
+    expect(find.text('left to collect'), findsOneWidget);
+    expect(tester.widget<DeliveryTimerBubble>(timer).deadline, order.collectionDeadline);
+  });
+
   testWidgets('successful Give result selects existing Profile and shows the new listing', (tester) async {
     final repository = _ProfileListingsRepositoryStub();
     final observer = _NavigationObserver();
