@@ -114,6 +114,12 @@ class CharityProfileRepository implements ICharityProfileRepository {
 
       final charities = _extractCharityList(response.value);
       final normalizedTarget = _normalizeName(targetName);
+      if (normalizedTarget.isEmpty) {
+        return Result.failure(
+          AppStrings.charityProfileUnavailable,
+          statusCode: 404,
+        );
+      }
       for (final raw in charities) {
         final charity = _parseCharity(raw);
         if (charity != null &&
@@ -299,17 +305,24 @@ class CharityProfileRepository implements ICharityProfileRepository {
     );
   }
 
-  static String resolveDescription(Charity? charity) {
+  static String resolveDescription(
+    Charity? charity, {
+    String? fallbackName,
+  }) {
     final supplied = charity?.description?.trim();
     if (supplied != null && supplied.isNotEmpty) {
       return supplied;
     }
-    final name = charity?.name.trim() ?? '';
-    final fallback = name.isEmpty
-        ? null
-        : DiscoverRepository().descriptionForCharityName(name);
-    if (fallback != null && fallback.trim().isNotEmpty) {
-      return fallback.trim();
+    final candidateNames = <String>[
+      if (charity?.name.trim().isNotEmpty == true) charity!.name.trim(),
+      if (fallbackName?.trim().isNotEmpty == true) fallbackName!.trim(),
+    ];
+    final discoverRepository = DiscoverRepository();
+    for (final name in candidateNames) {
+      final fallback = discoverRepository.descriptionForCharityName(name);
+      if (fallback != null && fallback.trim().isNotEmpty) {
+        return fallback.trim();
+      }
     }
     return AppStrings.charityProfileNoDescription;
   }
@@ -480,7 +493,7 @@ class CharityProfileRepository implements ICharityProfileRepository {
   }
 
   static String _normalizeName(String value) =>
-      value.trim().toLowerCase().replaceAll(RegExp(r'\s+'), ' ');
+      DiscoverRepository.normalizeCharityName(value);
 
   static String? _text(dynamic value) {
     if (value is! String) return null;

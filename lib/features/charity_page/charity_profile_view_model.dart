@@ -59,8 +59,10 @@ class CharityProfileViewModel extends ChangeNotifier {
     return url;
   }
 
-  String get displayDescription =>
-      CharityProfileRepository.resolveDescription(charity);
+  String get displayDescription => CharityProfileRepository.resolveDescription(
+    charity,
+    fallbackName: args.charityName ?? args.charity?.name,
+  );
 
   Charity? get headerCharity {
     final current = charity;

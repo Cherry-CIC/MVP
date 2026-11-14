@@ -141,4 +141,25 @@ void main() {
     expect(vm.status, CharityProfileStatus.unavailable);
     expect(vm.products, isEmpty);
   });
+
+  test('retains Discover fallback description when backend lookup returns 404 for a named charity', () async {
+    final repo = _FakeCharityProfileRepository(
+      onFetchCharity: ({charityId, charityName}) async =>
+          Result.failure('Unavailable', statusCode: 404),
+      onFetchProducts: (charity, {limit = 20, cursor}) async =>
+          Result.failure('Unavailable', statusCode: 404),
+    );
+
+    final vm = CharityProfileViewModel(
+      args: const CharityProfileArgs(charityName: 'West London NHS Charity'),
+      repository: repo,
+    );
+
+    await vm.loadInitial();
+    expect(vm.status, CharityProfileStatus.unavailable);
+    expect(
+      vm.displayDescription,
+      contains('West London NHS Charity raises funds'),
+    );
+  });
 }

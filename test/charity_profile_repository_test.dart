@@ -115,6 +115,48 @@ void main() {
     expect(result.value?.description, 'Helping every dog.');
   });
 
+  test('resolves WaterAid and Cat Welfare Group across spacing and leading-The differences', () async {
+    final api = _StubGetApiService({
+      ApiEndpoints.charities: Result.success({
+        'success': true,
+        'data': [
+          {
+            'id': 'water-aid-id',
+            'name': 'Water Aid',
+            'imageUrl': AppImages.waterAidLogo,
+            'description': '',
+          },
+          {
+            'id': 'cat-welfare-id',
+            'name': 'Cat Welfare Group',
+            'imageUrl': AppImages.catWelfareGroupLogo,
+            'description': '',
+          },
+        ],
+      }),
+    });
+
+    final repo = CharityProfileRepository(api);
+    final waterAidResult = await repo.fetchCharity(charityName: 'WaterAid');
+    final catWelfareResult = await repo.fetchCharity(
+      charityName: 'The Cat Welfare Group',
+    );
+
+    expect(waterAidResult.isSuccess, isTrue);
+    expect(waterAidResult.value?.id, 'water-aid-id');
+    expect(
+      CharityProfileRepository.resolveDescription(waterAidResult.value),
+      DiscoverRepository().descriptionForCharityName('WaterAid'),
+    );
+
+    expect(catWelfareResult.isSuccess, isTrue);
+    expect(catWelfareResult.value?.id, 'cat-welfare-id');
+    expect(
+      CharityProfileRepository.resolveDescription(catWelfareResult.value),
+      DiscoverRepository().descriptionForCharityName('The Cat Welfare Group'),
+    );
+  });
+
   test('filters fetchProducts strictly by charityId, active status, and pagination metadata', () async {
     final charity = Charity(
       id: 'dogs-trust',
