@@ -663,4 +663,68 @@ void main() {
       expect(selectedFromListing?.id, 'dogs-trust');
     },
   );
+
+  testWidgets(
+    'empty charity listings state shows branded List an item button that navigates to Donations with charity preselected',
+    (tester) async {
+      tester.view.physicalSize = const Size(800, 1400);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final navigator = NavigationProvider();
+      final productViewModel = ProductViewModel(
+        productRepository: _ProductRepositoryStub(),
+        navigator: navigator,
+        currentUserIdProvider: () => 'buyer-1',
+      );
+      final emptyRepo = _FakeCharityProfileRepository(
+        charity: _dogsTrust,
+        returnedProducts: const [],
+      );
+      Charity? capturedInitialCharity;
+
+      await tester.pumpWidget(
+        _wrapWithProviders(
+          navigator: navigator,
+          productViewModel: productViewModel,
+          charityProfileRepository: emptyRepo,
+          onGenerateRoute: (settings) {
+            if (settings.name == AppRoutes.donations) {
+              capturedInitialCharity = settings.arguments as Charity?;
+              return MaterialPageRoute<bool>(
+                settings: settings,
+                builder: (_) => const Scaffold(
+                  body: Text('Donation Listing Destination'),
+                ),
+              );
+            }
+            return AppRoutes.generateRoute(settings);
+          },
+          child: CharityProfilePage(
+            args: CharityProfileArgs(charity: _dogsTrust),
+            repository: emptyRepo,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text(AppStrings.charityProfileEmptyListings), findsOneWidget);
+      final listButton = find.byKey(
+        const ValueKey('charity-profile-list-item-button'),
+      );
+      expect(listButton, findsOneWidget);
+      expect(
+        find.widgetWithText(FilledButton, AppStrings.charityProfileListAnItem),
+        findsOneWidget,
+      );
+
+      await tester.tap(listButton);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Donation Listing Destination'), findsOneWidget);
+      expect(capturedInitialCharity?.id, 'dogs-trust');
+      expect(capturedInitialCharity?.name, 'Dogs Trust');
+    },
+  );
 }

@@ -25,8 +25,15 @@ class DonationForm extends StatefulWidget {
   final List<XFile>? selectedImages;
   final VoidCallback? onClearImages;
   final ValueChanged<bool>? onSubmittingChanged;
+  final Charity? initialCharity;
 
-  const DonationForm({super.key, this.selectedImages, this.onClearImages, this.onSubmittingChanged});
+  const DonationForm({
+    super.key,
+    this.selectedImages,
+    this.onClearImages,
+    this.onSubmittingChanged,
+    this.initialCharity,
+  });
 
   @override
   DonationFormState createState() => DonationFormState();
@@ -53,6 +60,17 @@ class DonationFormState extends State<DonationForm> {
   Charity? selectedCharity;
   bool _isSubmitting = false;
   final _hideUnimplementedFeatures = true;
+
+  @override
+  void initState() {
+    super.initState();
+    final initial = widget.initialCharity;
+    if (initial != null &&
+        initial.id.trim().isNotEmpty &&
+        initial.name.trim().isNotEmpty) {
+      selectedCharity = initial;
+    }
+  }
 
   void toggleSwitchOpenToOtherCharity(bool value) {
     setState(() => isSwitchedOpenToOtherCharity = value);

@@ -275,12 +275,27 @@ class _CharityProfilePageState extends State<CharityProfilePage> {
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 32),
               child: Center(
-                child: Text(
-                  AppStrings.charityProfileEmptyListings,
-                  textAlign: TextAlign.center,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: AppColors.onSurfaceVariant(context),
-                  ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      AppStrings.charityProfileEmptyListings,
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: AppColors.onSurfaceVariant(context),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    FilledButton(
+                      key: const ValueKey('charity-profile-list-item-button'),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: theme.colorScheme.primary,
+                        foregroundColor: theme.colorScheme.onPrimary,
+                      ),
+                      onPressed: () => _openCreateListing(context),
+                      child: const Text(AppStrings.charityProfileListAnItem),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -333,6 +348,25 @@ class _CharityProfilePageState extends State<CharityProfilePage> {
       navigator.navigateTo(AppRoutes.product, arguments: product);
     } else {
       Navigator.of(context).pushNamed(AppRoutes.product, arguments: product);
+    }
+  }
+
+  Future<void> _openCreateListing(BuildContext context) async {
+    final charity = _viewModel.charity;
+    final navigator = _maybeRead<NavigationProvider>();
+    final dynamic posted;
+    if (navigator != null && navigator.navigatorKey.currentState != null) {
+      posted = await navigator.navigateTo(
+        AppRoutes.donations,
+        arguments: charity,
+      );
+    } else {
+      posted = await Navigator.of(
+        context,
+      ).pushNamed(AppRoutes.donations, arguments: charity);
+    }
+    if (posted == true && mounted) {
+      await _viewModel.refresh();
     }
   }
 

@@ -531,6 +531,7 @@ class AppStrings {
       'A description is not available for this charity yet.';
   static const charityProfileEmptyListings =
       'No items are currently listed on behalf of this charity.';
+  static const charityProfileListAnItem = 'List an item for this charity';
   static const charityProfileUnavailable =
       'This charity profile is unavailable.';
   static const charityProfileLoadError =

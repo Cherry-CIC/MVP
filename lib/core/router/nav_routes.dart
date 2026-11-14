@@ -3,6 +3,7 @@ import 'package:cherry_mvp/features/profile/profile_page.dart';
 import 'package:cherry_mvp/core/config/app_strings.dart';
 import 'package:cherry_mvp/core/models/product.dart';
 import 'package:cherry_mvp/core/router/nav_provider.dart';
+import 'package:cherry_mvp/features/charity_page/charity_model.dart';
 import 'package:cherry_mvp/features/charity_page/charity_page.dart';
 import 'package:cherry_mvp/features/charity_page/charity_profile_args.dart';
 import 'package:cherry_mvp/features/charity_page/charity_profile_page.dart';
@@ -120,7 +121,13 @@ class AppRoutes {
       case settingspage:
         return MaterialPageRoute(builder: (_) => SettingsPage());
       case donations:
-        return MaterialPageRoute(builder: (_) => DonationPage());
+        final initialCharity = settings.arguments is Charity
+            ? settings.arguments as Charity
+            : null;
+        return MaterialPageRoute(
+          settings: settings,
+          builder: (_) => DonationPage(initialCharity: initialCharity),
+        );
       case faqsPage:
         return MaterialPageRoute(builder: (_) => FaqPage());
       case legalInformationPage:
