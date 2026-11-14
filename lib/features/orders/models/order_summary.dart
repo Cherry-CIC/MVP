@@ -7,6 +7,7 @@ class OrderSummary {
   final String productName;
   final String imageUrl;
   final String size;
+  final String charityId;
   final String charityLogoUrl;
   final int? itemPriceMinor;
   final int? totalAmountMinor;
@@ -20,6 +21,7 @@ class OrderSummary {
     required this.productName,
     required this.imageUrl,
     required this.size,
+    this.charityId = '',
     required this.charityLogoUrl,
     required this.itemPriceMinor,
     required this.totalAmountMinor,
@@ -49,6 +51,7 @@ class OrderSummary {
       productName: productName.isEmpty ? fallbackProductName : productName,
       imageUrl: imageUrl,
       size: '',
+      charityId: _readString(json['charityId']),
       charityLogoUrl: '',
       itemPriceMinor: _readNonNegativeInteger(json['productAmount']),
       totalAmountMinor: _readNonNegativeInteger(json['totalAmount']),
@@ -70,6 +73,7 @@ class OrderSummary {
     String? productName,
     String? imageUrl,
     String? size,
+    String? charityId,
     String? charityLogoUrl,
     String? deliveryState,
     String? deliveryLabel,
@@ -80,6 +84,7 @@ class OrderSummary {
       productName: productName ?? this.productName,
       imageUrl: imageUrl ?? this.imageUrl,
       size: size ?? this.size,
+      charityId: charityId ?? this.charityId,
       charityLogoUrl: charityLogoUrl ?? this.charityLogoUrl,
       itemPriceMinor: itemPriceMinor,
       totalAmountMinor: totalAmountMinor,

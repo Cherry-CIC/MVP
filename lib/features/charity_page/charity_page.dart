@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cherry_mvp/core/config/config.dart';
+import 'package:cherry_mvp/core/router/nav_provider.dart';
 import 'package:cherry_mvp/core/utils/image_provider_helper.dart';
 import 'package:cherry_mvp/core/utils/utils.dart';
 import 'package:cherry_mvp/features/charity_page/charity_model.dart';
+import 'package:cherry_mvp/features/charity_page/charity_profile_args.dart';
 import 'package:cherry_mvp/features/charity_page/charity_viewmodel.dart';
 import 'package:cherry_mvp/features/charity_page/widgets/charity_card.dart';
 
@@ -100,7 +102,17 @@ class CharityPageState extends State<CharityPage> {
   void _handleCharityTap(Charity charity) {
     if (widget.selectionMode) {
       context.read<CharityViewModel>().goBack(charity);
+      return;
     }
+    NavigationProvider.openCharityProfileFromContext(
+      context,
+      CharityProfileArgs(
+        charity: charity,
+        charityId: charity.id,
+        charityName: charity.name,
+        charityImageUrl: charity.imageUrl,
+      ),
+    );
   }
 
   Widget _buildCharityList(

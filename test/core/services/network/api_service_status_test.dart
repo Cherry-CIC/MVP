@@ -29,6 +29,25 @@ void main() {
       expect(result.error, isNot(contains('PRIVATE_BACKEND_ERROR')));
     });
   }
+
+  test('GET maps Charity not found 404 message to CHARITY_NOT_FOUND errorCode', () async {
+    final dio = Dio(BaseOptions(baseUrl: 'https://example.test'))
+      ..httpClientAdapter = _StatusAdapter(
+        404,
+        body: '{"success":false,"message":"Charity not found"}',
+      );
+    final service = DioApiService.forTesting(
+      _AuthWithoutUser(),
+      dio: dio,
+      safeHttpLogSink: (_) {},
+    );
+
+    final result = await service.get<dynamic>('/api/charities/missing/products');
+
+    expect(result.isSuccess, isFalse);
+    expect(result.statusCode, 404);
+    expect(result.errorCode, 'CHARITY_NOT_FOUND');
+  });
 }
 
 class _AuthWithoutUser extends Mock implements FirebaseAuth {
@@ -37,8 +56,12 @@ class _AuthWithoutUser extends Mock implements FirebaseAuth {
 }
 
 class _StatusAdapter implements HttpClientAdapter {
-  _StatusAdapter(this.status);
+  _StatusAdapter(
+    this.status, {
+    this.body = '{"error":"PRIVATE_BACKEND_ERROR"}',
+  });
   final int status;
+  final String body;
 
   @override
   Future<ResponseBody> fetch(
@@ -46,7 +69,7 @@ class _StatusAdapter implements HttpClientAdapter {
     Stream<Uint8List>? requestStream,
     Future<void>? cancelFuture,
   ) async => ResponseBody.fromString(
-    '{"error":"PRIVATE_BACKEND_ERROR"}',
+    body,
     status,
     headers: {
       Headers.contentTypeHeader: ['application/json'],

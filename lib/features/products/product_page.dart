@@ -40,6 +40,7 @@ class ProductPage extends StatefulWidget {
 }
 
 class _ProductPageState extends State<ProductPage> {
+  Product? _initialSelectedProduct;
   Future<Result<Product>>? _productLoad;
   String? _requestedProductId;
   String? _sellerRequestId;
@@ -48,6 +49,11 @@ class _ProductPageState extends State<ProductPage> {
   @override
   void initState() {
     super.initState();
+    // Snapshot the active product for this route so navigating deeper
+    // (e.g. Charity Profile -> another Product) cannot mutate this page on Back.
+    if (widget.product == null && widget.productId == null) {
+      _initialSelectedProduct = context.read<ProductViewModel>().product;
+    }
     _loadProduct();
   }
 
@@ -71,8 +77,9 @@ class _ProductPageState extends State<ProductPage> {
 
   @override
   Widget build(BuildContext context) {
+    final fallbackProduct = widget.product ?? _initialSelectedProduct ?? context.watch<ProductViewModel>().product;
     final deleted = context.watch<DeletedListings?>();
-    final id = widget.productId ?? widget.product?.id ?? context.read<ProductViewModel>().product?.id;
+    final id = widget.productId ?? fallbackProduct?.id;
     if (id != null && deleted?.contains(id) == true) {
       return Scaffold(
         appBar: AppBar(),
@@ -82,7 +89,7 @@ class _ProductPageState extends State<ProductPage> {
     if (_productLoad == null) {
       return _buildDetails(
         context,
-        widget.product ?? context.watch<ProductViewModel>().product,
+        fallbackProduct,
       );
     }
 

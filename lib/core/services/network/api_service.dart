@@ -255,7 +255,15 @@ class DioApiService implements ApiService {
     final code = response['code'];
     // Keep only short machine codes. Backend messages and nested data stay out
     // of user-facing errors.
-    return code is String && RegExp(r'^[A-Z][A-Z0-9_]{0,63}$').hasMatch(code) ? code : null;
+    if (code is String && RegExp(r'^[A-Z][A-Z0-9_]{0,63}$').hasMatch(code)) {
+      return code;
+    }
+    final message = response['message'];
+    if (message is String &&
+        message.trim().toLowerCase() == 'charity not found') {
+      return 'CHARITY_NOT_FOUND';
+    }
+    return null;
   }
 
   Future<Response<dynamic>?> _retryRequestIfSafe(DioException error) async {

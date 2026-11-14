@@ -6,10 +6,13 @@ import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'widgets/donation_form.dart';
 import '../categories/category_view_model.dart';
+import '../charity_page/charity_model.dart';
 import '../charity_page/charity_viewmodel.dart';
 
 class DonationPage extends StatefulWidget {
-  const DonationPage({super.key});
+  const DonationPage({super.key, this.initialCharity});
+
+  final Charity? initialCharity;
 
   @override
   State<DonationPage> createState() => _DonationPageState();
@@ -69,6 +72,7 @@ class _DonationPageState extends State<DonationPage> {
               selectedImages: selectedImages,
               onClearImages: _clearImages,
               onSubmittingChanged: (value) => setState(() => _isSubmitting = value),
+              initialCharity: widget.initialCharity,
             ),
           ],
         ),
