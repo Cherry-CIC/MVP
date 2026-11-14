@@ -64,12 +64,25 @@ class _CharityProfilePageState extends State<CharityProfilePage> {
   @override
   void didUpdateWidget(covariant CharityProfilePage oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.args.charityId != widget.args.charityId ||
-        oldWidget.args.charityName != widget.args.charityName ||
+    if (!_hasSameTarget(oldWidget.args, widget.args) ||
         oldWidget.repository != widget.repository) {
       _viewModel.dispose();
       _createViewModel();
     }
+  }
+
+  bool _hasSameTarget(CharityProfileArgs a, CharityProfileArgs b) {
+    final aId = a.charityId ?? a.charity?.id;
+    final bId = b.charityId ?? b.charity?.id;
+    final aName = a.charityName ?? a.charity?.name;
+    final bName = b.charityName ?? b.charity?.name;
+    final aImage = a.charityImageUrl ?? a.charity?.imageUrl;
+    final bImage = b.charityImageUrl ?? b.charity?.imageUrl;
+    return aId == bId &&
+        aName == bName &&
+        aImage == bImage &&
+        a.charity?.description == b.charity?.description &&
+        a.charity?.website == b.charity?.website;
   }
 
   @override
@@ -270,8 +283,8 @@ class _CharityProfilePageState extends State<CharityProfilePage> {
           ),
         ];
       case CharityProfileStatus.loaded:
-        if (_viewModel.products.isEmpty) {
-          return [
+        return [
+          if (_viewModel.products.isEmpty)
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 32),
               child: Center(
@@ -298,32 +311,30 @@ class _CharityProfilePageState extends State<CharityProfilePage> {
                   ],
                 ),
               ),
-            ),
-          ];
-        }
-        return [
-          LayoutBuilder(
-            builder: (context, constraints) {
-              const spacing = 12.0;
-              final cardWidth = (constraints.maxWidth - spacing) / 2;
-              return Wrap(
-                spacing: spacing,
-                runSpacing: spacing,
-                children: [
-                  for (final product in _viewModel.products)
-                    SizedBox(
-                      key: ValueKey('charity-listing-${product.id}'),
-                      width: cardWidth,
-                      child: ProductCard(
-                        product: product,
-                        enableCharityTap: false,
-                        onTap: () => _openProduct(context, product),
+            )
+          else
+            LayoutBuilder(
+              builder: (context, constraints) {
+                const spacing = 12.0;
+                final cardWidth = (constraints.maxWidth - spacing) / 2;
+                return Wrap(
+                  spacing: spacing,
+                  runSpacing: spacing,
+                  children: [
+                    for (final product in _viewModel.products)
+                      SizedBox(
+                        key: ValueKey('charity-listing-${product.id}'),
+                        width: cardWidth,
+                        child: ProductCard(
+                          product: product,
+                          enableCharityTap: false,
+                          onTap: () => _openProduct(context, product),
+                        ),
                       ),
-                    ),
-                ],
-              );
-            },
-          ),
+                  ],
+                );
+              },
+            ),
           if (_viewModel.isLoadingMore)
             const Padding(
               padding: EdgeInsets.all(20),
@@ -423,6 +434,7 @@ class _CharityProfilePageState extends State<CharityProfilePage> {
   }
 
   Future<void> _blockCharity(BuildContext context, String charityId) async {
+    final originatingViewModel = _viewModel;
     final confirmed = await showBlockCharityDialog(context);
     if (!confirmed || !context.mounted) return;
 
@@ -431,7 +443,7 @@ class _CharityProfilePageState extends State<CharityProfilePage> {
         : await _blockCharityViaViewModel(charityId);
 
     if (!context.mounted) return;
-    if (result.isSuccess) {
+    if (result.isSuccess && identical(_viewModel, originatingViewModel)) {
       _viewModel.markBlocked();
     }
     _showFeedback(

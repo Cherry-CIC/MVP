@@ -122,6 +122,10 @@ void main() {
     vm.markBlocked();
     expect(vm.status, CharityProfileStatus.blocked);
     expect(vm.products, isEmpty);
+
+    await vm.refresh();
+    expect(vm.status, CharityProfileStatus.blocked);
+    expect(vm.products, isEmpty);
   });
 
   test('transitions to unavailable on 404 without initial charity', () async {

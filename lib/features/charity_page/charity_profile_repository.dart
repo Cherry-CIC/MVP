@@ -45,6 +45,9 @@ class CharityProfileRepository implements ICharityProfileRepository {
 
   static const int _fallbackScanMaxPages = 5;
   static const int _fallbackScanPageSize = 50;
+  static const String charityNotFoundErrorCode = 'CHARITY_NOT_FOUND';
+
+  bool _productsRouteUnsupported = false;
 
   @override
   Future<Result<Charity>> fetchCharity({
@@ -165,25 +168,36 @@ class CharityProfileRepository implements ICharityProfileRepository {
     }
 
     try {
+      if (_productsRouteUnsupported && requestedCursor != null) {
+        return await _fetchProductsFallback(
+          charity,
+          startCursor: requestedCursor,
+        );
+      }
+
       final response = await _apiService.get<dynamic>(
         '${ApiEndpoints.charityProducts(safeId)}?${query.join('&')}',
       );
       if (!response.isSuccess) {
         // Gracefully handle an older backend deployment that has not mounted
         // GET /api/charities/:id/products yet by filtering productsWithDetails.
-        if (response.statusCode == 404 &&
-            requestedCursor == null &&
-            _looksLikeMissingRoute(response)) {
-          return await _fetchProductsFallback(charity);
+        if (response.statusCode == 404 && _looksLikeMissingRoute(response)) {
+          _productsRouteUnsupported = true;
+          return await _fetchProductsFallback(
+            charity,
+            startCursor: requestedCursor,
+          );
         }
         return Result.failure(
           response.statusCode == 404 || response.statusCode == 410
               ? AppStrings.charityProfileUnavailable
               : AppStrings.charityProfileLoadError,
           statusCode: response.statusCode,
+          errorCode: response.errorCode,
         );
       }
 
+      _productsRouteUnsupported = false;
       return _parseProductsPage(
         charity: charity,
         response: response.value,
@@ -195,16 +209,21 @@ class CharityProfileRepository implements ICharityProfileRepository {
   }
 
   bool _looksLikeMissingRoute(Result<dynamic> response) {
+    if (response.errorCode == charityNotFoundErrorCode) {
+      return false;
+    }
     final error = (response.error ?? '').toLowerCase();
     return !error.contains('charity not found');
   }
 
   Future<Result<CharityProfilePageData>> _fetchProductsFallback(
-    Charity charity,
-  ) async {
+    Charity charity, {
+    String? startCursor,
+  }) async {
     final matched = <Product>[];
     final seenIds = <String>{};
-    String? cursor;
+    String? cursor = startCursor;
+    var hasMorePages = false;
 
     for (var page = 0; page < _fallbackScanMaxPages; page++) {
       final url = cursor == null
@@ -238,8 +257,11 @@ class CharityProfileRepository implements ICharityProfileRepository {
       final hasMore = meta?['hasMore'] == true;
       final nextCursor = _text(meta?['nextCursor']);
       if (!hasMore || nextCursor == null || nextCursor == cursor) {
+        hasMorePages = false;
+        cursor = null;
         break;
       }
+      hasMorePages = true;
       cursor = nextCursor;
     }
 
@@ -247,8 +269,8 @@ class CharityProfileRepository implements ICharityProfileRepository {
       CharityProfilePageData(
         charity: charity,
         products: List.unmodifiable(matched),
-        nextCursor: null,
-        hasMore: false,
+        nextCursor: hasMorePages ? cursor : null,
+        hasMore: hasMorePages && cursor != null,
       ),
     );
   }
@@ -391,7 +413,11 @@ class CharityProfileRepository implements ICharityProfileRepository {
     final id = _identifier(value['id'] ?? value['_id']);
     final userId = _identifier(value['userId'] ?? value['user_id']);
     final name = _text(value['name']);
-    final description = value['description'];
+    final rawDescription = value['description'];
+    // The API permits listings without a description; normalize omitted/null to empty string.
+    final description = rawDescription == null
+        ? ''
+        : (rawDescription is String ? rawDescription : null);
     final quality = _text(value['quality']);
     final size = _text(value['size']);
     final postageSizeId = _identifier(
@@ -407,7 +433,7 @@ class CharityProfileRepository implements ICharityProfileRepository {
     if (id == null ||
         userId == null ||
         name == null ||
-        description is! String ||
+        description == null ||
         quality == null ||
         size == null ||
         postageSizeId == null ||

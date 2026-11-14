@@ -249,6 +249,55 @@ void main() {
       expect(order.deliveryLabel, 'On the way');
     });
 
+    test('preserves order charityId and resolves logo when product enrichment omits charityId', () async {
+      final apiService = _FakeApiService((endpoint) {
+        if (endpoint == ApiEndpoints.myOrders) {
+          return Result.success({
+            'success': true,
+            'data': {
+              'orders': [
+                {
+                  ..._orderJson(
+                    id: 'order-with-charity',
+                    productId: 'product-1',
+                  ),
+                  'charityId': 'charity-1',
+                },
+              ],
+            },
+          });
+        }
+        if (endpoint == ApiEndpoints.charities) {
+          return Result.success({
+            'success': true,
+            'data': [
+              {
+                'id': 'charity-1',
+                'imageUrl': 'https://example.com/charity-1.png',
+              },
+            ],
+          });
+        }
+        if (endpoint == ApiEndpoints.productById('product-1')) {
+          return Result.success({
+            'success': true,
+            'data': _productJson(
+              id: 'product-1',
+              charityId: '',
+            ),
+          });
+        }
+        return Result.failure('Unexpected endpoint');
+      });
+
+      final result = await OrdersRepository(apiService).fetchOrders();
+
+      expect(result.isSuccess, isTrue);
+      final order = result.value!.single;
+      expect(order.charityId, 'charity-1');
+      expect(order.charityLogoUrl, 'https://example.com/charity-1.png');
+    });
+
     test('keeps valid orders and tolerates malformed records', () async {
       final apiService = _FakeApiService((endpoint) {
         if (endpoint == ApiEndpoints.myOrders) {

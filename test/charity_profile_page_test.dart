@@ -588,8 +588,14 @@ void main() {
           child: const Scaffold(body: OrderCard(order: order)),
         ),
       );
+      expect(
+        find.bySemanticsLabel(AppStrings.charityProfileViewButton),
+        findsOneWidget,
+      );
+      final countBeforeOrderTap = openedRoutes.length;
       await tester.tap(find.byKey(const ValueKey('order-charity-logo-order-1')));
       await tester.pumpAndSettle();
+      expect(openedRoutes.length, countBeforeOrderTap + 1);
       expect(openedRoutes.last.charityId, 'dogs-trust');
 
       // D. BasketListItem charity logo badge
@@ -619,10 +625,12 @@ void main() {
           child: Scaffold(body: BasketListItem(product: basketProduct)),
         ),
       );
+      final countBeforeBasketTap = openedRoutes.length;
       await tester.tap(
         find.byKey(ValueKey('basket-charity-logo-${_dogsProduct1.id}')),
       );
       await tester.pumpAndSettle();
+      expect(openedRoutes.length, countBeforeBasketTap + 1);
       expect(openedRoutes.last.charityId, 'dogs-trust');
 
       // E. CharityPage browse mode (selectionMode: false) opens CharityProfilePage
@@ -751,4 +759,124 @@ void main() {
       expect(capturedInitialCharity?.name, 'Dogs Trust');
     },
   );
+
+  testWidgets(
+    'keeps Load more accessible when first page listings are filtered out and refreshes when embedded charity changes',
+    (tester) async {
+      tester.view.physicalSize = const Size(800, 1400);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final navigator = NavigationProvider();
+      final productViewModel = ProductViewModel(
+        productRepository: _ProductRepositoryStub(),
+        navigator: navigator,
+        currentUserIdProvider: () => 'buyer-1',
+      );
+
+      final paginatedRepo = _PaginatedCharityProfileRepository(
+        onFetchCharity: ({charityId, charityName}) async => Result.success(
+          charityId == 'other-charity' ? _otherCharity : _dogsTrust,
+        ),
+        onFetchProducts: (charity, {limit = 20, cursor}) async {
+          if (charity.id == 'other-charity') {
+            return Result.success(
+              CharityProfilePageData(
+                charity: charity,
+                products: [_otherCharityProduct],
+                nextCursor: null,
+                hasMore: false,
+              ),
+            );
+          }
+          if (cursor == null) {
+            // Page 1 returns only an item belonging to another charity, which
+            // CharityProfileViewModel filters out, leaving products empty while hasMore is true.
+            return Result.success(
+              CharityProfilePageData(
+                charity: charity,
+                products: [_otherCharityProduct],
+                nextCursor: 'page-2',
+                hasMore: true,
+              ),
+            );
+          }
+          return Result.success(
+            CharityProfilePageData(
+              charity: charity,
+              products: [_dogsProduct1],
+              nextCursor: null,
+              hasMore: false,
+            ),
+          );
+        },
+      );
+
+      await tester.pumpWidget(
+        _wrapWithProviders(
+          navigator: navigator,
+          productViewModel: productViewModel,
+          charityProfileRepository: paginatedRepo,
+          child: CharityProfilePage(
+            args: CharityProfileArgs(charity: _dogsTrust),
+            repository: paginatedRepo,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Even though filtered products are empty on page 1, Load more is visible.
+      expect(find.text(AppStrings.profileListingsLoadMore), findsOneWidget);
+      await tester.tap(find.text(AppStrings.profileListingsLoadMore));
+      await tester.pumpAndSettle();
+      expect(find.text('Example product 1'), findsOneWidget);
+
+      // Replacing the embedded Charity object (without separate charityId/charityName) refreshes the page.
+      await tester.pumpWidget(
+        _wrapWithProviders(
+          navigator: navigator,
+          productViewModel: productViewModel,
+          charityProfileRepository: paginatedRepo,
+          child: CharityProfilePage(
+            args: CharityProfileArgs(charity: _otherCharity),
+            repository: paginatedRepo,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Other Charity'), findsOneWidget);
+      expect(find.text('Charity Y exclusive'), findsOneWidget);
+    },
+  );
+}
+
+class _PaginatedCharityProfileRepository implements ICharityProfileRepository {
+  _PaginatedCharityProfileRepository({
+    required this.onFetchCharity,
+    required this.onFetchProducts,
+  });
+
+  final Future<Result<Charity>> Function({
+    String? charityId,
+    String? charityName,
+  }) onFetchCharity;
+  final Future<Result<CharityProfilePageData>> Function(
+    Charity charity, {
+    int limit,
+    String? cursor,
+  }) onFetchProducts;
+
+  @override
+  Future<Result<Charity>> fetchCharity({
+    String? charityId,
+    String? charityName,
+  }) => onFetchCharity(charityId: charityId, charityName: charityName);
+
+  @override
+  Future<Result<CharityProfilePageData>> fetchProducts(
+    Charity charity, {
+    int limit = 20,
+    String? cursor,
+  }) => onFetchProducts(charity, limit: limit, cursor: cursor);
 }

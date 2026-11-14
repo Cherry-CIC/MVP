@@ -82,6 +82,7 @@ class CharityProfileViewModel extends ChangeNotifier {
   }
 
   Future<void> loadInitial() async {
+    if (_disposed || _status == CharityProfileStatus.blocked) return;
     final requestId = ++_requestSequence;
     _status = CharityProfileStatus.loading;
     _errorMessage = null;

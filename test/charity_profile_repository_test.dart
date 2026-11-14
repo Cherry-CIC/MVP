@@ -28,6 +28,7 @@ class _StubGetApiService implements ApiService {
       return Result.failure(
         response.error ?? 'Error',
         statusCode: response.statusCode,
+        errorCode: response.errorCode,
       );
     }
     return Result.success(response.value as T);
@@ -231,6 +232,102 @@ void main() {
       '${ApiEndpoints.charityProducts('dogs-trust')}?limit=20',
       '${ApiEndpoints.productsWithDetails}?limit=50',
     ]);
+  });
+
+  test('continues fallback scan across 5-page batches and preserves CHARITY_NOT_FOUND unavailability', () async {
+    final charity = Charity(
+      id: 'dogs-trust',
+      name: 'Dogs Trust',
+      imageUrl: AppImages.mind,
+      createdAt: DateTime(2025),
+      updatedAt: DateTime(2025),
+    );
+    final api = _StubGetApiService({
+      '${ApiEndpoints.charityProducts('dogs-trust')}?limit=20': Result.failure(
+        'Unable to fetch data. Please try again.',
+        statusCode: 404,
+      ),
+      for (var page = 1; page <= 5; page++)
+        page == 1
+            ? '${ApiEndpoints.productsWithDetails}?limit=50'
+            : '${ApiEndpoints.productsWithDetails}?limit=50&cursor=cursor-${page - 1}':
+            Result.success({
+              'success': true,
+              'data': {
+                'products': [
+                  _productJson(
+                    id: 'other-$page',
+                    name: 'Other $page',
+                    charityId: 'wwf',
+                  ),
+                ],
+              },
+              'meta': {
+                'limit': 50,
+                'nextCursor': 'cursor-$page',
+                'hasMore': true,
+              },
+            }),
+      '${ApiEndpoints.productsWithDetails}?limit=50&cursor=cursor-5':
+          Result.success({
+            'success': true,
+            'data': {
+              'products': [
+                {
+                  ..._productJson(
+                    id: 'dogs-late-page',
+                    name: 'Dogs Coat',
+                    charityId: 'dogs-trust',
+                  ),
+                  'description': null,
+                },
+              ],
+            },
+            'meta': {
+              'limit': 50,
+              'nextCursor': null,
+              'hasMore': false,
+            },
+          }),
+      '${ApiEndpoints.charityProducts('missing-charity')}?limit=20':
+          Result.failure(
+            'Unable to fetch data. Please try again.',
+            statusCode: 404,
+            errorCode: CharityProfileRepository.charityNotFoundErrorCode,
+          ),
+    });
+
+    final repo = CharityProfileRepository(api);
+    final firstBatch = await repo.fetchProducts(charity);
+
+    expect(firstBatch.isSuccess, isTrue);
+    expect(firstBatch.value?.products, isEmpty);
+    expect(firstBatch.value?.hasMore, isTrue);
+    expect(firstBatch.value?.nextCursor, 'cursor-5');
+
+    final secondBatch = await repo.fetchProducts(
+      charity,
+      cursor: firstBatch.value?.nextCursor,
+    );
+    expect(secondBatch.isSuccess, isTrue);
+    expect(secondBatch.value?.products.map((p) => p.id), ['dogs-late-page']);
+    expect(secondBatch.value?.products.single.description, '');
+    expect(secondBatch.value?.hasMore, isFalse);
+    expect(secondBatch.value?.nextCursor, isNull);
+
+    final missingRepo = CharityProfileRepository(api);
+    final missingResult = await missingRepo.fetchProducts(
+      Charity(
+        id: 'missing-charity',
+        name: 'Missing',
+        imageUrl: AppImages.mind,
+        createdAt: DateTime(2025),
+        updatedAt: DateTime(2025),
+      ),
+    );
+    expect(missingResult.isSuccess, isFalse);
+    expect(missingResult.statusCode, 404);
+    expect(missingResult.error, AppStrings.charityProfileUnavailable);
   });
 
   test('resolveDescription prefers API description, then DiscoverRepository, then default text', () {
