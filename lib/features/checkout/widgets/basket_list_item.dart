@@ -10,14 +10,16 @@ class BasketListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final textScale = MediaQuery.textScalerOf(context).scale(1.0).clamp(1.0, 1.5);
     return Container(
-      height: 140,
+      constraints: BoxConstraints(minHeight: 140 * textScale),
       margin: const EdgeInsets.all(16),
       child: Row(
         spacing: 16,
         children: [
-          AspectRatio(
-            aspectRatio: 1,
+          SizedBox(
+            width: 100,
+            height: 100,
             child: Container(
               decoration: BoxDecoration(
                 border: Border.all(
@@ -33,6 +35,7 @@ class BasketListItem extends StatelessWidget {
                       child: Image.network(
                         product.productImages.first,
                         fit: BoxFit.cover,
+                        excludeFromSemantics: true,
                       ),
                     )
                   : null,
@@ -46,13 +49,16 @@ class BasketListItem extends StatelessWidget {
                 Text(
                   product.name,
                   maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: Theme.of(
                     context,
                   ).textTheme.bodySmall?.copyWith(fontSize: 16),
                 ),
-                SizedBox(height: 4),
+                const SizedBox(height: 4),
                 Text(
                   product.size,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: Theme.of(
                     context,
                   ).textTheme.bodySmall?.copyWith(fontSize: 16),
@@ -77,8 +83,11 @@ class BasketListItem extends StatelessWidget {
                         height: 40,
                         width: 40,
                         child: product.charityImage.isNotEmpty
-                            ? Image.network(product.charityImage)
-                            : SizedBox.shrink(),
+                            ? Image.network(
+                                product.charityImage,
+                                excludeFromSemantics: true,
+                              )
+                            : const SizedBox.shrink(),
                       ),
                     ),
                   ],

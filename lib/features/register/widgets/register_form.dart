@@ -126,26 +126,35 @@ class _RegisterFormState extends State<RegisterForm> {
             children: [
               // Image Picker
               Center(
-                child: GestureDetector(
+                child: Semantics(
+                  button: true,
+                  label: _selectedImage == null
+                      ? AppStrings.uploadProfilePicture
+                      : AppStrings.changeProfilePicture,
+                  excludeSemantics: true,
                   onTap: _pickImage,
-                  child: _selectedImage == null
-                      ? Container(
-                          height: 100,
-                          width: 100,
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                          child: Center(
-                            child: Icon(
-                              Icons.camera_alt,
-                              color: Theme.of(context).colorScheme.primary,
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: _pickImage,
+                    child: _selectedImage == null
+                        ? Container(
+                            height: 100,
+                            width: 100,
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            child: Center(
+                              child: Icon(
+                                Icons.camera_alt,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
                             ),
+                          )
+                        : Image.file(
+                            _selectedImage!,
+                            height: 100,
+                            width: 100,
+                            fit: BoxFit.cover,
                           ),
-                        )
-                      : Image.file(
-                          _selectedImage!,
-                          height: 100,
-                          width: 100,
-                          fit: BoxFit.cover,
-                        ),
+                  ),
                 ),
               ),
               const SizedBox(height: 20),
@@ -220,13 +229,46 @@ class _RegisterFormState extends State<RegisterForm> {
 
               Consumer<RegisterViewModel>(
                 builder: (context, viewModel, child) {
+                  final isLoading = viewModel.status.type == StatusType.loading;
+                  final errorMessage = viewModel.status.type == StatusType.failure
+                      ? viewModel.status.message
+                      : null;
                   return Column(
                     children: [
-                      viewModel.status.type == StatusType.loading
-                          ? const Center(child: CircularProgressIndicator())
-                          : SizedBox(
-                              width: double.infinity,
-                              child: FilledButton(
+                      if (errorMessage != null && errorMessage.isNotEmpty) ...[
+                        Semantics(
+                          liveRegion: true,
+                          child: Text(
+                            errorMessage,
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: Theme.of(context).colorScheme.error,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                      ],
+                      SizedBox(
+                        width: double.infinity,
+                        child: isLoading
+                            ? Semantics(
+                                button: true,
+                                enabled: false,
+                                liveRegion: true,
+                                label: AppStrings.loadingButton('Submit'),
+                                excludeSemantics: true,
+                                child: FilledButton(
+                                  onPressed: null,
+                                  child: SizedBox(
+                                    width: 24,
+                                    height: 24,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 3,
+                                      color: Theme.of(context).colorScheme.onSurface,
+                                    ),
+                                  ),
+                                ),
+                              )
+                            : FilledButton(
                                 onPressed: () async {
                                   if (_formKey.currentState!.validate()) {
                                     await viewModel.register(
@@ -246,28 +288,43 @@ class _RegisterFormState extends State<RegisterForm> {
                                 },
                                 child: const Text("Submit"),
                               ),
-                            ),
+                      ),
                     ],
                   );
                 },
               ),
               const SizedBox(height: 20),
               // Login Navigation
-              GestureDetector(
-                onTap: () {
-                  navigator.replaceWith(AppRoutes.login);
-                },
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text("Already have an account? "),
-                    Text(
-                      "Login",
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
+              Semantics(
+                button: true,
+                label: AppStrings.alreadyHaveAccountLogin,
+                excludeSemantics: true,
+                onTap: () => navigator.replaceWith(AppRoutes.login),
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () {
+                    navigator.replaceWith(AppRoutes.login);
+                  },
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(
+                      minWidth: kMinInteractiveDimension,
+                      minHeight: kMinInteractiveDimension,
                     ),
-                  ],
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Text("Already have an account? "),
+                        Text(
+                          "Login",
+                          style: TextStyle(
+                            color: Theme.of(context).brightness == Brightness.dark
+                                ? Theme.of(context).colorScheme.primary
+                                : AppColors.primaryAction,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ],
@@ -328,9 +385,12 @@ class _LegalAcceptanceField extends StatelessWidget {
             if (field.hasError)
               Padding(
                 padding: const EdgeInsets.only(left: 12, top: 4),
-                child: Text(
-                  field.errorText!,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(color: colourScheme.error),
+                child: Semantics(
+                  liveRegion: true,
+                  child: Text(
+                    field.errorText!,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(color: colourScheme.error),
+                  ),
                 ),
               ),
           ],
@@ -351,9 +411,9 @@ class _LegalDocumentLink extends StatelessWidget {
     return TextButton(
       onPressed: onTap,
       style: TextButton.styleFrom(
-        minimumSize: const Size(0, 48),
+        minimumSize: const Size(48, 48),
         padding: const EdgeInsets.symmetric(horizontal: 2),
-        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        tapTargetSize: MaterialTapTargetSize.padded,
       ),
       child: Text(
         label,

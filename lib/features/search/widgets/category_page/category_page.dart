@@ -52,11 +52,14 @@ class CategoryPageState extends State<CategoryPage> {
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
-        leading: InkWell(
-          onTap: () => Navigator.of(context).maybePop(),
-          child: Padding(
-            padding: const EdgeInsets.all(12.0),
-            child: Image.asset(AppImages.backIcon, width: 24, height: 24),
+        leading: IconButton(
+          tooltip: AppStrings.back,
+          onPressed: () => Navigator.of(context).maybePop(),
+          icon: Image.asset(
+            AppImages.backIcon,
+            width: 24,
+            height: 24,
+            excludeFromSemantics: true,
           ),
         ),
         title: const Text(
@@ -92,17 +95,22 @@ class CategoryPageState extends State<CategoryPage> {
                 final isSelected = widget.initialCategoryId != null && category.id == widget.initialCategoryId;
 
                 return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 10),
-                  child: CategoryTileWidget(
-                    onTap: () => _handleCategoryTap(category),
-                    image: category.imageUrl,
-                    text: category.name,
-                    trailing: widget.selectionMode && isSelected
-                        ? Icon(
-                            Icons.check_circle,
-                            color: Theme.of(context).colorScheme.primary,
-                          )
-                        : null,
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: Semantics(
+                    selected: widget.selectionMode ? isSelected : null,
+                    child: CategoryTileWidget(
+                      onTap: () => _handleCategoryTap(category),
+                      image: category.imageUrl,
+                      text: category.name,
+                      trailing: widget.selectionMode && isSelected
+                          ? ExcludeSemantics(
+                              child: Icon(
+                                Icons.check_circle,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                            )
+                          : null,
+                    ),
                   ),
                 );
               },

@@ -23,59 +23,66 @@ class CheckoutCompletePage extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(48, 64, 48, 24),
               child: SizedBox(
                 width: double.infinity,
-                child: Column(
-                  children: [
-                    Container(
-                      decoration: ShapeDecoration(
-                        color: Theme.of(context).colorScheme.surface,
-                        shadows: [
-                          BoxShadow(
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.primary.withValues(alpha: .6),
-                            blurRadius: 12,
-                            offset: const Offset(0, 4),
+                child: Semantics(
+                  liveRegion: true,
+                  child: Column(
+                    children: [
+                      ExcludeSemantics(
+                        child: Container(
+                          decoration: ShapeDecoration(
+                            color: Theme.of(context).colorScheme.surface,
+                            shadows: [
+                              BoxShadow(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.primary.withValues(alpha: .6),
+                                blurRadius: 12,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                            shape: const CircleBorder(),
                           ),
-                        ],
-                        shape: const CircleBorder(),
-                      ),
-                      height: 120,
-                      width: 120,
-                      child: Container(
-                        alignment: Alignment.center,
-                        margin: const EdgeInsets.all(16),
-                        decoration: ShapeDecoration(
-                          color: Theme.of(context).colorScheme.primary,
-                          shape: const CircleBorder(),
+                          height: 120,
+                          width: 120,
+                          child: Container(
+                            alignment: Alignment.center,
+                            margin: const EdgeInsets.all(16),
+                            decoration: ShapeDecoration(
+                              color: Theme.of(context).colorScheme.primary,
+                              shape: const CircleBorder(),
+                            ),
+                            child: Icon(
+                              Icons.check,
+                              color: Theme.of(context).colorScheme.onPrimary,
+                              size: 64,
+                            ),
+                          ),
                         ),
-                        child: Icon(
-                          Icons.check,
-                          color: Theme.of(context).colorScheme.onPrimary,
-                          size: 64,
+                      ),
+                      const SizedBox(height: 24),
+                      Text(
+                        AppStrings.checkoutOrderPlaced,
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.headlineMedium,
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        AppStrings.checkoutThankYou,
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 24),
-                    Text(
-                      AppStrings.checkoutOrderPlaced,
-                      style: Theme.of(context).textTheme.headlineMedium,
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      AppStrings.checkoutThankYou,
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      const SizedBox(height: 8),
+                      Text(
+                        AppStrings.checkoutEscrowInfo,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      AppStrings.checkoutEscrowInfo,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),

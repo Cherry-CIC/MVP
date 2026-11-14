@@ -33,6 +33,7 @@ class SocialLoginButton extends StatelessWidget {
         iconAsset,
         height: 24,
         width: 20,
+        excludeFromSemantics: true,
       ),
       label: Text(
         label,

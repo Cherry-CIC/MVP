@@ -9,17 +9,19 @@ class PhotoTipsDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     return AlertDialog(
       title: Text(AppStrings.photosTipPopupHeading),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _buildTipRow(AppImages.targetIcon, AppStrings.clearWellLit),
-          const SizedBox(height: 16),
-          _buildTipRow(AppImages.tshirtIcon, AppStrings.multipleAngles),
-          const SizedBox(height: 16),
-          _buildTipRow(AppImages.wandIcon, AppStrings.noFilters),
-          const SizedBox(height: 16),
-          _buildTipRow(AppImages.rulerIcon, AppStrings.showItOff),
-        ],
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _buildTipRow(AppImages.targetIcon, AppStrings.clearWellLit),
+            const SizedBox(height: 16),
+            _buildTipRow(AppImages.tshirtIcon, AppStrings.multipleAngles),
+            const SizedBox(height: 16),
+            _buildTipRow(AppImages.wandIcon, AppStrings.noFilters),
+            const SizedBox(height: 16),
+            _buildTipRow(AppImages.rulerIcon, AppStrings.showItOff),
+          ],
+        ),
       ),
       actions: [
         SizedBox(
@@ -37,7 +39,7 @@ class PhotoTipsDialog extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Image.asset(iconPath, width: 20, height: 20),
+        Image.asset(iconPath, width: 20, height: 20, excludeFromSemantics: true),
         const SizedBox(width: 13),
         Flexible(
           child: Text(text),

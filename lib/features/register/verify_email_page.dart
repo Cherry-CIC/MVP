@@ -32,16 +32,25 @@ class _VerifyEmailPageState extends State<VerifyEmailPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Center(
-        child: Column(
-          spacing: 50,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text('Check your email inbox for a Verification email'),
-            ElevatedButton(
-              onPressed: () async => await _firebaseAuthService.sendVerificationEmail(),
-              child: Text('Resend Verification Email'),
-            ),
-          ],
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Column(
+            spacing: 50,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Semantics(
+                liveRegion: true,
+                child: const Text(
+                  'Check your email inbox for a Verification email',
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              ElevatedButton(
+                onPressed: () async => await _firebaseAuthService.sendVerificationEmail(),
+                child: const Text('Resend Verification Email'),
+              ),
+            ],
+          ),
         ),
       ),
     );

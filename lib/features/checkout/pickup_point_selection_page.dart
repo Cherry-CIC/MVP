@@ -116,10 +116,10 @@ class _PickupPointSelectionPageState extends State<PickupPointSelectionPage> {
         LengthLimitingTextInputFormatter(8),
         FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9 ]')),
       ],
-      decoration: InputDecoration(
+      decoration: const InputDecoration(
         labelText: AppStrings.postCode,
         hintText: AddressConstants.postCodeHintText,
-        prefixIcon: const Icon(Icons.location_on_outlined),
+        prefixIcon: ExcludeSemantics(child: Icon(Icons.location_on_outlined)),
       ),
       validator: _validatePostcode,
       onFieldSubmitted: (_) => _searchPickupPoints(viewModel),
@@ -132,7 +132,7 @@ class _PickupPointSelectionPageState extends State<PickupPointSelectionPage> {
       readOnly: true,
       decoration: const InputDecoration(
         labelText: AppStrings.countryText,
-        prefixIcon: Icon(Icons.flag_outlined),
+        prefixIcon: ExcludeSemantics(child: Icon(Icons.flag_outlined)),
       ),
     );
   }
@@ -244,57 +244,64 @@ class _PickupPointCard extends StatelessWidget {
     final distanceMetres = pickupPoint.distanceMetres;
     final displayDistance = pickupPoint.displayDistance;
 
-    return Material(
-      color: theme.colorScheme.surface,
-      borderRadius: BorderRadius.circular(8),
-      child: InkWell(
+    return Semantics(
+      button: true,
+      child: Material(
+        color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(8),
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: theme.colorScheme.outline),
-          ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.primaryContainer,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(Icons.store_mall_directory_outlined, color: theme.colorScheme.primary),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(inpost.name, style: theme.textTheme.titleSmall),
-                    const SizedBox(height: 4),
-                    Text(
-                      formattedAddress,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(8),
+          onTap: onTap,
+          child: Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: theme.colorScheme.outline),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ExcludeSemantics(
+                  child: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primaryContainer,
+                      borderRadius: BorderRadius.circular(8),
                     ),
-
-                    if (distanceMetres != 0)
+                    child: Icon(Icons.store_mall_directory_outlined, color: theme.colorScheme.primary),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(inpost.name, style: theme.textTheme.titleSmall),
+                      const SizedBox(height: 4),
                       Text(
-                        'Distance: $displayDistance',
+                        formattedAddress,
                         style: theme.textTheme.bodyMedium?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
                         ),
                       ),
-                  ],
+
+                      if (distanceMetres != 0)
+                        Text(
+                          'Distance: $displayDistance',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(width: 8),
-              Icon(Icons.chevron_right, color: theme.colorScheme.onSurfaceVariant),
-            ],
+                const SizedBox(width: 8),
+                ExcludeSemantics(
+                  child: Icon(Icons.chevron_right, color: theme.colorScheme.onSurfaceVariant),
+                ),
+              ],
+            ),
           ),
         ),
       ),

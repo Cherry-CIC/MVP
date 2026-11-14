@@ -1,6 +1,6 @@
 import 'package:cherry_mvp/core/config/config.dart';
+import 'package:cherry_mvp/core/widgets/loading_view.dart';
 import 'package:cherry_mvp/features/welcome/widgets/button_style.dart';
-import 'package:cherry_mvp/features/welcome/widgets/loading_view.dart';
 import 'package:cherry_mvp/core/router/router.dart';
 import 'package:cherry_mvp/core/utils/status.dart';
 import 'package:cherry_mvp/features/login/login_viewmodel.dart';
@@ -25,6 +25,7 @@ class AuthCard extends StatelessWidget {
         final bool isLoading = viewModel.status.type == StatusType.loading;
 
         return Card(
+          semanticContainer: false,
           color: Theme.of(context).colorScheme.surface,
           margin: EdgeInsets.zero,
           elevation: 20,
@@ -46,6 +47,7 @@ class AuthCard extends StatelessWidget {
                       ),
                     ),
                     IconButton(
+                      tooltip: AppStrings.close,
                       icon: Icon(Icons.close, color: Theme.of(context).colorScheme.onSurface),
                       onPressed: isLoading ? null : onClose,
                     ),
@@ -70,32 +72,35 @@ class AuthCard extends StatelessWidget {
                       ]),
 
                 const SizedBox(height: 10),
-                Row(
-                  children: [
-                    Expanded(
-                      child: Divider(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
-                      child: Text(
-                        AppStrings.or,
-                        style: TextStyle(
+                ExcludeSemantics(
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Divider(
                           color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                       ),
-                    ),
-                    Expanded(
-                      child: Divider(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        child: Text(
+                          AppStrings.or,
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          ),
+                        ),
                       ),
-                    ),
-                  ],
+                      Expanded(
+                        child: Divider(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 10),
                 TextButton(
                   style: TextButton.styleFrom(
+                    minimumSize: const Size(64, kMinInteractiveDimension),
                     foregroundColor: AppColors.primaryAction,
                     disabledForegroundColor: Theme.of(context).disabledColor,
                   ),

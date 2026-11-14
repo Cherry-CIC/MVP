@@ -95,7 +95,11 @@ class _EditListingScreenState extends State<_EditListingScreen> {
         ),
         body: SafeArea(
           child: vm.isLoading
-              ? const Center(child: CircularProgressIndicator())
+              ? const Center(
+                  child: CircularProgressIndicator(
+                    semanticsLabel: 'Loading listing',
+                  ),
+                )
               : vm.original == null
               ? Center(
                   child: Padding(
@@ -218,7 +222,7 @@ class _EditListingFormState extends State<_EditListingForm> {
                         child: Row(
                           children: [
                             Expanded(child: Text('Category: ${_categoryName ?? 'Choose a category'}')),
-                            const Icon(Icons.chevron_right),
+                            const ExcludeSemantics(child: Icon(Icons.chevron_right)),
                           ],
                         ),
                       ),
@@ -343,22 +347,24 @@ class _ListingPhotos extends StatelessWidget {
             padding: const EdgeInsets.only(bottom: 8),
             child: Row(
               children: [
-                SizedBox(
-                  width: 72,
-                  height: 72,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: photos[index].remoteUrl != null
-                        ? Image.network(
-                            photos[index].remoteUrl!,
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, _, _) => const Icon(Icons.broken_image_outlined),
-                          )
-                        : Image.file(
-                            File(photos[index].file!.path),
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, _, _) => const Icon(Icons.broken_image_outlined),
-                          ),
+                ExcludeSemantics(
+                  child: SizedBox(
+                    width: 72,
+                    height: 72,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: photos[index].remoteUrl != null
+                          ? Image.network(
+                              photos[index].remoteUrl!,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, _, _) => const Icon(Icons.broken_image_outlined),
+                            )
+                          : Image.file(
+                              File(photos[index].file!.path),
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, _, _) => const Icon(Icons.broken_image_outlined),
+                            ),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 12),

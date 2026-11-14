@@ -12,10 +12,12 @@ class LoginPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
+          tooltip: AppStrings.back,
           icon: Image.asset(
             AppImages.backIcon,
             width: 24,
             height: 24,
+            excludeFromSemantics: true,
           ),
           onPressed: () => context.read<LoginViewModel>().goBack(),
         ),

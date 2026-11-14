@@ -195,6 +195,7 @@ class _ListingsLoadingState extends StatelessWidget {
   Widget build(BuildContext context) {
     return Semantics(
       label: AppStrings.profileListingsLoading,
+      liveRegion: true,
       child: ExcludeSemantics(
         child: Row(
           children: [
@@ -263,36 +264,41 @@ class _ListingsErrorState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 24),
-        child: Column(
-          children: [
-            Icon(
-              Icons.error_outline,
-              color: Theme.of(context).colorScheme.error,
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              AppStrings.profileListingsLoadFailed,
-              textAlign: TextAlign.center,
-            ),
-            if (errorMessage != null && errorMessage!.isNotEmpty) ...[
-              const SizedBox(height: 4),
-              Text(
-                errorMessage!,
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+    return Semantics(
+      liveRegion: true,
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 24),
+          child: Column(
+            children: [
+              ExcludeSemantics(
+                child: Icon(
+                  Icons.error_outline,
+                  color: Theme.of(context).colorScheme.error,
                 ),
               ),
+              const SizedBox(height: 8),
+              const Text(
+                AppStrings.profileListingsLoadFailed,
+                textAlign: TextAlign.center,
+              ),
+              if (errorMessage != null && errorMessage!.isNotEmpty) ...[
+                const SizedBox(height: 4),
+                Text(
+                  errorMessage!,
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+              const SizedBox(height: 12),
+              OutlinedButton(
+                onPressed: onRetry,
+                child: const Text(AppStrings.retry),
+              ),
             ],
-            const SizedBox(height: 12),
-            OutlinedButton(
-              onPressed: onRetry,
-              child: const Text(AppStrings.retry),
-            ),
-          ],
+          ),
         ),
       ),
     );
@@ -311,10 +317,12 @@ class _ListingsEmptyState extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 24),
         child: Column(
           children: [
-            Icon(
-              Icons.checkroom_outlined,
-              size: 40,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ExcludeSemantics(
+              child: Icon(
+                Icons.checkroom_outlined,
+                size: 40,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
             const SizedBox(height: 12),
             const Text(

@@ -11,17 +11,19 @@ class DashboardEmptyWidget extends StatelessWidget {
         padding: const EdgeInsets.all(40.0),
         child: Column(
           children: [
-            const Icon(
-              Icons.shopping_bag_outlined,
-              size: 48,
-              color: Colors.grey,
+            ExcludeSemantics(
+              child: Icon(
+                Icons.shopping_bag_outlined,
+                size: 48,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
             const SizedBox(height: 16),
-            const Text(
+            Text(
               AppStrings.noProductsAvailable,
               style: TextStyle(
                 fontSize: 16,
-                color: Colors.grey,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ),
           ],

@@ -14,33 +14,35 @@ class DonationOption extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      clipBehavior: Clip.antiAlias,
-      color: Theme.of(context).colorScheme.surfaceContainerHighest,
-      shape: StadiumBorder(),
-      child: InkWell(
-        onTap: () => onChanged(!value),
-        borderRadius: BorderRadius.circular(30),
-        child: Padding(
-          padding: EdgeInsets.symmetric(vertical: 8, horizontal: 16.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Text(
-                  labelText,
-                  style: TextStyle(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant),
+    return MergeSemantics(
+      child: Material(
+        clipBehavior: Clip.antiAlias,
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        shape: const StadiumBorder(),
+        child: InkWell(
+          onTap: () => onChanged(!value),
+          borderRadius: BorderRadius.circular(30),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    labelText,
+                    style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant),
+                  ),
                 ),
-              ),
-              Switch.adaptive(
-                value: value,
-                onChanged: onChanged,
-                inactiveTrackColor:
-                    Theme.of(context).colorScheme.onSurfaceVariant,
-                activeTrackColor: Theme.of(context).colorScheme.primary,
-              ),
-            ],
+                Switch.adaptive(
+                  value: value,
+                  onChanged: onChanged,
+                  inactiveTrackColor:
+                      Theme.of(context).colorScheme.onSurfaceVariant,
+                  activeTrackColor: Theme.of(context).colorScheme.primary,
+                ),
+              ],
+            ),
           ),
         ),
       ),

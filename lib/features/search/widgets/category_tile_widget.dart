@@ -16,44 +16,56 @@ class CategoryTileWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Column(
+    return Semantics(
+      button: true,
+      label: text,
+      child: InkWell(
+        onTap: onTap,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(
+            minHeight: kMinInteractiveDimension,
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  Image.network(
-                    image,
-                    width: 24,
-                    height: 24,
-                    color: const Color(0xFFFF0050),
-                    errorBuilder: (context, error, stackTrace) => Image.asset(
-                      AppImages.getCategoryIcon(text),
-                      width: 24,
-                      height: 24,
-                      color: const Color(0xFFFF0050),
-                      errorBuilder: (context, error, stackTrace) => const Icon(
-                        Icons.broken_image,
-                        color: AppColors.red,
+              Expanded(
+                child: Row(
+                  children: [
+                    ExcludeSemantics(
+                      child: Image.network(
+                        image,
+                        width: 24,
+                        height: 24,
+                        color: const Color(0xFFFF0050),
+                        errorBuilder: (context, error, stackTrace) => Image.asset(
+                          AppImages.getCategoryIcon(text),
+                          width: 24,
+                          height: 24,
+                          color: const Color(0xFFFF0050),
+                          excludeFromSemantics: true,
+                          errorBuilder: (context, error, stackTrace) => const Icon(
+                            Icons.broken_image,
+                            color: AppColors.red,
+                          ),
+                        ),
                       ),
                     ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(left: 16),
-                    child: Text(
-                      text,
-                      style: Theme.of(context).textTheme.bodyLarge,
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 16),
+                        child: Text(
+                          text,
+                          style: Theme.of(context).textTheme.bodyLarge,
+                        ),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
+              ?trailing,
             ],
           ),
-          ?trailing,
-        ],
+        ),
       ),
     );
   }

@@ -22,6 +22,7 @@ class IconTextRow extends StatelessWidget {
               assetPath,
               height: 16,
               width: 16,
+              excludeFromSemantics: true,
             ),
             const SizedBox(width: 8),
             Text(

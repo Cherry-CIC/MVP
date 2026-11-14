@@ -1,5 +1,5 @@
+import 'package:cherry_mvp/core/config/app_colors.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_test/flutter_test.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 ThemeData buildTheme([Brightness brightness = Brightness.light]) {
@@ -83,7 +83,7 @@ ThemeData buildTheme([Brightness brightness = Brightness.light]) {
       ),
     );
 
-    if (WidgetsBinding.instance is TestWidgetsFlutterBinding ||
+    if (WidgetsBinding.instance.runtimeType.toString().contains('Test') ||
         !GoogleFonts.config.allowRuntimeFetching) {
       return customBase;
     }
@@ -159,24 +159,57 @@ ThemeData buildTheme([Brightness brightness = Brightness.light]) {
         ),
       ),
       hintStyle: TextStyle(color: baseTheme.colorScheme.onSurfaceVariant),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: baseTheme.colorScheme.error, width: 1.5),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: baseTheme.colorScheme.error, width: 2),
+      ),
       prefixIconColor: baseTheme.colorScheme.onSurfaceVariant,
     ),
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
         minimumSize: const Size(64, 48),
+        tapTargetSize: MaterialTapTargetSize.padded,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         textStyle: const TextStyle(fontWeight: FontWeight.w500),
-        side: BorderSide(color: baseTheme.colorScheme.primary),
-        foregroundColor:
-            isDark ? Colors.white : baseTheme.colorScheme.primary,
+        // AppColors.primaryAction keeps outlined text at WCAG AA (4.5:1) on
+        // the light surface; the brand red alone is only ~3.9:1.
+        side: BorderSide(color: isDark ? baseTheme.colorScheme.primary : AppColors.primaryAction),
+        foregroundColor: isDark ? Colors.white : AppColors.primaryAction,
       ),
     ),
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
+        // White on the brand red (#F90653) is 4.05:1, below WCAG AA (4.5:1) for
+        // normal text; primaryAction (#CC0041) is 5.76:1.
+        minimumSize: const Size(64, 48),
+        tapTargetSize: MaterialTapTargetSize.padded,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        backgroundColor: baseTheme.colorScheme.primary,
+        backgroundColor: AppColors.primaryAction,
         textStyle: const TextStyle(fontWeight: FontWeight.w600),
         foregroundColor: baseTheme.colorScheme.onPrimary,
+      ),
+    ),
+    iconButtonTheme: IconButtonThemeData(
+      style: IconButton.styleFrom(
+        minimumSize: const Size(48, 48),
+        tapTargetSize: MaterialTapTargetSize.padded,
+      ),
+    ),
+    textButtonTheme: TextButtonThemeData(
+      style: TextButton.styleFrom(
+        minimumSize: const Size(48, 48),
+        tapTargetSize: MaterialTapTargetSize.padded,
+        foregroundColor: isDark ? Colors.white : AppColors.primaryAction,
+      ),
+    ),
+    elevatedButtonTheme: ElevatedButtonThemeData(
+      style: ElevatedButton.styleFrom(
+        minimumSize: const Size(64, 48),
+        tapTargetSize: MaterialTapTargetSize.padded,
       ),
     ),
   );

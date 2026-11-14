@@ -53,7 +53,7 @@ class _SelectPaymentTypeBottomSheetState extends State<SelectPaymentTypeBottomSh
 
               /// CARD
               ListTile(
-                leading: const Icon(Icons.credit_card),
+                leading: const ExcludeSemantics(child: Icon(Icons.credit_card)),
                 title: Text(AppStrings.paymentMethodsCard),
                 trailing: RadioGroup<PaymentType>(
                   groupValue: selected,
@@ -72,6 +72,7 @@ class _SelectPaymentTypeBottomSheetState extends State<SelectPaymentTypeBottomSh
                     AppImages.paymentMethodsGoogleIcon,
                     width: 24,
                     height: 24,
+                    excludeFromSemantics: true,
                   ),
                   title: Text(AppStrings.paymentMethodsGooglePay),
                   trailing: RadioGroup<PaymentType>(
@@ -93,6 +94,7 @@ class _SelectPaymentTypeBottomSheetState extends State<SelectPaymentTypeBottomSh
                     width: 24,
                     height: 24,
                     color: Theme.of(context).colorScheme.onSurface,
+                    excludeFromSemantics: true,
                   ),
                   title: Text(AppStrings.paymentMethodsApplePay),
                   trailing: RadioGroup<PaymentType>(

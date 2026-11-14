@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cherry_mvp/core/config/config.dart';
@@ -41,10 +42,20 @@ class _UsernameSetupPageState extends State<UsernameSetupPage> {
     );
   }
 
+  void _setError(String error) {
+    setState(() {
+      _isSubmitting = false;
+      _errorText = error;
+    });
+    if (mounted) {
+      SemanticsService.sendAnnouncement(View.of(context), error, TextDirection.ltr);
+    }
+  }
+
   Future<void> _saveUsername() async {
     final validationError = _validateUsername();
     if (validationError != null) {
-      setState(() => _errorText = validationError);
+      _setError(validationError);
       return;
     }
 
@@ -68,18 +79,12 @@ class _UsernameSetupPageState extends State<UsernameSetupPage> {
     if (!mounted) return;
 
     if (!isTakenResult.isSuccess) {
-      setState(() {
-        _isSubmitting = false;
-        _errorText = isTakenResult.error ?? AppStrings.usernameSaveFailed;
-      });
+      _setError(isTakenResult.error ?? AppStrings.usernameSaveFailed);
       return;
     }
 
     if (isTakenResult.value == true) {
-      setState(() {
-        _isSubmitting = false;
-        _errorText = AppStrings.usernameTakenError;
-      });
+      _setError(AppStrings.usernameTakenError);
       return;
     }
 
@@ -88,10 +93,7 @@ class _UsernameSetupPageState extends State<UsernameSetupPage> {
     if (!mounted) return;
 
     if (!saveResult.isSuccess) {
-      setState(() {
-        _isSubmitting = false;
-        _errorText = saveResult.error ?? AppStrings.usernameSaveFailed;
-      });
+      _setError(saveResult.error ?? AppStrings.usernameSaveFailed);
       return;
     }
 
@@ -117,15 +119,21 @@ class _UsernameSetupPageState extends State<UsernameSetupPage> {
                 Row(
                   children: [
                     IconButton(
+                      tooltip: AppStrings.back,
                       onPressed: _isSubmitting ? null : _handleBack,
                       icon: Image.asset(
                         AppImages.backIcon,
                         width: 24,
                         height: 24,
+                        excludeFromSemantics: true,
                       ),
                     ),
                     const Spacer(),
-                    Image.asset(AppImages.cherryLogo, width: 86),
+                    Image.asset(
+                      AppImages.cherryLogo,
+                      width: 86,
+                      excludeFromSemantics: true,
+                    ),
                   ],
                 ),
                 const SizedBox(height: 22),
@@ -143,18 +151,24 @@ class _UsernameSetupPageState extends State<UsernameSetupPage> {
                   ),
                 ),
                 const SizedBox(height: 22),
-                TextField(
-                  controller: _usernameController,
-                  enabled: !_isSubmitting,
-                  onChanged: (_) {
-                    setState(() {
-                      _errorText = null;
-                    });
-                  },
-                  decoration: InputDecoration(
-                    hintText: AppStrings.usernameSetupHint,
-                    prefixIcon: const Icon(Icons.person_outline),
-                    errorText: _errorText,
+                Semantics(
+                  label: AppStrings.usernameSetupHint,
+                  liveRegion: _errorText != null,
+                  child: TextField(
+                    controller: _usernameController,
+                    enabled: !_isSubmitting,
+                    onChanged: (_) {
+                      setState(() {
+                        _errorText = null;
+                      });
+                    },
+                    decoration: InputDecoration(
+                      hintText: AppStrings.usernameSetupHint,
+                      prefixIcon: const ExcludeSemantics(
+                        child: Icon(Icons.person_outline),
+                      ),
+                      errorText: _errorText,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 18),
@@ -162,7 +176,24 @@ class _UsernameSetupPageState extends State<UsernameSetupPage> {
                   width: double.infinity,
                   height: 56,
                   child: _isSubmitting
-                      ? const Center(child: CircularProgressIndicator())
+                      ? Semantics(
+                          button: true,
+                          enabled: false,
+                          liveRegion: true,
+                          label: AppStrings.loadingButton(AppStrings.nextButton),
+                          excludeSemantics: true,
+                          child: FilledButton(
+                            onPressed: null,
+                            child: SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 3,
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
+                            ),
+                          ),
+                        )
                       : FilledButton(
                           onPressed: _isValid ? _saveUsername : null,
                           child: const Text(AppStrings.nextButton),

@@ -43,8 +43,11 @@ class PostageSizePageState extends State<PostageSizePage> {
         return Scaffold(
           appBar: AppBar(
             leading: IconButton(
-              icon: ImageProviderHelper.buildImage(
-                imagePath: AppImages.backIcon,
+              tooltip: AppStrings.back,
+              icon: ExcludeSemantics(
+                child: ImageProviderHelper.buildImage(
+                  imagePath: AppImages.backIcon,
+                ),
               ),
               onPressed: () => viewModel.goBack(),
             ),
@@ -65,42 +68,53 @@ class PostageSizePageState extends State<PostageSizePage> {
     List<PostageSizeInfo> postageSizeInfos,
   ) {
     if (status.type == StatusType.loading) {
-      return const Center(child: CircularProgressIndicator());
+      return Center(
+        child: Semantics(
+          label: AppStrings.loading,
+          liveRegion: true,
+          child: const CircularProgressIndicator(),
+        ),
+      );
     }
 
     if (status.type == StatusType.failure) {
-      return Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.error_outline,
-              color: Theme.of(context).colorScheme.primary,
-              size: 44,
-            ),
-            const SizedBox(height: 12),
-            Text(
-              AppStrings.postageSizeInfoError,
-              style: Theme.of(context).textTheme.titleMedium,
-              textAlign: TextAlign.center,
-            ),
-            if (status.message != null) ...[
-              const SizedBox(height: 8),
-              Text(
-                status.message!,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+      return Semantics(
+        liveRegion: true,
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              ExcludeSemantics(
+                child: Icon(
+                  Icons.error_outline,
+                  color: Theme.of(context).colorScheme.primary,
+                  size: 44,
                 ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                AppStrings.postageSizeInfoError,
+                style: Theme.of(context).textTheme.titleMedium,
                 textAlign: TextAlign.center,
               ),
+              if (status.message != null) ...[
+                const SizedBox(height: 8),
+                Text(
+                  status.message!,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+              const SizedBox(height: 16),
+              FilledButton(
+                onPressed: () => viewModel.fetchPostageSizes(),
+                child: Text(AppStrings.retry),
+              ),
             ],
-            const SizedBox(height: 16),
-            FilledButton(
-              onPressed: () => viewModel.fetchPostageSizes(),
-              child: Text(AppStrings.retry),
-            ),
-          ],
+          ),
         ),
       );
     }
@@ -152,55 +166,63 @@ class _PostageSizeCard extends StatelessWidget {
     final iconBackground = isSelected ? theme.colorScheme.primary : theme.colorScheme.primaryContainer;
     final iconColour = isSelected ? theme.colorScheme.onPrimary : theme.colorScheme.primary;
 
-    return Material(
-      color: theme.colorScheme.surface,
-      borderRadius: BorderRadius.circular(8),
-      child: InkWell(
+    return Semantics(
+      button: true,
+      selected: isSelected,
+      child: Material(
+        color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(8),
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: borderColor, width: isSelected ? 1.5 : 1),
-          ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: iconBackground,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(_icon, color: iconColour),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      postageSizeInfo.size.label,
-                      style: theme.textTheme.titleMedium,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(8),
+          onTap: onTap,
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: borderColor, width: isSelected ? 1.5 : 1),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ExcludeSemantics(
+                  child: Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: iconBackground,
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      postageSizeInfo.description,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
+                    child: Icon(_icon, color: iconColour),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        postageSizeInfo.size.label,
+                        style: theme.textTheme.titleMedium,
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 4),
+                      Text(
+                        postageSizeInfo.description,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(width: 8),
-              Icon(
-                isSelected ? Icons.check_circle : Icons.chevron_right,
-                color: isSelected ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant,
-              ),
-            ],
+                const SizedBox(width: 8),
+                ExcludeSemantics(
+                  child: Icon(
+                    isSelected ? Icons.check_circle : Icons.chevron_right,
+                    color: isSelected ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

@@ -98,50 +98,65 @@ class ProductCard extends StatelessWidget {
                         ),
                       ),
                       if (!viewModel.isOwnProduct(product)) Positioned(
-                        top: product.isSold ? 16 : null,
-                        bottom: product.isSold ? null : 16,
-                        right: 16,
+                        top: product.isSold ? 8 : null,
+                        bottom: product.isSold ? null : 8,
+                        right: 8,
                         child: Semantics(
                           key: ValueKey('product-like-${product.id}'),
                           button: true,
+                          toggled: isLiked,
                           label: isLiked ? AppStrings.unlikeProduct : AppStrings.likeProduct,
                           child: GestureDetector(
+                            behavior: HitTestBehavior.opaque,
                             onTap: onLikePressed ?? () => viewModel.toggleLike(product),
-                            child: Material(
-                              borderRadius: BorderRadius.circular(4),
-                              elevation: 2,
-                              color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                              type: MaterialType.button,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 6,
-                                  vertical: 4,
-                                ),
-                                child: Row(
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    isLiked
-                                        ? Image.asset(
-                                            AppImages.likeHeart,
-                                            height: 16,
-                                            fit: BoxFit.contain,
-                                            color: Colors.red,
-                                          )
-                                        : Icon(
-                                            Icons.favorite_outline,
-                                            size: 16,
-                                            color: Theme.of(context).colorScheme.onSurfaceVariant,
-                                          ),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      displayLikes.toString(),
-                                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                        fontWeight: FontWeight.bold,
-                                        color: isLiked ? Colors.red : Theme.of(context).colorScheme.onSurfaceVariant,
-                                      ),
+                            child: ConstrainedBox(
+                              constraints: const BoxConstraints(
+                                minWidth: kMinInteractiveDimension,
+                                minHeight: kMinInteractiveDimension,
+                              ),
+                              child: Center(
+                                widthFactor: 1,
+                                heightFactor: 1,
+                                child: Material(
+                                  borderRadius: BorderRadius.circular(4),
+                                  elevation: 2,
+                                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                                  type: MaterialType.button,
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 6,
+                                      vertical: 4,
                                     ),
-                                  ],
+                                    child: Row(
+                                      crossAxisAlignment: CrossAxisAlignment.center,
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        isLiked
+                                            ? Image.asset(
+                                                AppImages.likeHeart,
+                                                height: 16,
+                                                fit: BoxFit.contain,
+                                                color: Colors.red,
+                                                excludeFromSemantics: true,
+                                              )
+                                            : ExcludeSemantics(
+                                                child: Icon(
+                                                  Icons.favorite_outline,
+                                                  size: 16,
+                                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                                ),
+                                              ),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          displayLikes.toString(),
+                                          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                            fontWeight: FontWeight.bold,
+                                            color: isLiked ? Colors.red : Theme.of(context).colorScheme.onSurfaceVariant,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
                                 ),
                               ),
                             ),
@@ -240,7 +255,12 @@ class ProductCard extends StatelessWidget {
                                   ),
                                 ),
                                 const SizedBox(width: 4),
-                                Image.asset(AppImages.shieldTick, width: 16, height: 16),
+                                Image.asset(
+                                  AppImages.shieldTick,
+                                  width: 16,
+                                  height: 16,
+                                  excludeFromSemantics: true,
+                                ),
                               ],
                             ),
                           ],
@@ -248,11 +268,13 @@ class ProductCard extends StatelessWidget {
                       ),
                     ),
                     if (product.charityImage.isNotEmpty)
-                      ImageProviderHelper.buildImage(
-                        imagePath: product.charityImage,
-                        height: 35,
-                        width: 35,
-                        fit: BoxFit.cover,
+                      ExcludeSemantics(
+                        child: ImageProviderHelper.buildImage(
+                          imagePath: product.charityImage,
+                          height: 35,
+                          width: 35,
+                          fit: BoxFit.cover,
+                        ),
                       ),
                   ],
                 ),

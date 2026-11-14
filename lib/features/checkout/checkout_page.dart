@@ -91,20 +91,23 @@ class _CheckoutPageState extends State<CheckoutPage> {
 
             if (_errorMessage.isNotEmpty)
               SliverToBoxAdapter(
-                child: Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primaryContainer,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: AppColors.primaryAction),
-                  ),
-                  child: Text(
-                    _errorMessage,
-                    style: const TextStyle(
-                      color: AppColors.primaryAction,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
+                child: Semantics(
+                  liveRegion: true,
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.primaryContainer,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: AppColors.primaryAction),
+                    ),
+                    child: Text(
+                      _errorMessage,
+                      style: const TextStyle(
+                        color: AppColors.primaryAction,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ),
                 ),
@@ -117,15 +120,20 @@ class _CheckoutPageState extends State<CheckoutPage> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(
-                        Icons.lock,
-                        size: 14,
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                      Text(
-                        AppStrings.checkoutSecure,
-                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      ExcludeSemantics(
+                        child: Icon(
+                          Icons.lock,
+                          size: 14,
                           color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      Flexible(
+                        child: Text(
+                          AppStrings.checkoutSecure,
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          ),
                         ),
                       ),
                     ],

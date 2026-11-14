@@ -9,39 +9,45 @@ class CategoryErrorWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final onSurfaceVariant = Theme.of(context).colorScheme.onSurfaceVariant;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(40.0),
-        child: Column(
-          children: [
-            const Icon(
-              Icons.error_outline,
-              size: 48,
-              color: AppColors.red,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              AppStrings.failedToLoadCategories,
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey[600],
+        child: Semantics(
+          liveRegion: true,
+          child: Column(
+            children: [
+              const ExcludeSemantics(
+                child: Icon(
+                  Icons.error_outline,
+                  size: 48,
+                  color: AppColors.red,
+                ),
               ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              errorMessage ?? AppStrings.unknownErrorOccurred,
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[500],
+              const SizedBox(height: 16),
+              Text(
+                AppStrings.failedToLoadCategories,
+                style: TextStyle(
+                  fontSize: 16,
+                  color: onSurfaceVariant,
+                ),
               ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: onRetry,
-              child: const Text(AppStrings.retry),
-            ),
-          ],
+              const SizedBox(height: 8),
+              Text(
+                errorMessage ?? AppStrings.unknownErrorOccurred,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: onSurfaceVariant,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: onRetry,
+                child: const Text(AppStrings.retry),
+              ),
+            ],
+          ),
         ),
       ),
     );

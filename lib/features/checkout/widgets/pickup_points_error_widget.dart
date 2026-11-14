@@ -9,39 +9,45 @@ class PickupPointErrorWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(40.0),
-        child: Column(
-          children: [
-            const Icon(
-              Icons.error_outline,
-              size: 48,
-              color: AppColors.red,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              AppStrings.failedToLoadPickupPoint,
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey[600],
+    final secondaryColor = Theme.of(context).colorScheme.onSurfaceVariant;
+    return Semantics(
+      liveRegion: true,
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(40.0),
+          child: Column(
+            children: [
+              const ExcludeSemantics(
+                child: Icon(
+                  Icons.error_outline,
+                  size: 48,
+                  color: AppColors.primaryAction,
+                ),
               ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              errorMessage ?? AppStrings.unknownErrorOccurred,
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[500],
+              const SizedBox(height: 16),
+              Text(
+                AppStrings.failedToLoadPickupPoint,
+                style: TextStyle(
+                  fontSize: 16,
+                  color: secondaryColor,
+                ),
               ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: onRetry,
-              child: const Text(AppStrings.retry),
-            ),
-          ],
+              const SizedBox(height: 8),
+              Text(
+                errorMessage ?? AppStrings.unknownErrorOccurred,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: secondaryColor,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: onRetry,
+                child: const Text(AppStrings.retry),
+              ),
+            ],
+          ),
         ),
       ),
     );

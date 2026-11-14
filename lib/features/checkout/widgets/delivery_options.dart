@@ -71,12 +71,24 @@ class _DeliveryOptionsState extends State<DeliveryOptions> {
           PriceListItem(
             title: Row(
               children: [
-                const Text(AppStrings.checkoutSecurityFee),
+                const Flexible(child: Text(AppStrings.checkoutSecurityFee)),
                 const SizedBox(width: 4),
-                InkWell(
-                  borderRadius: BorderRadius.circular(16),
-                  onTap: () => viewModel.showPurchaseSecurity(),
-                  child: const Icon(Icons.info, size: 16),
+                Semantics(
+                  button: true,
+                  label: AppStrings.purchaseSecurityHeading,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(24),
+                    onTap: () => viewModel.showPurchaseSecurity(),
+                    child: const SizedBox(
+                      width: 48,
+                      height: 48,
+                      child: Center(
+                        child: ExcludeSemantics(
+                          child: Icon(Icons.info, size: 16),
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -161,21 +173,23 @@ class _DeliveryOptionsState extends State<DeliveryOptions> {
                           await viewModel.fetchShippingMethodsForInpost();
                         }
                       },
-                      leading: const Icon(Icons.map),
+                      leading: const ExcludeSemantics(child: Icon(Icons.map)),
                       title: selectedInpost != null
                           ? Row(
                               crossAxisAlignment: CrossAxisAlignment.center,
                               spacing: 10,
                               children: [
-                                Container(
-                                  decoration: BoxDecoration(
-                                    color: Color.fromARGB(255, 255, 204, 5),
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  padding: EdgeInsets.all(6),
-                                  child: SvgPicture.asset(
-                                    AppImages.inpostLogo,
-                                    height: 25,
+                                ExcludeSemantics(
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      color: const Color.fromARGB(255, 255, 204, 5),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    padding: const EdgeInsets.all(6),
+                                    child: SvgPicture.asset(
+                                      AppImages.inpostLogo,
+                                      height: 25,
+                                    ),
                                   ),
                                 ),
                                 Expanded(
@@ -187,12 +201,12 @@ class _DeliveryOptionsState extends State<DeliveryOptions> {
                                 ),
                                 Text(
                                   '${AppStrings.currencySymbol}${(viewModel.selectedInpostShippingMethod?.pricePence ?? 0) / 100}',
-                                  style: TextStyle(color: AppColors.primaryAction),
+                                  style: const TextStyle(color: AppColors.primaryAction),
                                 ),
                               ],
                             )
-                          : Text(AppStrings.checkoutChoosePickupPoint),
-                      trailing: const Icon(Icons.chevron_right),
+                          : const Text(AppStrings.checkoutChoosePickupPoint),
+                      trailing: const ExcludeSemantics(child: Icon(Icons.chevron_right)),
                     ),
                     if (viewModel.deliveryChoice == DeliveryType.pickup && selectedInpost != null) ...[
                       ListTile(
@@ -202,7 +216,7 @@ class _DeliveryOptionsState extends State<DeliveryOptions> {
                         title: Row(
                           spacing: 8,
                           children: [
-                            Icon(Icons.store_outlined, size: 20),
+                            const ExcludeSemantics(child: Icon(Icons.store_outlined, size: 20)),
                             Expanded(
                               child: Text(
                                 viewModel.pickupBuilding,
@@ -215,7 +229,7 @@ class _DeliveryOptionsState extends State<DeliveryOptions> {
                         subtitle: Row(
                           spacing: 8,
                           children: [
-                            Icon(Icons.location_on_outlined, size: 20),
+                            const ExcludeSemantics(child: Icon(Icons.location_on_outlined, size: 20)),
                             Expanded(
                               child: Text(
                                 viewModel.pickupAddress,
@@ -234,34 +248,39 @@ class _DeliveryOptionsState extends State<DeliveryOptions> {
             ],
           ),
           const Divider(height: 32),
-          Text(
-            AppStrings.mobilePhoneNumber,
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ExcludeSemantics(
+            child: Text(
+              AppStrings.mobilePhoneNumber,
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
           ),
           const SizedBox(height: 8),
-          TextField(
-            controller: _mobilePhoneController,
-            keyboardType: TextInputType.phone,
-            decoration: InputDecoration(
-              hintText: AddressConstants.mobilePhoneHintText,
-              border: OutlineInputBorder(
-                borderSide: BorderSide(
-                  color: Theme.of(context).colorScheme.outline,
+          Semantics(
+            label: AppStrings.mobilePhoneNumber,
+            child: TextField(
+              controller: _mobilePhoneController,
+              keyboardType: TextInputType.phone,
+              decoration: InputDecoration(
+                hintText: AddressConstants.mobilePhoneHintText,
+                border: OutlineInputBorder(
+                  borderSide: BorderSide(
+                    color: Theme.of(context).colorScheme.outline,
+                  ),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderSide: BorderSide(
+                    color: Theme.of(context).colorScheme.outline,
+                  ),
                 ),
               ),
-              enabledBorder: OutlineInputBorder(
-                borderSide: BorderSide(
-                  color: Theme.of(context).colorScheme.outline,
-                ),
-              ),
+              onTapUpOutside: (_) {
+                viewModel.setMobilePhoneNumber(_mobilePhoneController.text);
+                FocusManager.instance.primaryFocus?.unfocus();
+              },
+              onSubmitted: (value) => viewModel.setMobilePhoneNumber(value),
             ),
-            onTapUpOutside: (_) {
-              viewModel.setMobilePhoneNumber(_mobilePhoneController.text);
-              FocusManager.instance.primaryFocus?.unfocus();
-            },
-            onSubmitted: (value) => viewModel.setMobilePhoneNumber(value),
           ),
           // Show address input field when home delivery is selected
           if (viewModel.deliveryChoice == DeliveryType.home) ...[
@@ -294,7 +313,7 @@ class _DeliveryOptionsState extends State<DeliveryOptions> {
               return Outlined(
                 child: ListTile(
                   contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-                  leading: const Icon(Icons.credit_card),
+                  leading: const ExcludeSemantics(child: Icon(Icons.credit_card)),
                   title: Text(
                     selectedType == null ? AppStrings.checkoutChoosePayment : _paymentTypeLabel(selectedType),
                   ),
@@ -304,7 +323,7 @@ class _DeliveryOptionsState extends State<DeliveryOptions> {
                           style: Theme.of(context).textTheme.labelSmall,
                         )
                       : null,
-                  trailing: const Icon(Icons.chevron_right),
+                  trailing: const ExcludeSemantics(child: Icon(Icons.chevron_right)),
                   onTap: () async {
                     await showModalBottomSheet<PaymentType>(
                       context: context,

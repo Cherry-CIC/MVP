@@ -170,12 +170,14 @@ class _EditProfileFormState extends State<_EditProfileForm> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Center(
-              child: CircleAvatar(
-                radius: 40,
-                backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
-                backgroundImage: (photoUrl != null && photoUrl.isNotEmpty)
-                    ? NetworkImage(photoUrl)
-                    : AssetImage(AppImages.profileProfileIcon) as ImageProvider,
+              child: ExcludeSemantics(
+                child: CircleAvatar(
+                  radius: 40,
+                  backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+                  backgroundImage: (photoUrl != null && photoUrl.isNotEmpty)
+                      ? NetworkImage(photoUrl)
+                      : AssetImage(AppImages.profileProfileIcon) as ImageProvider,
+                ),
               ),
             ),
             const SizedBox(height: 24),
@@ -186,7 +188,7 @@ class _EditProfileFormState extends State<_EditProfileForm> {
               validator: _validateOptionalFirstName,
               decoration: const InputDecoration(
                 labelText: AppStrings.editProfileFirstNameLabel,
-                prefixIcon: Icon(Icons.badge_outlined),
+                prefixIcon: ExcludeSemantics(child: Icon(Icons.badge_outlined)),
               ),
             ),
             const SizedBox(height: 16),
@@ -199,7 +201,7 @@ class _EditProfileFormState extends State<_EditProfileForm> {
               },
               decoration: const InputDecoration(
                 labelText: AppStrings.editProfileUsernameLabel,
-                prefixIcon: Icon(Icons.person_outline),
+                prefixIcon: ExcludeSemantics(child: Icon(Icons.person_outline)),
               ),
             ),
             const SizedBox(height: 16),
@@ -210,7 +212,7 @@ class _EditProfileFormState extends State<_EditProfileForm> {
               validator: _validateOptionalPhone,
               decoration: const InputDecoration(
                 labelText: AppStrings.editProfilePhoneLabel,
-                prefixIcon: Icon(Icons.phone_outlined),
+                prefixIcon: ExcludeSemantics(child: Icon(Icons.phone_outlined)),
               ),
             ),
             const SizedBox(height: 16),
@@ -220,7 +222,7 @@ class _EditProfileFormState extends State<_EditProfileForm> {
               initialValue: widget.credentials.email ?? '',
               decoration: const InputDecoration(
                 labelText: AppStrings.email,
-                prefixIcon: Icon(Icons.email_outlined),
+                prefixIcon: ExcludeSemantics(child: Icon(Icons.email_outlined)),
                 helperText: AppStrings.editProfileEmailHelper,
               ),
             ),

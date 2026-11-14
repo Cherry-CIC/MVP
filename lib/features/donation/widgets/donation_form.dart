@@ -300,7 +300,13 @@ class DonationFormState extends State<DonationForm> {
               Padding(
                 padding: const EdgeInsets.all(16),
                 child: _isSubmitting || donationViewModel.status.type == StatusType.loading
-                    ? const Center(child: CircularProgressIndicator())
+                    ? Center(
+                        child: Semantics(
+                          label: AppStrings.loading,
+                          liveRegion: true,
+                          child: const CircularProgressIndicator(),
+                        ),
+                      )
                     : SizedBox(
                         height: 56,
                         width: double.infinity,
@@ -417,27 +423,32 @@ class _SelectionField extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: InputDecorator(
-          decoration: InputDecoration(
-            labelText: label,
-            suffixIcon: const Icon(Icons.chevron_right),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(
-                color: Theme.of(context).colorScheme.outline,
+      child: Semantics(
+        button: true,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12),
+          child: InputDecorator(
+            decoration: InputDecoration(
+              labelText: label,
+              suffixIcon: const ExcludeSemantics(
+                child: Icon(Icons.chevron_right),
+              ),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(
+                  color: Theme.of(context).colorScheme.outline,
+                ),
               ),
             ),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 4),
-            child: Text(
-              display,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: isPlaceholder ? theme.hintColor : theme.colorScheme.onSurface,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: Text(
+                display,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: isPlaceholder ? theme.hintColor : theme.colorScheme.onSurface,
+                ),
               ),
             ),
           ),

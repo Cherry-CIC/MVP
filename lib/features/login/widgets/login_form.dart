@@ -103,13 +103,46 @@ class LoginFormState extends State<LoginForm> {
 
               Consumer<LoginViewModel>(
                 builder: (context, viewModel, child) {
+                  final isLoading = viewModel.status.type == StatusType.loading;
+                  final errorMessage = viewModel.status.type == StatusType.failure
+                      ? viewModel.status.message
+                      : null;
                   return Column(
                     children: [
-                      viewModel.status.type == StatusType.loading
-                          ? const Center(child: CircularProgressIndicator())
-                          : SizedBox(
-                              width: double.infinity,
-                              child: FilledButton(
+                      if (errorMessage != null && errorMessage.isNotEmpty) ...[
+                        Semantics(
+                          liveRegion: true,
+                          child: Text(
+                            errorMessage,
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: Theme.of(context).colorScheme.error,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                      ],
+                      SizedBox(
+                        width: double.infinity,
+                        child: isLoading
+                            ? Semantics(
+                                button: true,
+                                enabled: false,
+                                liveRegion: true,
+                                label: AppStrings.loadingButton('Submit'),
+                                excludeSemantics: true,
+                                child: FilledButton(
+                                  onPressed: null,
+                                  child: SizedBox(
+                                    width: 24,
+                                    height: 24,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 3,
+                                      color: Theme.of(context).colorScheme.onSurface,
+                                    ),
+                                  ),
+                                ),
+                              )
+                            : FilledButton(
                                 onPressed: () async {
                                   final trimmedEmail = _emailController.text.trim();
 
@@ -132,7 +165,7 @@ class LoginFormState extends State<LoginForm> {
                                 },
                                 child: const Text("Submit"),
                               ),
-                            ),
+                      ),
                     ],
                   );
                 },

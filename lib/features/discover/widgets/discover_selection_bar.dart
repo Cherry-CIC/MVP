@@ -1,3 +1,4 @@
+import 'package:cherry_mvp/core/config/app_colors.dart';
 import 'package:flutter/material.dart';
 
 class DiscoverSelectionBar extends StatelessWidget {
@@ -55,12 +56,16 @@ class _TabButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colourScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final selectedTextColor = isDark ? colourScheme.primary : AppColors.primaryAction;
+    final unselectedTextColor = isDark ? colourScheme.onSurfaceVariant : const Color(0xFF5C5C60);
 
     return Expanded(
       child: Semantics(
         button: true,
         selected: isSelected,
         label: '$label charities',
+        excludeSemantics: true,
         child: Material(
           color: isSelected ? colourScheme.surface : Colors.transparent,
           borderRadius: BorderRadius.circular(8),
@@ -68,16 +73,23 @@ class _TabButton extends StatelessWidget {
           child: InkWell(
             borderRadius: BorderRadius.circular(8),
             onTap: onTap,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-              child: Text(
-                label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  color: isSelected ? colourScheme.primary : colourScheme.secondary,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(
+                minHeight: kMinInteractiveDimension,
+              ),
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      color: isSelected ? selectedTextColor : unselectedTextColor,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
                 ),
-                textAlign: TextAlign.center,
               ),
             ),
           ),

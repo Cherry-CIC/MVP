@@ -1,3 +1,4 @@
+import 'package:cherry_mvp/core/config/app_strings.dart';
 import 'package:cherry_mvp/core/config/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:cherry_mvp/core/config/app_colors.dart';
@@ -19,13 +20,18 @@ class StarRating extends StatelessWidget {
     final fullStars = rating.floor();
     final hasHalfStar = rating.ceil() != rating.floor();
     final emptyStars = maxStarRating - rating.ceil();
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        for (var i = 0; i < fullStars; i++) Icon(Icons.star, color: AppColors.yellow, size: starSize),
-        if (hasHalfStar) Icon(Icons.star_half, color: AppColors.yellow, size: starSize),
-        for (var i = 0; i < emptyStars; i++) Icon(Icons.star_border, color: AppColors.yellow, size: starSize),
-      ],
+    // Announce one summary instead of a run of unlabeled star icons.
+    return Semantics(
+      label: AppStrings.starRatingLabel(rating, maxStarRating),
+      excludeSemantics: true,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          for (var i = 0; i < fullStars; i++) Icon(Icons.star, color: AppColors.yellow, size: starSize),
+          if (hasHalfStar) Icon(Icons.star_half, color: AppColors.yellow, size: starSize),
+          for (var i = 0; i < emptyStars; i++) Icon(Icons.star_border, color: AppColors.yellow, size: starSize),
+        ],
+      ),
     );
   }
 }

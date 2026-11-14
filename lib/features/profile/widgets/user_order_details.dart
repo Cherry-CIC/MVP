@@ -68,6 +68,7 @@ class UserOrderDetails extends StatelessWidget {
                   color: Theme.of(context).colorScheme.primary,
                   height: 18,
                   width: 18,
+                  excludeFromSemantics: true,
                 ),
               ],
             ),

@@ -6,21 +6,24 @@ class PickupPointsLoadingWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
-      child: Padding(
-        padding: EdgeInsets.all(40.0),
-        child: Column(
-          children: [
-            CircularProgressIndicator(),
-            SizedBox(height: 16),
-            Text(
-              AppStrings.loadingPickupPoint,
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey,
+    return Semantics(
+      liveRegion: true,
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(40.0),
+          child: Column(
+            children: [
+              const CircularProgressIndicator(),
+              const SizedBox(height: 16),
+              Text(
+                AppStrings.loadingPickupPoint,
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

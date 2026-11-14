@@ -52,7 +52,13 @@ class _LikedItemsView extends StatelessWidget {
             switch (viewModel.status) {
               case LikedItemsStatus.initial:
               case LikedItemsStatus.loading:
-                return const Center(child: CircularProgressIndicator());
+                return Center(
+                  child: Semantics(
+                    label: AppStrings.loading,
+                    liveRegion: true,
+                    child: const CircularProgressIndicator(),
+                  ),
+                );
               case LikedItemsStatus.empty:
                 return const _LikedItemsEmptyState();
               case LikedItemsStatus.error:
@@ -158,10 +164,12 @@ class _LikedItemsEmptyState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              Icons.favorite_border,
-              size: 48,
-              color: Theme.of(context).colorScheme.primary,
+            ExcludeSemantics(
+              child: Icon(
+                Icons.favorite_border,
+                size: 48,
+                color: Theme.of(context).colorScheme.primary,
+              ),
             ),
             const SizedBox(height: 16),
             Text(
@@ -199,29 +207,34 @@ class _LikedItemsErrorState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.error_outline,
-              size: 48,
-              color: Theme.of(context).colorScheme.error,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            const SizedBox(height: 24),
-            OutlinedButton(
-              onPressed: onRetry,
-              child: const Text(AppStrings.retry),
-            ),
-          ],
+    return Semantics(
+      liveRegion: true,
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ExcludeSemantics(
+                child: Icon(
+                  Icons.error_outline,
+                  size: 48,
+                  color: Theme.of(context).colorScheme.error,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                message,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 24),
+              OutlinedButton(
+                onPressed: onRetry,
+                child: const Text(AppStrings.retry),
+              ),
+            ],
+          ),
         ),
       ),
     );
