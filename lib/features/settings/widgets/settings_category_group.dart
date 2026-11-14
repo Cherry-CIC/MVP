@@ -81,6 +81,19 @@ class SettingsCategoryGroup extends StatelessWidget {
             },
           );
         }
+        if (item.children.isNotEmpty) {
+          final variantColor = Theme.of(context).colorScheme.onSurfaceVariant;
+          return ExpansionTile(
+            title: Text(item.title),
+            textColor: variantColor,
+            collapsedTextColor: variantColor,
+            iconColor: variantColor,
+            collapsedIconColor: variantColor,
+            shape: const Border(),
+            collapsedShape: const Border(),
+            children: item.children,
+          );
+        }
         return SettingsItem(
           title: item.title,
           trailing: item.trailing,
