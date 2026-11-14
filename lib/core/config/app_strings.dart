@@ -456,6 +456,8 @@ class AppStrings {
   static const postageText = "Postage";
   static const chatWithUsText = "Chat with us";
   static const faqText = "FAQ'S";
+  static const contactText = "Contact";
+  static const contactUrl = "https://cherry.org.uk/contact";
   static const adText = "Ad";
 
   // Country & Currency
