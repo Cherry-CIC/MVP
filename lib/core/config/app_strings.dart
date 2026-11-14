@@ -95,8 +95,7 @@ class AppStrings {
   static const editProfileFirstNameLabel = 'First name';
   static const editProfileUsernameLabel = 'Username';
   static const editProfilePhoneLabel = 'Phone number';
-  static const editProfilePhoneInternationalFormat =
-      'Use +44 instead of the first 0 in your phone number.';
+  static const editProfilePhoneInternationalFormat = 'Use +44 instead of the first 0 in your phone number.';
   static const editProfileEmailHelper = 'Email cannot be changed here';
   static const editProfileSave = 'Save changes';
   static const editProfileSaveSuccess = 'Profile updated';
@@ -356,8 +355,7 @@ class AppStrings {
   static const checkoutNearestPickupPoints = 'Nearest pick-up points';
   static const checkoutMobilePhoneRequired = 'A mobile phone number is required for InPost pickup';
   static const checkoutRecipientNameRequired = 'Your name is required for pickup delivery.';
-  static const checkoutPickupOnlyCurrently =
-      'Only pick-up point delivery is currently available.';
+  static const checkoutPickupOnlyCurrently = 'Only pick-up point delivery is currently available.';
   static const checkoutPickupPostcodeRequired = 'Please enter a postcode';
   static const checkoutPickupPostcodeInvalid = 'Please enter a valid UK postcode';
   static const checkoutOwnProductNotAllowed = 'You cannot buy your own listing.';
@@ -418,7 +416,8 @@ class AppStrings {
   static const yourSupportBody =
       "Reach out to our support at any time with any issues, disputes questions, guidance or anything else- they’re here to help!";
   static const supportMissionHeading = "Support Our Mission";
-  static const supportMissionBoldTextSpan = "cherry is a nonprofit CIC (Community Interest Company) limited by guarantee, ";
+  static const supportMissionBoldTextSpan =
+      "cherry is a nonprofit CIC (Community Interest Company) limited by guarantee, ";
   static const supportMissionNormalTextSpan = "NOT by shares.";
   static const supportMissionPlainText = "Meaning ";
   static const supportMissionPinkText = "we will NEVER work in the interests of profiteers.";
@@ -444,7 +443,8 @@ class AppStrings {
   static const communityRulesText = "Community Rules";
   static const legalAcceptanceIntroText = "I confirm I am 18 years of age or older and agree to the";
   static const legalAcceptanceAndText = "and";
-  static const legalAcceptanceRequiredText = "You must confirm you are at least 18 years old and accept the Terms and Conditions and Community Rules.";
+  static const legalAcceptanceRequiredText =
+      "You must confirm you are at least 18 years old and accept the Terms and Conditions and Community Rules.";
   static const legalDocumentLoadErrorText = "We couldn't load this legal document. Please try again.";
   static const cookieSettingsText = "Cookie settings";
   static const logOutText = "Log out";

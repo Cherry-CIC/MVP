@@ -54,8 +54,9 @@ class LoginViewModel extends ChangeNotifier {
         _status = Status.failure(result.error ?? "");
         SafeLog.event(AppLogEvent.loginFailed, level: SafeLogLevel.warning);
       }
-    } catch (e) {
-      _status = Status.failure(e.toString());
+    } catch (_) {
+      _status = Status.failure('Google sign-in failed. Please try again.');
+      SafeLog.event(AppLogEvent.loginFailed, level: SafeLogLevel.warning);
     }
 
     notifyListeners();
@@ -74,8 +75,9 @@ class LoginViewModel extends ChangeNotifier {
         _status = Status.failure(result.error ?? "");
         SafeLog.event(AppLogEvent.loginFailed, level: SafeLogLevel.warning);
       }
-    } catch (e) {
-      _status = Status.failure(e.toString());
+    } catch (_) {
+      _status = Status.failure('Apple sign-in failed. Please try again.');
+      SafeLog.event(AppLogEvent.loginFailed, level: SafeLogLevel.warning);
     }
 
     notifyListeners();

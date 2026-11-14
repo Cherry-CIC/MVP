@@ -1,18 +1,38 @@
+import 'dart:io';
+
 import 'package:cherry_mvp/core/config/config.dart';
-import 'package:cherry_mvp/features/welcome/widgets/button_style.dart';
-import 'package:cherry_mvp/features/welcome/widgets/loading_view.dart';
 import 'package:cherry_mvp/core/router/router.dart';
 import 'package:cherry_mvp/core/utils/status.dart';
 import 'package:cherry_mvp/features/login/login_viewmodel.dart';
 import 'package:cherry_mvp/features/welcome/welcome_page.dart';
+import 'package:cherry_mvp/features/welcome/widgets/button_style.dart';
+import 'package:cherry_mvp/features/welcome/widgets/loading_view.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
-import 'dart:io';
 
 class AuthCard extends StatelessWidget {
   final VoidCallback onClose;
   final AuthMode mode;
   const AuthCard({super.key, required this.onClose, required this.mode});
+
+  Future<void> _handleSocialSignIn(
+    BuildContext context,
+    Future<void> Function() action,
+  ) async {
+    final loginViewModel = context.read<LoginViewModel>();
+    await action();
+    if (!context.mounted) {
+      return;
+    }
+
+    if (loginViewModel.status.type == StatusType.failure) {
+      final message = loginViewModel.status.message?.trim() ?? '';
+      if (message.isNotEmpty) {
+        Fluttertoast.showToast(msg: message);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -23,6 +43,9 @@ class AuthCard extends StatelessWidget {
     return Consumer<LoginViewModel>(
       builder: (context, viewModel, child) {
         final bool isLoading = viewModel.status.type == StatusType.loading;
+        final String errorMessage = viewModel.status.type == StatusType.failure
+            ? (viewModel.status.message?.trim() ?? '')
+            : '';
 
         return Card(
           color: Theme.of(context).colorScheme.surface,
@@ -46,7 +69,10 @@ class AuthCard extends StatelessWidget {
                       ),
                     ),
                     IconButton(
-                      icon: Icon(Icons.close, color: Theme.of(context).colorScheme.onSurface),
+                      icon: Icon(
+                        Icons.close,
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
                       onPressed: isLoading ? null : onClose,
                     ),
                   ],
@@ -58,16 +84,33 @@ class AuthCard extends StatelessWidget {
                           SocialLoginButton(
                             label: AppStrings.continueWithApple,
                             iconAsset: AppImages.authAppleIcon,
-                            onPressed: () => loginViewModel.signInWithApple(),
+                            onPressed: () => _handleSocialSignIn(
+                              context,
+                              loginViewModel.signInWithApple,
+                            ),
                           ),
                           const SizedBox(height: 10),
                         ],
                         SocialLoginButton(
                           label: AppStrings.continueWithGoogle,
                           iconAsset: AppImages.authGoogleIcon,
-                          onPressed: () => loginViewModel.signInWithGoogle(),
+                          onPressed: () => _handleSocialSignIn(
+                            context,
+                            loginViewModel.signInWithGoogle,
+                          ),
                         ),
                       ]),
+                if (errorMessage.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  Text(
+                    errorMessage,
+                    key: const Key('auth_card_error_message'),
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+                  ),
+                ],
 
                 const SizedBox(height: 10),
                 Row(
@@ -102,7 +145,10 @@ class AuthCard extends StatelessWidget {
                   onPressed: isLoading
                       ? null
                       : () {
-                          isLogin ? navigator.navigateTo(AppRoutes.login) : navigator.navigateTo(AppRoutes.register);
+                          loginViewModel.clearStatus();
+                          isLogin
+                              ? navigator.navigateTo(AppRoutes.login)
+                              : navigator.navigateTo(AppRoutes.register);
                         },
                   child: const Text(AppStrings.continueWithEmail),
                 ),
