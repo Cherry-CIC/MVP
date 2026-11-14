@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'package:cherry_mvp/core/config/feature_flags.dart';
+
 class DiscoverSelectionBar extends StatelessWidget {
   const DiscoverSelectionBar({
     required this.selectedTag,
@@ -16,6 +18,10 @@ class DiscoverSelectionBar extends StatelessWidget {
     ('Local to you', 'local'),
   ];
 
+  static List<(String, String)> get _visibleTabs => _tabs
+      .where((tab) => tab.$2 != 'local' || FeatureFlags.showLocalCharitiesTab)
+      .toList();
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -26,7 +32,7 @@ class DiscoverSelectionBar extends StatelessWidget {
       child: Padding(
         padding: EdgeInsets.all(4),
         child: Row(
-          children: _tabs
+          children: _visibleTabs
               .map(
                 (tab) => _TabButton(
                   label: tab.$1,
