@@ -1,7 +1,17 @@
 class AppStrings {
   // General
-  static const appName = 'Cherry';
-  static const appVersion = "Version 1.0 April, 2025";
+  static const appName = 'cherry';
+  static String formatAppVersion(String version, String buildNumber) {
+    final trimmedVersion = version.trim();
+    if (trimmedVersion.isEmpty) {
+      return '';
+    }
+    final trimmedBuild = buildNumber.trim();
+    if (trimmedBuild.isEmpty || trimmedBuild == trimmedVersion) {
+      return 'Version $trimmedVersion';
+    }
+    return 'Version $trimmedVersion (Build $trimmedBuild)';
+  }
   static const greeting = 'Hello';
   static const exclamationMark = '!!';
   static const or = 'or';
