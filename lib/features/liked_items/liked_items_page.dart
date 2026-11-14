@@ -1,3 +1,4 @@
+import 'package:cherry_mvp/features/search/widgets/search.dart';
 import 'package:cherry_mvp/core/config/config.dart';
 import 'package:cherry_mvp/core/config/app_spacing.dart';
 import 'package:cherry_mvp/core/models/product.dart';
@@ -101,7 +102,7 @@ class _LikedItemsView extends StatelessWidget {
     }
 
     if (FeatureFlags.showSearchNavigation && index == _searchNavIndex) {
-      context.read<SearchController>().openView();
+      openSearch(context);
       return;
     }
 

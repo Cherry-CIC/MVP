@@ -30,7 +30,6 @@ class CategoryViewModel extends ChangeNotifier {
     'Books',
     'Board Games',
     'Vinyl & Disk',
-    'Electronics',
   ];
 
   void _sortCategories() {

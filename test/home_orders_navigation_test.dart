@@ -39,6 +39,7 @@ class _HomeRepositoryStub implements IHomeRepository {
     int limit = 20,
     String? cursor,
     String? search,
+    String? categoryId,
   }) async {
     return Result.success(
       const ProductPage(
@@ -141,7 +142,6 @@ Future<NavigationProvider> _pumpHomePage(
     MultiProvider(
       providers: [
         Provider<NavigationProvider>.value(value: navigator),
-        ChangeNotifierProvider(create: (_) => SearchController()),
         ChangeNotifierProvider(
           create: (_) => HomeViewModel(homeRepository: _HomeRepositoryStub()),
         ),

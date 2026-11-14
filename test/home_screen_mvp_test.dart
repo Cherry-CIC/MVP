@@ -25,6 +25,7 @@ class _HomeRepositoryStub implements IHomeRepository {
     int limit = 20,
     String? cursor,
     String? search,
+    String? categoryId,
   }) async {
     return result;
   }
@@ -68,7 +69,6 @@ Future<ProductViewModel> _pumpHomeScreen(
     MultiProvider(
       providers: [
         Provider<NavigationProvider>.value(value: navigator),
-        ChangeNotifierProvider(create: (_) => SearchController()),
         ChangeNotifierProvider<HomeViewModel>(
           create: (_) => HomeViewModel(homeRepository: _HomeRepositoryStub(result)),
         ),
@@ -113,7 +113,7 @@ void main() {
   ) async {
     await _pumpHomeScreen(tester);
 
-    expect(find.text('AI Search: Red Polka Dot Dress'), findsOneWidget);
+    expect(find.text('Search items'), findsOneWidget);
     expect(find.byIcon(Icons.search), findsOneWidget);
   });
 

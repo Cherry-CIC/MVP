@@ -53,6 +53,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/images/
+    - assets/images/search/
     - assets/fonts/
     - assets/legal/
     - .env.dev

@@ -34,6 +34,8 @@ class HomeViewModel extends ChangeNotifier {
   bool _isRefreshing = false;
   String _searchText = '';
   String _searchQuery = '';
+  Category? _searchCategory;
+  String? _searchLoadMoreError;
   Timer? _searchDebounce;
   DateTime? _homeLoadMoreRetryAt;
   int _homeRequestSequence = 0;
@@ -54,10 +56,12 @@ class HomeViewModel extends ChangeNotifier {
   String get searchText => _searchText;
   String get searchQuery => _searchQuery;
   Status get searchStatus => _searchStatus;
-  bool get hasActiveSearch => _searchText.isNotEmpty || _searchQuery.isNotEmpty;
+  Category? get searchCategory => _searchCategory;
+  String? get searchLoadMoreError => _searchLoadMoreError;
+  bool get hasActiveSearch => _searchText.isNotEmpty || _searchCategory != null;
   bool get isSearchLoading => _searchStatus.type == StatusType.loading;
   bool get isSearchEmpty =>
-      _searchQuery.isNotEmpty && _searchStatus.type == StatusType.success && _searchProducts.isEmpty;
+      hasActiveSearch && _searchStatus.type == StatusType.success && _searchProducts.isEmpty && !_searchHasMore;
 
   Future<void> fetchProducts({bool forceRefresh = false}) async {
     if (_disposed) return;
@@ -79,7 +83,7 @@ class HomeViewModel extends ChangeNotifier {
     final query = _searchText;
     await Future.wait([
       refreshProducts(),
-      if (query.isNotEmpty) _runSearch(query),
+      if (hasActiveSearch) _runSearch(query),
     ]);
   }
 
@@ -94,45 +98,59 @@ class HomeViewModel extends ChangeNotifier {
     _searchHasMore = false;
     _isLoadingMoreSearch = false;
     _searchQuery = query;
-    _searchStatus = query.isEmpty ? Status.uninitialized : Status.loading;
+    _searchStatus = hasActiveSearch ? Status.loading : Status.uninitialized;
+    _searchLoadMoreError = null;
     _isRefreshing = false;
 
     await Future.wait([
       _fetchHomeFirstPage(clearProducts: true),
-      if (query.isNotEmpty) _runSearch(query),
+      if (hasActiveSearch) _runSearch(query),
     ]);
   }
 
   void updateSearchText(String query) {
     if (_disposed) return;
     final normalizedQuery = query.trim();
+    if (normalizedQuery == _searchText) return;
     _searchText = normalizedQuery;
-    _searchDebounce?.cancel();
-
-    if (normalizedQuery.isEmpty) {
-      clearSearch();
-      return;
-    }
-
-    _searchStatus = Status.loading;
-    notifyListeners();
+    _prepareSearch();
+    if (!hasActiveSearch) return;
 
     _searchDebounce = Timer(searchDebounceDuration, () {
       _runSearch(normalizedQuery);
     });
   }
 
+  Future<void> selectSearchCategory(Category? category) async {
+    if (_disposed || category?.id == _searchCategory?.id) return;
+    _searchCategory = category;
+    _prepareSearch();
+    if (hasActiveSearch) await _runSearch(_searchText);
+  }
+
+  Future<void> retrySearch() async {
+    if (_disposed || !hasActiveSearch) return;
+    await _runSearch(_searchText);
+  }
+
   void clearSearch() {
     if (_disposed) return;
-    _searchDebounce?.cancel();
     _searchText = '';
-    _searchQuery = '';
+    _searchCategory = null;
+    _prepareSearch();
+  }
+
+  // Invalidate previous requests immediately, including during the typing delay.
+  void _prepareSearch() {
+    _searchDebounce?.cancel();
+    _searchRequestSequence++;
+    _searchQuery = _searchText;
     _searchProducts = const [];
     _searchNextCursor = null;
     _searchHasMore = false;
     _isLoadingMoreSearch = false;
-    _searchStatus = Status.uninitialized;
-    _searchRequestSequence++;
+    _searchLoadMoreError = null;
+    _searchStatus = hasActiveSearch ? Status.loading : Status.uninitialized;
     notifyListeners();
   }
 
@@ -192,12 +210,13 @@ class HomeViewModel extends ChangeNotifier {
   }
 
   Future<void> loadMoreSearchProducts() async {
-    if (_disposed || _isLoadingMoreSearch || !_searchHasMore || _searchNextCursor == null || _searchQuery.isEmpty) {
+    if (_disposed || _isLoadingMoreSearch || !_searchHasMore || _searchNextCursor == null || !hasActiveSearch) {
       return;
     }
 
     final requestId = _searchRequestSequence;
     _isLoadingMoreSearch = true;
+    _searchLoadMoreError = null;
     notifyListeners();
 
     try {
@@ -205,12 +224,12 @@ class HomeViewModel extends ChangeNotifier {
         limit: defaultPageSize,
         cursor: _searchNextCursor,
         search: _searchQuery,
+        categoryId: _searchCategory?.id,
       );
 
+      if (requestId != _searchRequestSequence) return;
+
       if (result.isSuccess && result.value != null) {
-        if (requestId != _searchRequestSequence) {
-          return;
-        }
         final page = result.value!;
         final existingIds = _searchProducts.map((product) => product.id).toSet();
         final visibleProducts = _visibleProducts(page.products);
@@ -220,12 +239,15 @@ class HomeViewModel extends ChangeNotifier {
         _searchNextCursor = page.nextCursor;
         _searchHasMore = page.hasMore;
       } else {
+        _searchLoadMoreError = 'Could not load more items. Please try again.';
         SafeLog.event(
           AppLogEvent.homeSearchFailed,
           level: SafeLogLevel.warning,
         );
       }
     } catch (_) {
+      if (requestId != _searchRequestSequence) return;
+      _searchLoadMoreError = 'Could not load more items. Please try again.';
       SafeLog.event(
         AppLogEvent.homeSearchFailed,
         level: SafeLogLevel.severe,
@@ -308,23 +330,17 @@ class HomeViewModel extends ChangeNotifier {
   }
 
   Future<void> _runSearch(String query) async {
-    if (_disposed || query != _searchText) {
-      return;
-    }
+    if (_disposed || query != _searchText || !hasActiveSearch) return;
 
-    final requestId = ++_searchRequestSequence;
-    _searchQuery = query;
-    _searchProducts = const [];
-    _searchNextCursor = null;
-    _searchHasMore = false;
-    _isLoadingMoreSearch = false;
-    _searchStatus = Status.loading;
-    notifyListeners();
+    _prepareSearch();
+    final requestId = _searchRequestSequence;
+    final categoryId = _searchCategory?.id;
 
     try {
       final result = await homeRepository.fetchProducts(
         limit: defaultPageSize,
         search: query,
+        categoryId: categoryId,
       );
 
       if (result.isSuccess && result.value != null) {
