@@ -1,3 +1,7 @@
+import 'package:cherry_mvp/features/notifications/collection_notification_inbox.dart';
+import 'package:cherry_mvp/features/notifications/collection_push_controller.dart';
+import 'package:cherry_mvp/features/notifications/notification_device_repository.dart';
+import 'package:cherry_mvp/features/notifications/push_messaging_gateway.dart';
 import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -53,6 +57,36 @@ List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
     Provider<FirebaseAuth>(create: (_) => FirebaseAuth.instance),
     Provider<FirebaseFirestore>(create: (_) => FirebaseFirestore.instance),
     Provider(create: (_) => NavigationProvider()),
+    ChangeNotifierProvider<CollectionNotificationInbox>(
+      create: (context) => CollectionNotificationInbox(
+        onTapReady: () {
+          // Wait for the navigator to exist on a cold launch. The username gate
+          // still checks authentication before mounting the reminder host.
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (!context.mounted) return;
+            final navigator = context.read<NavigationProvider>().navigatorKey.currentState;
+            if (navigator != null && context.read<FirebaseAuth>().currentUser != null) {
+              navigator.pushNamedAndRemoveUntil(AppRoutes.home, (_) => false);
+            }
+          });
+          WidgetsBinding.instance.ensureVisualUpdate();
+        },
+      ),
+    ),
+    ChangeNotifierProvider<CollectionPushController>(
+      lazy: false,
+      create: (context) {
+        final auth = context.read<FirebaseAuth>();
+        return CollectionPushController(
+          gateway: FirebasePushMessagingGateway(),
+          repository: ApiNotificationDeviceRepository(auth: auth),
+          preferences: prefs,
+          currentUserId: () => auth.currentUser?.uid,
+          accountChanges: auth.authStateChanges().map((user) => user?.uid),
+          inbox: context.read<CollectionNotificationInbox>(),
+        );
+      },
+    ),
     ChangeNotifierProvider(create: (_) => ThemeNotifier(prefs)),
 
     ChangeNotifierProvider(create: (_) => DeletedListings()),
@@ -354,6 +388,8 @@ List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
         firebaseAuth: Provider.of<FirebaseAuth>(context, listen: false),
         firestore: Provider.of<FirebaseFirestore>(context, listen: false),
         apiService: Provider.of<ApiService>(context, listen: false),
+        beforeSignOut: context.read<CollectionPushController>().beforeSignOut,
+        afterSignOutAttempt: context.read<CollectionPushController>().afterSignOutAttempt,
         clearUserState: Provider.of<ProductViewModel>(
           context,
           listen: false,

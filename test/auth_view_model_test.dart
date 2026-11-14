@@ -106,6 +106,8 @@ void main() {
   setUp(() {
     SharedPreferences.setMockInitialValues(<String, Object>{
       'account-a-preference': 'private value',
+      'collectionPush.rotate': true,
+      'collectionPush.owner': 'buyer',
     });
   });
 
@@ -117,7 +119,11 @@ void main() {
     final productViewModel = _productViewModel();
     final navigator = _RecordingNavigationProvider();
 
+    var cleanups = 0;
     final authViewModel = AuthViewModel(
+      beforeSignOut: () async {
+        cleanups++;
+      },
       loginRepository: loginRepository,
       navigator: navigator,
       firebaseAuth: firebaseAuth,
@@ -140,6 +146,8 @@ void main() {
 
     await authViewModel.logout(context);
 
+    expect(cleanups, greaterThan(0));
+    expect((await SharedPreferences.getInstance()).getBool('collectionPush.rotate'), isTrue);
     expect(productViewModel.cachedLikedProducts, isEmpty);
     expect(
       productViewModel.isProductLiked('account-a-liked-product'),
@@ -158,7 +166,11 @@ void main() {
     final productViewModel = _productViewModel();
     final navigator = _RecordingNavigationProvider();
 
+    var cleanups = 0;
     final authViewModel = AuthViewModel(
+      beforeSignOut: () async {
+        cleanups++;
+      },
       loginRepository: loginRepository,
       navigator: navigator,
       firebaseAuth: _FakeFirebaseAuth(),
@@ -170,6 +182,8 @@ void main() {
     final result = await authViewModel.deleteAccount();
 
     expect(result.isSuccess, isTrue);
+    expect(cleanups, greaterThan(0));
+    expect((await SharedPreferences.getInstance()).getBool('collectionPush.rotate'), isTrue);
     expect(productViewModel.cachedLikedProducts, isEmpty);
     expect(
       productViewModel.isProductLiked('account-a-liked-product'),

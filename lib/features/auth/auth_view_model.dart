@@ -17,6 +17,8 @@ class AuthViewModel extends ChangeNotifier {
   final FirebaseFirestore firestore;
   final ApiService apiService;
   final VoidCallback _clearUserState;
+  final Future<void> Function()? beforeSignOut;
+  final VoidCallback? afterSignOutAttempt;
 
   AuthViewModel({
     required this.loginRepository,
@@ -25,6 +27,8 @@ class AuthViewModel extends ChangeNotifier {
     required this.firestore,
     required this.apiService,
     VoidCallback? clearUserState,
+    this.beforeSignOut,
+    this.afterSignOutAttempt,
   }) : _clearUserState = clearUserState ?? _noop;
 
   static void _noop() {}
@@ -98,6 +102,7 @@ class AuthViewModel extends ChangeNotifier {
         ).showSnackBar(SnackBar(content: Text('Error: $e')));
       }
     } finally {
+      afterSignOutAttempt?.call();
       notifyListeners();
     }
   }
@@ -111,6 +116,7 @@ class AuthViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
+      await beforeSignOut?.call();
       final result = await apiService.delete<Map<String, dynamic>>(
         ApiEndpoints.deleteAccount,
       );
@@ -146,10 +152,13 @@ class AuthViewModel extends ChangeNotifier {
       _deleteAccountStatus = Status.failure(message);
       notifyListeners();
       return Result.failure(message);
+    } finally {
+      afterSignOutAttempt?.call();
     }
   }
 
   Future<Result<void>> _signOutAndClearPrefs() async {
+    await beforeSignOut?.call();
     final result = await loginRepository.logout();
     if (!result.isSuccess) {
       if (firebaseAuth.currentUser == null) {
@@ -160,7 +169,7 @@ class AuthViewModel extends ChangeNotifier {
 
     _clearLocalUserState();
     final prefs = await SharedPreferences.getInstance();
-    await prefs.clear();
+    await _clearPreferences(prefs);
     return Result.success(null);
   }
 
@@ -176,7 +185,7 @@ class AuthViewModel extends ChangeNotifier {
 
     try {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.clear();
+      await _clearPreferences(prefs);
     } catch (_) {}
 
     _clearLocalUserState();
@@ -185,5 +194,13 @@ class AuthViewModel extends ChangeNotifier {
   void _clearLocalUserState() {
     userCredentials = null;
     _clearUserState();
+  }
+
+  Future<void> _clearPreferences(SharedPreferences prefs) async {
+    // Retain device ownership and failed cleanup markers across an offline
+    // logout. A new account must rotate the old token before registering.
+    for (final key in prefs.getKeys().where((key) => !key.startsWith('collectionPush.'))) {
+      await prefs.remove(key);
+    }
   }
 }

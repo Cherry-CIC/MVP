@@ -1,3 +1,5 @@
+import 'package:provider/provider.dart';
+import 'package:cherry_mvp/features/notifications/collection_notification_inbox.dart';
 import 'package:cherry_mvp/core/services/services.dart';
 import 'package:cherry_mvp/features/auth/username_setup_page.dart';
 import 'package:cherry_mvp/features/home/home_page.dart';
@@ -52,6 +54,7 @@ class _PostAuthUsernameGateState extends State<PostAuthUsernameGate> {
           return DeliveryReminderHost(
             key: ValueKey(currentUser.uid),
             userId: currentUser.uid,
+            notifications: context.read<CollectionNotificationInbox?>(),
             builder: (_, timer) => HomePage(deliveryTimer: timer),
           );
         }

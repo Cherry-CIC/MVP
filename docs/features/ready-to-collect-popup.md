@@ -1,4 +1,4 @@
-# Ready to collect: connected pop-up
+# Ready to collect: reminders and push notifications
 
 The collection dialog now uses buyer order API data through the existing reminder host. It appears on entry or app resume when a stored arrival and collection deadline are available, then hands over to confirmation after customer collection. A separate local preview remains available for design review.
 
@@ -8,7 +8,7 @@ The collection dialog now uses buyer order API data through the existing reminde
 
 - Frontend PR #564: https://github.com/Cherry-CIC/MVP/pull/564. This branch is based on that PR and reuses its item summary and countdown formatter.
 - Backend PR #74: https://github.com/Cherry-CIC/cherry-Backend/pull/74 supplies the confirmation foundation. [Backend PR #75](https://github.com/Cherry-CIC/cherry-Backend/pull/75), stacked on #74, adds arrival, deadline and locker details.
-- This draft covers the pop-up and API integration. The collection Home countdown is included; push notifications remain separate work. The existing confirmation Home timer is preserved. Neither PR has been merged or deployed.
+- [Frontend PR #573](https://github.com/Cherry-CIC/MVP/pull/573) covers the pop-up, Home countdown and optional push notifications. The existing confirmation Home timer is preserved. Neither collection PR has been merged or deployed. Backend push registration and sending default to disabled until the release gates below are satisfied.
 
 ## Agreed 72-hour rule
 
@@ -32,7 +32,7 @@ Before expiry, show Open map when available, otherwise Track parcel when availab
 
 The host refreshes on entry/resume and every minute while Home or its dialog is visible. It replaces a changed dialog or removes one after cancellation, return or resolution. Concurrent fetches are guarded and backgrounded responses are invalidated. Collection-ready, collection-expired and confirmation dismissals use separate identities in per-buyer device preferences; legacy confirmation dismissals remain valid.
 
-Map links use only the saved locker address, never the buyer's delivery address. Incomplete addresses hide the map action; a valid HTTPS tracking URL provides a fallback. Links open externally, and a failed launch offers a retry. See [Google Maps URLs](https://developers.google.com/maps/documentation/urls/get-started). Notification permissions are not involved in this flow. A later notification tap must refresh state before presenting any reminder.
+Map links use only the saved locker address, never the buyer's delivery address. Incomplete addresses hide the map action; a valid HTTPS tracking URL provides a fallback. Links open externally, and a failed launch offers a retry. See [Google Maps URLs](https://developers.google.com/maps/documentation/urls/get-started). Notification permission is not needed for the in-app flow. Notification taps refresh authenticated order data before presenting a reminder.
 
 Missing carrier arrival/deadline fields suppress the timed collection reminder. No historical arrival backfill or fresh 72-hour window is invented. Expired awaiting-collection orders receive neutral expiry copy, not an assertion that a return has occurred.
 
@@ -46,7 +46,7 @@ The local preview uses sample data and bundled images. Its map/tracking actions 
 
 Validation on 7 November 2026: 90 focused tests passed, including 12 new API/host integration tests; the render check passed for light, expired and dark states. Static analysis passed for all changed Dart files. The widget tests include 320-pixel width at 200% text, spoken countdown labels, tap targets and light/dark contrast. Physical screen-reader use is still outstanding.
 
-Local validation used Flutter 3.44.4 / Dart 3.12.2. Offline dependency resolution adjusted four transitive test dependencies for this installed SDK; the repository lockfile was restored and no dependency changes are included.
+The earlier pop-up/timer validation used Flutter 3.44.4 / Dart 3.12.2. Push validation uses the installed Flutter 3.47.9 / Dart 3.13.7. This stage adds `firebase_messaging` 16.3.0 and its platform packages to the lockfile.
 
 Run from the isolated Flutter worktree:
 
@@ -60,7 +60,7 @@ flutter run -d chrome -t tool/ready_to_collect_preview.dart
 
 The render tool writes ready, expired and dark previews to `build/collection-preview/`. It makes no network or backend requests.
 
-Live InPost events, external map/tracking launch on devices, physical-device layout, VoiceOver/TalkBack and the full deployed collection-to-confirmation lifecycle still need verification. Polling means foreground state may take up to a minute to refresh after the backend processes an event; push delivery is not included.
+Live InPost events, external map/tracking launch on devices, physical-device layout, VoiceOver/TalkBack and the full deployed collection-to-confirmation lifecycle still need verification. Foreground push events request an immediate refresh. Without push, foreground state may take up to a minute to refresh after the backend processes an event.
 
 
 ## Home timer (13 November 2026)
@@ -71,4 +71,32 @@ At zero, the timer disappears and requests fresh order data. Collection or retur
 
 ![Home collection timer using sample data](images/collection-home-timer.png)
 
-Validation: all 110 focused Flutter tests pass; static analysis passes for all seven changed Dart files. Six visual previews pass, including light/dark timers and 320-pixel width with 200% text. A width constraint preserves screen margins at large text sizes. Physical-device and live-courier verification remain outstanding. No backend changes or push notifications are part of this stage.
+Validation: all 110 focused Flutter tests pass; static analysis passes for all seven changed Dart files. Six visual previews pass, including light/dark timers and 320-pixel width with 200% text. A width constraint preserves screen margins at large text sizes. Physical-device and live-courier verification remain outstanding. Those results describe the earlier Home timer stage; push validation is recorded below.
+
+
+## Optional push notifications (13 November 2026)
+
+Settings contains an accessible Collection notifications switch. Permission is requested only after the buyer turns it on. A denied permission, missing APNs token, offline request or disabled backend endpoint never prevents the pop-up or Home timer. The switch explains that in-app reminders always work and presents a retry when registration fails. If permission is later revoked in phone settings, the app removes its registration and explains how to restore permission. Web and desktop do not request push permission.
+
+The app registers `POST /api/notifications/devices` with `{token, platform}` and removes registrations through `DELETE` with `{token}`. Each request captures the current Firebase user and bearer, checks that the session still belongs to that buyer, and never logs tokens. Token refresh removes the old registration. Logout and account deletion revoke before losing authentication and delete the FCM token. If offline cleanup fails, local ownership/rotation markers survive preference clearing; another account cannot register until token rotation succeeds. Settings preferences are per buyer. A notification already accepted by the delivery service can still arrive during logout; the payload is generic and taps never expose another buyer's order.
+
+Both a terminated-app launch (`getInitialMessage`) and a background-app tap (`onMessageOpenedApp`) use a validated inbox. Pending cold-launch intent waits for the matching authenticated buyer. Explicit taps return to Home, refresh the buyer's orders and reopen the target despite a previous dismissal. Current collection, confirmation or expiry state comes from the API. Returned/cancelled/resolved orders are not reopened. Another open reminder is replaced without overlapping dialogs. Failed refreshes retain the intent for retry on resume. Foreground messages refresh the host without requesting another OS banner. The inbox ignores duplicate event hints in the running session.
+
+Native configuration includes Android notification permission and disabled messaging auto-initialisation; iOS includes disabled messaging auto-initialisation, remote-notification/background-fetch modes and an APS entitlement. Flutter generates the Swift package and plugin registration for Firebase Messaging. Existing Firebase method swizzling remains enabled. The Firebase static linkage flags inherit `-ObjC`.
+
+### Release gates and remaining checks
+
+- Deploy and verify the server-only collection exclusions described in [the rules audit](../security/collection-push-rules.md) before enabling registration or sending. The broader existing public database rules remain a separate critical release blocker.
+- Verify APNs authentication in Firebase for each shipped iOS app, enable Push Notifications on its Apple App ID, and regenerate signing profiles as needed. The source entitlement is `development`; verify that distribution signing exports the `production` APS entitlement before TestFlight or App Store release.
+- Deploy and schedule the backend queue worker, then explicitly enable `COLLECTION_PUSH_ENABLED`. A scheduler or feature flag was not changed by this work. Review [backend PR #75](https://github.com/Cherry-CIC/cherry-Backend/pull/75) for delivery guarantees and its unavoidable send/receipt crash window.
+- On physical iOS and Android devices, test permission denied/allowed, token refresh, cold launch and background taps, foreground refresh, offline logout, account switching, and receipt/return before a tap. Verify VoiceOver/TalkBack and live InPost events. Simulator/unit tests do not prove APNs or FCM delivery.
+
+Validation on 14 November 2026: 134 focused Flutter tests pass, including device ownership/session races, opt-in/denial, restored phone permission, disabled registration, token rotation, offline logout markers, notification tap transitions, existing auth/settings behaviour and the existing collection/confirmation suite. Notification settings fit a 320-pixel screen at 200% text. Static analysis passes for all 14 changed/new Dart files, and formatting/whitespace checks pass. Tests use an isolated Flutter 3.47.9 SDK because the shared installation had advanced to 3.50.0 while this worktree's generated package configuration still referenced 3.47.9. Lockfile-enforced dependency resolution passed without additional version changes.
+
+The Android development debug APK and iOS development simulator app both build successfully. Native iOS validation exposed an existing launch scheme issue: `shouldUseLaunchSchemeArgsEnv="YES"` on `LaunchAction` caused recursive argument inheritance and an Xcode stack overflow while querying build settings. Removing that attribute from the development and production launch actions allows both the settings query and simulator build to pass. Test/profile actions still inherit launch arguments. This small native prerequisite is recorded in a separate commit. Simulator compilation does not verify distribution signing or real push delivery.
+
+```sh
+flutter test test/collection_push_test.dart test/notification_device_repository_test.dart test/delivery_reminder_test.dart test/auth_view_model_test.dart test/settings_legal_information_test.dart test/ready_to_collect_dialog_test.dart test/collection_timer_bubble_test.dart test/orders_repository_test.dart test/orders_view_model_test.dart test/orders_widgets_test.dart test/home_orders_navigation_test.dart
+```
+
+Implementation references: [Firebase Flutter messaging setup](https://firebase.google.com/docs/cloud-messaging/flutter/get-started) and [message interaction handling](https://firebase.google.com/docs/cloud-messaging/flutter/receive-messages).

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:cherry_mvp/features/notifications/collection_notification_inbox.dart';
 
 import 'package:cherry_mvp/features/orders/models/order_summary.dart';
 import 'package:cherry_mvp/features/orders/orders_page.dart';
@@ -21,9 +22,11 @@ class DeliveryReminderHost extends StatefulWidget {
     required this.builder,
     this.openLink,
     this.now = DateTime.now,
+    this.notifications,
   });
 
   final String userId;
+  final CollectionNotificationInbox? notifications;
   final DateTime Function() now;
   final Future<bool> Function(Uri)? openLink;
   final Widget Function(BuildContext context, Widget? timer) builder;
@@ -55,6 +58,7 @@ class _DeliveryReminderHostState extends State<DeliveryReminderHost> with Widget
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    widget.notifications?.addListener(_notificationReceived);
     _refreshTimer = Timer.periodic(const Duration(minutes: 1), (_) {
       if (WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed &&
           (ModalRoute.of(context)?.isCurrent == true || _dialog?.isCurrent == true)) {
@@ -64,6 +68,24 @@ class _DeliveryReminderHostState extends State<DeliveryReminderHost> with Widget
     _resolutionSubscription = context.read<OrdersViewModel>().resolvedOrders.listen((id) {
       if (mounted) setState(() => _resolved.add(id));
     });
+  }
+
+  void _notificationReceived() {
+    if (!mounted) return;
+    _pending = true;
+    if (ModalRoute.of(context)?.isCurrent == true || _dialog?.isCurrent == true) {
+      _pending = false;
+      _check(++_generation);
+    }
+  }
+
+  @override
+  void didUpdateWidget(DeliveryReminderHost oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.notifications != widget.notifications) {
+      oldWidget.notifications?.removeListener(_notificationReceived);
+      widget.notifications?.addListener(_notificationReceived);
+    }
   }
 
   @override
@@ -131,17 +153,31 @@ class _DeliveryReminderHostState extends State<DeliveryReminderHost> with Widget
         _dismissed = saved.toSet();
       });
       final shown = _shownOrder;
+      final tap = widget.notifications?.pendingFor(widget.userId);
+      final tappedOrder = tap == null ? null : eligible.where((order) => order.id == tap.orderId).firstOrNull;
       if (_dialog != null && shown != null) {
         final latest = eligible.where((order) => order.id == shown.id).firstOrNull;
-        if (latest == null ||
+        if ((tappedOrder != null && tappedOrder.id != shown.id) ||
+            latest == null ||
             latest.deliveryState != shown.deliveryState ||
             latest.reminderDeadline != shown.reminderDeadline ||
             latest.collectionMapUri != shown.collectionMapUri ||
             latest.trackingUri != shown.trackingUri) {
           _pending = true;
           _dialog!.navigator?.removeRoute(_dialog!, DeliveryReminderAction.interrupted);
+        } else if (tap != null) {
+          widget.notifications?.consume(tap);
         }
         return;
+      }
+      if (tap != null) {
+        widget.notifications?.consume(tap);
+        // Explicit taps may reopen a dismissed reminder, but only after the
+        // authenticated API confirms its current stage and eligibility.
+        if (tappedOrder != null) {
+          unawaited(_showReminder(tappedOrder));
+          return;
+        }
       }
       final unseen = eligible.where((order) => !_dismissed.contains(_dismissalId(order))).firstOrNull;
       if (unseen != null) unawaited(_showReminder(unseen));
@@ -230,6 +266,7 @@ class _DeliveryReminderHostState extends State<DeliveryReminderHost> with Widget
 
   @override
   void dispose() {
+    widget.notifications?.removeListener(_notificationReceived);
     _resolutionSubscription.cancel();
     _refreshTimer.cancel();
     WidgetsBinding.instance.removeObserver(this);

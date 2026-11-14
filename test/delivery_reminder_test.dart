@@ -1,3 +1,4 @@
+import 'package:cherry_mvp/features/notifications/collection_notification_inbox.dart';
 import 'package:cherry_mvp/core/utils/result.dart';
 import 'package:cherry_mvp/features/orders/models/order_summary.dart';
 import 'package:cherry_mvp/features/orders/orders_repository.dart';
@@ -53,6 +54,7 @@ Future<void> _open(
   WidgetTester tester,
   _Repository repo, {
   String userId = 'buyer',
+  CollectionNotificationInbox? notifications,
   DateTime Function() now = DateTime.now,
   Future<bool> Function(Uri)? openLink,
 }) async {
@@ -67,6 +69,7 @@ Future<void> _open(
         home: DeliveryReminderHost(
           key: ValueKey(userId),
           userId: userId,
+          notifications: notifications,
           now: now,
           openLink: openLink,
           builder: (_, timer) => Scaffold(body: const Text('Home'), floatingActionButton: timer),
@@ -120,6 +123,115 @@ OrderSummary collectionOrder({String state = 'awaiting_collection', int hours = 
 
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
+
+  testWidgets('notification tap refreshes and reopens the correct dismissed collection', (tester) async {
+    SharedPreferences.setMockInitialValues({
+      'deliveryReminder.buyer': ['collection:collection:ready'],
+    });
+    final inbox = CollectionNotificationInbox()..setUser('buyer');
+    final repo = _Repository()..orders = [collectionOrder()];
+    await _open(tester, repo, notifications: inbox);
+    expect(find.byType(ReadyToCollectDialog), findsNothing);
+    final before = repo.fetchCount;
+    inbox.receive({
+      'type': 'ready_to_collect',
+      'userId': 'buyer',
+      'orderId': 'collection',
+      'eventId': 'one',
+    }, opened: true);
+    await tester.pumpAndSettle();
+    expect(repo.fetchCount, greaterThan(before));
+    expect(find.byType(ReadyToCollectDialog), findsOneWidget);
+    expect(inbox.pendingFor('buyer'), isNull);
+    await tester.pumpWidget(const SizedBox());
+    inbox.dispose();
+  });
+
+  testWidgets('old collection notification opens confirmation after collection', (tester) async {
+    SharedPreferences.setMockInitialValues({
+      'deliveryReminder.buyer': ['collection:collection:ready', 'collection'],
+    });
+    final inbox = CollectionNotificationInbox()..setUser('buyer');
+    final repo = _Repository()..orders = [collectionOrder()];
+    await _open(tester, repo, notifications: inbox);
+    repo.orders = [order('collection', hours: 47)];
+    inbox.receive({
+      'type': 'ready_to_collect',
+      'userId': 'buyer',
+      'orderId': 'collection',
+      'eventId': 'one',
+    }, opened: true);
+    await tester.pumpAndSettle();
+    expect(find.byType(ReadyToCollectDialog), findsNothing);
+    expect(find.byType(DeliveryReminderDialog), findsOneWidget);
+    await tester.pumpWidget(const SizedBox());
+    inbox.dispose();
+  });
+
+  testWidgets('notification for returned parcel cannot reopen a stale reminder', (tester) async {
+    SharedPreferences.setMockInitialValues({
+      'deliveryReminder.buyer': ['collection:collection:ready'],
+    });
+    final inbox = CollectionNotificationInbox()..setUser('buyer');
+    final repo = _Repository()..orders = [collectionOrder()];
+    await _open(tester, repo, notifications: inbox);
+    repo.orders = [collectionOrder(state: 'returned')];
+    inbox.receive({
+      'type': 'ready_to_collect',
+      'userId': 'buyer',
+      'orderId': 'collection',
+      'eventId': 'one',
+    }, opened: true);
+    await tester.pumpAndSettle();
+    expect(find.byType(ReadyToCollectDialog), findsNothing);
+    expect(timerBubble, findsNothing);
+    expect(inbox.pendingFor('buyer'), isNull);
+    await tester.pumpWidget(const SizedBox());
+    inbox.dispose();
+  });
+
+  testWidgets('notification tap replaces another open reminder without overlapping', (tester) async {
+    final inbox = CollectionNotificationInbox()..setUser('buyer');
+    final repo = _Repository()..orders = [order('another', hours: 1), collectionOrder()];
+    await _open(tester, repo, notifications: inbox);
+    expect(find.byType(DeliveryReminderDialog), findsOneWidget);
+    inbox.receive({
+      'type': 'ready_to_collect',
+      'userId': 'buyer',
+      'orderId': 'collection',
+      'eventId': 'one',
+    }, opened: true);
+    await tester.pumpAndSettle();
+    expect(find.byType(ReadyToCollectDialog), findsOneWidget);
+    expect(find.byType(DeliveryReminderDialog), findsNothing);
+    await tester.pumpWidget(const SizedBox());
+    inbox.dispose();
+  });
+
+  testWidgets('failed notification refresh waits for fresh data before opening', (tester) async {
+    SharedPreferences.setMockInitialValues({
+      'deliveryReminder.buyer': ['collection:collection:ready'],
+    });
+    final inbox = CollectionNotificationInbox()..setUser('buyer');
+    final repo = _Repository()..orders = [collectionOrder()];
+    await _open(tester, repo, notifications: inbox);
+    repo.failFetch = true;
+    inbox.receive({
+      'type': 'ready_to_collect',
+      'userId': 'buyer',
+      'orderId': 'collection',
+      'eventId': 'one',
+    }, opened: true);
+    await tester.pumpAndSettle();
+    expect(find.byType(ReadyToCollectDialog), findsNothing);
+    expect(inbox.pendingFor('buyer'), isNotNull);
+    background(tester);
+    repo.failFetch = false;
+    await resume(tester);
+    expect(find.byType(ReadyToCollectDialog), findsOneWidget);
+    await tester.pumpWidget(const SizedBox());
+    inbox.dispose();
+  });
 
   testWidgets('locker arrival never starts a timer and customer collection does', (tester) async {
     final arrival = OrderSummary.tryFromOrderJson({

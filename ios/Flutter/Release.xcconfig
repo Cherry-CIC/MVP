@@ -2,3 +2,4 @@
 #include? "Pods/Target Support Files/Pods-Runner/Pods-Runner.profile.xcconfig"
 #include "Generated.xcconfig"
 PRODUCT_BUNDLE_IDENTIFIER = uk.org.cherry.app
+OTHER_LDFLAGS = $(inherited) -ObjC
