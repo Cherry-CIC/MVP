@@ -1,0 +1,30 @@
+{
+  "score": 1,
+  "summary": "The new push collections and descendants deny all direct client access. The existing wildcard still permits public reads and writes elsewhere, so the wider ruleset is critically insecure and push must remain disabled pending a broader review and verified deployment.",
+  "findings": [
+    {
+      "check": "Identity and authority",
+      "severity": "critical",
+      "issue": "Anonymous clients can read and write legacy collections, including source orders and shipments. They can forge notification eligibility or ownership even though device tokens and push jobs are protected.",
+      "recommendation": "Replace the legacy wildcard with tested collection-specific access rules. Protect server-owned order and shipment fields before enabling collection push. Compare the deployed policy before any authorised deployment."
+    },
+    {
+      "check": "Update bypass and type safety",
+      "severity": "critical",
+      "issue": "Legacy creates and updates have no field validation, immutable ownership protection or state-transition enforcement. The scoped push collections have no client create or update path to exploit.",
+      "recommendation": "Audit actual client queries and schemas, then add ownership checks and shared validators to every permitted legacy create and update. Keep push writes on the authenticated backend."
+    },
+    {
+      "check": "Resource exhaustion",
+      "severity": "critical",
+      "issue": "Legacy collections have no application-level size limits or write restrictions. Public writes can consume storage and operation quotas.",
+      "recommendation": "Restrict writers, validate field sizes and types, and review backend API limits. Do not treat token collection exclusions as a fix for database-wide abuse."
+    },
+    {
+      "check": "Business logic and deployment",
+      "severity": "major",
+      "issue": "The local rules had no root firebase.json rules path. Adding that path makes deployment possible but does not establish which rules are currently live or authorise deployment.",
+      "recommendation": "Review the intended environment and its current rules, retain the disabled push feature flag until protections are deployed and verified, and run the isolated emulator suite for future policy changes."
+    }
+  ]
+}

@@ -3,19 +3,19 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // This rule allows anyone with your Firestore database reference to view, edit,
-    // and delete all data in your Firestore database. It is useful for getting
-    // started, but it is configured to expire after 30 days because it
-    // leaves your app open to attackers. At that time, all client
-    // requests to your Firestore database will be denied.
-    //
-    // Make sure to write security rules for your app before that time, or else
-    // all client requests to your Firestore database will be denied until you Update
-    // your rules
-    match /{document=**} {
-      // Extended to keep MVP environments functional.
-      // TODO: replace with authenticated per-collection rules before production scale.
-      allow read, write: if request.time < timestamp.date(2030, 12, 31);
+    // Server-only data: pushDevices stores notification tokens and their owners;
+    // collectionPushJobs stores delivery jobs, leases and deduplication state.
+    // Only the backend Admin SDK may access either top-level collection or its
+    // descendants. Client claims and document fields never grant access here.
+    // Exclude these paths from the legacy allow itself: an overlapping deny rule
+    // would not override a matching allow in Firestore.
+    match /{collection}/{document=**} {
+      // CRITICAL existing limitation: all other collections remain publicly
+      // readable/writable until this date. This scoped protection does not make
+      // the wider database secure. See docs/security/collection-push-rules.md.
+      allow read, write: if collection != 'pushDevices'
+                         && collection != 'collectionPushJobs'
+                         && request.time < timestamp.date(2030, 12, 31);
     }
   }
 }

@@ -1,0 +1,17 @@
+{
+  "name": "cherry-collection-push-rules-tests",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "pretest": "node -e \"require('node:fs').copyFileSync('../../firestore.rules', 'firestore.rules')\"",
+    "test": "firebase emulators:exec --only firestore --project demo-cherry-push-rules --config firebase.json \"node --test firestore.test.mjs\""
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "5.0.2",
+    "firebase": "12.19.0",
+    "firebase-tools": "14.27.0"
+  }
+}
