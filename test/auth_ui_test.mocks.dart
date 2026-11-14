@@ -7,7 +7,8 @@
 import 'dart:async' as _i5;
 
 import 'package:cherry_mvp/core/models/model.dart' as _i6;
-import 'package:cherry_mvp/core/router/nav_provider.dart' as _i8;
+import 'package:cherry_mvp/core/router/nav_provider.dart' as _i9;
+import 'package:cherry_mvp/core/services/services.dart' as _i8;
 import 'package:cherry_mvp/core/utils/utils.dart' as _i2;
 import 'package:cherry_mvp/features/login/login_model.dart' as _i7;
 import 'package:cherry_mvp/features/login/login_repository.dart' as _i4;
@@ -102,13 +103,27 @@ class MockLoginRepository extends _i1.Mock implements _i4.LoginRepository {
             ),
           )
           as _i5.Future<_i2.Result<void>>);
+
+  @override
+  _i5.Future<_i8.RevokeAppleTokenResult> revokeAppleAccessIfLinked() =>
+      (super.noSuchMethod(
+            Invocation.method(#revokeAppleAccessIfLinked, []),
+            returnValue: _i5.Future<_i8.RevokeAppleTokenResult>.value(
+              _i8.RevokeAppleTokenResult.skipped,
+            ),
+            returnValueForMissingStub:
+                _i5.Future<_i8.RevokeAppleTokenResult>.value(
+                  _i8.RevokeAppleTokenResult.skipped,
+                ),
+          )
+          as _i5.Future<_i8.RevokeAppleTokenResult>);
 }
 
 /// A class which mocks [NavigationProvider].
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockNavigationProvider extends _i1.Mock
-    implements _i8.NavigationProvider {
+    implements _i9.NavigationProvider {
   @override
   _i3.GlobalKey<_i3.NavigatorState> get navigatorKey =>
       (super.noSuchMethod(

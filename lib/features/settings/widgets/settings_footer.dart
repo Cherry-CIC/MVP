@@ -1,17 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:cherry_mvp/core/config/config.dart';
 import 'package:cherry_mvp/core/services/app_info_provider.dart';
 import 'package:cherry_mvp/features/auth/auth_view_model.dart';
 
 class SettingsFooter extends StatefulWidget {
-  const SettingsFooter({
-    super.key,
-    this.packageInfoLoader,
-  });
-
-  final Future<PackageInfo> Function()? packageInfoLoader;
+  const SettingsFooter({super.key});
 
   @override
   State<SettingsFooter> createState() => _SettingsFooterState();
@@ -19,18 +13,6 @@ class SettingsFooter extends StatefulWidget {
 
 class _SettingsFooterState extends State<SettingsFooter> {
   bool _isDeletingAccount = false;
-  late final Future<String?> _versionFuture = _loadAppVersion();
-
-  Future<String?> _loadAppVersion() async {
-    try {
-      final loader = widget.packageInfoLoader ?? PackageInfo.fromPlatform;
-      final info = await loader();
-      final formatted = AppStrings.formatAppVersion(info.version, info.buildNumber);
-      return formatted.isEmpty ? null : formatted;
-    } catch (_) {
-      return null;
-    }
-  }
 
   Future<bool?> _showConfirmDialog(BuildContext context) {
     return showDialog<bool>(
@@ -90,17 +72,11 @@ class _SettingsFooterState extends State<SettingsFooter> {
             }
           },
         ),
-        FutureBuilder<String?>(
-          future: _versionFuture,
-          builder: (context, snapshot) {
-            final versionText = snapshot.data;
-            return ListTile(
-              title: Text(AppStrings.appName),
-              titleTextStyle: Theme.of(context).textTheme.titleMedium,
-              subtitle: versionText == null ? null : Text(versionText),
-              subtitleTextStyle: Theme.of(context).textTheme.labelLarge,
-            );
-          },
+        ListTile(
+          title: Text(AppStrings.appName),
+          titleTextStyle: Theme.of(context).textTheme.titleMedium,
+          subtitle: Text(AppStrings.formatAppVersion(appInfo?.version ?? '', appInfo?.buildNumber ?? '')),
+          subtitleTextStyle: Theme.of(context).textTheme.labelLarge,
         ),
       ],
     );

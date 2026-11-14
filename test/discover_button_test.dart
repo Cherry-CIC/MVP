@@ -17,12 +17,15 @@ class _Navigator extends NavigationProvider {
 }
 
 void main() {
+  setUpAll(() async {
+    TestWidgetsFlutterBinding.ensureInitialized();
+    final font = FontLoader('InstrumentSansPricing')..addFont(rootBundle.load('assets/fonts/InstrumentSans-Bold.ttf'));
+    await font.load();
+  });
+
   for (final width in [320.0, 390.0]) {
     for (final scale in [1.0, 2.0]) {
       testWidgets('banner fits width $width at text scale $scale and opens Discovery', (tester) async {
-        final font = FontLoader('InstrumentSansPricing')
-          ..addFont(rootBundle.load('assets/fonts/InstrumentSans-Bold.ttf'));
-        await font.load();
         tester.view.physicalSize = Size(width, 1200);
         tester.view.devicePixelRatio = 1;
         addTearDown(tester.view.resetPhysicalSize);
@@ -34,10 +37,10 @@ void main() {
             child: MaterialApp(
               theme: buildTheme(),
               home: MediaQuery(
-                data: MediaQueryData(textScaler: TextScaler.linear(scale)),
+                data: MediaQueryData(textScaler: .linear(scale)),
                 child: const Scaffold(
                   body: SingleChildScrollView(
-                    child: Padding(padding: EdgeInsets.all(16), child: DiscoverButton()),
+                    child: Padding(padding: .all(16), child: DiscoverButton()),
                   ),
                 ),
               ),

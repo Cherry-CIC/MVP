@@ -91,7 +91,7 @@ class _WelcomePageState extends State<WelcomePage> {
                     ),
                   ),
                   Text(
-                    '${AppStrings.appVersion}${appInfo?.formattedVersion ?? ''}',
+                    AppStrings.formatAppVersion(appInfo?.version ?? '', appInfo?.buildNumber ?? ''),
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
