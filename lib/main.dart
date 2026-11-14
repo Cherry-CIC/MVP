@@ -16,10 +16,12 @@ import 'package:cherry_mvp/core/utils/dependency.dart';
 import 'package:cherry_mvp/features/welcome/widgets/auth_gate.dart';
 import 'package:cherry_mvp/core/theme/theme_notifier.dart';
 import 'package:cherry_mvp/core/config/firebase_environment.dart';
+import 'package:cherry_mvp/core/config/system_photo_picker.dart';
 
 void main() async {
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
+  configureSystemPhotoPicker();
 
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
@@ -29,14 +31,39 @@ void main() async {
   /// Load environment variables
   await dotenv.load(fileName: FirebaseEnvironment.envFile);
 
-  await Firebase.initializeApp(
-    options: FirebaseEnvironment.currentPlatform,
-  );
+  final expectedFirebaseOptions = FirebaseEnvironment.currentPlatform;
+  try {
+    if (Firebase.apps.isEmpty) {
+      await Firebase.initializeApp(
+        options: expectedFirebaseOptions,
+      );
+    }
+  } on FirebaseException catch (e) {
+    if (e.code != 'duplicate-app') {
+      rethrow;
+    }
+  }
+  _verifyFirebaseAppOptions(Firebase.app().options, expectedFirebaseOptions);
   await _configureFirebaseEmulators();
 
   SharedPreferences prefs = await SharedPreferences.getInstance();
 
   runApp(MultiProvider(providers: [...buildProviders(prefs)], child: MyApp()));
+}
+
+void _verifyFirebaseAppOptions(
+  FirebaseOptions actual,
+  FirebaseOptions expected,
+) {
+  if (actual.projectId != expected.projectId ||
+      actual.appId != expected.appId ||
+      actual.apiKey != expected.apiKey) {
+    throw StateError(
+      'Firebase app configuration mismatch: initialized '
+      '${actual.projectId} (${actual.appId}), expected '
+      '${expected.projectId} (${expected.appId}).',
+    );
+  }
 }
 
 Future<void> _configureFirebaseEmulators() async {

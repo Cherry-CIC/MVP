@@ -200,6 +200,7 @@ class DioApiService implements ApiService {
       case DioExceptionType.connectionTimeout:
       case DioExceptionType.sendTimeout:
       case DioExceptionType.receiveTimeout:
+      case DioExceptionType.transformTimeout:
         return ErrorStrings.timeoutError;
       case DioExceptionType.badCertificate:
         return ErrorStrings.serverError;
@@ -291,6 +292,7 @@ class DioApiService implements ApiService {
       case DioExceptionType.connectionTimeout:
       case DioExceptionType.sendTimeout:
       case DioExceptionType.receiveTimeout:
+      case DioExceptionType.transformTimeout:
       case DioExceptionType.connectionError:
         return true;
       case DioExceptionType.badCertificate:

@@ -8,10 +8,11 @@ import 'package:cherry_mvp/features/orders/orders_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 typedef _GetHandler = FutureOr<Result<dynamic>> Function(String endpoint);
-typedef _PostHandler = FutureOr<Result<dynamic>> Function(
-  String endpoint,
-  dynamic data,
-);
+typedef _PostHandler =
+    FutureOr<Result<dynamic>> Function(
+      String endpoint,
+      dynamic data,
+    );
 
 class _FakeApiService implements ApiService {
   final _GetHandler _handler;
@@ -20,8 +21,7 @@ class _FakeApiService implements ApiService {
   String? postedEndpoint;
   dynamic postedData;
 
-  _FakeApiService(this._handler, { _PostHandler? postHandler })
-      : _postHandler = postHandler;
+  _FakeApiService(this._handler, {this._postHandler});
 
   @override
   Future<Result<T>> get<T>(
@@ -135,7 +135,7 @@ void main() {
     test('posts receipt confirmation without a request body', () async {
       final apiService = _FakeApiService(
         (_) => Result.failure('Unexpected GET'),
-        postHandler: (_, __) => Result.success({}),
+        postHandler: (_, _) => Result.success({}),
       );
 
       final result = await OrdersRepository(apiService).confirmOrderReceived('order / one');
@@ -148,7 +148,7 @@ void main() {
     test('posts a trimmed dispute message and required reason', () async {
       final apiService = _FakeApiService(
         (_) => Result.failure('Unexpected GET'),
-        postHandler: (_, __) => Result.success({}),
+        postHandler: (_, _) => Result.success({}),
       );
 
       final result = await OrdersRepository(apiService).submitOrderDispute(
@@ -168,7 +168,7 @@ void main() {
     test('omits a blank optional dispute message', () async {
       final apiService = _FakeApiService(
         (_) => Result.failure('Unexpected GET'),
-        postHandler: (_, __) => Result.success({}),
+        postHandler: (_, _) => Result.success({}),
       );
 
       await OrdersRepository(apiService).submitOrderDispute(

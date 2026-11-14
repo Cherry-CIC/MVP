@@ -1,8 +1,10 @@
 import 'package:cherry_mvp/core/config/config.dart';
+import 'package:cherry_mvp/core/services/app_info_provider.dart';
 import 'package:cherry_mvp/features/settings/widgets/settings_footer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:provider/provider.dart';
 
 void main() {
   group('AppStrings.formatAppVersion', () {
@@ -44,13 +46,18 @@ void main() {
         buildSignature: '',
       );
 
+      final appInfoProvider = AppInfoProvider();
+
       await tester.pumpWidget(
-        const MaterialApp(
-          home: Scaffold(
-            body: CustomScrollView(
-              slivers: [
-                SettingsFooter(),
-              ],
+        ChangeNotifierProvider<AppInfoProvider>.value(
+          value: appInfoProvider,
+          child: const MaterialApp(
+            home: Scaffold(
+              body: CustomScrollView(
+                slivers: [
+                  SettingsFooter(),
+                ],
+              ),
             ),
           ),
         ),
@@ -69,9 +76,7 @@ void main() {
           home: Scaffold(
             body: CustomScrollView(
               slivers: [
-                SettingsFooter(
-                  packageInfoLoader: () async => throw Exception('unavailable'),
-                ),
+                SettingsFooter(),
               ],
             ),
           ),

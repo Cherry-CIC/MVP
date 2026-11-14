@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:cherry_mvp/core/models/model.dart';
@@ -130,18 +131,27 @@ class FirebaseAuthService {
       }
       // Once signed in, return the UserCredential
       return Result.success(UserCredentials.fromAuth(userCredential.user!));
+    } on GoogleSignInException catch (e) {
+      SafeLog.event(
+        AppLogEvent.authenticationOperationFailed,
+        level: SafeLogLevel.warning,
+      );
+      if (e.code == GoogleSignInExceptionCode.canceled) {
+        return Result.failure('Google sign-in was cancelled.');
+      }
+      return Result.failure('Google sign-in failed. Please try again.');
     } on FirebaseAuthException {
       SafeLog.event(
         AppLogEvent.authenticationOperationFailed,
         level: SafeLogLevel.warning,
       );
-      return Result.failure('Google sign-in failed');
+      return Result.failure('Google sign-in failed. Please try again.');
     } catch (_) {
       SafeLog.event(
         AppLogEvent.authenticationOperationFailed,
         level: SafeLogLevel.warning,
       );
-      return Result.failure('Google sign-in failed');
+      return Result.failure('Google sign-in failed. Please try again.');
     }
   }
 

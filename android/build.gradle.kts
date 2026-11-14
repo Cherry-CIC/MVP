@@ -14,23 +14,12 @@ subprojects {
 }
 subprojects {
     project.evaluationDependsOn(":app")
-    // section added to fix current stripe error on build:
-    //
-    // Execution failed for task ':stripe_android:checkDebugAarMetadata'.
-    // :stripe_android is currently compiled against android-35.
-    project.configurations.all {
-        resolutionStrategy {
-            // Force these to versions that work with API 35
-            force( "androidx.browser:browser:1.8.0")
-            force( "androidx.activity:activity:1.9.3")
-            force( "androidx.activity:activity-ktx:1.9.3")
-            force( "androidx.activity:activity-compose:1.9.3")
-            force( "androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
-        }
+    configurations.configureEach {
+        exclude(group = "com.google.android.gms", module = "play-services-tapandpay")
     }
-    // end section
 }
 
 tasks.register<Delete>("clean") {
+    description = ""
     delete(rootProject.layout.buildDirectory)
 }
