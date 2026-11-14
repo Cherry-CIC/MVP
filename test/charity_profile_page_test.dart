@@ -504,7 +504,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(openedRoutes.last.charityId, 'dogs-trust');
 
-      // B. DiscoverCharityCard logo badge
+      // B. DiscoverCharityCard logo badge and cover image
       final navB = NavigationProvider();
       await tester.pumpWidget(
         _wrapWithProviders(
@@ -534,10 +534,34 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
+
+      // Tapping the like button toggles like state without opening the profile.
+      final countBeforeLikeTap = openedRoutes.length;
+      expect(find.byIcon(Icons.favorite_border), findsOneWidget);
+      await tester.tap(
+        find.byKey(const ValueKey('discover-charity-like-Dogs Trust')),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byIcon(Icons.favorite), findsOneWidget);
+      expect(openedRoutes.length, countBeforeLikeTap);
+
+      // Tapping the cover image opens CharityProfilePage.
+      await tester.tap(
+        find.byKey(const ValueKey('discover-charity-image-Dogs Trust')),
+      );
+      await tester.pumpAndSettle();
+      expect(openedRoutes.length, countBeforeLikeTap + 1);
+      expect(openedRoutes.last.charityName, 'Dogs Trust');
+      expect(openedRoutes.last.charityImageUrl, AppImages.mind);
+      navB.goBack();
+      await tester.pumpAndSettle();
+
+      // Tapping the logo badge also opens CharityProfilePage.
       await tester.tap(
         find.byKey(const ValueKey('discover-charity-logo-Dogs Trust')),
       );
       await tester.pumpAndSettle();
+      expect(openedRoutes.length, countBeforeLikeTap + 2);
       expect(openedRoutes.last.charityName, 'Dogs Trust');
 
       // C. OrderCard logo badge

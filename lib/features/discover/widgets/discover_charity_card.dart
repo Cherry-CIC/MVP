@@ -35,6 +35,16 @@ class DiscoverCharityCardState extends State<DiscoverCharityCard> {
     });
   }
 
+  void _openCharityProfile(BuildContext context) {
+    NavigationProvider.openCharityProfileFromContext(
+      context,
+      CharityProfileArgs(
+        charityName: widget.title,
+        charityImageUrl: widget.logoPath,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -42,13 +52,22 @@ class DiscoverCharityCardState extends State<DiscoverCharityCard> {
       children: [
         Stack(
           children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: Image.asset(
-                widget.imagePath,
-                width: double.infinity,
-                fit: BoxFit.cover,
-                semanticLabel: 'Cover image for ${widget.title}',
+            Semantics(
+              button: true,
+              label: 'Cover image for ${widget.title}',
+              child: GestureDetector(
+                key: ValueKey('discover-charity-image-${widget.title}'),
+                behavior: HitTestBehavior.opaque,
+                onTap: () => _openCharityProfile(context),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Image.asset(
+                    widget.imagePath,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                    semanticLabel: 'Cover image for ${widget.title}',
+                  ),
+                ),
               ),
             ),
             Positioned(
@@ -64,6 +83,8 @@ class DiscoverCharityCardState extends State<DiscoverCharityCard> {
               bottom: 9,
               right: 9,
               child: GestureDetector(
+                key: ValueKey('discover-charity-like-${widget.title}'),
+                behavior: HitTestBehavior.opaque,
                 onTap: toggleLiked,
                 child: Container(
                   constraints: const BoxConstraints(minWidth: 35, minHeight: 25),
