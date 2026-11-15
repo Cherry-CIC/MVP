@@ -37,6 +37,9 @@ class FeatureFlags {
   // Display the locally filtered Discover charity categories for the MVP.
   static const bool showDiscoverSelectionBar = true;
 
+  // Hide the Local to you Discover tab for the MVP until it uses the buyer's location.
+  static const bool showLocalCharitiesTab = false;
+
   // Hide product rows within Discover charity cards for the MVP.
   static const bool showItemsInSupport = false;
 
