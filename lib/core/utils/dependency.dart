@@ -15,6 +15,7 @@ import 'package:cherry_mvp/core/theme/theme_notifier.dart';
 import 'package:cherry_mvp/features/auth/auth_view_model.dart';
 import 'package:cherry_mvp/features/categories/category_repository.dart';
 import 'package:cherry_mvp/features/categories/category_view_model.dart';
+import 'package:cherry_mvp/features/charity_page/charity_profile_repository.dart';
 import 'package:cherry_mvp/features/charity_page/charity_repository.dart';
 import 'package:cherry_mvp/features/charity_page/charity_viewmodel.dart';
 import 'package:cherry_mvp/features/checkout/checkout_repository.dart';
@@ -196,6 +197,11 @@ List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
           );
         }
       },
+    ),
+    Provider<ICharityProfileRepository>(
+      create: (context) => CharityProfileRepository(
+        Provider.of<ApiService>(context, listen: false),
+      ),
     ),
     ChangeNotifierProvider<LoginViewModel>(
       create: (context) => LoginViewModel(

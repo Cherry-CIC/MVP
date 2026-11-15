@@ -1,5 +1,7 @@
 import 'package:cherry_mvp/core/config/app_strings.dart';
+import 'package:cherry_mvp/core/router/nav_provider.dart';
 import 'package:cherry_mvp/core/utils/image_provider_helper.dart';
+import 'package:cherry_mvp/features/charity_page/charity_profile_args.dart';
 import 'package:cherry_mvp/features/orders/models/order_summary.dart';
 import 'package:cherry_mvp/features/orders/order_currency_formatter.dart';
 import 'package:flutter/material.dart';
@@ -22,37 +24,38 @@ class OrderCard extends StatelessWidget {
 
     return Semantics(
       container: true,
+      explicitChildNodes: true,
       label:
           '${order.productName}. Size $sizeLabel. '
           '$priceLabel. $statusLabel.',
-      child: ExcludeSemantics(
-        child: GestureDetector(
-          onTap: onTap,
-          behavior: HitTestBehavior.opaque,
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              final textScale = MediaQuery.textScalerOf(context).scale(1);
-              final useFlexibleLayout = constraints.maxWidth < 340 || textScale > 1.3;
-              final imageSize = useFlexibleLayout
-                  ? 112.0
-                  : (constraints.maxWidth * 0.36).clamp(120.0, 144.0).toDouble();
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final textScale = MediaQuery.textScalerOf(context).scale(1);
+            final useFlexibleLayout = constraints.maxWidth < 340 || textScale > 1.3;
+            final imageSize = useFlexibleLayout
+                ? 112.0
+                : (constraints.maxWidth * 0.36).clamp(120.0, 144.0).toDouble();
 
-              if (useFlexibleLayout) {
-                return _FlexibleOrderLayout(
-                  order: order,
-                  imageSize: imageSize,
-                  sizeLabel: sizeLabel,
-                  priceLabel: priceLabel,
-                  statusLabel: statusLabel,
-                );
-              }
+            if (useFlexibleLayout) {
+              return _FlexibleOrderLayout(
+                order: order,
+                imageSize: imageSize,
+                sizeLabel: sizeLabel,
+                priceLabel: priceLabel,
+                statusLabel: statusLabel,
+              );
+            }
 
-              return Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _OrderImage(order: order, size: imageSize),
-                  const SizedBox(width: 16),
-                  Expanded(
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _OrderImage(order: order, size: imageSize),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: ExcludeSemantics(
                     child: ConstrainedBox(
                       constraints: BoxConstraints(minHeight: imageSize),
                       child: _OrderDetails(
@@ -63,10 +66,10 @@ class OrderCard extends StatelessWidget {
                       ),
                     ),
                   ),
-                ],
-              );
-            },
-          ),
+                ),
+              ],
+            );
+          },
         ),
       ),
     );
@@ -99,21 +102,25 @@ class _FlexibleOrderLayout extends StatelessWidget {
             _OrderImage(order: order, size: imageSize),
             const SizedBox(width: 16),
             Expanded(
-              child: _ProductIdentity(
-                order: order,
-                sizeLabel: sizeLabel,
+              child: ExcludeSemantics(
+                child: _ProductIdentity(
+                  order: order,
+                  sizeLabel: sizeLabel,
+                ),
               ),
             ),
           ],
         ),
         const SizedBox(height: 12),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Expanded(child: _PriceLabel(label: priceLabel)),
-            const SizedBox(width: 12),
-            Flexible(child: _StatusBadge(label: statusLabel)),
-          ],
+        ExcludeSemantics(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Expanded(child: _PriceLabel(label: priceLabel)),
+              const SizedBox(width: 12),
+              Flexible(child: _StatusBadge(label: statusLabel)),
+            ],
+          ),
         ),
       ],
     );
@@ -265,11 +272,17 @@ class _OrderImage extends StatelessWidget {
           child: Stack(
             fit: StackFit.expand,
             children: [
-              _ProductImage(imageUrl: order.imageUrl),
+              ExcludeSemantics(
+                child: _ProductImage(imageUrl: order.imageUrl),
+              ),
               Positioned(
                 left: 4,
                 bottom: 4,
-                child: _CharityLogo(imageUrl: order.charityLogoUrl),
+                child: _CharityLogo(
+                  orderId: order.id,
+                  charityId: order.charityId,
+                  imageUrl: order.charityLogoUrl,
+                ),
               ),
             ],
           ),
@@ -324,13 +337,19 @@ class _ProductImagePlaceholder extends StatelessWidget {
 }
 
 class _CharityLogo extends StatelessWidget {
+  final String orderId;
+  final String charityId;
   final String imageUrl;
 
-  const _CharityLogo({required this.imageUrl});
+  const _CharityLogo({
+    required this.orderId,
+    required this.charityId,
+    required this.imageUrl,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    final badge = Container(
       width: 44,
       height: 30,
       padding: const EdgeInsets.all(3),
@@ -356,6 +375,28 @@ class _CharityLogo extends StatelessWidget {
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ),
+    );
+
+    final validCharityId = CharityProfileArgs.safeIdentifier(charityId);
+    if (validCharityId == null) {
+      return ExcludeSemantics(child: badge);
+    }
+
+    return Semantics(
+      button: true,
+      label: AppStrings.charityProfileViewButton,
+      child: GestureDetector(
+        key: ValueKey('order-charity-logo-$orderId'),
+        behavior: HitTestBehavior.opaque,
+        onTap: () => NavigationProvider.openCharityProfileFromContext(
+          context,
+          CharityProfileArgs(
+            charityId: validCharityId,
+            charityImageUrl: imageUrl.trim().isEmpty ? null : imageUrl.trim(),
+          ),
+        ),
+        child: ExcludeSemantics(child: badge),
+      ),
     );
   }
 }
