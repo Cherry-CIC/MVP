@@ -36,6 +36,7 @@ class CharityProfileViewModel extends ChangeNotifier {
   Charity? _charity;
   List<Product> _products = const [];
   String? _errorMessage;
+  String? _loadMoreErrorMessage;
   String? _nextCursor;
   bool _hasMore = false;
   bool _isLoadingMore = false;
@@ -46,6 +47,7 @@ class CharityProfileViewModel extends ChangeNotifier {
   Charity? get charity => _charity ?? args.charity;
   List<Product> get products => _products;
   String? get errorMessage => _errorMessage;
+  String? get loadMoreErrorMessage => _loadMoreErrorMessage;
   bool get hasMore => _hasMore;
   bool get isLoadingMore => _isLoadingMore;
 
@@ -86,6 +88,7 @@ class CharityProfileViewModel extends ChangeNotifier {
     final requestId = ++_requestSequence;
     _status = CharityProfileStatus.loading;
     _errorMessage = null;
+    _loadMoreErrorMessage = null;
     _isLoadingMore = false;
     _charity = args.charity;
     notifyListeners();
@@ -146,32 +149,43 @@ class CharityProfileViewModel extends ChangeNotifier {
     final currentCharity = charity!;
     final requestId = _requestSequence;
     _isLoadingMore = true;
+    _loadMoreErrorMessage = null;
     notifyListeners();
 
-    final result = await repository.fetchProducts(
-      currentCharity,
-      limit: pageSize,
-      cursor: _nextCursor,
-    );
-    if (_disposed || requestId != _requestSequence) return;
+    try {
+      final result = await repository.fetchProducts(
+        currentCharity,
+        limit: pageSize,
+        cursor: _nextCursor,
+      );
+      if (_disposed || requestId != _requestSequence) return;
 
-    _isLoadingMore = false;
-    if (result.isSuccess && result.value != null) {
-      final merged = List<Product>.from(_products);
-      final seenIds = merged.map((p) => p.id).toSet();
-      for (final product in _filterOwnedVisible(
-        result.value!.products,
-        currentCharity.id,
-      )) {
-        if (seenIds.add(product.id)) {
-          merged.add(product);
+      _isLoadingMore = false;
+      if (result.isSuccess && result.value != null) {
+        final merged = List<Product>.from(_products);
+        final seenIds = merged.map((p) => p.id).toSet();
+        for (final product in _filterOwnedVisible(
+          result.value!.products,
+          currentCharity.id,
+        )) {
+          if (seenIds.add(product.id)) {
+            merged.add(product);
+          }
         }
+        _products = List.unmodifiable(merged);
+        _nextCursor = result.value!.nextCursor;
+        _hasMore = result.value!.hasMore;
+        _loadMoreErrorMessage = null;
+      } else {
+        _loadMoreErrorMessage = AppStrings.profileListingsLoadMoreFailed;
       }
-      _products = List.unmodifiable(merged);
-      _nextCursor = result.value!.nextCursor;
-      _hasMore = result.value!.hasMore;
+      notifyListeners();
+    } catch (_) {
+      if (_disposed || requestId != _requestSequence) return;
+      _isLoadingMore = false;
+      _loadMoreErrorMessage = AppStrings.profileListingsLoadMoreFailed;
+      notifyListeners();
     }
-    notifyListeners();
   }
 
   void markBlocked() {
@@ -183,6 +197,7 @@ class CharityProfileViewModel extends ChangeNotifier {
     _hasMore = false;
     _isLoadingMore = false;
     _errorMessage = null;
+    _loadMoreErrorMessage = null;
     notifyListeners();
   }
 

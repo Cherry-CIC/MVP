@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:cherry_mvp/core/config/app_images.dart';
+import 'package:cherry_mvp/core/config/app_strings.dart';
 import 'package:cherry_mvp/core/models/product.dart';
 import 'package:cherry_mvp/core/utils/result.dart';
 import 'package:cherry_mvp/features/charity_page/charity_model.dart';
@@ -165,5 +168,72 @@ void main() {
       vm.displayDescription,
       contains('West London NHS Charity raises funds'),
     );
+  });
+
+  test('sets and clears loadMoreErrorMessage while preserving products and cursor for retry', () async {
+    final dogs = _charity();
+    final p1 = _product('p1', 'dogs-trust', dogs);
+    final p2 = _product('p2', 'dogs-trust', dogs);
+    var page2Attempts = 0;
+    Completer<Result<CharityProfilePageData>>? retryCompleter;
+
+    final repo = _FakeCharityProfileRepository(
+      onFetchCharity: ({charityId, charityName}) async => Result.success(dogs),
+      onFetchProducts: (charity, {limit = 20, cursor}) async {
+        if (cursor == null) {
+          return Result.success(
+            CharityProfilePageData(
+              charity: charity,
+              products: [p1],
+              nextCursor: 'cursor-2',
+              hasMore: true,
+            ),
+          );
+        }
+        page2Attempts++;
+        if (page2Attempts == 1) {
+          return Result.failure('Network error');
+        }
+        return retryCompleter!.future;
+      },
+    );
+
+    final vm = CharityProfileViewModel(
+      args: const CharityProfileArgs(charityId: 'dogs-trust'),
+      repository: repo,
+    );
+
+    await vm.loadInitial();
+    expect(vm.products.map((p) => p.id), ['p1']);
+    expect(vm.loadMoreErrorMessage, isNull);
+
+    await vm.loadMore();
+    expect(vm.status, CharityProfileStatus.loaded);
+    expect(vm.isLoadingMore, isFalse);
+    expect(vm.products.map((p) => p.id), ['p1']);
+    expect(vm.hasMore, isTrue);
+    expect(vm.loadMoreErrorMessage, AppStrings.profileListingsLoadMoreFailed);
+
+    retryCompleter = Completer<Result<CharityProfilePageData>>();
+    final retryFuture = vm.loadMore();
+    expect(vm.isLoadingMore, isTrue);
+    expect(vm.loadMoreErrorMessage, isNull);
+
+    retryCompleter.complete(
+      Result.success(
+        CharityProfilePageData(
+          charity: dogs,
+          products: [p2],
+          nextCursor: null,
+          hasMore: false,
+        ),
+      ),
+    );
+    await retryFuture;
+
+    expect(vm.isLoadingMore, isFalse);
+    expect(vm.loadMoreErrorMessage, isNull);
+    expect(vm.hasMore, isFalse);
+    expect(vm.products.map((p) => p.id), ['p1', 'p2']);
   });
 }

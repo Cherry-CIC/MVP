@@ -849,6 +849,85 @@ void main() {
       expect(find.text('Charity Y exclusive'), findsOneWidget);
     },
   );
+
+  testWidgets(
+    'shows load-more error and retries cleanly when fetching next page fails',
+    (tester) async {
+      tester.view.physicalSize = const Size(800, 1400);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final navigator = NavigationProvider();
+      final productViewModel = ProductViewModel(
+        productRepository: _ProductRepositoryStub(),
+        navigator: navigator,
+        currentUserIdProvider: () => 'buyer-1',
+      );
+      var page2Calls = 0;
+
+      final repo = _PaginatedCharityProfileRepository(
+        onFetchCharity: ({charityId, charityName}) async =>
+            Result.success(_dogsTrust),
+        onFetchProducts: (charity, {limit = 20, cursor}) async {
+          if (cursor == null) {
+            return Result.success(
+              CharityProfilePageData(
+                charity: charity,
+                products: [_dogsProduct1],
+                nextCursor: 'page-2',
+                hasMore: true,
+              ),
+            );
+          }
+          page2Calls++;
+          if (page2Calls == 1) {
+            return Result.failure(AppStrings.charityProfileLoadError);
+          }
+          return Result.success(
+            CharityProfilePageData(
+              charity: charity,
+              products: [_dogsProduct2],
+              nextCursor: null,
+              hasMore: false,
+            ),
+          );
+        },
+      );
+
+      await tester.pumpWidget(
+        _wrapWithProviders(
+          navigator: navigator,
+          productViewModel: productViewModel,
+          charityProfileRepository: repo,
+          child: CharityProfilePage(
+            args: CharityProfileArgs(charity: _dogsTrust),
+            repository: repo,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Example product 1'), findsOneWidget);
+      expect(find.text(AppStrings.profileListingsLoadMore), findsOneWidget);
+
+      await tester.tap(find.text(AppStrings.profileListingsLoadMore));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Example product 1'), findsOneWidget);
+      expect(find.text(AppStrings.profileListingsLoadMoreFailed), findsOneWidget);
+      expect(find.text(AppStrings.retry), findsOneWidget);
+
+      await tester.tap(find.text(AppStrings.retry));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Example product 1'), findsOneWidget);
+      expect(find.text('Example product 2'), findsOneWidget);
+      expect(find.text(AppStrings.profileListingsLoadMoreFailed), findsNothing);
+      expect(find.text(AppStrings.retry), findsNothing);
+      expect(find.text(AppStrings.profileListingsLoadMore), findsNothing);
+    },
+  );
 }
 
 class _PaginatedCharityProfileRepository implements ICharityProfileRepository {

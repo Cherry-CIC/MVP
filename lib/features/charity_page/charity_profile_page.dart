@@ -340,6 +340,26 @@ class _CharityProfilePageState extends State<CharityProfilePage> {
               padding: EdgeInsets.all(20),
               child: Center(child: CircularProgressIndicator()),
             )
+          else if (_viewModel.loadMoreErrorMessage != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 16),
+              child: Column(
+                children: [
+                  Text(
+                    _viewModel.loadMoreErrorMessage!,
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: AppColors.onSurfaceVariant(context),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  TextButton(
+                    onPressed: _viewModel.loadMore,
+                    child: const Text(AppStrings.retry),
+                  ),
+                ],
+              ),
+            )
           else if (_viewModel.hasMore)
             Padding(
               padding: const EdgeInsets.only(top: 16),
