@@ -761,7 +761,7 @@ void main() {
   );
 
   testWidgets(
-    'keeps Load more accessible when first page listings are filtered out and refreshes when embedded charity changes',
+    'advances past empty filtered initial pages without showing the empty state alongside Load more, and refreshes when embedded charity changes',
     (tester) async {
       tester.view.physicalSize = const Size(800, 1400);
       tester.view.devicePixelRatio = 1;
@@ -792,7 +792,7 @@ void main() {
           }
           if (cursor == null) {
             // Page 1 returns only an item belonging to another charity, which
-            // CharityProfileViewModel filters out, leaving products empty while hasMore is true.
+            // CharityProfileViewModel filters out while hasMore is true.
             return Result.success(
               CharityProfilePageData(
                 charity: charity,
@@ -802,10 +802,20 @@ void main() {
               ),
             );
           }
+          if (cursor == 'page-2') {
+            return Result.success(
+              CharityProfilePageData(
+                charity: charity,
+                products: [_dogsProduct1],
+                nextCursor: null,
+                hasMore: false,
+              ),
+            );
+          }
           return Result.success(
             CharityProfilePageData(
               charity: charity,
-              products: [_dogsProduct1],
+              products: const [],
               nextCursor: null,
               hasMore: false,
             ),
@@ -826,11 +836,10 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Even though filtered products are empty on page 1, Load more is visible.
-      expect(find.text(AppStrings.profileListingsLoadMore), findsOneWidget);
-      await tester.tap(find.text(AppStrings.profileListingsLoadMore));
-      await tester.pumpAndSettle();
+      // ViewModel automatically skipped empty filtered page 1 to show page 2 directly.
       expect(find.text('Example product 1'), findsOneWidget);
+      expect(find.text(AppStrings.charityProfileEmptyListings), findsNothing);
+      expect(find.text(AppStrings.profileListingsLoadMore), findsNothing);
 
       // Replacing the embedded Charity object (without separate charityId/charityName) refreshes the page.
       await tester.pumpWidget(
@@ -847,6 +856,76 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Other Charity'), findsOneWidget);
       expect(find.text('Charity Y exclusive'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'does not show the empty-listings message alongside Load more when products remain empty past the auto-advance cap',
+    (tester) async {
+      tester.view.physicalSize = const Size(800, 1400);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final navigator = NavigationProvider();
+      final productViewModel = ProductViewModel(
+        productRepository: _ProductRepositoryStub(),
+        navigator: navigator,
+        currentUserIdProvider: () => 'buyer-1',
+      );
+
+      var pageIndex = 0;
+      final deepRepo = _PaginatedCharityProfileRepository(
+        onFetchCharity: ({charityId, charityName}) async =>
+            Result.success(_dogsTrust),
+        onFetchProducts: (charity, {limit = 20, cursor}) async {
+          pageIndex++;
+          if (pageIndex <= 5) {
+            return Result.success(
+              CharityProfilePageData(
+                charity: charity,
+                products: [_otherCharityProduct],
+                nextCursor: 'page-${pageIndex + 1}',
+                hasMore: true,
+              ),
+            );
+          }
+          return Result.success(
+            CharityProfilePageData(
+              charity: charity,
+              products: [_dogsProduct1],
+              nextCursor: null,
+              hasMore: false,
+            ),
+          );
+        },
+      );
+
+      await tester.pumpWidget(
+        _wrapWithProviders(
+          navigator: navigator,
+          productViewModel: productViewModel,
+          charityProfileRepository: deepRepo,
+          child: CharityProfilePage(
+            args: CharityProfileArgs(charity: _dogsTrust),
+            repository: deepRepo,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Empty message and List button must NOT render while more pages exist.
+      expect(find.text(AppStrings.charityProfileEmptyListings), findsNothing);
+      expect(
+        find.byKey(const ValueKey('charity-profile-list-item-button')),
+        findsNothing,
+      );
+      expect(find.text(AppStrings.profileListingsLoadMore), findsOneWidget);
+
+      await tester.tap(find.text(AppStrings.profileListingsLoadMore));
+      await tester.pumpAndSettle();
+      expect(find.text('Example product 1'), findsOneWidget);
+      expect(find.text(AppStrings.profileListingsLoadMore), findsNothing);
     },
   );
 

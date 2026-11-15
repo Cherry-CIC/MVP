@@ -236,4 +236,100 @@ void main() {
     expect(vm.hasMore, isFalse);
     expect(vm.products.map((p) => p.id), ['p1', 'p2']);
   });
+
+  test('loadInitial automatically advances through empty filtered pages until visible items are found', () async {
+    final dogs = _charity();
+    final p1 = _product('p1', 'dogs-trust', dogs);
+    final wrongCharity = _product('wrong-1', 'other-charity', null);
+    final requestedCursors = <String?>[];
+
+    final repo = _FakeCharityProfileRepository(
+      onFetchCharity: ({charityId, charityName}) async => Result.success(dogs),
+      onFetchProducts: (charity, {limit = 20, cursor}) async {
+        requestedCursors.add(cursor);
+        if (cursor == null) {
+          return Result.success(
+            CharityProfilePageData(
+              charity: charity,
+              products: [wrongCharity],
+              nextCursor: 'page-2',
+              hasMore: true,
+            ),
+          );
+        }
+        return Result.success(
+          CharityProfilePageData(
+            charity: charity,
+            products: [p1],
+            nextCursor: null,
+            hasMore: false,
+          ),
+        );
+      },
+    );
+
+    final vm = CharityProfileViewModel(
+      args: const CharityProfileArgs(charityId: 'dogs-trust'),
+      repository: repo,
+    );
+
+    await vm.loadInitial();
+
+    expect(requestedCursors, [null, 'page-2']);
+    expect(vm.status, CharityProfileStatus.loaded);
+    expect(vm.products.map((p) => p.id), ['p1']);
+    expect(vm.hasMore, isFalse);
+    expect(vm.loadMoreErrorMessage, isNull);
+  });
+
+  test('loadInitial stops after bounded empty pages and preserves retry when a skipped page fails', () async {
+    final dogs = _charity();
+    var cursorCall = 0;
+
+    final failingSkipRepo = _FakeCharityProfileRepository(
+      onFetchCharity: ({charityId, charityName}) async => Result.success(dogs),
+      onFetchProducts: (charity, {limit = 20, cursor}) async {
+        if (cursor == null) {
+          return Result.success(
+            CharityProfilePageData(
+              charity: charity,
+              products: const [],
+              nextCursor: 'page-2',
+              hasMore: true,
+            ),
+          );
+        }
+        cursorCall++;
+        if (cursorCall == 1) {
+          return Result.failure('Network error');
+        }
+        return Result.success(
+          CharityProfilePageData(
+            charity: charity,
+            products: [_product('p-recovered', 'dogs-trust', dogs)],
+            nextCursor: null,
+            hasMore: false,
+          ),
+        );
+      },
+    );
+
+    final vm = CharityProfileViewModel(
+      args: const CharityProfileArgs(charityId: 'dogs-trust'),
+      repository: failingSkipRepo,
+    );
+
+    await vm.loadInitial();
+
+    expect(vm.status, CharityProfileStatus.loaded);
+    expect(vm.products, isEmpty);
+    expect(vm.hasMore, isTrue);
+    expect(vm.loadMoreErrorMessage, AppStrings.profileListingsLoadMoreFailed);
+
+    await vm.loadMore();
+
+    expect(vm.products.map((p) => p.id), ['p-recovered']);
+    expect(vm.hasMore, isFalse);
+    expect(vm.loadMoreErrorMessage, isNull);
+  });
 }

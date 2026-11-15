@@ -18,6 +18,8 @@ enum CharityProfileStatus {
 
 /// Manages loading, pagination, and safety state for a single charity profile.
 class CharityProfileViewModel extends ChangeNotifier {
+  static const int _maxAutoAdvanceEmptyPages = 4;
+
   CharityProfileViewModel({
     required this.args,
     required this.repository,
@@ -131,7 +133,11 @@ class CharityProfileViewModel extends ChangeNotifier {
     );
     if (_disposed || requestId != _requestSequence) return;
 
-    _applyInitialProductsResult(resolvedCharity, productsResult);
+    await _applyInitialProductsResult(
+      requestId: requestId,
+      resolvedCharity: resolvedCharity,
+      result: productsResult,
+    );
   }
 
   Future<void> refresh() => loadInitial();
@@ -152,40 +158,17 @@ class CharityProfileViewModel extends ChangeNotifier {
     _loadMoreErrorMessage = null;
     notifyListeners();
 
-    try {
-      final result = await repository.fetchProducts(
-        currentCharity,
-        limit: pageSize,
-        cursor: _nextCursor,
-      );
-      if (_disposed || requestId != _requestSequence) return;
-
-      _isLoadingMore = false;
-      if (result.isSuccess && result.value != null) {
-        final merged = List<Product>.from(_products);
-        final seenIds = merged.map((p) => p.id).toSet();
-        for (final product in _filterOwnedVisible(
-          result.value!.products,
-          currentCharity.id,
-        )) {
-          if (seenIds.add(product.id)) {
-            merged.add(product);
-          }
-        }
-        _products = List.unmodifiable(merged);
-        _nextCursor = result.value!.nextCursor;
-        _hasMore = result.value!.hasMore;
-        _loadMoreErrorMessage = null;
-      } else {
-        _loadMoreErrorMessage = AppStrings.profileListingsLoadMoreFailed;
-      }
-      notifyListeners();
-    } catch (_) {
-      if (_disposed || requestId != _requestSequence) return;
-      _isLoadingMore = false;
-      _loadMoreErrorMessage = AppStrings.profileListingsLoadMoreFailed;
-      notifyListeners();
-    }
+    final merged = List<Product>.from(_products);
+    final seenIds = merged.map((p) => p.id).toSet();
+    await _fetchPagesUntilVisible(
+      requestId: requestId,
+      startingCharity: currentCharity,
+      targetCharityId: currentCharity.id,
+      merged: merged,
+      seenIds: seenIds,
+      startingCursor: _nextCursor,
+      requireProgress: true,
+    );
   }
 
   void markBlocked() {
@@ -201,10 +184,11 @@ class CharityProfileViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  void _applyInitialProductsResult(
-    Charity resolvedCharity,
-    Result<CharityProfilePageData> result,
-  ) {
+  Future<void> _applyInitialProductsResult({
+    required int requestId,
+    required Charity resolvedCharity,
+    required Result<CharityProfilePageData> result,
+  }) async {
     if (!result.isSuccess || result.value == null) {
       _products = const [];
       _nextCursor = null;
@@ -220,15 +204,152 @@ class CharityProfileViewModel extends ChangeNotifier {
     }
 
     final page = result.value!;
-    _charity = page.charity;
-    _products = List.unmodifiable(
-      _filterOwnedVisible(page.products, resolvedCharity.id),
+    final merged = <Product>[];
+    final seenIds = <String>{};
+    _appendVisibleProducts(
+      merged,
+      seenIds,
+      page.products,
+      resolvedCharity.id,
     );
+
+    if (merged.isEmpty && page.hasMore && page.nextCursor != null) {
+      await _fetchPagesUntilVisible(
+        requestId: requestId,
+        startingCharity: page.charity,
+        targetCharityId: resolvedCharity.id,
+        merged: merged,
+        seenIds: seenIds,
+        startingCursor: page.nextCursor,
+        requireProgress: false,
+      );
+      return;
+    }
+
+    _charity = page.charity;
+    _products = List.unmodifiable(merged);
     _nextCursor = page.nextCursor;
     _hasMore = page.hasMore;
     _status = CharityProfileStatus.loaded;
     _errorMessage = null;
+    _loadMoreErrorMessage = null;
     notifyListeners();
+  }
+
+  Future<void> _fetchPagesUntilVisible({
+    required int requestId,
+    required Charity startingCharity,
+    required String targetCharityId,
+    required List<Product> merged,
+    required Set<String> seenIds,
+    required String? startingCursor,
+    required bool requireProgress,
+  }) async {
+    var currentCharity = startingCharity;
+    var cursor = startingCursor;
+    var hasMore = cursor != null;
+    var addedAny = false;
+    var attempts = 0;
+    final maxAttempts = _maxAutoAdvanceEmptyPages + (requireProgress ? 1 : 0);
+
+    while (cursor != null && attempts < maxAttempts) {
+      attempts++;
+      final requestedCursor = cursor;
+      try {
+        final result = await repository.fetchProducts(
+          currentCharity,
+          limit: pageSize,
+          cursor: requestedCursor,
+        );
+        if (_disposed || requestId != _requestSequence) return;
+
+        if (!result.isSuccess || result.value == null) {
+          _commitPagedState(
+            charity: currentCharity,
+            merged: merged,
+            nextCursor: requestedCursor,
+            hasMore: true,
+            loadMoreErrorMessage: AppStrings.profileListingsLoadMoreFailed,
+          );
+          return;
+        }
+
+        final page = result.value!;
+        currentCharity = page.charity;
+        if (_appendVisibleProducts(
+          merged,
+          seenIds,
+          page.products,
+          targetCharityId,
+        )) {
+          addedAny = true;
+        }
+        hasMore = page.hasMore;
+        cursor = page.nextCursor;
+
+        if (!hasMore || cursor == null || cursor == requestedCursor) {
+          hasMore = false;
+          cursor = null;
+          break;
+        }
+
+        if (requireProgress ? addedAny : merged.isNotEmpty) {
+          break;
+        }
+      } catch (_) {
+        if (_disposed || requestId != _requestSequence) return;
+        _commitPagedState(
+          charity: currentCharity,
+          merged: merged,
+          nextCursor: requestedCursor,
+          hasMore: true,
+          loadMoreErrorMessage: AppStrings.profileListingsLoadMoreFailed,
+        );
+        return;
+      }
+    }
+
+    _commitPagedState(
+      charity: currentCharity,
+      merged: merged,
+      nextCursor: cursor,
+      hasMore: hasMore,
+      loadMoreErrorMessage: null,
+    );
+  }
+
+  void _commitPagedState({
+    required Charity charity,
+    required List<Product> merged,
+    required String? nextCursor,
+    required bool hasMore,
+    required String? loadMoreErrorMessage,
+  }) {
+    _charity = charity;
+    _products = List.unmodifiable(merged);
+    _nextCursor = nextCursor;
+    _hasMore = hasMore;
+    _status = CharityProfileStatus.loaded;
+    _isLoadingMore = false;
+    _errorMessage = null;
+    _loadMoreErrorMessage = loadMoreErrorMessage;
+    notifyListeners();
+  }
+
+  bool _appendVisibleProducts(
+    List<Product> target,
+    Set<String> seenIds,
+    Iterable<Product> items,
+    String charityId,
+  ) {
+    var added = false;
+    for (final product in _filterOwnedVisible(items, charityId)) {
+      if (seenIds.add(product.id)) {
+        target.add(product);
+        added = true;
+      }
+    }
+    return added;
   }
 
   Iterable<Product> _filterOwnedVisible(

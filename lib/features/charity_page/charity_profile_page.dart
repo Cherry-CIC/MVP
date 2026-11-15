@@ -284,7 +284,10 @@ class _CharityProfilePageState extends State<CharityProfilePage> {
         ];
       case CharityProfileStatus.loaded:
         return [
-          if (_viewModel.products.isEmpty)
+          if (_viewModel.products.isEmpty &&
+              !_viewModel.hasMore &&
+              !_viewModel.isLoadingMore &&
+              _viewModel.loadMoreErrorMessage == null)
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 32),
               child: Center(
@@ -312,7 +315,7 @@ class _CharityProfilePageState extends State<CharityProfilePage> {
                 ),
               ),
             )
-          else
+          else if (_viewModel.products.isNotEmpty)
             LayoutBuilder(
               builder: (context, constraints) {
                 const spacing = 12.0;
