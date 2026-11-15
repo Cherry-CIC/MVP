@@ -53,6 +53,23 @@ class CollectionPushController extends ChangeNotifier with WidgetsBindingObserve
   bool get registered => _registered;
   PushPermission get permission => _permission;
   String? get error => _error;
+  bool get shouldPromptOptIn {
+    final uid = _userId;
+    if (!supported || _suspended || _busy || uid == null || currentUserId() != uid) return false;
+    if (enabled || preferences.getBool('${preferencePrefix}prompted.$uid') == true) return false;
+    return _permission != PushPermission.denied;
+  }
+
+  Future<void> completeOptInPrompt({required bool allow}) async {
+    final uid = _userId;
+    if (uid == null) return;
+    await preferences.setBool('${preferencePrefix}prompted.$uid', true);
+    if (allow) {
+      await setEnabled(true);
+    } else {
+      _notify();
+    }
+  }
 
   bool _active(String userId, int generation) =>
       !_disposed && !_suspended && currentUserId() == userId && _userId == userId && _generation == generation;

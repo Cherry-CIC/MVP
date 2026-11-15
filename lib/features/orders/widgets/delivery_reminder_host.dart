@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'package:cherry_mvp/features/notifications/collection_notification_inbox.dart';
+import 'package:cherry_mvp/features/notifications/collection_notification_settings.dart';
+import 'package:cherry_mvp/features/notifications/collection_push_controller.dart';
 
 import 'package:cherry_mvp/features/orders/models/order_summary.dart';
 import 'package:cherry_mvp/features/orders/orders_page.dart';
@@ -172,6 +174,9 @@ class _DeliveryReminderHostState extends State<DeliveryReminderHost> with Widget
       }
       if (tap != null) {
         widget.notifications?.consume(tap);
+        if (tap.type != 'ready_to_collect') {
+          unawaited(context.read<OrdersViewModel>().refreshOrders());
+        }
         // Explicit taps may reopen a dismissed reminder, but only after the
         // authenticated API confirms its current stage and eligibility.
         if (tappedOrder != null) {
@@ -180,7 +185,14 @@ class _DeliveryReminderHostState extends State<DeliveryReminderHost> with Widget
         }
       }
       final unseen = eligible.where((order) => !_dismissed.contains(_dismissalId(order))).firstOrNull;
-      if (unseen != null) unawaited(_showReminder(unseen));
+      if (unseen != null) {
+        unawaited(_showReminder(unseen));
+        return;
+      }
+      final push = context.read<CollectionPushController?>();
+      if (push != null && push.shouldPromptOptIn) {
+        unawaited(_showNotificationPrompt(push));
+      }
     } finally {
       _fetching = false;
       if (mounted && _pending) _scheduleCheck();
@@ -262,6 +274,29 @@ class _DeliveryReminderHostState extends State<DeliveryReminderHost> with Widget
     } else if (action == DeliveryReminderAction.report) {
       await OrderActions.reportProblem(context, order, orders);
     }
+  }
+
+  Future<void> _showNotificationPrompt(CollectionPushController push) async {
+    if (_dialog != null || ModalRoute.of(context)?.isCurrent != true || !push.shouldPromptOptIn) {
+      return;
+    }
+    final route = DialogRoute<Object>(
+      context: context,
+      builder: (_) => const DeliveryNotificationPromptDialog(),
+    );
+    setState(() {
+      _dialog = route;
+    });
+    final action = await Navigator.of(context).push(route);
+    if (!mounted) return;
+    setState(() {
+      _dialog = null;
+    });
+    if (action == DeliveryReminderAction.interrupted) {
+      _scheduleCheck();
+      return;
+    }
+    await push.completeOptInPrompt(allow: action == true);
   }
 
   @override

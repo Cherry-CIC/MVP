@@ -1,10 +1,23 @@
 import 'package:flutter/foundation.dart';
 
 class CollectionNotification {
-  const CollectionNotification({required this.orderId, required this.userId, required this.eventId});
+  const CollectionNotification({
+    required this.orderId,
+    required this.userId,
+    required this.eventId,
+    this.type = 'ready_to_collect',
+  });
   final String orderId;
   final String userId;
   final String eventId;
+  final String type;
+
+  static const Set<String> supportedTypes = {
+    'ready_to_collect',
+    'delivery_update',
+    'confirm_delivery',
+    'order_shipped',
+  };
 
   static CollectionNotification? parse(Map<String, dynamic> data) {
     String? identifier(String key) {
@@ -15,12 +28,13 @@ class CollectionNotification {
       return value;
     }
 
-    if (data['type'] != 'ready_to_collect') return null;
+    final type = data['type'];
+    if (type is! String || !supportedTypes.contains(type)) return null;
     final order = identifier('orderId');
     final user = identifier('userId');
     final event = identifier('eventId');
     if (order == null || user == null || event == null) return null;
-    return CollectionNotification(orderId: order, userId: user, eventId: event);
+    return CollectionNotification(orderId: order, userId: user, eventId: event, type: type);
   }
 }
 

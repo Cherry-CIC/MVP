@@ -229,7 +229,29 @@ void main() {
     expect(pending.pendingFor('other'), isNull);
     expect(CollectionNotification.parse({...message(), 'orderId': '../order'}), isNull);
     expect(CollectionNotification.parse({...message(), 'type': 'unrecognised'}), isNull);
+    for (final type in ['ready_to_collect', 'delivery_update', 'confirm_delivery', 'order_shipped']) {
+      final parsed = CollectionNotification.parse({...message(), 'type': type});
+      expect(parsed?.type, type);
+    }
     pending.dispose();
+  });
+  test('one-time opt-in prompt asks once per user and only requests permission when allowed', () async {
+    await start();
+    expect(controller.shouldPromptOptIn, isTrue);
+    await controller.completeOptInPrompt(allow: false);
+    expect(controller.shouldPromptOptIn, isFalse);
+    expect(gateway.requests, 0);
+    expect(devices.registrations, isEmpty);
+
+    uid = 'second-buyer';
+    accounts.add(uid);
+    await controller.refresh();
+    expect(controller.shouldPromptOptIn, isTrue);
+    await controller.completeOptInPrompt(allow: true);
+    expect(controller.shouldPromptOptIn, isFalse);
+    expect(gateway.requests, 1);
+    expect(controller.registered, isTrue);
+    expect(devices.registrations, contains('second-buyer:token-a:android'));
   });
   testWidgets('notification settings have a labelled switch and fit large text', (tester) async {
     await tester.runAsync(start);
@@ -248,9 +270,38 @@ void main() {
         ),
       ),
     );
-    expect(find.text('Collection notifications'), findsOneWidget);
+    expect(find.text('Delivery notifications'), findsOneWidget);
+    expect(find.text(kDeliveryNotificationSubtitle), findsOneWidget);
     expect(find.byType(SwitchListTile), findsOneWidget);
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());
+  });
+  testWidgets('delivery notification prompt dialog displays copy and returns choice', (tester) async {
+    await tester.runAsync(start);
+    bool? choice;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) => Scaffold(
+            body: TextButton(
+              onPressed: () async {
+                choice = await showDialog<bool>(
+                  context: context,
+                  builder: (_) => const DeliveryNotificationPromptDialog(),
+                );
+              },
+              child: const Text('Open'),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('Open'));
+    await tester.pumpAndSettle();
+    expect(find.text('Get delivery updates'), findsOneWidget);
+    expect(find.text(kDeliveryNotificationSubtitle), findsOneWidget);
+    await tester.tap(find.text('Allow updates'));
+    await tester.pumpAndSettle();
+    expect(choice, isTrue);
   });
 }
