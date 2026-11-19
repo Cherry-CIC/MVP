@@ -19,6 +19,9 @@ import 'package:cherry_mvp/features/home/home_viewmodel.dart';
 import 'package:cherry_mvp/features/login/login_repository.dart';
 import 'package:cherry_mvp/features/orders/models/order_summary.dart';
 import 'package:cherry_mvp/features/orders/orders_repository.dart';
+import 'package:cherry_mvp/features/orders/widgets/delivery_reminder_host.dart';
+import 'package:cherry_mvp/features/orders/widgets/delivery_timer_bubble.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cherry_mvp/features/orders/orders_view_model.dart';
 import 'package:cherry_mvp/features/products/product_repository.dart';
 import 'package:cherry_mvp/features/products/product_viewmodel.dart';
@@ -51,16 +54,23 @@ class _HomeRepositoryStub implements IHomeRepository {
   }
 }
 
-// Navigation only fetches orders; Fake throws for unexpected repository calls.
 class _OrdersRepositoryStub extends Fake implements IOrdersRepository {
+  final List<OrderSummary> orders;
+  int failReminderFetches;
+  _OrdersRepositoryStub([this.orders = const [], this.failReminderFetches = 0]);
+
   @override
   Future<Result<dynamic>> confirmOrderReceived(String orderId) async {
     return Result.success(null);
   }
 
   @override
-  Future<Result<List<OrderSummary>>> fetchOrders() async {
-    return Result.success(const []);
+  Future<Result<List<OrderSummary>>> fetchOrders({bool deliveryRemindersOnly = false}) async {
+    if (deliveryRemindersOnly && failReminderFetches > 0) {
+      failReminderFetches--;
+      return Result.failure('Temporary error');
+    }
+    return Result.success(orders);
   }
 
   @override
@@ -133,14 +143,17 @@ Future<NavigationProvider> _pumpHomePage(
   WidgetTester tester, {
   _ProfileListingsRepositoryStub? listingsRepository,
   NavigatorObserver? observer,
+  _OrdersRepositoryStub? ordersRepository,
 }) async {
   final navigator = NavigationProvider();
+  final orders = ordersRepository ?? _OrdersRepositoryStub();
   final firebaseAuth = _FirebaseAuthMock();
 
   await tester.pumpWidget(
     MultiProvider(
       providers: [
         Provider<NavigationProvider>.value(value: navigator),
+        Provider<IOrdersRepository>.value(value: orders),
         ChangeNotifierProvider(create: (_) => SearchController()),
         ChangeNotifierProvider(
           create: (_) => HomeViewModel(homeRepository: _HomeRepositoryStub()),
@@ -152,7 +165,7 @@ Future<NavigationProvider> _pumpHomePage(
           ),
         ),
         ChangeNotifierProvider(
-          create: (_) => OrdersViewModel(repository: _OrdersRepositoryStub()),
+          create: (_) => OrdersViewModel(repository: orders),
         ),
         ChangeNotifierProvider(
           create: (_) => ProfileListingsViewModel(
@@ -191,7 +204,12 @@ Future<NavigationProvider> _pumpHomePage(
         navigatorKey: navigator.navigatorKey,
         navigatorObservers: [?observer],
         onGenerateRoute: AppRoutes.generateRoute,
-        home: const HomePage(),
+        home: ordersRepository == null
+            ? const HomePage()
+            : DeliveryReminderHost(
+                userId: 'buyer',
+                builder: (_, timer) => HomePage(deliveryTimer: timer),
+              ),
       ),
     ),
   );
@@ -207,6 +225,57 @@ Future<void> _openOrders(WidgetTester tester) async {
 }
 
 void main() {
+  testWidgets('timer sits above Home navigation and clears after confirming in My Orders', (tester) async {
+    SharedPreferences.setMockInitialValues({
+      'deliveryReminder.buyer': ['a'],
+    });
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    final order = OrderSummary.tryFromOrderJson({
+      'id': 'a',
+      'productName': 'Winter coat',
+      'deliveryState': 'awaiting_confirmation',
+      'collectedAt': DateTime.now().toUtc().subtract(const Duration(hours: 40)).toIso8601String(),
+      'confirmationDeadline': DateTime.now().toUtc().add(const Duration(hours: 8)).toIso8601String(),
+    })!;
+    await _pumpHomePage(tester, ordersRepository: _OrdersRepositoryStub([order]));
+    final timer = find.byType(DeliveryTimerBubble);
+    final bar = find.byType(BottomNavigationBar);
+    expect(tester.getBottomRight(timer).dy, lessThan(tester.getTopLeft(bar).dy));
+    expect(tester.getCenter(timer).dx, greaterThan(tester.getCenter(bar).dx));
+    await _openOrders(tester);
+    expect(timer, findsNothing);
+    await tester.tap(find.byKey(const ValueKey('a')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Yes, all good'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Home'));
+    await tester.pumpAndSettle();
+    expect(timer, findsNothing);
+  });
+
+  testWidgets('retries a failed delivery reminder fetch when returning to Home', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    final order = OrderSummary.tryFromOrderJson({
+      'id': 'retry-1',
+      'productName': 'Rain jacket',
+      'deliveryState': 'awaiting_confirmation',
+      'shipment': {
+        'id': 's-retry',
+        'status': 'delivered',
+        'deliveredAt': DateTime.now().toUtc().subtract(const Duration(hours: 1)).toIso8601String(),
+      },
+    })!;
+    await _pumpHomePage(tester, ordersRepository: _OrdersRepositoryStub([order], 1));
+    expect(find.text('Your item has been delivered'), findsNothing);
+
+    await tester.tap(find.text('Profile'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Home'));
+    await tester.pumpAndSettle();
+    expect(find.text('Your item has been delivered'), findsOneWidget);
+  });
+
   testWidgets('successful Give result selects existing Profile and shows the new listing', (tester) async {
     final repository = _ProfileListingsRepositoryStub();
     final observer = _NavigationObserver();

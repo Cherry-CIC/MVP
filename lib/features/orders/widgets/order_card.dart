@@ -376,6 +376,8 @@ class OrderStatusFormatter {
       'dispatched' || 'shipped' || 'in_transit' => 'On the way',
       'out_for_delivery' => 'Out for delivery',
       'delivered' => 'Delivered',
+      'awaiting_collection' => 'Ready to collect',
+      'collected' => 'Collected',
       'awaiting_confirmation' => AppStrings.myOrdersAwaitingConfirmation,
       'confirmed' => AppStrings.myOrdersConfirmed,
       'disputed' => AppStrings.myOrdersDisputed,

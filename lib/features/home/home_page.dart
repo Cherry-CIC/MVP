@@ -6,11 +6,14 @@ import 'package:cherry_mvp/features/home/widgets/bottom_nav_bar.dart';
 import 'package:cherry_mvp/features/home/widgets/home_screen.dart';
 import 'package:cherry_mvp/features/messages/message_page.dart';
 import 'package:cherry_mvp/features/orders/orders_page.dart';
+import 'package:cherry_mvp/features/orders/widgets/delivery_reminder_host.dart';
 import 'package:cherry_mvp/features/profile/profile_page.dart';
 import 'package:cherry_mvp/features/profile/profile_listings_view_model.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  const HomePage({super.key, this.deliveryTimer});
+
+  final Widget? deliveryTimer;
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -47,6 +50,7 @@ class _HomePageState extends State<HomePage> {
     if (index == _homeNavIndex) {
       _showProfileRoot();
       _pageController.jumpToPage(_homePageIndex);
+      DeliveryReminderHost.retryPending(context);
       return;
     }
 
@@ -85,7 +89,9 @@ class _HomePageState extends State<HomePage> {
 
   void _onPageChanged(int index) {
     var nextSelectedIndex = _homeNavIndex;
-    if (index == _profilePageIndex) {
+    if (index == _homePageIndex) {
+      DeliveryReminderHost.retryPending(context);
+    } else if (index == _profilePageIndex) {
       nextSelectedIndex = _profileNavIndex;
       context.read<ProfileListingsViewModel>().refreshListings();
     } else if (FeatureFlags.showInbox && index == _inboxPageIndex) {
@@ -137,6 +143,7 @@ class _HomePageState extends State<HomePage> {
             ),
           ],
         ),
+        floatingActionButton: _selectedIndex == _homeNavIndex ? widget.deliveryTimer : null,
         bottomNavigationBar: CherryBottomNavBar(
           selectedIndex: _selectedIndex,
           onItemSelected: _onItemTapped,

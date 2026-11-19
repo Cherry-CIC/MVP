@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cherry_mvp/core/utils/result.dart';
 import 'package:cherry_mvp/core/utils/status.dart';
 import 'package:cherry_mvp/features/orders/models/order_summary.dart';
@@ -10,6 +12,10 @@ class OrdersViewModel extends ChangeNotifier {
   OrdersViewModel({
     required this.repository,
   });
+
+  // Receipt and dispute actions can complete from either My Orders or a reminder.
+  final _resolvedOrders = StreamController<String>.broadcast();
+  Stream<String> get resolvedOrders => _resolvedOrders.stream;
 
   Status _status = Status.uninitialized;
   List<OrderSummary> _orders = const [];
@@ -49,6 +55,7 @@ class OrdersViewModel extends ChangeNotifier {
             );
           })
           .toList(growable: false);
+      if (!_isDisposed) _resolvedOrders.add(orderId);
       _notifyIfActive();
     }
     return result;
@@ -76,6 +83,7 @@ class OrdersViewModel extends ChangeNotifier {
             );
           })
           .toList(growable: false);
+      if (!_isDisposed) _resolvedOrders.add(orderId);
       _notifyIfActive();
     }
     return result;
@@ -168,6 +176,7 @@ class OrdersViewModel extends ChangeNotifier {
     _isRefreshing = false;
     _refreshError = null;
     _isDisposed = true;
+    _resolvedOrders.close();
     super.dispose();
   }
 }

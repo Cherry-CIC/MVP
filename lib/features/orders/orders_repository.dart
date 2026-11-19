@@ -5,7 +5,7 @@ import 'package:cherry_mvp/core/utils/result.dart';
 import 'package:cherry_mvp/features/orders/models/order_summary.dart';
 
 abstract class IOrdersRepository {
-  Future<Result<List<OrderSummary>>> fetchOrders();
+  Future<Result<List<OrderSummary>>> fetchOrders({bool deliveryRemindersOnly = false});
   Future<Result<dynamic>> confirmOrderReceived(String orderId);
   Future<Result<dynamic>> submitOrderDispute(
     String orderId, {
@@ -63,7 +63,7 @@ final class OrdersRepository implements IOrdersRepository {
   }
 
   @override
-  Future<Result<List<OrderSummary>>> fetchOrders() async {
+  Future<Result<List<OrderSummary>>> fetchOrders({bool deliveryRemindersOnly = false}) async {
     try {
       final result = await _apiService.get<dynamic>(ApiEndpoints.myOrders);
       if (!result.isSuccess || result.value == null) {
@@ -85,7 +85,12 @@ final class OrdersRepository implements IOrdersRepository {
         return Result.failure('Could not load your orders');
       }
 
-      final orders = rawOrders.map(OrderSummary.tryFromOrderJson).whereType<OrderSummary>().toList(growable: false);
+      final now = DateTime.now();
+      final orders = rawOrders
+          .map(OrderSummary.tryFromOrderJson)
+          .whereType<OrderSummary>()
+          .where((order) => !deliveryRemindersOnly || order.canShowDeliveryReminder(now))
+          .toList(growable: false);
       if (orders.isEmpty) {
         return Result.success(const []);
       }
@@ -108,6 +113,7 @@ final class OrdersRepository implements IOrdersRepository {
                   : order.productName,
               imageUrl: product.imageUrl,
               size: product.size,
+              condition: product.condition,
               charityLogoUrl: charityLogos[product.charityId] ?? '',
             );
           })
@@ -252,12 +258,14 @@ final class _ProductEnrichment {
   final String imageUrl;
   final String size;
   final String charityId;
+  final String condition;
 
   const _ProductEnrichment({
     required this.name,
     required this.imageUrl,
     required this.size,
     required this.charityId,
+    required this.condition,
   });
 
   static _ProductEnrichment? tryFromJson(dynamic value) {
@@ -280,6 +288,7 @@ final class _ProductEnrichment {
       name: _readString(value['name']),
       imageUrl: imageUrl,
       size: _readString(value['size']),
+      condition: _readString(value['quality']),
       charityId: _readString(value['charityId']),
     );
   }
