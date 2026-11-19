@@ -32,15 +32,18 @@ class HomeScreenState extends State<HomeScreen> {
           child: CustomScrollView(
             slivers: [
               if (FeatureFlags.showSearch)
-                PinnedHeaderSliver(
-                  child: Padding(
-                    padding: EdgeInsets.fromLTRB(
-                      16,
-                      8 + MediaQuery.of(context).padding.top,
-                      16,
-                      8,
+                SliverFloatingHeader(
+                  child: ColoredBox(
+                    color: Theme.of(context).scaffoldBackgroundColor,
+                    child: Padding(
+                      padding: EdgeInsets.fromLTRB(
+                        16,
+                        8 + MediaQuery.of(context).padding.top,
+                        16,
+                        8,
+                      ),
+                      child: const Search(showAsBar: true),
                     ),
-                    child: const Search(showAsBar: true),
                   ),
                 ),
               SliverPadding(
