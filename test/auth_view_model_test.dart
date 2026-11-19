@@ -2,8 +2,10 @@ import 'package:cherry_mvp/core/config/app_images.dart';
 import 'package:cherry_mvp/core/models/product.dart';
 import 'package:cherry_mvp/core/router/nav_provider.dart';
 import 'package:cherry_mvp/core/router/nav_routes.dart';
+import 'package:cherry_mvp/core/services/firebase_auth_service.dart';
 import 'package:cherry_mvp/core/services/network/api_service.dart';
 import 'package:cherry_mvp/core/utils/result.dart';
+import 'package:cherry_mvp/core/utils/status.dart';
 import 'package:cherry_mvp/features/auth/auth_view_model.dart';
 import 'package:cherry_mvp/features/login/login_repository.dart';
 import 'package:cherry_mvp/features/products/product_repository.dart';
@@ -17,12 +19,23 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'support/unexpected_api_service.dart';
 
 class _FakeLoginRepository implements LoginRepository {
-  _FakeLoginRepository(this.logoutResult);
+  _FakeLoginRepository(
+    this.logoutResult, {
+    this.revokeAppleTokenResult = RevokeAppleTokenResult.skipped,
+  });
 
   final Result<void> logoutResult;
+  final RevokeAppleTokenResult revokeAppleTokenResult;
+  int revokeAppleTokenCalls = 0;
 
   @override
   Future<Result<void>> logout() async => logoutResult;
+
+  @override
+  Future<RevokeAppleTokenResult> revokeAppleAccessIfLinked() async {
+    revokeAppleTokenCalls += 1;
+    return revokeAppleTokenResult;
+  }
 
   @override
   dynamic noSuchMethod(Invocation invocation) {
@@ -67,8 +80,11 @@ class _RecordingNavigationProvider extends NavigationProvider {
 }
 
 class _DeleteAccountApiService implements ApiService {
+  int deleteCalls = 0;
+
   @override
   Future<Result<T>> delete<T>(String endpoint) async {
+    deleteCalls += 1;
     return Result.success(<String, dynamic>{'success': true} as T);
   }
 
@@ -180,5 +196,115 @@ void main() {
       isNull,
     );
     expect(navigator.removedUntilRoute, AppRoutes.welcome);
+  });
+
+  group('Apple sign-in token revocation during account deletion (Issue #549)', () {
+    test('Scenario: Account without Apple proceeds normally without Apple prompt', () async {
+      final loginRepository = _FakeLoginRepository(
+        Result.success(null),
+        revokeAppleTokenResult: RevokeAppleTokenResult.skipped,
+      );
+      final apiService = _DeleteAccountApiService();
+      final navigator = _RecordingNavigationProvider();
+      final productViewModel = _productViewModel();
+
+      final authViewModel = AuthViewModel(
+        loginRepository: loginRepository,
+        navigator: navigator,
+        firebaseAuth: _FakeFirebaseAuth(),
+        firestore: _FakeFirebaseFirestore(),
+        apiService: apiService,
+        clearUserState: productViewModel.clearUserState,
+      );
+
+      final result = await authViewModel.deleteAccount();
+
+      expect(result.isSuccess, isTrue);
+      expect(loginRepository.revokeAppleTokenCalls, 1);
+      expect(apiService.deleteCalls, 1);
+      expect(navigator.removedUntilRoute, AppRoutes.welcome);
+    });
+
+    test('Scenario: Account linked to Apple revokes token and proceeds to delete account', () async {
+      final loginRepository = _FakeLoginRepository(
+        Result.success(null),
+        revokeAppleTokenResult: RevokeAppleTokenResult.success,
+      );
+      final apiService = _DeleteAccountApiService();
+      final navigator = _RecordingNavigationProvider();
+      final productViewModel = _productViewModel();
+
+      final authViewModel = AuthViewModel(
+        loginRepository: loginRepository,
+        navigator: navigator,
+        firebaseAuth: _FakeFirebaseAuth(),
+        firestore: _FakeFirebaseFirestore(),
+        apiService: apiService,
+        clearUserState: productViewModel.clearUserState,
+      );
+
+      final result = await authViewModel.deleteAccount();
+
+      expect(result.isSuccess, isTrue);
+      expect(loginRepository.revokeAppleTokenCalls, 1);
+      expect(apiService.deleteCalls, 1);
+      expect(navigator.removedUntilRoute, AppRoutes.welcome);
+    });
+
+    test('Scenario: User cancels Apple re-authentication prompt - deletion is safely aborted', () async {
+      final loginRepository = _FakeLoginRepository(
+        Result.success(null),
+        revokeAppleTokenResult: RevokeAppleTokenResult.userCancelled,
+      );
+      final apiService = _DeleteAccountApiService();
+      final navigator = _RecordingNavigationProvider();
+      final productViewModel = _productViewModel();
+
+      final authViewModel = AuthViewModel(
+        loginRepository: loginRepository,
+        navigator: navigator,
+        firebaseAuth: _FakeFirebaseAuth(),
+        firestore: _FakeFirebaseFirestore(),
+        apiService: apiService,
+        clearUserState: productViewModel.clearUserState,
+      );
+
+      final result = await authViewModel.deleteAccount();
+
+      expect(result.isSuccess, isFalse);
+      expect(result.error, 'Account deletion was cancelled.');
+      expect(loginRepository.revokeAppleTokenCalls, 1);
+      // Backend delete must NOT be called when cancelled!
+      expect(apiService.deleteCalls, 0);
+      expect(authViewModel.deleteAccountStatus.type, StatusType.uninitialized);
+      expect(navigator.removedUntilRoute, isNull);
+    });
+
+    test('Scenario: Revocation fails technically - deletion proceeds without blocking', () async {
+      final loginRepository = _FakeLoginRepository(
+        Result.success(null),
+        revokeAppleTokenResult: RevokeAppleTokenResult.failedNonBlocking,
+      );
+      final apiService = _DeleteAccountApiService();
+      final navigator = _RecordingNavigationProvider();
+      final productViewModel = _productViewModel();
+
+      final authViewModel = AuthViewModel(
+        loginRepository: loginRepository,
+        navigator: navigator,
+        firebaseAuth: _FakeFirebaseAuth(),
+        firestore: _FakeFirebaseFirestore(),
+        apiService: apiService,
+        clearUserState: productViewModel.clearUserState,
+      );
+
+      final result = await authViewModel.deleteAccount();
+
+      expect(result.isSuccess, isTrue);
+      expect(loginRepository.revokeAppleTokenCalls, 1);
+      // Backend deletion must still proceed!
+      expect(apiService.deleteCalls, 1);
+      expect(navigator.removedUntilRoute, AppRoutes.welcome);
+    });
   });
 }

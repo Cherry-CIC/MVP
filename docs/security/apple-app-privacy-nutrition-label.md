@@ -38,6 +38,8 @@ This document records the Apple App Privacy "Nutrition Label" information for th
 
 ## Verification Checklist
 - [x] Camera usage description added to iOS `Info.plist`.
+- [x] Out-of-process `PHPickerViewController` used with `requestFullMetadata: false` across listing (`PhotoUpload`) and registration (`RegisterForm`) flows, avoiding full photo-library authorization prompts.
+- [x] No `NSPhotoLibraryUsageDescription` or `NSPhotoLibraryAddUsageDescription` declared; `permission_handler_apple` compiles with `PERMISSION_PHOTOS=0`.
 - [x] No microphone usage description is declared because the current MVP has no audio or video capture flow.
 - [x] App functionality matches the camera permission declared by the app.
 - [x] App provides a direct "Open Settings" recovery action when permission is denied.

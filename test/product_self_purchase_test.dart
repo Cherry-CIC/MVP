@@ -45,15 +45,17 @@ class _ProductRepositoryStub extends ProductRepository {
 }
 
 void main() {
+  setUpAll(() async {
+    TestWidgetsFlutterBinding.ensureInitialized();
+    final font = FontLoader('Raleway')..addFont(rootBundle.load('assets/fonts/Raleway-ExtraBold.ttf'));
+    await font.load();
+    final priceFontLoader = FontLoader('InstrumentSansPricing')
+      ..addFont(rootBundle.load('assets/fonts/InstrumentSans-Bold.ttf'));
+    await priceFontLoader.load();
+  });
   for (final width in [320.0, 390.0]) {
     for (final scale in [1.0, 2.0]) {
       testWidgets('product details fit width $width at text scale $scale', (tester) async {
-        final fontLoader = FontLoader('Raleway')
-          ..addFont(rootBundle.load('assets/fonts/Raleway-ExtraBold.ttf'));
-        await fontLoader.load();
-        final priceFontLoader = FontLoader('InstrumentSansPricing')
-          ..addFont(rootBundle.load('assets/fonts/InstrumentSans-Bold.ttf'));
-        await priceFontLoader.load();
         tester.view.physicalSize = Size(width, 1600);
         tester.view.devicePixelRatio = 1;
         addTearDown(tester.view.resetPhysicalSize);
@@ -150,7 +152,8 @@ void main() {
     expect(find.text(_product.description), findsOneWidget);
     expect(find.text(_product.size), findsOneWidget);
     expect(find.text(_product.quality), findsOneWidget);
-    expect(find.text('£20.00'), findsNWidgets(2));
+    expect(find.text('£20.00'), findsOneWidget); // raised proceeds
+    expect(find.text('£22.00'), findsOneWidget); // incl. £2.00 PSF
     expect(find.text('0'), findsOneWidget);
 
     await tester.tap(find.byIcon(Icons.favorite_outline));

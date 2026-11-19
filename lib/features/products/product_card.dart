@@ -6,6 +6,7 @@ import 'package:cherry_mvp/core/config/app_strings.dart';
 import 'package:cherry_mvp/core/config/app_spacing.dart';
 import 'package:cherry_mvp/core/models/model.dart';
 import 'package:cherry_mvp/core/utils/image_provider_helper.dart';
+import 'package:cherry_mvp/core/utils/security_fee.dart';
 import 'package:cherry_mvp/features/products/product_viewmodel.dart';
 import 'package:cherry_mvp/features/products/widgets/sold_listing_banner.dart';
 
@@ -225,7 +226,7 @@ class ProductCard extends StatelessWidget {
                               runSpacing: 2,
                               children: [
                                 Text(
-                                  '£${product.price.toStringAsFixed(2)}',
+                                  '£${product.priceIncludingSecurityFee.toStringAsFixed(2)}',
                                   style: Theme.of(context).textTheme.headlineLarge?.copyWith(
                                     color: Theme.of(context).colorScheme.primary,
                                     fontSize: 16,

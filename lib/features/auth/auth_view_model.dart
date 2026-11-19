@@ -111,6 +111,13 @@ class AuthViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
+      final revokeResult = await loginRepository.revokeAppleAccessIfLinked();
+      if (revokeResult == RevokeAppleTokenResult.userCancelled) {
+        _deleteAccountStatus = Status.uninitialized;
+        notifyListeners();
+        return Result.failure('Account deletion was cancelled.');
+      }
+
       final result = await apiService.delete<Map<String, dynamic>>(
         ApiEndpoints.deleteAccount,
       );

@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
@@ -46,6 +47,7 @@ class _RegisterFormState extends State<RegisterForm> {
   // Image picker controller
   final ImagePicker _picker = ImagePicker();
   File? _selectedImage;
+  bool _isPickingImage = false;
 
   @override
   void initState() {
@@ -101,13 +103,31 @@ class _RegisterFormState extends State<RegisterForm> {
   }
 
   Future<void> _pickImage() async {
-    final XFile? pickedFile = await _picker.pickImage(
-      source: ImageSource.gallery,
-    );
-    if (pickedFile != null) {
+    if (_isPickingImage) return;
+    _isPickingImage = true;
+    try {
+      final XFile? pickedFile = await _picker.pickImage(
+        source: ImageSource.gallery,
+        requestFullMetadata: false,
+      );
+      if (!mounted || pickedFile == null) return;
       setState(() {
         _selectedImage = File(pickedFile.path);
       });
+    } on PlatformException catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('${AppStrings.errorPickingImage}: ${error.message ?? error.code}')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('${AppStrings.errorPickingImage}: $e')),
+        );
+      }
+    } finally {
+      _isPickingImage = false;
     }
   }
 

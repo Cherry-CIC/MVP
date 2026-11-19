@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_test/flutter_test.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 ThemeData buildTheme([Brightness brightness = Brightness.light]) {
@@ -83,8 +82,7 @@ ThemeData buildTheme([Brightness brightness = Brightness.light]) {
       ),
     );
 
-    if (WidgetsBinding.instance is TestWidgetsFlutterBinding ||
-        !GoogleFonts.config.allowRuntimeFetching) {
+    if (WidgetsBinding.instance.runtimeType.toString().contains('Test') || !GoogleFonts.config.allowRuntimeFetching) {
       return customBase;
     }
 
@@ -109,9 +107,7 @@ ThemeData buildTheme([Brightness brightness = Brightness.light]) {
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: isDark
-            ? BorderSide(color: baseTheme.colorScheme.outlineVariant)
-            : BorderSide.none,
+        side: isDark ? BorderSide(color: baseTheme.colorScheme.outlineVariant) : BorderSide.none,
       ),
     ),
     dialogTheme: DialogThemeData(
@@ -143,9 +139,7 @@ ThemeData buildTheme([Brightness brightness = Brightness.light]) {
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide(
-          color: isDark
-              ? baseTheme.colorScheme.outline
-              : baseTheme.colorScheme.secondary,
+          color: isDark ? baseTheme.colorScheme.outline : baseTheme.colorScheme.secondary,
           width: 1.5,
         ),
       ),
@@ -167,8 +161,7 @@ ThemeData buildTheme([Brightness brightness = Brightness.light]) {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         textStyle: const TextStyle(fontWeight: FontWeight.w500),
         side: BorderSide(color: baseTheme.colorScheme.primary),
-        foregroundColor:
-            isDark ? Colors.white : baseTheme.colorScheme.primary,
+        foregroundColor: isDark ? Colors.white : baseTheme.colorScheme.primary,
       ),
     ),
     filledButtonTheme: FilledButtonThemeData(

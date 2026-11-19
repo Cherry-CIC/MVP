@@ -1,7 +1,8 @@
 import 'package:cherry_mvp/core/services/safe_log.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:google_sign_in/google_sign_in.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 class GoogleAuthService {
   final _googleSignIn = GoogleSignIn.instance;
@@ -10,11 +11,36 @@ class GoogleAuthService {
   GoogleSignInAccount? _currentUser;
   GoogleSignInAccount? get currentUser => _currentUser;
 
+  static String? resolveClientId({
+    required bool isWeb,
+    required TargetPlatform platform,
+    required Map<String, String> env,
+  }) {
+    if (isWeb ||
+        platform == TargetPlatform.iOS ||
+        platform == TargetPlatform.macOS) {
+      final clientId = env['GOOGLE_SIGN_IN_CLIENT_ID']?.trim();
+      return (clientId != null && clientId.isNotEmpty) ? clientId : null;
+    }
+    return null;
+  }
+
+  static String? resolveServerClientId(Map<String, String> env) {
+    final serverClientId = env['GOOGLE_SIGN_IN_SERVER_CLIENT_ID']?.trim();
+    return (serverClientId != null && serverClientId.isNotEmpty)
+        ? serverClientId
+        : null;
+  }
+
   Future<void> _initializeGoogleSignIn() async {
     try {
       await _googleSignIn.initialize(
-        clientId: dotenv.env['GOOGLE_SIGN_IN_CLIENT_ID'],
-        serverClientId: dotenv.env['GOOGLE_SIGN_IN_SERVER_CLIENT_ID'],
+        clientId: resolveClientId(
+          isWeb: kIsWeb,
+          platform: defaultTargetPlatform,
+          env: dotenv.env,
+        ),
+        serverClientId: resolveServerClientId(dotenv.env),
       );
       _isGoogleSignInInitialized = true;
     } catch (_) {
@@ -33,20 +59,19 @@ class GoogleAuthService {
     }
   }
 
-  Future<UserCredential> signInWithGoogleFirebase(FirebaseAuth firebaseAuth) async {
+  Future<UserCredential> signInWithGoogleFirebase(
+    FirebaseAuth firebaseAuth,
+  ) async {
+    if (kIsWeb) {
+      return firebaseAuth.signInWithPopup(GoogleAuthProvider());
+    }
+
     await _ensureGoogleSignInInitialized();
 
     final GoogleSignInAccount googleUser = await _googleSignIn.authenticate();
-
-    final authClient = _googleSignIn.authorizationClient;
-    final authorization = await authClient.authorizationForScopes(['email']);
-
-    // Obtain the auth details from the request
     final GoogleSignInAuthentication googleAuth = googleUser.authentication;
 
-    // Create a new credential
     final credential = GoogleAuthProvider.credential(
-      accessToken: authorization?.accessToken,
       idToken: googleAuth.idToken,
     );
 
@@ -57,7 +82,14 @@ class GoogleAuthService {
   }
 
   Future<void> signOut() async {
-    await _googleSignIn.signOut();
+    if (!kIsWeb) {
+      try {
+        await _ensureGoogleSignInInitialized();
+        await _googleSignIn.signOut();
+      } catch (_) {
+        // Ignore Google sign-out errors when Google Sign-In was not active.
+      }
+    }
     _currentUser = null;
   }
 }
