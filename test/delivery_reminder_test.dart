@@ -303,11 +303,14 @@ void main() {
     })!;
 
     expect(deliveredOrder.deliveredAt, deliveredAt);
+    expect(deliveredOrder.usesDeliveryDeadline, isTrue);
     expect(deliveredOrder.confirmationDeadline, deliveredAt.add(const Duration(hours: 72)));
 
     final repo = _Repository()..orders = [deliveredOrder];
     await _open(tester, repo);
     expect(find.byType(DeliveryReminderDialog), findsOneWidget);
+    expect(find.text('Your item has been delivered'), findsOneWidget);
+    expect(find.text('Your item has been collected'), findsNothing);
     expect(find.text('The 72 hours started when your parcel was delivered.'), findsOneWidget);
 
     await dismissReminder(tester);
@@ -324,5 +327,31 @@ void main() {
       },
     })!;
     expect(expiredDelivered.canShowDeliveryReminder(DateTime.now().toUtc()), isFalse);
+  });
+
+  testWidgets('preserves server collection deadline and copy when both collectedAt and deliveredAt exist', (tester) async {
+    final collectedAt = DateTime.now().toUtc().subtract(const Duration(hours: 2));
+    final serverDeadline = collectedAt.add(const Duration(hours: 48));
+    final collectedOrder = OrderSummary.tryFromOrderJson({
+      'id': 'c1',
+      'productName': 'Scarf',
+      'deliveryState': 'awaiting_confirmation',
+      'collectedAt': collectedAt.toIso8601String(),
+      'confirmationDeadline': serverDeadline.toIso8601String(),
+      'shipment': {
+        'id': 's3',
+        'status': 'collected',
+        'deliveredAt': collectedAt.toIso8601String(),
+      },
+    })!;
+
+    expect(collectedOrder.usesDeliveryDeadline, isFalse);
+    expect(collectedOrder.confirmationDeadline, serverDeadline);
+
+    final repo = _Repository()..orders = [collectedOrder];
+    await _open(tester, repo);
+    expect(find.byType(DeliveryReminderDialog), findsOneWidget);
+    expect(find.text('Your item has been collected'), findsOneWidget);
+    expect(find.text('The 48 hours started when you collected your parcel.'), findsOneWidget);
   });
 }

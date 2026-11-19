@@ -16,6 +16,7 @@ class OrderSummary {
   final DateTime? confirmationDeadline;
   final DateTime? collectedAt;
   final DateTime? deliveredAt;
+  final bool usesDeliveryDeadline;
   final String condition;
 
   bool canShowDeliveryReminder(DateTime now) =>
@@ -38,6 +39,7 @@ class OrderSummary {
     this.confirmationDeadline,
     this.collectedAt,
     this.deliveredAt,
+    this.usesDeliveryDeadline = false,
     this.condition = '',
   });
 
@@ -62,9 +64,12 @@ class OrderSummary {
         DateTime.tryParse(_readString(shipment?['deliveredAt'])) ??
         DateTime.tryParse(_readString(json['deliveredAt']));
     final collectedAt = DateTime.tryParse(_readString(json['collectedAt']));
-    final confirmationDeadline = deliveredAt != null
-        ? deliveredAt.add(const Duration(hours: 72))
-        : DateTime.tryParse(_readString(json['confirmationDeadline']));
+    final serverDeadline = DateTime.tryParse(_readString(json['confirmationDeadline']));
+    final hasCollectionDeadline = collectedAt != null && serverDeadline != null;
+    final confirmationDeadline = hasCollectionDeadline
+        ? serverDeadline
+        : deliveredAt?.add(const Duration(hours: 72)) ?? serverDeadline;
+    final usesDeliveryDeadline = !hasCollectionDeadline && deliveredAt != null;
 
     return OrderSummary(
       id: id,
@@ -84,6 +89,7 @@ class OrderSummary {
       confirmationDeadline: confirmationDeadline,
       collectedAt: collectedAt,
       deliveredAt: deliveredAt,
+      usesDeliveryDeadline: usesDeliveryDeadline,
     );
   }
 
@@ -114,6 +120,7 @@ class OrderSummary {
       confirmationDeadline: confirmationDeadline,
       collectedAt: collectedAt,
       deliveredAt: deliveredAt,
+      usesDeliveryDeadline: usesDeliveryDeadline,
       condition: condition ?? this.condition,
       deliveryState: deliveryState ?? this.deliveryState,
       deliveryLabel: deliveryLabel ?? this.deliveryLabel,
