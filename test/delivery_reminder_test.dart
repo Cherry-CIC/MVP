@@ -288,4 +288,41 @@ void main() {
     expect(timerBubble, findsNothing);
     expect(repo.confirmed, isNull);
   });
+
+  testWidgets('calculates 72-hour confirmation deadline from shipment.deliveredAt', (tester) async {
+    final deliveredAt = DateTime.now().toUtc().subtract(const Duration(hours: 2));
+    final deliveredOrder = OrderSummary.tryFromOrderJson({
+      'id': 'd1',
+      'productName': 'Boots',
+      'deliveryState': 'awaiting_confirmation',
+      'shipment': {
+        'id': 's1',
+        'status': 'delivered',
+        'deliveredAt': deliveredAt.toIso8601String(),
+      },
+    })!;
+
+    expect(deliveredOrder.deliveredAt, deliveredAt);
+    expect(deliveredOrder.confirmationDeadline, deliveredAt.add(const Duration(hours: 72)));
+
+    final repo = _Repository()..orders = [deliveredOrder];
+    await _open(tester, repo);
+    expect(find.byType(DeliveryReminderDialog), findsOneWidget);
+    expect(find.text('The 72 hours started when your parcel was delivered.'), findsOneWidget);
+
+    await dismissReminder(tester);
+    expect(timerBubble, findsOneWidget);
+
+    final expiredDelivered = OrderSummary.tryFromOrderJson({
+      'id': 'd2',
+      'productName': 'Hat',
+      'deliveryState': 'awaiting_confirmation',
+      'shipment': {
+        'id': 's2',
+        'status': 'delivered',
+        'deliveredAt': DateTime.now().toUtc().subtract(const Duration(hours: 73)).toIso8601String(),
+      },
+    })!;
+    expect(expiredDelivered.canShowDeliveryReminder(DateTime.now().toUtc()), isFalse);
+  });
 }

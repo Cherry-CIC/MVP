@@ -87,7 +87,11 @@ class _DeliveryReminderDialogState extends State<DeliveryReminderDialog> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                const Text('The 48 hours started when you collected your parcel.'),
+                Text(
+                  widget.order.deliveredAt != null
+                      ? 'The 72 hours started when your parcel was delivered.'
+                      : 'The 48 hours started when you collected your parcel.',
+                ),
                 const SizedBox(height: 20),
                 FilledButton(
                   style: FilledButton.styleFrom(
