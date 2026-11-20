@@ -9,13 +9,17 @@ class DiscoverSelectionBar extends StatelessWidget {
     super.key,
   });
 
+  static const String popularTag = 'popular';
+  static const String categoriesTag = 'categories';
+
   final String selectedTag;
   final ValueChanged<String> onSelected;
 
   static const _tabs = [
-    ('Popular', 'popular'),
+    ('Popular', popularTag),
     ('Smaller Charities', 'smaller-charities'),
     ('Local to you', 'local'),
+    ('Categories', categoriesTag),
   ];
 
   static List<(String, String)> get _visibleTabs => _tabs
@@ -36,6 +40,7 @@ class DiscoverSelectionBar extends StatelessWidget {
               .map(
                 (tab) => _TabButton(
                   label: tab.$1,
+                  semanticsLabel: tab.$2 == categoriesTag ? tab.$1 : '${tab.$1} charities',
                   isSelected: selectedTag == tab.$2,
                   onTap: () => onSelected(tab.$2),
                 ),
@@ -50,11 +55,13 @@ class DiscoverSelectionBar extends StatelessWidget {
 class _TabButton extends StatelessWidget {
   const _TabButton({
     required this.label,
+    required this.semanticsLabel,
     required this.isSelected,
     required this.onTap,
   });
 
   final String label;
+  final String semanticsLabel;
   final bool isSelected;
   final VoidCallback onTap;
 
@@ -66,7 +73,8 @@ class _TabButton extends StatelessWidget {
       child: Semantics(
         button: true,
         selected: isSelected,
-        label: '$label charities',
+        excludeSemantics: true,
+        label: semanticsLabel,
         child: Material(
           color: isSelected ? colourScheme.surface : Colors.transparent,
           borderRadius: BorderRadius.circular(8),

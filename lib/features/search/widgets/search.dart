@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cherry_mvp/core/config/config.dart';
 import 'package:cherry_mvp/core/models/category.dart';
 import 'package:cherry_mvp/core/models/product.dart';
@@ -11,10 +13,16 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 
 /// Both shop entry points use the same search route and lifecycle.
-Future<void> openSearch(BuildContext context) async {
+///
+/// With [initialCategory], search opens already scoped to that category and
+/// leaves the keyboard closed so the results are visible straight away.
+Future<void> openSearch(BuildContext context, {Category? initialCategory}) async {
   final model = context.read<HomeViewModel>();
+  if (initialCategory != null) {
+    unawaited(model.selectSearchCategory(initialCategory));
+  }
   await Navigator.of(context).push<void>(
-    MaterialPageRoute(builder: (_) => const SearchPage()),
+    MaterialPageRoute(builder: (_) => SearchPage(autofocus: initialCategory == null)),
   );
   model.clearSearch();
 }
@@ -61,7 +69,9 @@ class Search extends StatelessWidget {
 }
 
 class SearchPage extends StatefulWidget {
-  const SearchPage({super.key});
+  final bool autofocus;
+
+  const SearchPage({this.autofocus = true, super.key});
 
   @override
   State<SearchPage> createState() => _SearchPageState();
@@ -105,7 +115,7 @@ class _SearchPageState extends State<SearchPage> {
                     child: TextField(
                       controller: _controller,
                       focusNode: _focusNode,
-                      autofocus: true,
+                      autofocus: widget.autofocus,
                       maxLength: 100,
                       textInputAction: TextInputAction.search,
                       onChanged: model.updateSearchText,

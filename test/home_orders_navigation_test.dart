@@ -10,12 +10,16 @@ import 'package:cherry_mvp/features/categories/category_view_model.dart';
 import 'package:cherry_mvp/features/charity_page/charity_model.dart';
 import 'package:cherry_mvp/features/charity_page/charity_repository.dart';
 import 'package:cherry_mvp/features/charity_page/charity_viewmodel.dart';
+import 'package:cherry_mvp/features/discover/discover_page.dart';
+import 'package:cherry_mvp/features/discover/discover_repository.dart';
+import 'package:cherry_mvp/features/discover/discover_viewmodel.dart';
 import 'package:cherry_mvp/features/donation/donation_page.dart';
 import 'package:cherry_mvp/features/donation/donation_repository.dart';
 import 'package:cherry_mvp/features/donation/donation_view_model.dart';
 import 'package:cherry_mvp/features/home/home_page.dart';
 import 'package:cherry_mvp/features/home/home_repository.dart';
 import 'package:cherry_mvp/features/home/home_viewmodel.dart';
+import 'package:cherry_mvp/features/home/widgets/discover_button.dart';
 import 'package:cherry_mvp/features/login/login_repository.dart';
 import 'package:cherry_mvp/features/orders/models/order_summary.dart';
 import 'package:cherry_mvp/features/orders/orders_repository.dart';
@@ -107,6 +111,13 @@ class _CharityRepositoryStub implements ICharityRepository {
 
 class _DonationRepositoryStub extends Fake implements IDonationRepository {}
 
+class _ProductRepositoryStub extends ProductRepository {
+  _ProductRepositoryStub() : super(_ApiServiceMock());
+
+  @override
+  Future<Result<List<Product>>> fetchLikedProducts() async => Result.success(const []);
+}
+
 class _NavigationObserver extends NavigatorObserver {
   final List<Route<dynamic>> pushedRoutes = [];
   final List<Route<dynamic>> poppedRoutes = [];
@@ -142,14 +153,18 @@ Future<NavigationProvider> _pumpHomePage(
     MultiProvider(
       providers: [
         Provider<NavigationProvider>.value(value: navigator),
+        Provider<ProductRepository>(create: (_) => _ProductRepositoryStub()),
         ChangeNotifierProvider(
           create: (_) => HomeViewModel(homeRepository: _HomeRepositoryStub()),
         ),
         ChangeNotifierProvider(
-          create: (_) => ProductViewModel(
-            productRepository: ProductRepository(_ApiServiceMock()),
+          create: (context) => ProductViewModel(
+            productRepository: context.read<ProductRepository>(),
             navigator: navigator,
           ),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => DiscoverViewModel(discoverRepository: DiscoverRepository()),
         ),
         ChangeNotifierProvider(
           create: (_) => OrdersViewModel(repository: _OrdersRepositoryStub()),
@@ -207,6 +222,73 @@ Future<void> _openOrders(WidgetTester tester) async {
 }
 
 void main() {
+  testWidgets('footer lists Home, Discover, Give, Profile in that order', (tester) async {
+    await _pumpHomePage(tester);
+
+    final labels = ['Home', 'Discover', 'Give', 'Profile'];
+    final positions = [for (final label in labels) tester.getTopLeft(find.text(label)).dx];
+    expect(positions, orderedEquals([...positions]..sort()));
+  });
+
+  testWidgets('Discover footer tab shows the Discover page and returns to Home', (tester) async {
+    await _pumpHomePage(tester);
+    expect(find.byType(DiscoverPage), findsNothing);
+
+    await tester.tap(find.text('Discover'));
+    await tester.pumpAndSettle();
+
+    expect(tester.widget<BottomNavigationBar>(find.byType(BottomNavigationBar)).currentIndex, 1);
+    expect(find.byType(DiscoverPage), findsOneWidget);
+    expect(find.byType(BackButton), findsNothing);
+    expect(find.text('Popular'), findsOneWidget);
+    expect(find.text('Categories'), findsOneWidget);
+
+    await tester.tap(find.text('Home'));
+    await tester.pumpAndSettle();
+    expect(tester.widget<BottomNavigationBar>(find.byType(BottomNavigationBar)).currentIndex, 0);
+  });
+
+  testWidgets('Explore Charities banner on Home switches to the Discover tab', (tester) async {
+    final navigator = await _pumpHomePage(tester);
+
+    await tester.tap(find.byType(DiscoverButton));
+    await tester.pumpAndSettle();
+
+    expect(tester.widget<BottomNavigationBar>(find.byType(BottomNavigationBar)).currentIndex, 1);
+    expect(find.byType(DiscoverPage), findsOneWidget);
+    expect(navigator.navigatorKey.currentState!.canPop(), isFalse);
+  });
+
+  testWidgets('tapping Discover from Liked Items pops back to HomePage with Discover selected', (tester) async {
+    final navigator = await _pumpHomePage(tester);
+
+    await tester.tap(find.text('Profile'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Liked'));
+    await tester.pumpAndSettle();
+    expect(navigator.navigatorKey.currentState!.canPop(), isTrue);
+
+    await tester.tap(find.text('Discover'));
+    await tester.pumpAndSettle();
+
+    expect(navigator.navigatorKey.currentState!.canPop(), isFalse);
+    expect(tester.widget<BottomNavigationBar>(find.byType(BottomNavigationBar)).currentIndex, 1);
+    expect(find.byType(DiscoverPage), findsOneWidget);
+    expect(find.byType(BackButton), findsNothing);
+  });
+
+  testWidgets('swiping between Home and Discover keeps the footer in step', (tester) async {
+    await _pumpHomePage(tester);
+
+    await tester.drag(find.byType(PageView), const Offset(-500, 0));
+    await tester.pumpAndSettle();
+    expect(tester.widget<BottomNavigationBar>(find.byType(BottomNavigationBar)).currentIndex, 1);
+
+    await tester.drag(find.byType(PageView), const Offset(500, 0));
+    await tester.pumpAndSettle();
+    expect(tester.widget<BottomNavigationBar>(find.byType(BottomNavigationBar)).currentIndex, 0);
+  });
+
   testWidgets('successful Give result selects existing Profile and shows the new listing', (tester) async {
     final repository = _ProfileListingsRepositoryStub();
     final observer = _NavigationObserver();
@@ -224,7 +306,7 @@ void main() {
     navigator.goBack(true);
     await tester.pumpAndSettle();
 
-    expect(tester.widget<BottomNavigationBar>(find.byType(BottomNavigationBar)).currentIndex, 2);
+    expect(tester.widget<BottomNavigationBar>(find.byType(BottomNavigationBar)).currentIndex, 3);
     expect(find.byKey(const ValueKey('new-listing')), findsOneWidget);
     expect(tester.state(find.byType(HomePage)), same(originalHome));
     expect(find.byType(DonationPage), findsNothing);
@@ -318,7 +400,7 @@ void main() {
     expect(find.byType(BottomNavigationBar), findsOneWidget);
     expect(
       tester.widget<BottomNavigationBar>(find.byType(BottomNavigationBar)).currentIndex,
-      2,
+      3,
     );
   });
 

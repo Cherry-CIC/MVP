@@ -14,8 +14,9 @@ import '../auth/auth_view_model.dart';
 
 class ProfilePage extends StatefulWidget {
   final VoidCallback? onOrdersPressed;
+  final ValueChanged<int>? onTabSelected;
 
-  const ProfilePage({super.key, this.onOrdersPressed});
+  const ProfilePage({super.key, this.onOrdersPressed, this.onTabSelected});
 
   @override
   State<ProfilePage> createState() => _ProfilePageState();
@@ -106,9 +107,12 @@ class _ProfilePageState extends State<ProfilePage> {
       navigator.navigateTo(AppRoutes.settingspage);
     }
 
-    void navigateToLikedItems() {
+    Future<void> navigateToLikedItems() async {
       final navigator = Provider.of<NavigationProvider>(context, listen: false);
-      navigator.navigateTo(AppRoutes.likedItems);
+      final selectedTab = await navigator.navigateTo(AppRoutes.likedItems);
+      if (selectedTab is int && mounted) {
+        widget.onTabSelected?.call(selectedTab);
+      }
     }
 
     void navigateToEditProfile() {

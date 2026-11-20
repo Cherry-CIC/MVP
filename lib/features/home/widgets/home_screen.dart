@@ -7,7 +7,10 @@ import 'package:cherry_mvp/features/search/widgets/search.dart';
 import 'package:provider/provider.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  /// Opens the Discover footer tab; falls back to the Discover route when null.
+  final VoidCallback? onOpenDiscover;
+
+  const HomeScreen({this.onOpenDiscover, super.key});
 
   @override
   HomeScreenState createState() => HomeScreenState();
@@ -48,7 +51,7 @@ class HomeScreenState extends State<HomeScreen> {
                 ),
               SliverPadding(
                 padding: EdgeInsets.fromLTRB(16, discoverTopPadding, 16, 16),
-                sliver: const SliverToBoxAdapter(child: DiscoverButton()),
+                sliver: SliverToBoxAdapter(child: DiscoverButton(onTap: widget.onOpenDiscover)),
               ),
               const DashboardPage(),
             ],
