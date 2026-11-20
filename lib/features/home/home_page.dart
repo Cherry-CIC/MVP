@@ -1,3 +1,5 @@
+import 'package:cherry_mvp/features/discover/discover_page.dart';
+import 'package:cherry_mvp/features/search/widgets/search.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cherry_mvp/core/config/feature_flags.dart';
@@ -18,16 +20,11 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   static const int _homePageIndex = 0;
-  static const int _inboxPageIndex = 1;
-  static const int _profilePageIndex = FeatureFlags.showInbox ? 2 : 1;
+  static const int _discoverPageIndex = 1;
+  static const int _inboxPageIndex = 2;
+  static const int _profilePageIndex = FeatureFlags.showInbox ? 3 : 2;
 
-  static const int _homeNavIndex = 0;
-  static const int _inboxNavIndex = 1;
-  static const int _giveNavIndex = FeatureFlags.showInbox ? 2 : 1;
-  static const int _searchNavIndex = _giveNavIndex + 1;
-  static const int _profileNavIndex = _giveNavIndex + (FeatureFlags.showSearchNavigation ? 2 : 1);
-
-  int _selectedIndex = 0;
+  int _selectedIndex = CherryNavIndices.home;
   bool _showOrders = false;
   final PageController _pageController = PageController();
 
@@ -44,39 +41,45 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _onItemTapped(int index) async {
-    if (index == _homeNavIndex) {
+    if (index == CherryNavIndices.home) {
       _showProfileRoot();
       _pageController.jumpToPage(_homePageIndex);
       return;
     }
 
-    if (FeatureFlags.showInbox && index == _inboxNavIndex) {
+    if (index == CherryNavIndices.discover) {
+      _showProfileRoot();
+      _pageController.jumpToPage(_discoverPageIndex);
+      return;
+    }
+
+    if (FeatureFlags.showInbox && index == CherryNavIndices.inbox) {
       _showProfileRoot();
       _pageController.jumpToPage(_inboxPageIndex);
       return;
     }
 
-    if (index == _giveNavIndex) {
+    if (index == CherryNavIndices.give) {
       final posted = await showDialog<bool>(
         context: context,
         builder: (context) => Dialog.fullscreen(child: DonationPage()),
       );
       if (posted == true && mounted) {
-        _onItemTapped(_profileNavIndex);
+        _onItemTapped(CherryNavIndices.profile);
       }
       return;
     }
 
-    if (FeatureFlags.showSearchNavigation && index == _searchNavIndex) {
-      context.read<SearchController>().openView();
+    if (FeatureFlags.showSearchNavigation && index == CherryNavIndices.search) {
+      openSearch(context);
       return;
     }
 
-    if (index == _profileNavIndex) {
+    if (index == CherryNavIndices.profile) {
       if (_showOrders) {
         _showProfileRoot();
       }
-      if (_selectedIndex == _profileNavIndex) {
+      if (_selectedIndex == CherryNavIndices.profile) {
         context.read<ProfileListingsViewModel>().refreshListings();
       }
       _pageController.jumpToPage(_profilePageIndex);
@@ -84,12 +87,14 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _onPageChanged(int index) {
-    var nextSelectedIndex = _homeNavIndex;
-    if (index == _profilePageIndex) {
-      nextSelectedIndex = _profileNavIndex;
+    var nextSelectedIndex = CherryNavIndices.home;
+    if (index == _discoverPageIndex) {
+      nextSelectedIndex = CherryNavIndices.discover;
+    } else if (index == _profilePageIndex) {
+      nextSelectedIndex = CherryNavIndices.profile;
       context.read<ProfileListingsViewModel>().refreshListings();
     } else if (FeatureFlags.showInbox && index == _inboxPageIndex) {
-      nextSelectedIndex = _inboxNavIndex;
+      nextSelectedIndex = CherryNavIndices.inbox;
     }
 
     setState(() {
@@ -120,7 +125,8 @@ class _HomePageState extends State<HomePage> {
           controller: _pageController,
           onPageChanged: _onPageChanged,
           children: [
-            const HomeScreen(),
+            HomeScreen(onOpenDiscover: () => _onItemTapped(CherryNavIndices.discover)),
+            const DiscoverPage(showBackButton: false),
             if (FeatureFlags.showInbox) const MessagePage(),
             Stack(
               fit: StackFit.expand,
@@ -129,7 +135,10 @@ class _HomePageState extends State<HomePage> {
                   offstage: _showOrders,
                   child: TickerMode(
                     enabled: !_showOrders,
-                    child: ProfilePage(onOrdersPressed: _openOrders),
+                    child: ProfilePage(
+                      onOrdersPressed: _openOrders,
+                      onTabSelected: _onItemTapped,
+                    ),
                   ),
                 ),
                 if (_showOrders) MyOrdersPage(onBack: _showProfileRoot),

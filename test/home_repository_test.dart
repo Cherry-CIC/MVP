@@ -103,6 +103,7 @@ void main() {
         limit: 20,
         cursor: 'cursor-1',
         search: ' jumper ',
+        categoryId: ' women ',
       );
 
       expect(result.isSuccess, isTrue);
@@ -115,6 +116,7 @@ void main() {
         'limit': 20,
         'cursor': 'cursor-1',
         'search': 'jumper',
+        'categoryId': 'women',
       });
     });
 
@@ -163,7 +165,7 @@ void main() {
       });
       final repository = HomeRepository(apiService);
 
-      await repository.fetchProducts(limit: 10, cursor: '', search: '   ');
+      await repository.fetchProducts(limit: 10, cursor: '', search: '   ', categoryId: '   ');
 
       expect(apiService.lastQueryParameters, {'limit': 10});
     });

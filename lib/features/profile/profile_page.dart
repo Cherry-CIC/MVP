@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:cherry_mvp/core/config/config.dart';
 import 'package:cherry_mvp/core/models/user_section.dart';
 import 'package:cherry_mvp/core/router/router.dart';
+import 'package:cherry_mvp/features/home/widgets/bottom_nav_bar.dart';
 import 'package:cherry_mvp/features/profile/profile_listings_view_model.dart';
 import 'package:cherry_mvp/features/profile/widgets/donation_impact_tracker.dart';
 import 'package:cherry_mvp/features/profile/widgets/profile_listings_section.dart';
@@ -14,8 +15,9 @@ import '../auth/auth_view_model.dart';
 
 class ProfilePage extends StatefulWidget {
   final VoidCallback? onOrdersPressed;
+  final ValueChanged<int>? onTabSelected;
 
-  const ProfilePage({super.key, this.onOrdersPressed});
+  const ProfilePage({super.key, this.onOrdersPressed, this.onTabSelected});
 
   @override
   State<ProfilePage> createState() => _ProfilePageState();
@@ -106,9 +108,16 @@ class _ProfilePageState extends State<ProfilePage> {
       navigator.navigateTo(AppRoutes.settingspage);
     }
 
-    void navigateToLikedItems() {
+    Future<void> navigateToLikedItems() async {
       final navigator = Provider.of<NavigationProvider>(context, listen: false);
-      navigator.navigateTo(AppRoutes.likedItems);
+      final selectedTab = await navigator.navigateTo(AppRoutes.likedItems);
+      if (selectedTab is int && mounted) {
+        if (widget.onTabSelected != null) {
+          widget.onTabSelected!(selectedTab);
+        } else if (selectedTab == CherryNavIndices.discover) {
+          navigator.navigateTo(AppRoutes.discover);
+        }
+      }
     }
 
     void navigateToEditProfile() {
