@@ -35,9 +35,7 @@ class CherryBottomNavBar extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final selectedColor = this.selectedColor ?? Theme.of(context).colorScheme.primary;
     final unselectedColor = this.unselectedColor ?? Theme.of(context).colorScheme.onSurfaceVariant;
-    final gradientColors = isDark
-        ? const [Color(0xFF2E1A22), Color(0xFF18181B)]
-        : const [Color(0xFFFFC0D4), Color(0xFFFFF2F6)];
+    final backgroundColor = isDark ? const Color(0xFF18181B) : const Color(0xFFFFF2F6);
 
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -45,10 +43,7 @@ class CherryBottomNavBar extends StatelessWidget {
           bottomLeft: Radius.circular(40),
           bottomRight: Radius.circular(20),
         ),
-        gradient: RadialGradient(
-          transform: const GradientRotation(-12.58),
-          colors: gradientColors,
-        ),
+        color: backgroundColor,
       ),
       child: BottomNavigationBar(
         currentIndex: selectedIndex,
