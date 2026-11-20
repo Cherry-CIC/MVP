@@ -13,6 +13,7 @@ import 'package:provider/provider.dart';
 import 'package:provider/single_child_widget.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cherry_mvp/core/router/router.dart';
+import 'package:cherry_mvp/core/services/app_info_provider.dart';
 import 'package:cherry_mvp/core/services/services.dart';
 import 'package:cherry_mvp/core/theme/theme_notifier.dart';
 import 'package:cherry_mvp/features/auth/auth_view_model.dart';
@@ -395,6 +396,9 @@ List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
           listen: false,
         ).clearUserState,
       ),
+    ),
+    ChangeNotifierProvider<AppInfoProvider>(
+      create: (_) => AppInfoProvider(),
     ),
   ];
 }

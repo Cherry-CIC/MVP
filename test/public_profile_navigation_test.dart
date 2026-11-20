@@ -15,11 +15,15 @@ import 'package:cherry_mvp/features/profile/widgets/seller_listing_card.dart';
 import 'package:cherry_mvp/features/profile/public_user_profile.dart';
 import 'package:cherry_mvp/features/profile/public_user_profile_repository.dart';
 import 'package:cherry_mvp/features/shared_widgets/bottom_cta.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mockito/mockito.dart';
 import 'package:provider/provider.dart';
 
 import 'support/unexpected_api_service.dart';
+
+class _MockFirebaseAuth extends Mock implements FirebaseAuth {}
 
 class _RecordingNavigationProvider extends NavigationProvider {
   final calls = <({String route, Object? arguments})>[];
@@ -119,6 +123,7 @@ Future<({NavigationProvider navigator, ProductViewModel products, CheckoutViewMo
       providers: [
         Provider<NavigationProvider>.value(value: navigator),
         Provider<IPublicUserProfileRepository>.value(value: repository),
+        Provider<FirebaseAuth>.value(value: _MockFirebaseAuth()),
         ChangeNotifierProvider<ProductViewModel>.value(value: products),
         ChangeNotifierProvider<CheckoutViewModel>.value(value: checkout),
       ],

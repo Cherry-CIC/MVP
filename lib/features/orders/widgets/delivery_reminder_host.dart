@@ -33,6 +33,10 @@ class DeliveryReminderHost extends StatefulWidget {
   final Future<bool> Function(Uri)? openLink;
   final Widget Function(BuildContext context, Widget? timer) builder;
 
+  static void retryPending(BuildContext context) {
+    context.findAncestorStateOfType<_DeliveryReminderHostState>()?._retryPending();
+  }
+
   @override
   State<DeliveryReminderHost> createState() => _DeliveryReminderHostState();
 }
@@ -125,15 +129,25 @@ class _DeliveryReminderHostState extends State<DeliveryReminderHost> with Widget
     WidgetsBinding.instance.ensureVisualUpdate();
   }
 
+  void _retryPending() {
+    if (_pending) _scheduleCheck();
+  }
+
   Future<void> _check(int generation) async {
     if (_fetching) {
       _pending = true;
       return;
     }
     _fetching = true;
+    var retryImmediately = true;
     try {
       final result = await context.read<IOrdersRepository>().fetchOrders(deliveryRemindersOnly: true);
-      if (!mounted || generation != _generation || !result.isSuccess) return;
+      if (!mounted || generation != _generation) return;
+      if (!result.isSuccess) {
+        _pending = true;
+        retryImmediately = false;
+        return;
+      }
       final prefs = await SharedPreferences.getInstance();
       if (!mounted || generation != _generation) return;
       if (ModalRoute.of(context)?.isCurrent != true && _dialog?.isCurrent != true) {
@@ -195,7 +209,7 @@ class _DeliveryReminderHostState extends State<DeliveryReminderHost> with Widget
       }
     } finally {
       _fetching = false;
-      if (mounted && _pending) _scheduleCheck();
+      if (mounted && _pending && retryImmediately) _scheduleCheck();
     }
   }
 

@@ -4,6 +4,7 @@ import 'package:cherry_mvp/features/products/widgets/product_quality_label.dart'
 import 'package:cherry_mvp/core/config/app_images.dart';
 import 'package:cherry_mvp/core/config/feature_flags.dart';
 import 'package:cherry_mvp/core/models/model.dart';
+import 'package:cherry_mvp/core/utils/security_fee.dart';
 import 'package:cherry_mvp/features/products/product_viewmodel.dart';
 
 class ProductInformation extends StatelessWidget {
@@ -54,7 +55,7 @@ class ProductInformation extends StatelessWidget {
                       runSpacing: 4,
                       children: [
                         Text(
-                          '£${product.price.toStringAsFixed(2)}',
+                          '£${product.priceIncludingSecurityFee.toStringAsFixed(2)}',
                           style: priceStyle.copyWith(color: colours.primary),
                         ),
                         Image.asset(AppImages.shieldTick, width: 20, height: 20),

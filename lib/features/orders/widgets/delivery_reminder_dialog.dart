@@ -68,7 +68,9 @@ class _DeliveryReminderDialogState extends State<DeliveryReminderDialog> {
                 Semantics(
                   header: true,
                   child: Text(
-                    'Your item has been collected',
+                    widget.order.usesDeliveryDeadline
+                        ? 'Your item has been delivered'
+                        : 'Your item has been collected',
                     style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                   ),
                 ),
@@ -86,7 +88,11 @@ class _DeliveryReminderDialogState extends State<DeliveryReminderDialog> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                const Text('The 48 hours started when you collected your parcel.'),
+                Text(
+                  widget.order.usesDeliveryDeadline
+                      ? 'The 72 hours started when your parcel was delivered.'
+                      : 'The 48 hours started when you collected your parcel.',
+                ),
                 const SizedBox(height: 20),
                 FilledButton(
                   style: FilledButton.styleFrom(

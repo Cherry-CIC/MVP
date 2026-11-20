@@ -43,6 +43,8 @@ This guide details the exact responses required in the Google Play Console **Dat
 ## Verification & Compliance Checklist
 - [x] `android.permission.CAMERA` declared in `AndroidManifest.xml` with `android.hardware.camera` feature flag set to `required="false"`.
 - [x] No `android.permission.RECORD_AUDIO` declaration because the current MVP has no audio or video capture flow.
+- [x] Android system photo picker (`PickVisualMedia` / `PickMultipleVisualMedia`) enabled via `configureSystemPhotoPicker()` (`useAndroidPhotoPicker = true`).
+- [x] Broad photo/video/storage permissions (`READ_MEDIA_IMAGES`, `READ_MEDIA_VIDEO`, `READ_MEDIA_VISUAL_USER_SELECTED`, `READ_EXTERNAL_STORAGE`, `WRITE_EXTERNAL_STORAGE`) explicitly removed in `AndroidManifest.xml` via `tools:node="remove"`.
 - [x] In-app pre-permission dialog explains camera access before launching the system camera picker.
 - [x] User-facing “Open Settings” recovery action included when permission is denied.
 - [x] Camera usage description updated in iOS `Info.plist`; no microphone description is declared.

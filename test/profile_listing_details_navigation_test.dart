@@ -192,7 +192,7 @@ void _expectOwnerDetails(WidgetTester tester, Product product) {
   expect(find.text(product.size), findsOneWidget);
   expect(find.text(product.quality), findsOneWidget);
   expect(find.text('£18.00'), findsOneWidget);
-  expect(find.text('£20.00'), findsOneWidget);
+  expect(find.text('£22.00'), findsOneWidget); // price £20.00 + PSF £2.00
   expect(find.text('7'), findsOneWidget);
   expect(find.byType(BottomCta), findsNothing);
   expect(find.text(AppStrings.productPageBuyNow), findsNothing);

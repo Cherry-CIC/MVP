@@ -93,7 +93,8 @@ class SafeHttpLogInterceptor extends Interceptor {
     return switch (type) {
       DioExceptionType.connectionTimeout ||
       DioExceptionType.sendTimeout ||
-      DioExceptionType.receiveTimeout => SafeHttpErrorCategory.timeout,
+      DioExceptionType.receiveTimeout ||
+      DioExceptionType.transformTimeout => SafeHttpErrorCategory.timeout,
       DioExceptionType.badCertificate => SafeHttpErrorCategory.badCertificate,
       DioExceptionType.cancel => SafeHttpErrorCategory.cancelled,
       DioExceptionType.connectionError => SafeHttpErrorCategory.connection,

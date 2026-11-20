@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cherry_mvp/core/config/firestore_constants.dart';
 import 'package:cherry_mvp/core/services/error_string.dart';
+import 'package:cherry_mvp/core/services/username_service.dart';
 import 'package:cherry_mvp/core/utils/result.dart';
 
 class FirestoreService {
@@ -118,10 +119,14 @@ class FirestoreService {
 
       // Store user data to shared preferences
       await prefs.setString(FirestoreConstants.id, uid);
+      final username = readString(FirestoreConstants.username);
       await prefs.setString(
         FirestoreConstants.username,
-        readString(FirestoreConstants.username),
+        username,
       );
+      if (username.isNotEmpty) {
+        await UsernameService.cacheUsernameForUid(prefs, uid, username);
+      }
       await prefs.setString(
         FirestoreConstants.firstname,
         readString(FirestoreConstants.firstname),

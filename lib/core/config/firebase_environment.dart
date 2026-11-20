@@ -2,10 +2,35 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 
 class FirebaseEnvironment {
-  static const String name = String.fromEnvironment(
-    'APP_ENV',
-    defaultValue: 'dev',
+  static const String _definedAppEnv = String.fromEnvironment('APP_ENV');
+  static const String _flutterAppFlavor = String.fromEnvironment(
+    'FLUTTER_APP_FLAVOR',
   );
+
+  static String get name => resolveEnvironmentName(
+    definedAppEnv: _definedAppEnv,
+    flutterAppFlavor: _flutterAppFlavor,
+  );
+
+  static String resolveEnvironmentName({
+    required String definedAppEnv,
+    required String flutterAppFlavor,
+  }) {
+    final normalizedAppEnv = definedAppEnv.trim().toLowerCase();
+    if (normalizedAppEnv.isNotEmpty) {
+      return normalizedAppEnv;
+    }
+
+    final normalizedFlavor = flutterAppFlavor.trim().toLowerCase();
+    if (normalizedFlavor == 'prod' || normalizedFlavor.endsWith('-prod')) {
+      return 'prod';
+    }
+    if (normalizedFlavor == 'dev' || normalizedFlavor.endsWith('-dev')) {
+      return 'dev';
+    }
+
+    return 'dev';
+  }
 
   static bool get isProduction => name == 'prod';
 

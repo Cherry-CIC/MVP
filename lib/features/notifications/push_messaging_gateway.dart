@@ -46,7 +46,7 @@ class FirebasePushMessagingGateway implements PushMessagingGateway {
         : await _messaging.getNotificationSettings();
     return switch (settings.authorizationStatus) {
       AuthorizationStatus.authorized || AuthorizationStatus.provisional => PushPermission.allowed,
-      AuthorizationStatus.denied => PushPermission.denied,
+      AuthorizationStatus.denied || AuthorizationStatus.deniedPermanently => PushPermission.denied,
       AuthorizationStatus.notDetermined => PushPermission.notDetermined,
     };
   }

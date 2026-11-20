@@ -15,6 +15,8 @@ class OrderSummary {
   final String deliveryLabel;
   final DateTime? confirmationDeadline;
   final DateTime? collectedAt;
+  final DateTime? deliveredAt;
+  final bool usesDeliveryDeadline;
   final DateTime? readyForCollectionAt;
   final DateTime? collectionDeadline;
   final Uri? collectionMapUri;
@@ -30,7 +32,7 @@ class OrderSummary {
   final String condition;
 
   bool canShowDeliveryReminder(DateTime now) =>
-      collectedAt != null &&
+      (collectedAt != null || deliveredAt != null) &&
       (deliveryState == 'awaiting_confirmation' || deliveryState == 'collected') &&
       confirmationDeadline?.isAfter(now) == true;
 
@@ -48,6 +50,8 @@ class OrderSummary {
     required this.deliveryLabel,
     this.confirmationDeadline,
     this.collectedAt,
+    this.deliveredAt,
+    this.usesDeliveryDeadline = false,
     this.readyForCollectionAt,
     this.collectionDeadline,
     this.collectionMapUri,
@@ -69,6 +73,19 @@ class OrderSummary {
     final productId = _readString(json['productId']);
     final productName = _readString(json['productName']);
     final imageUrl = _readString(json['imageUrl']);
+    final shipment = json['shipment'] is Map
+        ? Map<String, dynamic>.from(json['shipment'] as Map)
+        : null;
+    final deliveredAt =
+        DateTime.tryParse(_readString(shipment?['deliveredAt'])) ??
+        DateTime.tryParse(_readString(json['deliveredAt']));
+    final collectedAt = DateTime.tryParse(_readString(json['collectedAt']));
+    final serverDeadline = DateTime.tryParse(_readString(json['confirmationDeadline']));
+    final hasCollectionDeadline = collectedAt != null && serverDeadline != null;
+    final confirmationDeadline = hasCollectionDeadline
+        ? serverDeadline
+        : deliveredAt?.add(const Duration(hours: 72)) ?? serverDeadline;
+    final usesDeliveryDeadline = !hasCollectionDeadline && deliveredAt != null;
 
     return OrderSummary(
       id: id,
@@ -85,8 +102,10 @@ class OrderSummary {
         json['status'],
       ]),
       deliveryLabel: _readString(json['deliveryLabel']),
-      confirmationDeadline: DateTime.tryParse(_readString(json['confirmationDeadline'])),
-      collectedAt: DateTime.tryParse(_readString(json['collectedAt'])),
+      confirmationDeadline: confirmationDeadline,
+      collectedAt: collectedAt,
+      deliveredAt: deliveredAt,
+      usesDeliveryDeadline: usesDeliveryDeadline,
       readyForCollectionAt: _readInstant(json['readyForCollectionAt']),
       collectionDeadline: _readInstant(json['collectionDeadline']),
       collectionMapUri: _mapUri(json['collectionPoint']),
@@ -120,6 +139,8 @@ class OrderSummary {
       currency: currency,
       confirmationDeadline: confirmationDeadline,
       collectedAt: collectedAt,
+      deliveredAt: deliveredAt,
+      usesDeliveryDeadline: usesDeliveryDeadline,
       readyForCollectionAt: readyForCollectionAt,
       collectionDeadline: collectionDeadline,
       collectionMapUri: collectionMapUri,

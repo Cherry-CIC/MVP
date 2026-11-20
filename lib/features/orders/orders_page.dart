@@ -293,7 +293,7 @@ class _DisputeDialogState extends State<_DisputeDialog> {
           mainAxisSize: MainAxisSize.min,
           children: [
             DropdownButtonFormField<String>(
-              value: _reason,
+              initialValue: _reason,
               items: const [
                 DropdownMenuItem(value: 'wrong_item', child: Text('Wrong item')),
                 DropdownMenuItem(value: 'item_not_as_described', child: Text('Item not as described')),

@@ -56,7 +56,8 @@ class _HomeRepositoryStub implements IHomeRepository {
 
 class _OrdersRepositoryStub extends Fake implements IOrdersRepository {
   final List<OrderSummary> orders;
-  _OrdersRepositoryStub([this.orders = const []]);
+  int failReminderFetches;
+  _OrdersRepositoryStub([this.orders = const [], this.failReminderFetches = 0]);
 
   @override
   Future<Result<dynamic>> confirmOrderReceived(String orderId) async {
@@ -65,6 +66,10 @@ class _OrdersRepositoryStub extends Fake implements IOrdersRepository {
 
   @override
   Future<Result<List<OrderSummary>>> fetchOrders({bool deliveryRemindersOnly = false}) async {
+    if (deliveryRemindersOnly && failReminderFetches > 0) {
+      failReminderFetches--;
+      return Result.failure('Temporary error');
+    }
     return Result.success(orders);
   }
 
@@ -272,6 +277,29 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('left to collect'), findsOneWidget);
     expect(tester.widget<DeliveryTimerBubble>(timer).deadline, order.collectionDeadline);
+  });
+
+  testWidgets('retries a failed delivery reminder fetch when returning to Home', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    final order = OrderSummary.tryFromOrderJson({
+      'id': 'retry-1',
+      'productName': 'Rain jacket',
+      'deliveryState': 'awaiting_confirmation',
+      'shipment': {
+        'id': 's-retry',
+        'status': 'delivered',
+        'deliveredAt': DateTime.now().toUtc().subtract(const Duration(hours: 1)).toIso8601String(),
+      },
+    })!;
+    await _pumpHomePage(tester, ordersRepository: _OrdersRepositoryStub([order], 1));
+    expect(find.text('Your item has been delivered'), findsNothing);
+
+    await tester.tap(find.text('Profile'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Home'));
+    await tester.pumpAndSettle();
+    expect(find.text('Your item has been delivered'), findsOneWidget);
   });
 
   testWidgets('successful Give result selects existing Profile and shows the new listing', (tester) async {

@@ -100,6 +100,12 @@ void main() {
     }.entries) {
       await _enterText(tester, entry.key, entry.value);
     }
+    final checkbox = find.byType(Checkbox);
+    await tester.ensureVisible(checkbox);
+    await tester.pumpAndSettle();
+    await tester.tap(checkbox);
+    await tester.pump();
+
     final form = tester.state<FormState>(find.byType(Form));
     expect(form.validate(), isFalse);
     await tester.pump();
