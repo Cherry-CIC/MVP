@@ -1,14 +1,18 @@
 import 'package:cherry_mvp/core/config/app_images.dart';
 import 'package:cherry_mvp/core/config/app_strings.dart';
+import 'package:cherry_mvp/core/models/category.dart';
 import 'package:cherry_mvp/core/models/product.dart';
 import 'package:cherry_mvp/core/router/nav_provider.dart';
 import 'package:cherry_mvp/core/utils/result.dart';
+import 'package:cherry_mvp/features/categories/category_repository.dart';
+import 'package:cherry_mvp/features/categories/category_view_model.dart';
 import 'package:cherry_mvp/features/home/home_repository.dart';
 import 'package:cherry_mvp/features/home/home_viewmodel.dart';
 import 'package:cherry_mvp/features/home/widgets/discover_button.dart';
 import 'package:cherry_mvp/features/home/widgets/home_screen.dart';
 import 'package:cherry_mvp/features/products/product_repository.dart';
 import 'package:cherry_mvp/features/products/product_viewmodel.dart';
+import 'package:cherry_mvp/features/search/widgets/search.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
@@ -16,9 +20,11 @@ import 'package:provider/provider.dart';
 import 'support/unexpected_api_service.dart';
 
 class _HomeRepositoryStub implements IHomeRepository {
-  _HomeRepositoryStub(this.result);
+  _HomeRepositoryStub(this.result, {this.onFetch});
 
   final Result<ProductPage> result;
+  final Result<ProductPage> Function(String? categoryId)? onFetch;
+  final requestedCategoryIds = <String?>[];
 
   @override
   Future<Result<ProductPage>> fetchProducts({
@@ -27,7 +33,19 @@ class _HomeRepositoryStub implements IHomeRepository {
     String? search,
     String? categoryId,
   }) async {
-    return result;
+    requestedCategoryIds.add(categoryId);
+    return onFetch?.call(categoryId) ?? result;
+  }
+}
+
+class _CategoryRepositoryStub implements ICategoryRepository {
+  _CategoryRepositoryStub(this.categories);
+
+  final List<Category> categories;
+
+  @override
+  Future<Result<List<Category>>> fetchCategories() async {
+    return Result.success(categories);
   }
 }
 
@@ -42,12 +60,15 @@ class _ProductRepositoryStub extends ProductRepository {
   }
 }
 
-Future<ProductViewModel> _pumpHomeScreen(
+Future<({ProductViewModel productViewModel, _HomeRepositoryStub homeRepository})> _pumpHomeScreen(
   WidgetTester tester, {
   List<Product> products = const [],
   List<Product> likedProducts = const [],
+  List<Category> categories = const [],
   Result<ProductPage>? fetchResult,
+  Result<ProductPage> Function(String? categoryId)? onFetch,
   EdgeInsets mediaPadding = EdgeInsets.zero,
+  VoidCallback? onOpenDiscover,
 }) async {
   final navigator = NavigationProvider();
   final result =
@@ -60,6 +81,7 @@ Future<ProductViewModel> _pumpHomeScreen(
           hasMore: false,
         ),
       );
+  final homeRepository = _HomeRepositoryStub(result, onFetch: onFetch);
   final productViewModel = ProductViewModel(
     productRepository: _ProductRepositoryStub(likedProducts),
     navigator: navigator,
@@ -70,7 +92,13 @@ Future<ProductViewModel> _pumpHomeScreen(
       providers: [
         Provider<NavigationProvider>.value(value: navigator),
         ChangeNotifierProvider<HomeViewModel>(
-          create: (_) => HomeViewModel(homeRepository: _HomeRepositoryStub(result)),
+          create: (_) => HomeViewModel(homeRepository: homeRepository),
+        ),
+        ChangeNotifierProvider<CategoryViewModel>(
+          create: (_) => CategoryViewModel(
+            categoryRepository: _CategoryRepositoryStub(categories),
+            navigator: navigator,
+          ),
         ),
         ChangeNotifierProvider<ProductViewModel>.value(
           value: productViewModel,
@@ -81,14 +109,22 @@ Future<ProductViewModel> _pumpHomeScreen(
           data: MediaQueryData.fromView(tester.view).copyWith(
             padding: mediaPadding,
           ),
-          child: const HomeScreen(),
+          child: HomeScreen(onOpenDiscover: onOpenDiscover),
         ),
       ),
     ),
   );
 
-  return productViewModel;
+  return (productViewModel: productViewModel, homeRepository: homeRepository);
 }
+
+Category _category(String id, String name) => Category(
+  id: id,
+  name: name,
+  imageUrl: '',
+  createdAt: DateTime(2026),
+  updatedAt: DateTime(2026),
+);
 
 Product _product(int index) {
   return Product(
@@ -108,9 +144,7 @@ Product _product(int index) {
 }
 
 void main() {
-  testWidgets('HomeScreen shows the global search bar', (
-    tester,
-  ) async {
+  testWidgets('HomeScreen shows the slimmer global search bar', (tester) async {
     await _pumpHomeScreen(tester);
 
     expect(find.text('Search items'), findsOneWidget);
@@ -118,22 +152,105 @@ void main() {
   });
 
   testWidgets(
-    'HomeScreen keeps the discover tile below the top safe area for the MVP',
+    'HomeScreen keeps the search bar and discover tile cleanly below the top safe area',
     (tester) async {
       await _pumpHomeScreen(
         tester,
         mediaPadding: const EdgeInsets.only(top: 32),
       );
 
+      final searchTop = tester.getTopLeft(find.byType(Search)).dy;
+      final searchBottom = tester.getBottomLeft(find.byType(Search)).dy;
       final discoverTop = tester.getTopLeft(find.byType(DiscoverButton)).dy;
 
-      expect(discoverTop, 108);
+      expect(searchTop, 36);
+      expect(discoverTop, greaterThan(searchBottom));
     },
   );
 
-  testWidgets('HomeScreen hides charity advert placeholders for the MVP', (
+  testWidgets('HomeScreen shows category pills below search without Charities and filters Home items', (tester) async {
+    final women = _category('women', 'Women');
+    final men = _category('men', 'Men');
+    final allProduct = _product(1);
+    final womenProduct = _product(2);
+
+    final pumped = await _pumpHomeScreen(
+      tester,
+      categories: [women, men],
+      onFetch: (categoryId) {
+        if (categoryId == 'women') {
+          return Result.success(
+            ProductPage(products: [womenProduct], limit: 20, nextCursor: null, hasMore: false),
+          );
+        }
+        if (categoryId == 'men') {
+          return Result.success(
+            const ProductPage(products: [], limit: 20, nextCursor: null, hasMore: false),
+          );
+        }
+        return Result.success(
+          ProductPage(products: [allProduct], limit: 20, nextCursor: null, hasMore: false),
+        );
+      },
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('All'), findsOneWidget);
+    expect(find.text('Women'), findsOneWidget);
+    expect(find.text('Men'), findsOneWidget);
+    expect(find.text('Charities'), findsNothing);
+    expect(find.text('MVP item 1'), findsOneWidget);
+
+    await tester.tap(find.text('Women'));
+    await tester.pumpAndSettle();
+
+    expect(pumped.homeRepository.requestedCategoryIds.last, 'women');
+    expect(find.text('MVP item 2'), findsOneWidget);
+    expect(find.text('MVP item 1'), findsNothing);
+
+    await tester.tap(find.text('Men'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('No items in Men yet'), findsOneWidget);
+    await tester.tap(find.text('Show all items'));
+    await tester.pumpAndSettle();
+
+    expect(pumped.homeRepository.requestedCategoryIds.last, isNull);
+    expect(find.text('MVP item 1'), findsOneWidget);
+  });
+
+  testWidgets('HomeScreen hides search bar and category pills when scrolling down and reveals them on scroll up', (
     tester,
   ) async {
+    tester.view.physicalSize = const Size(430, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await _pumpHomeScreen(
+      tester,
+      categories: [_category('women', 'Women'), _category('men', 'Men')],
+      products: List.generate(12, (index) => _product(index + 1)),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byType(Search), findsOneWidget);
+    expect(find.text('Women'), findsOneWidget);
+
+    await tester.drag(find.byType(CustomScrollView), const Offset(0, -600));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(Search), findsNothing);
+    expect(find.text('Women'), findsNothing);
+
+    await tester.drag(find.byType(CustomScrollView), const Offset(0, 250));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(Search), findsOneWidget);
+    expect(find.text('Women'), findsOneWidget);
+  });
+
+  testWidgets('HomeScreen hides charity advert placeholders for the MVP', (tester) async {
     tester.view.physicalSize = const Size(1200, 4000);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
@@ -150,9 +267,7 @@ void main() {
     expect(find.text(AppStrings.adText), findsNothing);
   });
 
-  testWidgets('HomeScreen shows product load errors on fetch failure', (
-    tester,
-  ) async {
+  testWidgets('HomeScreen shows product load errors on fetch failure', (tester) async {
     await _pumpHomeScreen(
       tester,
       fetchResult: Result.failure('technical failure'),
@@ -164,22 +279,20 @@ void main() {
     expect(find.text(AppStrings.noProductsAvailable), findsNothing);
   });
 
-  testWidgets('HomeScreen restores liked hearts from the API', (
-    tester,
-  ) async {
+  testWidgets('HomeScreen restores liked hearts from the API', (tester) async {
     tester.view.physicalSize = const Size(1200, 2400);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
 
     final product = _product(1);
-    final productViewModel = await _pumpHomeScreen(
+    final pumped = await _pumpHomeScreen(
       tester,
       products: [product],
       likedProducts: [product],
     );
     await tester.pumpAndSettle();
 
-    expect(productViewModel.isProductLiked(product.id), isTrue);
+    expect(pumped.productViewModel.isProductLiked(product.id), isTrue);
   });
 }

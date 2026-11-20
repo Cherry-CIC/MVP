@@ -172,6 +172,46 @@ void main() {
     await model.removeRecentSearch('red coat');
     expect(model.recentSearches, isEmpty);
   });
+
+  test('home category filter scopes home feed and pagination independently of search', () async {
+    repository.responses.addAll([
+      Future.value(_page(['women-1'], nextCursor: 'c1')),
+      Future.value(_page(['women-2'])),
+      Future.value(_page(['all-1'])),
+    ]);
+
+    await model.selectHomeCategory(_women);
+    expect(model.homeCategory, _women);
+    expect(model.searchCategory, isNull);
+    expect(repository.requests.last, (search: null, categoryId: 'women', cursor: null));
+    expect(model.products.map((p) => p.id), ['women-1']);
+
+    await model.loadMoreProducts();
+    expect(repository.requests.last, (search: null, categoryId: 'women', cursor: 'c1'));
+    expect(model.products.map((p) => p.id), ['women-1', 'women-2']);
+
+    await model.selectHomeCategory(null);
+    expect(model.homeCategory, isNull);
+    expect(repository.requests.last, (search: null, categoryId: null, cursor: null));
+    expect(model.products.map((p) => p.id), ['all-1']);
+  });
+
+  test('late home category response cannot overwrite a newer home category selection', () async {
+    final old = Completer<Result<ProductPage>>();
+    repository.responses.addAll([
+      old.future,
+      Future.value(_page(['men-item'])),
+    ]);
+
+    final previous = model.selectHomeCategory(_women);
+    await model.selectHomeCategory(_men);
+    old.complete(_page(['women-item'], nextCursor: 'stale'));
+    await previous;
+
+    expect(model.homeCategory, _men);
+    expect(model.products.single.id, 'men-item');
+    expect(model.hasMore, isFalse);
+  });
 }
 
 Category _category(String id, String name) => Category(

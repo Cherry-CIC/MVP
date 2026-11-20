@@ -41,6 +41,7 @@ class HomeViewModel extends ChangeNotifier {
   bool _isLoadingMore = false;
   bool _isLoadingMoreSearch = false;
   bool _isRefreshing = false;
+  Category? _homeCategory;
   String _searchText = '';
   String _searchQuery = '';
   Category? _searchCategory;
@@ -63,6 +64,7 @@ class HomeViewModel extends ChangeNotifier {
   bool get isLoadingMore => _isLoadingMore;
   bool get isLoadingMoreSearch => _isLoadingMoreSearch;
   bool get isRefreshing => _isRefreshing;
+  Category? get homeCategory => _homeCategory;
   String get searchText => _searchText;
   String get searchQuery => _searchQuery;
   Status get searchStatus => _searchStatus;
@@ -72,6 +74,12 @@ class HomeViewModel extends ChangeNotifier {
   bool get isSearchLoading => _searchStatus.type == StatusType.loading;
   bool get isSearchEmpty =>
       hasActiveSearch && _searchStatus.type == StatusType.success && _searchProducts.isEmpty && !_searchHasMore;
+
+  Future<void> selectHomeCategory(Category? category) async {
+    if (_disposed || category?.id == _homeCategory?.id) return;
+    _homeCategory = category;
+    await _fetchHomeFirstPage(clearProducts: true);
+  }
 
   void loadRecentSearches() {
     if (_disposed) return;
@@ -238,6 +246,7 @@ class HomeViewModel extends ChangeNotifier {
     }
 
     final requestId = _homeRequestSequence;
+    final categoryId = _homeCategory?.id;
     _isLoadingMore = true;
     notifyListeners();
 
@@ -245,6 +254,7 @@ class HomeViewModel extends ChangeNotifier {
       final result = await homeRepository.fetchProducts(
         limit: defaultPageSize,
         cursor: _nextCursor,
+        categoryId: categoryId,
       );
 
       if (result.isSuccess && result.value != null) {
@@ -337,6 +347,7 @@ class HomeViewModel extends ChangeNotifier {
   Future<void> _fetchHomeFirstPage({required bool clearProducts}) async {
     if (_disposed) return;
     final requestId = ++_homeRequestSequence;
+    final categoryId = _homeCategory?.id;
     _isLoadingMore = false;
     if (clearProducts) {
       _homeProducts = const [];
@@ -354,6 +365,7 @@ class HomeViewModel extends ChangeNotifier {
     try {
       final result = await homeRepository.fetchProducts(
         limit: defaultPageSize,
+        categoryId: categoryId,
       );
 
       if (result.isSuccess && result.value != null) {

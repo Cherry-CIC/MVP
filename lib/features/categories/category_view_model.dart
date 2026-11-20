@@ -77,7 +77,7 @@ class CategoryViewModel extends ChangeNotifier {
     try {
       final result = await categoryRepository.fetchCategories();
       if (result.isSuccess && result.value != null) {
-        _categories = result.value!;
+        _categories = List<Category>.of(result.value!);
         _sortCategories();
         _status = Status.success;
       } else {

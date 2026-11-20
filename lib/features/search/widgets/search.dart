@@ -36,6 +36,7 @@ class Search extends StatelessWidget {
     if (!showAsBar) {
       return Image.asset(AppImages.icSearch, width: 24, height: 24, color: colours.secondary);
     }
+    final borderRadius = BorderRadius.circular(10);
     return Semantics(
       button: true,
       label: 'Search items',
@@ -43,19 +44,29 @@ class Search extends StatelessWidget {
       onTap: () => openSearch(context),
       child: Material(
         color: colours.surfaceContainerHighest,
-        elevation: 1,
-        shape: const StadiumBorder(),
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: borderRadius,
+          side: BorderSide(color: colours.outlineVariant),
+        ),
         child: InkWell(
-          customBorder: const StadiumBorder(),
+          borderRadius: borderRadius,
           onTap: () => openSearch(context),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
             child: Row(
               children: [
-                Icon(Icons.search, size: 16, color: colours.onSurfaceVariant),
+                Icon(Icons.search, size: 18, color: colours.onSurfaceVariant),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: Text('Search items', style: TextStyle(color: colours.onSurfaceVariant)),
+                  child: Text(
+                    'Search items',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: colours.onSurfaceVariant,
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -108,13 +119,17 @@ class _SearchPageState extends State<SearchPage> {
   Widget build(BuildContext context) {
     final model = context.watch<HomeViewModel>();
     final colours = Theme.of(context).colorScheme;
+    final inputBorder = OutlineInputBorder(
+      borderRadius: BorderRadius.circular(10),
+      borderSide: BorderSide(color: colours.outlineVariant),
+    );
     return Scaffold(
       backgroundColor: colours.surface,
       body: SafeArea(
         child: Column(
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(4, 12, 16, 12),
+              padding: const EdgeInsets.fromLTRB(4, 6, 16, 8),
               child: Row(
                 children: [
                   const BackButton(),
@@ -134,14 +149,16 @@ class _SearchPageState extends State<SearchPage> {
                       decoration: InputDecoration(
                         hintText: 'Search items',
                         counterText: '',
-                        prefixIcon: const Icon(Icons.search, size: 20),
+                        isDense: true,
+                        prefixIcon: const Icon(Icons.search, size: 18),
+                        prefixIconConstraints: const BoxConstraints(minWidth: 40, minHeight: 38),
                         suffixIcon: ValueListenableBuilder<TextEditingValue>(
                           valueListenable: _controller,
                           builder: (context, value, _) => value.text.isEmpty
                               ? const SizedBox.shrink()
                               : IconButton(
                                   tooltip: 'Clear search',
-                                  icon: const Icon(Icons.close),
+                                  icon: const Icon(Icons.close, size: 18),
                                   onPressed: () {
                                     _controller.clear();
                                     model.updateSearchText('');
@@ -150,14 +167,11 @@ class _SearchPageState extends State<SearchPage> {
                         ),
                         filled: true,
                         fillColor: colours.surfaceContainerHighest,
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(28)),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(28),
-                          borderSide: BorderSide(color: colours.outline),
-                        ),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                        border: inputBorder,
+                        enabledBorder: inputBorder,
                         focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(28),
+                          borderRadius: BorderRadius.circular(10),
                           borderSide: BorderSide(color: colours.onSurfaceVariant),
                         ),
                       ),
