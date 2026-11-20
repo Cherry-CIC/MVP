@@ -160,6 +160,18 @@ void main() {
     expect(repository.requests.last, (search: 'coat', categoryId: null, cursor: null));
     expect(model.searchProducts.single.id, 'global');
   });
+
+  test('submitSearch records normalized query and executes search immediately', () async {
+    repository.responses.add(Future.value(_page(['coat-1'])));
+
+    await model.submitSearch('  Red   coat ');
+    expect(model.recentSearches, ['Red coat']);
+    expect(repository.requests.single, (search: 'Red coat', categoryId: null, cursor: null));
+    expect(model.searchProducts.single.id, 'coat-1');
+
+    await model.removeRecentSearch('red coat');
+    expect(model.recentSearches, isEmpty);
+  });
 }
 
 Category _category(String id, String name) => Category(

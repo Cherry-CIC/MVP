@@ -4,12 +4,11 @@ import 'package:cherry_mvp/core/config/app_theme.dart';
 import 'package:cherry_mvp/core/models/model.dart';
 import 'package:cherry_mvp/core/router/router.dart';
 import 'package:cherry_mvp/core/utils/utils.dart';
-import 'package:cherry_mvp/features/categories/category_repository.dart';
-import 'package:cherry_mvp/features/categories/category_view_model.dart';
 import 'package:cherry_mvp/features/home/home_repository.dart';
 import 'package:cherry_mvp/features/home/home_viewmodel.dart';
 import 'package:cherry_mvp/features/products/product_repository.dart';
 import 'package:cherry_mvp/features/products/product_viewmodel.dart';
+import 'package:cherry_mvp/features/search/recent_searches_store.dart';
 import 'package:cherry_mvp/features/search/widgets/search.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -33,41 +32,16 @@ class _Items implements IHomeRepository {
   }
 }
 
-class _Categories implements ICategoryRepository {
-  bool fail = false;
-  int requests = 0;
-  final removed = <String>{};
-  @override
-  Future<Result<List<Category>>> fetchCategories() async {
-    requests++;
-    return fail
-        ? Result.failure('offline')
-        : Result.success([
-            for (final name in [
-              'Women',
-              'Men',
-              'Children',
-              'Accessories',
-              'Unisex',
-              'Designer',
-              'Books',
-              'Board Games',
-              'Vinyl & Disk',
-            ])
-              if (!removed.contains(name))
-                Category(
-                  id: name.toLowerCase(),
-                  name: name,
-                  imageUrl: 'https://example.com/icon.png',
-                  createdAt: DateTime(2026),
-                  updatedAt: DateTime(2026),
-                ),
-          ]);
-  }
-}
-
 Result<ProductPage> _page({List<Product> products = const [], String? cursor}) => Result.success(
   ProductPage(products: products, limit: 20, nextCursor: cursor, hasMore: cursor != null),
+);
+
+final _women = Category(
+  id: 'women',
+  name: 'Women',
+  imageUrl: '',
+  createdAt: DateTime(2026),
+  updatedAt: DateTime(2026),
 );
 
 final _coat = Product(
@@ -88,7 +62,8 @@ final _coat = Product(
 Future<HomeViewModel> _open(
   WidgetTester tester,
   _Items items, {
-  _Categories? categories,
+  RecentSearchesStore? recentSearchesStore,
+  Category? initialCategory,
   Brightness brightness = Brightness.light,
   double textScale = 1,
   bool open = true,
@@ -98,15 +73,15 @@ Future<HomeViewModel> _open(
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.view.resetDevicePixelRatio);
   final navigator = NavigationProvider();
-  final model = HomeViewModel(homeRepository: items);
+  final model = HomeViewModel(
+    homeRepository: items,
+    recentSearchesStore: recentSearchesStore ?? RecentSearchesStore.inMemory(),
+  );
   await tester.pumpWidget(
     MultiProvider(
       providers: [
         Provider<NavigationProvider>.value(value: navigator),
         ChangeNotifierProvider.value(value: model),
-        ChangeNotifierProvider(
-          create: (_) => CategoryViewModel(categoryRepository: categories ?? _Categories(), navigator: navigator),
-        ),
         ChangeNotifierProvider(
           create: (_) => ProductViewModel(
             productRepository: ProductRepository(const UnexpectedApiService()),
@@ -124,12 +99,25 @@ Future<HomeViewModel> _open(
         onGenerateRoute: (settings) => MaterialPageRoute<void>(
           builder: (_) => Scaffold(appBar: AppBar(), body: Text('Opened ${settings.name}')),
         ),
-        home: const Scaffold(body: Search(showAsBar: true)),
+        home: Scaffold(
+          body: Builder(
+            builder: (context) => Column(
+              children: [
+                const Search(showAsBar: true),
+                if (initialCategory != null)
+                  TextButton(
+                    onPressed: () => openSearch(context, initialCategory: initialCategory),
+                    child: const Text('Open category'),
+                  ),
+              ],
+            ),
+          ),
+        ),
       ),
     ),
   );
   if (open) {
-    await tester.tap(find.byType(Search));
+    await tester.tap(initialCategory == null ? find.byType(Search) : find.text('Open category'));
     await tester.pumpAndSettle();
   }
   addTearDown(() async {
@@ -152,76 +140,124 @@ void main() {
     semantics.dispose();
   });
 
-  testWidgets('reopening search refreshes categories removed from the catalogue', (tester) async {
-    final categories = _Categories();
-    await _open(tester, _Items(), categories: categories);
-    expect(find.text('Women'), findsOneWidget);
-    await tester.pageBack();
-    await tester.pumpAndSettle();
-    categories.removed.add('Women');
-    await tester.tap(find.byType(Search));
-    await tester.pumpAndSettle();
-    expect(categories.requests, 2);
-    expect(find.text('Women'), findsNothing);
-    expect(find.text('Men'), findsOneWidget);
-  });
-
-  testWidgets('Charities opens Discover and returns to categories', (tester) async {
-    await _open(tester, _Items());
-    await tester.tap(find.text('Charities'));
-    await tester.pumpAndSettle();
-    expect(find.text('Opened ${AppRoutes.discover}'), findsOneWidget);
-    await tester.pageBack();
-    await tester.pumpAndSettle();
-    expect(find.text('Women'), findsOneWidget);
-  });
-
-  testWidgets('opening shows categories, typing searches, backspace restores browse and back exits', (tester) async {
+  testWidgets('opening search without history shows clean empty prompt and no categories list', (tester) async {
     final items = _Items();
     final model = await _open(tester, items);
-    expect(find.text('Women'), findsOneWidget);
-    expect(find.text('Vinyl & Disk'), findsOneWidget);
-    expect(find.text('Electronics'), findsNothing);
+
+    expect(find.text('Search for anything'), findsOneWidget);
+    expect(find.text('Charities'), findsNothing);
+    expect(find.text('Women'), findsNothing);
     expect(find.text('No items found'), findsNothing);
     expect(items.requests, isEmpty);
+    expect(tester.widget<TextField>(find.byType(TextField)).focusNode!.hasFocus, isTrue);
+
     await tester.enterText(find.byType(TextField), 'coat');
     await tester.pump(const Duration(milliseconds: 400));
     await tester.pumpAndSettle();
     expect(items.requests.last.search, 'coat');
     expect(find.text('No items found'), findsOneWidget);
+
     await tester.enterText(find.byType(TextField), '');
     await tester.pumpAndSettle();
-    expect(find.text('Women'), findsOneWidget);
+    expect(find.text('Search for anything'), findsOneWidget);
+
     await tester.tap(find.byType(BackButton));
     await tester.pumpAndSettle();
     expect(find.byType(SearchPage), findsNothing);
     expect(model.hasActiveSearch, isFalse);
   });
 
-  testWidgets('category-only search and clear query preserve the category until cleared', (tester) async {
+  testWidgets('submitted searches are remembered on reopen, re-run on tap, and can be removed or cleared', (
+    tester,
+  ) async {
+    final store = RecentSearchesStore.inMemory();
+    final items = _Items()
+      ..responses.addAll([
+        _page(products: [_coat]),
+        _page(products: [_coat]),
+      ]);
+    await _open(tester, items, recentSearchesStore: store);
+
+    await tester.enterText(find.byType(TextField), 'red coat');
+    await tester.testTextInput.receiveAction(TextInputAction.search);
+    await tester.pumpAndSettle();
+    expect(find.text('Red coat'), findsOneWidget);
+
+    await tester.tap(find.byType(BackButton));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byType(Search));
+    await tester.pumpAndSettle();
+    expect(find.text('Recent searches'), findsOneWidget);
+    expect(find.text('red coat'), findsOneWidget);
+
+    await tester.tap(find.text('red coat'));
+    await tester.pumpAndSettle();
+    expect(items.requests.last.search, 'red coat');
+    expect(find.text('Red coat'), findsOneWidget);
+
+    await tester.tap(find.byTooltip('Clear search'));
+    await tester.pumpAndSettle();
+    expect(find.text('Recent searches'), findsOneWidget);
+
+    await tester.tap(find.byTooltip('Remove recent search'));
+    await tester.pumpAndSettle();
+    expect(find.text('Recent searches'), findsNothing);
+    expect(find.text('Search for anything'), findsOneWidget);
+  });
+
+  testWidgets('tapping a search result saves the search query and Clear all empties history', (tester) async {
+    final store = RecentSearchesStore.inMemory();
+    await store.add('boots');
+    final items = _Items()..responses.add(_page(products: [_coat]));
+    await _open(tester, items, recentSearchesStore: store);
+
+    await tester.enterText(find.byType(TextField), 'coat');
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Red coat'));
+    await tester.pumpAndSettle();
+    expect(find.text('Opened ${AppRoutes.product}'), findsOneWidget);
+
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Clear search'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('coat'), findsOneWidget);
+    expect(find.text('boots'), findsOneWidget);
+
+    await tester.tap(find.text('Clear all'));
+    await tester.pumpAndSettle();
+    expect(find.text('Search for anything'), findsOneWidget);
+  });
+
+  testWidgets('category-filtered search and clear query preserve the category until cleared', (tester) async {
     final items = _Items()
       ..responses.addAll([
         _page(products: [_coat]),
         _page(products: [_coat]),
         _page(products: [_coat]),
       ]);
-    final model = await _open(tester, items);
-    await tester.tap(find.text('Women'));
-    await tester.pumpAndSettle();
+    final model = await _open(tester, items, initialCategory: _women);
+
     expect(items.requests.last.categoryId, 'women');
     expect(find.text('Red coat'), findsOneWidget);
     expect(tester.widget<TextField>(find.byType(TextField)).focusNode!.hasFocus, isFalse);
+
     await tester.enterText(find.byType(TextField), 'coat');
     await tester.pump(const Duration(milliseconds: 400));
     await tester.pumpAndSettle();
     await tester.tap(find.byTooltip('Clear search'));
     await tester.pump(const Duration(milliseconds: 400));
     await tester.pumpAndSettle();
+
     expect(items.requests.last, (search: '', categoryId: 'women', cursor: null));
     expect(model.searchCategory!.name, 'Women');
+
     await tester.tap(find.byTooltip('Clear category'));
     await tester.pumpAndSettle();
-    expect(find.text('Men'), findsOneWidget);
+    expect(find.text('Search for anything'), findsOneWidget);
     expect(model.hasActiveSearch, isFalse);
   });
 
@@ -232,7 +268,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(tester.widget<TextField>(find.byType(TextField)).focusNode!.hasFocus, isFalse);
     expect(find.byType(SearchPage), findsOneWidget);
-    expect(find.text('Women'), findsOneWidget);
+    expect(find.text('Search for anything'), findsOneWidget);
   });
 
   testWidgets('empty continuation pages retain load more and show retry feedback', (tester) async {
@@ -242,9 +278,7 @@ void main() {
         Result.failure('offline'),
         _page(products: [_coat]),
       ]);
-    await _open(tester, items);
-    await tester.tap(find.text('Women'));
-    await tester.pumpAndSettle();
+    await _open(tester, items, initialCategory: _women);
     expect(find.text('No items found'), findsNothing);
     await tester.tap(find.text('Load more results'));
     await tester.pumpAndSettle();
@@ -256,32 +290,18 @@ void main() {
     expect(items.requests.last.categoryId, 'women');
   });
 
-  testWidgets('category failure leaves text search available and category retry works', (tester) async {
-    final categories = _Categories()..fail = true;
+  testWidgets('search failure supports retry and listing navigation returns to the same search', (tester) async {
     final items = _Items()
       ..responses.addAll([
         Result.failure('offline'),
         _page(products: [_coat]),
       ]);
-    await _open(tester, items, categories: categories);
-    expect(find.text('Retry categories'), findsOneWidget);
-    categories.fail = false;
-    await tester.tap(find.text('Retry categories'));
-    await tester.pumpAndSettle();
-    expect(find.text('Women'), findsOneWidget);
-    await tester.enterText(find.byType(TextField), 'coat');
-    await tester.pump(const Duration(milliseconds: 400));
-    await tester.pumpAndSettle();
+    final model = await _open(tester, items, initialCategory: _women);
+    expect(find.text('Retry search'), findsOneWidget);
     await tester.tap(find.text('Retry search'));
     await tester.pumpAndSettle();
     expect(find.text('Red coat'), findsOneWidget);
-  });
 
-  testWidgets('listing navigation returns to the same search', (tester) async {
-    final items = _Items()..responses.add(_page(products: [_coat]));
-    final model = await _open(tester, items);
-    await tester.tap(find.text('Women'));
-    await tester.pumpAndSettle();
     await tester.tap(find.text('Red coat'));
     await tester.pumpAndSettle();
     expect(find.text('Opened ${AppRoutes.product}'), findsOneWidget);
@@ -291,13 +311,19 @@ void main() {
     expect(model.searchCategory!.name, 'Women');
   });
 
-  testWidgets('categories remain usable with large text and dark mode', (tester) async {
-    await _open(tester, _Items(), brightness: Brightness.dark, textScale: 2);
+  testWidgets('recent searches and empty prompt remain usable with large text and dark mode', (tester) async {
+    final store = RecentSearchesStore.inMemory();
+    await store.add('vintage wool jacket');
+    await _open(
+      tester,
+      _Items(),
+      recentSearchesStore: store,
+      brightness: Brightness.dark,
+      textScale: 2,
+    );
     tester.view.physicalSize = const Size(320, 568);
     await tester.pumpAndSettle();
-    await tester.drag(find.byType(CustomScrollView), const Offset(0, -500));
-    await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
-    expect(find.text('Vinyl & Disk'), findsOneWidget);
+    expect(find.text('vintage wool jacket'), findsOneWidget);
   });
 }

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:cherry_mvp/core/services/safe_log.dart';
 import 'package:cherry_mvp/features/home/home_repository.dart';
 import 'package:cherry_mvp/features/products/deleted_listings.dart';
+import 'package:cherry_mvp/features/search/recent_searches_store.dart';
 import 'package:cherry_mvp/core/models/model.dart';
 import 'package:cherry_mvp/core/utils/utils.dart';
 import 'package:flutter/cupertino.dart';
@@ -15,8 +16,15 @@ class HomeViewModel extends ChangeNotifier {
   final IHomeRepository homeRepository;
   final void Function(Iterable<Product>)? onProductsLoaded;
   final DeletedListings? deletedListings;
+  final RecentSearchesStore _recentSearchesStore;
 
-  HomeViewModel({required this.homeRepository, this.onProductsLoaded, this.deletedListings}) {
+  HomeViewModel({
+    required this.homeRepository,
+    this.onProductsLoaded,
+    this.deletedListings,
+    RecentSearchesStore? recentSearchesStore,
+  }) : _recentSearchesStore = recentSearchesStore ?? RecentSearchesStore.inMemory() {
+    _recentSearches = _recentSearchesStore.load();
     deletedListings?.addListener(_removeDeletedListings);
   }
 
@@ -25,6 +33,7 @@ class HomeViewModel extends ChangeNotifier {
   Status _searchStatus = Status.uninitialized;
   List<Product> _homeProducts = [];
   List<Product> _searchProducts = [];
+  List<String> _recentSearches = const [];
   String? _nextCursor;
   String? _searchNextCursor;
   bool _hasMore = false;
@@ -46,6 +55,7 @@ class HomeViewModel extends ChangeNotifier {
   Status get status => _status;
   List<Product> get products => _homeProducts;
   List<Product> get searchProducts => _searchProducts;
+  List<String> get recentSearches => _recentSearches;
   String? get nextCursor => _nextCursor;
   String? get searchNextCursor => _searchNextCursor;
   bool get hasMore => _hasMore;
@@ -62,6 +72,69 @@ class HomeViewModel extends ChangeNotifier {
   bool get isSearchLoading => _searchStatus.type == StatusType.loading;
   bool get isSearchEmpty =>
       hasActiveSearch && _searchStatus.type == StatusType.success && _searchProducts.isEmpty && !_searchHasMore;
+
+  void loadRecentSearches() {
+    if (_disposed) return;
+    final loaded = _recentSearchesStore.load();
+    if (_recentSearches.length == loaded.length &&
+        _recentSearches.indexed.every((e) => loaded[e.$1] == e.$2)) {
+      return;
+    }
+    _recentSearches = loaded;
+    notifyListeners();
+  }
+
+  Future<void> recordRecentSearch(String query) async {
+    if (_disposed) return;
+    final normalized = RecentSearchesStore.normalize(query);
+    if (normalized.isEmpty) return;
+    _recentSearches = List<String>.unmodifiable(
+      <String>[
+        normalized,
+        ..._recentSearches.where((entry) => entry.toLowerCase() != normalized.toLowerCase()),
+      ].take(RecentSearchesStore.maxEntries),
+    );
+    notifyListeners();
+    final persisted = await _recentSearchesStore.add(normalized);
+    if (!_disposed) {
+      _recentSearches = persisted;
+      notifyListeners();
+    }
+  }
+
+  Future<void> removeRecentSearch(String query) async {
+    if (_disposed) return;
+    final normalized = RecentSearchesStore.normalize(query).toLowerCase();
+    _recentSearches = List<String>.unmodifiable(
+      _recentSearches.where((entry) => entry.toLowerCase() != normalized),
+    );
+    notifyListeners();
+    final persisted = await _recentSearchesStore.remove(query);
+    if (!_disposed) {
+      _recentSearches = persisted;
+      notifyListeners();
+    }
+  }
+
+  Future<void> clearRecentSearches() async {
+    if (_disposed) return;
+    _recentSearches = const [];
+    notifyListeners();
+    await _recentSearchesStore.clear();
+  }
+
+  Future<void> submitSearch(String query) async {
+    if (_disposed) return;
+    final normalized = RecentSearchesStore.normalize(query);
+    _searchText = normalized;
+    _prepareSearch();
+    if (normalized.isNotEmpty) {
+      unawaited(recordRecentSearch(normalized));
+    }
+    if (hasActiveSearch) {
+      await _runSearch(normalized);
+    }
+  }
 
   Future<void> fetchProducts({bool forceRefresh = false}) async {
     if (_disposed) return;

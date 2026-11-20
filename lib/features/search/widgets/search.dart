@@ -3,13 +3,10 @@ import 'dart:async';
 import 'package:cherry_mvp/core/config/config.dart';
 import 'package:cherry_mvp/core/models/category.dart';
 import 'package:cherry_mvp/core/models/product.dart';
-import 'package:cherry_mvp/core/router/router.dart';
 import 'package:cherry_mvp/core/utils/utils.dart';
-import 'package:cherry_mvp/features/categories/category_view_model.dart';
 import 'package:cherry_mvp/features/home/home_viewmodel.dart';
 import 'package:cherry_mvp/features/products/product_viewmodel.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 
 /// Both shop entry points use the same search route and lifecycle.
@@ -18,6 +15,7 @@ import 'package:provider/provider.dart';
 /// leaves the keyboard closed so the results are visible straight away.
 Future<void> openSearch(BuildContext context, {Category? initialCategory}) async {
   final model = context.read<HomeViewModel>();
+  model.loadRecentSearches();
   if (initialCategory != null) {
     unawaited(model.selectSearchCategory(initialCategory));
   }
@@ -86,7 +84,7 @@ class _SearchPageState extends State<SearchPage> {
     super.initState();
     _controller.text = context.read<HomeViewModel>().searchText;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) context.read<CategoryViewModel>().fetchCategories();
+      if (mounted) context.read<HomeViewModel>().loadRecentSearches();
     });
   }
 
@@ -95,6 +93,15 @@ class _SearchPageState extends State<SearchPage> {
     _controller.dispose();
     _focusNode.dispose();
     super.dispose();
+  }
+
+  void _selectRecentSearch(String term) {
+    _controller.value = TextEditingValue(
+      text: term,
+      selection: TextSelection.collapsed(offset: term.length),
+    );
+    _focusNode.unfocus();
+    context.read<HomeViewModel>().submitSearch(term);
   }
 
   @override
@@ -119,9 +126,9 @@ class _SearchPageState extends State<SearchPage> {
                       maxLength: 100,
                       textInputAction: TextInputAction.search,
                       onChanged: model.updateSearchText,
-                      onSubmitted: (_) {
+                      onSubmitted: (value) {
                         _focusNode.unfocus();
-                        model.retrySearch();
+                        model.submitSearch(value);
                       },
                       onTapOutside: (_) => _focusNode.unfocus(),
                       decoration: InputDecoration(
@@ -173,10 +180,7 @@ class _SearchPageState extends State<SearchPage> {
               ),
             Expanded(
               child: _SearchBody(
-                onCategorySelected: (category) {
-                  _focusNode.unfocus();
-                  model.selectSearchCategory(category);
-                },
+                onRecentSearchSelected: _selectRecentSearch,
               ),
             ),
           ],
@@ -187,57 +191,49 @@ class _SearchPageState extends State<SearchPage> {
 }
 
 class _SearchBody extends StatelessWidget {
-  const _SearchBody({required this.onCategorySelected});
-  final ValueChanged<Category> onCategorySelected;
+  const _SearchBody({required this.onRecentSearchSelected});
+  final ValueChanged<String> onRecentSearchSelected;
 
   @override
   Widget build(BuildContext context) {
     final model = context.watch<HomeViewModel>();
-    final categories = context.watch<CategoryViewModel>();
     final browsing = !model.hasActiveSearch;
     Widget content;
     if (browsing) {
-      content = SliverList.list(
-        children: [
-          _BrowseRow(
-            label: 'Charities',
-            icon: SvgPicture.asset('assets/images/search/charities.svg', width: 25, height: 25),
-            onTap: () {
-              FocusManager.instance.primaryFocus?.unfocus();
-              context.read<NavigationProvider>().navigateTo(AppRoutes.discover);
-            },
-          ),
-          if (categories.status.type == StatusType.loading || categories.status.type == StatusType.uninitialized)
-            const _SearchLoading(label: 'Loading categories')
-          else if (categories.status.type == StatusType.failure)
-            _SearchMessage(
-              title: 'Could not load categories',
-              message: 'You can still search for items above.',
-              action: TextButton(onPressed: categories.fetchCategories, child: const Text('Retry categories')),
-            )
-          else if (categories.categories.isEmpty)
-            const _SearchMessage(title: 'No categories available', message: 'Search for an item above.')
-          else
-            for (final category in categories.categories)
-              _BrowseRow(
-                label: category.name,
-                icon: Image.network(
-                  category.imageUrl,
-                  width: 25,
-                  height: 25,
-                  color: Theme.of(context).colorScheme.primary,
-                  errorBuilder: (_, error, stack) => Image.asset(
-                    AppImages.getCategoryIcon(category.name),
-                    width: 25,
-                    height: 25,
-                    color: Theme.of(context).colorScheme.primary,
-                    errorBuilder: (_, error, stack) => const Icon(Icons.category_outlined),
+      final recentSearches = model.recentSearches;
+      if (recentSearches.isEmpty) {
+        content = const SliverFillRemaining(
+          hasScrollBody: false,
+          child: _EmptySearchPrompt(),
+        );
+      } else {
+        content = SliverList.list(
+          children: [
+            Wrap(
+              alignment: WrapAlignment.spaceBetween,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                Text(
+                  'Recent searches',
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
-                onTap: () => onCategorySelected(category),
+                TextButton(
+                  onPressed: model.clearRecentSearches,
+                  child: const Text('Clear all'),
+                ),
+              ],
+            ),
+            for (final term in recentSearches)
+              _RecentSearchRow(
+                term: term,
+                onTap: () => onRecentSearchSelected(term),
+                onRemove: () => model.removeRecentSearch(term),
               ),
-        ],
-      );
+          ],
+        );
+      }
     } else if (model.isSearchLoading) {
       content = const SliverToBoxAdapter(child: _SearchLoading(label: 'Searching items'));
     } else if (model.searchStatus.type == StatusType.failure) {
@@ -296,26 +292,79 @@ class _SearchBody extends StatelessWidget {
   }
 }
 
-class _BrowseRow extends StatelessWidget {
-  const _BrowseRow({required this.label, required this.icon, required this.onTap});
-  final String label;
-  final Widget icon;
-  final VoidCallback onTap;
+class _EmptySearchPrompt extends StatelessWidget {
+  const _EmptySearchPrompt();
 
   @override
-  Widget build(BuildContext context) => Container(
-    decoration: BoxDecoration(
-      border: Border(bottom: BorderSide(color: Theme.of(context).colorScheme.outline)),
-    ),
-    child: ListTile(
-      minTileHeight: 60,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 12),
-      leading: ExcludeSemantics(child: icon),
-      title: Text(label),
-      trailing: const Icon(Icons.chevron_right, size: 24),
-      onTap: onTap,
-    ),
-  );
+  Widget build(BuildContext context) {
+    final colours = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 64,
+              height: 64,
+              decoration: BoxDecoration(
+                color: colours.primary.withValues(alpha: 0.12),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.search, size: 32, color: colours.primary),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Search for anything',
+              textAlign: TextAlign.center,
+              style: textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Explore pre-loved items across Cherry.',
+              textAlign: TextAlign.center,
+              style: textTheme.bodyMedium?.copyWith(color: colours.onSurfaceVariant),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _RecentSearchRow extends StatelessWidget {
+  const _RecentSearchRow({
+    required this.term,
+    required this.onTap,
+    required this.onRemove,
+  });
+
+  final String term;
+  final VoidCallback onTap;
+  final VoidCallback onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    final colours = Theme.of(context).colorScheme;
+    return Container(
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: colours.outlineVariant)),
+      ),
+      child: ListTile(
+        dense: true,
+        contentPadding: const EdgeInsets.only(left: 4),
+        leading: Icon(Icons.history, size: 20, color: colours.onSurfaceVariant),
+        title: Text(term, maxLines: 1, overflow: TextOverflow.ellipsis),
+        trailing: IconButton(
+          tooltip: 'Remove recent search',
+          icon: Icon(Icons.close, size: 18, color: colours.onSurfaceVariant),
+          onPressed: onRemove,
+        ),
+        onTap: onTap,
+      ),
+    );
+  }
 }
 
 class _SearchLoading extends StatelessWidget {
@@ -368,6 +417,10 @@ class _ProductSuggestionTile extends StatelessWidget {
     return ListTile(
       onTap: () {
         FocusManager.instance.primaryFocus?.unfocus();
+        final homeModel = context.read<HomeViewModel>();
+        if (homeModel.searchText.isNotEmpty) {
+          unawaited(homeModel.recordRecentSearch(homeModel.searchText));
+        }
         context.read<ProductViewModel>().goToProductPage(product);
       },
       leading: ClipRRect(
