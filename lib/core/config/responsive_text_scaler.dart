@@ -39,16 +39,17 @@ class ResponsiveTextScaler {
     return 1.0 + t * (maxScaleFactor - 1.0);
   }
 
-  /// Combines the OS [baseScaler] with the viewport multiplier for [size].
+  /// Combines the OS [baseScaler] with the viewport multiplier for [size],
+  /// preserving nonlinear OS font scaling curves (e.g. Android 14+).
   static TextScaler textScalerFor({
     required Size size,
     required TextScaler baseScaler,
   }) {
     final responsiveFactor = scaleFactorForSize(size);
-    final osScale = baseScaler.scale(1.0);
-    final combinedScale = (osScale * responsiveFactor)
-        .clamp(minScaleFactor, maxCombinedScale);
-    return TextScaler.linear(combinedScale);
+    return _ResponsiveTextScaler(
+      baseScaler: baseScaler,
+      responsiveFactor: responsiveFactor,
+    );
   }
 
   /// Wraps [child] in a [MediaQuery] with responsive text scaling applied.
@@ -65,4 +66,42 @@ class ResponsiveTextScaler {
       child: child,
     );
   }
+}
+
+class _ResponsiveTextScaler extends TextScaler {
+  const _ResponsiveTextScaler({
+    required this.baseScaler,
+    required this.responsiveFactor,
+  });
+
+  final TextScaler baseScaler;
+  final double responsiveFactor;
+
+  @override
+  double scale(double fontSize) {
+    if (fontSize <= 0) return 0;
+    final osScaled = baseScaler.scale(fontSize);
+    final combined = osScaled * responsiveFactor;
+    final minAllowed = fontSize * ResponsiveTextScaler.minScaleFactor;
+    final maxAllowed = fontSize * ResponsiveTextScaler.maxCombinedScale;
+    return combined.clamp(minAllowed, maxAllowed);
+  }
+
+  @override
+  // ignore: deprecated_member_use
+  double get textScaleFactor => (baseScaler.scale(1.0) * responsiveFactor).clamp(
+    ResponsiveTextScaler.minScaleFactor,
+    ResponsiveTextScaler.maxCombinedScale,
+  );
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is _ResponsiveTextScaler &&
+        other.baseScaler == baseScaler &&
+        other.responsiveFactor == responsiveFactor;
+  }
+
+  @override
+  int get hashCode => Object.hash(baseScaler, responsiveFactor);
 }

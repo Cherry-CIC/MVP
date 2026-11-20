@@ -5,7 +5,41 @@ import 'package:cherry_mvp/core/utils/utils.dart';
 import 'package:cherry_mvp/features/home/home_repository.dart';
 import 'package:cherry_mvp/features/home/home_viewmodel.dart';
 import 'package:cherry_mvp/features/products/deleted_listings.dart';
+import 'package:cherry_mvp/features/search/recent_searches_store.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+class _ControlledRecentSearchesStore extends RecentSearchesStore {
+  _ControlledRecentSearchesStore() : super.inMemory();
+
+  List<String> currentEntries = const [];
+  Completer<List<String>>? pendingAdd;
+  Completer<List<String>>? pendingRemove;
+
+  @override
+  List<String> load() => List<String>.unmodifiable(currentEntries);
+
+  @override
+  Future<List<String>> add(String query) {
+    final completer = pendingAdd;
+    if (completer != null) return completer.future;
+    currentEntries = [query, ...currentEntries.where((e) => e != query)];
+    return Future.value(load());
+  }
+
+  @override
+  Future<List<String>> remove(String query) {
+    final completer = pendingRemove;
+    if (completer != null) return completer.future;
+    currentEntries = currentEntries.where((e) => e != query).toList();
+    return Future.value(load());
+  }
+
+  @override
+  Future<void> clear() async {
+    currentEntries = const [];
+  }
+}
 
 class _Repository implements IHomeRepository {
   final responses = <Future<Result<ProductPage>>>[];
@@ -171,6 +205,39 @@ void main() {
 
     await model.removeRecentSearch('red coat');
     expect(model.recentSearches, isEmpty);
+  });
+
+  test('pending recent-search writes do not overwrite newer state after clear or account reload', () async {
+    SharedPreferences.setMockInitialValues({});
+    final store = _ControlledRecentSearchesStore()..currentEntries = ['initial'];
+    model.dispose();
+    model = HomeViewModel(homeRepository: repository, recentSearchesStore: store);
+
+    final addCompleter = Completer<List<String>>();
+    store.pendingAdd = addCompleter;
+    final pendingAdd = model.recordRecentSearch('stale-item');
+    expect(model.recentSearches.first, 'stale-item');
+
+    await model.clearRecentSearches();
+    expect(model.recentSearches, isEmpty);
+
+    addCompleter.complete(['stale-item', 'initial']);
+    await pendingAdd;
+    expect(model.recentSearches, isEmpty);
+
+    store.pendingAdd = null;
+    store.currentEntries = ['account-b-query'];
+    final removeCompleter = Completer<List<String>>();
+    store.pendingRemove = removeCompleter;
+
+    final pendingRemove = model.removeRecentSearch('account-b-query');
+    store.currentEntries = ['switched-account-query'];
+    model.loadRecentSearches();
+    expect(model.recentSearches, ['switched-account-query']);
+
+    removeCompleter.complete(const []);
+    await pendingRemove;
+    expect(model.recentSearches, ['switched-account-query']);
   });
 
   test('home category filter scopes home feed and pagination independently of search', () async {

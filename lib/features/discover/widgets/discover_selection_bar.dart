@@ -75,6 +75,7 @@ class _TabButton extends StatelessWidget {
         selected: isSelected,
         excludeSemantics: true,
         label: semanticsLabel,
+        onTap: onTap,
         child: Material(
           color: isSelected ? colourScheme.surface : Colors.transparent,
           borderRadius: BorderRadius.circular(8),

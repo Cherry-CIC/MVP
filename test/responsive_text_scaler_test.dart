@@ -126,6 +126,21 @@ Future<double> _pumpAndMeasureExploreHeight(
   return tester.getSize(find.text('All')).height;
 }
 
+class _NonlinearTestTextScaler extends TextScaler {
+  const _NonlinearTestTextScaler();
+
+  @override
+  double scale(double fontSize) {
+    // Mimics Android 14 nonlinear 200% scaling where large headings scale less than small text.
+    if (fontSize >= 30) return 38;
+    return fontSize * 2.0;
+  }
+
+  @override
+  // ignore: deprecated_member_use
+  double get textScaleFactor => 2.0;
+}
+
 void main() {
   test('scaleFactorForSize decreases on compact screens, stays 1.0 on phones, and increases on tablets', () {
     expect(
@@ -156,6 +171,19 @@ void main() {
       baseScaler: const TextScaler.linear(2.0),
     );
     expect(clampedScaler.scale(10), closeTo(10 * ResponsiveTextScaler.maxCombinedScale, 1e-4));
+
+    final nonlinearPhoneScaler = ResponsiveTextScaler.textScalerFor(
+      size: const Size(390, 844),
+      baseScaler: const _NonlinearTestTextScaler(),
+    );
+    expect(nonlinearPhoneScaler.scale(12), closeTo(24, 1e-4));
+    expect(nonlinearPhoneScaler.scale(30), closeTo(38, 1e-4));
+
+    final nonlinearTabletScaler = ResponsiveTextScaler.textScalerFor(
+      size: const Size(1200, 800),
+      baseScaler: const _NonlinearTestTextScaler(),
+    );
+    expect(nonlinearTabletScaler.scale(30), closeTo(38 * 1.35, 1e-4));
   });
 
   testWidgets('HomeScreen text dynamically scales across compact phone, standard phone, and landscape tablet', (

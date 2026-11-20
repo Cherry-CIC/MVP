@@ -34,6 +34,7 @@ class HomeViewModel extends ChangeNotifier {
   List<Product> _homeProducts = [];
   List<Product> _searchProducts = [];
   List<String> _recentSearches = const [];
+  int _recentSearchesGeneration = 0;
   String? _nextCursor;
   String? _searchNextCursor;
   bool _hasMore = false;
@@ -83,6 +84,7 @@ class HomeViewModel extends ChangeNotifier {
 
   void loadRecentSearches() {
     if (_disposed) return;
+    _recentSearchesGeneration++;
     final loaded = _recentSearchesStore.load();
     if (_recentSearches.length == loaded.length &&
         _recentSearches.indexed.every((e) => loaded[e.$1] == e.$2)) {
@@ -96,6 +98,7 @@ class HomeViewModel extends ChangeNotifier {
     if (_disposed) return;
     final normalized = RecentSearchesStore.normalize(query);
     if (normalized.isEmpty) return;
+    final generation = ++_recentSearchesGeneration;
     _recentSearches = List<String>.unmodifiable(
       <String>[
         normalized,
@@ -104,7 +107,7 @@ class HomeViewModel extends ChangeNotifier {
     );
     notifyListeners();
     final persisted = await _recentSearchesStore.add(normalized);
-    if (!_disposed) {
+    if (!_disposed && generation == _recentSearchesGeneration) {
       _recentSearches = persisted;
       notifyListeners();
     }
@@ -113,12 +116,13 @@ class HomeViewModel extends ChangeNotifier {
   Future<void> removeRecentSearch(String query) async {
     if (_disposed) return;
     final normalized = RecentSearchesStore.normalize(query).toLowerCase();
+    final generation = ++_recentSearchesGeneration;
     _recentSearches = List<String>.unmodifiable(
       _recentSearches.where((entry) => entry.toLowerCase() != normalized),
     );
     notifyListeners();
     final persisted = await _recentSearchesStore.remove(query);
-    if (!_disposed) {
+    if (!_disposed && generation == _recentSearchesGeneration) {
       _recentSearches = persisted;
       notifyListeners();
     }
@@ -126,6 +130,7 @@ class HomeViewModel extends ChangeNotifier {
 
   Future<void> clearRecentSearches() async {
     if (_disposed) return;
+    _recentSearchesGeneration++;
     _recentSearches = const [];
     notifyListeners();
     await _recentSearchesStore.clear();

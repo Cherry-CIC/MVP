@@ -46,7 +46,9 @@ class HomeScreenState extends State<HomeScreen> {
         onRefresh: () => context.read<HomeViewModel>().refreshProducts(),
         child: NotificationListener<ScrollNotification>(
           onNotification: (notification) {
-            if (notification.metrics.extentAfter < 600) {
+            if (notification.depth == 0 &&
+                notification.metrics.axis == Axis.vertical &&
+                notification.metrics.extentAfter < 600) {
               context.read<HomeViewModel>().loadMoreProducts();
             }
             return false;

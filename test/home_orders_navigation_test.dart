@@ -277,6 +277,22 @@ void main() {
     expect(find.byType(BackButton), findsNothing);
   });
 
+  testWidgets('tapping Discover from Liked Items on standalone ProfilePage navigates to Discover route', (
+    tester,
+  ) async {
+    final navigator = await _pumpHomePage(tester);
+    navigator.navigateTo(AppRoutes.myListings);
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Liked'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Discover'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(DiscoverPage), findsOneWidget);
+    expect(find.byType(BackButton), findsOneWidget);
+  });
+
   testWidgets('swiping between Home and Discover keeps the footer in step', (tester) async {
     await _pumpHomePage(tester);
 

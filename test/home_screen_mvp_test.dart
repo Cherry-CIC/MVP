@@ -250,6 +250,32 @@ void main() {
     expect(find.text('Women'), findsOneWidget);
   });
 
+  testWidgets('scrolling horizontal category pills does not trigger vertical feed pagination', (tester) async {
+    final categories = [
+      for (final name in ['Women', 'Men', 'Children', 'Accessories', 'Unisex', 'Designer', 'Books', 'Board Games'])
+        _category(name.toLowerCase(), name),
+    ];
+    final pumped = await _pumpHomeScreen(
+      tester,
+      categories: categories,
+      fetchResult: Result.success(
+        ProductPage(
+          products: List.generate(4, (index) => _product(index + 1)),
+          limit: 20,
+          nextCursor: 'cursor-2',
+          hasMore: true,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final initialRequests = pumped.homeRepository.requestedCategoryIds.length;
+
+    await tester.drag(find.byType(SingleChildScrollView), const Offset(-200, 0));
+    await tester.pumpAndSettle();
+
+    expect(pumped.homeRepository.requestedCategoryIds.length, initialRequests);
+  });
+
   testWidgets('HomeScreen hides charity advert placeholders for the MVP', (tester) async {
     tester.view.physicalSize = const Size(1200, 4000);
     tester.view.devicePixelRatio = 1;

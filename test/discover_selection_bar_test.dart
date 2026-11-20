@@ -1,3 +1,5 @@
+import 'dart:ui' show SemanticsAction;
+
 import 'package:cherry_mvp/core/config/feature_flags.dart';
 import 'package:cherry_mvp/features/discover/widgets/discover_selection_bar.dart';
 import 'package:flutter/material.dart';
@@ -39,14 +41,21 @@ void main() {
     expect(selected, DiscoverSelectionBar.categoriesTag);
   });
 
-  testWidgets('semantics read naturally for charity tabs and Categories', (tester) async {
+  testWidgets('semantics read naturally for charity tabs and Categories and support semantic tap', (tester) async {
     final semantics = tester.ensureSemantics();
-    await _pumpBar(tester);
+    String? selected;
+    await _pumpBar(tester, onSelected: (tag) => selected = tag);
 
     expect(find.bySemanticsLabel('Popular charities'), findsOneWidget);
     expect(find.bySemanticsLabel('Smaller Charities charities'), findsOneWidget);
     expect(find.bySemanticsLabel('Categories'), findsOneWidget);
     expect(find.bySemanticsLabel('Categories charities'), findsNothing);
+
+    final categoriesNode = tester.getSemantics(find.bySemanticsLabel('Categories'));
+    expect(categoriesNode.getSemanticsData().hasAction(SemanticsAction.tap), isTrue);
+    categoriesNode.owner!.performAction(categoriesNode.id, SemanticsAction.tap);
+    await tester.pump();
+    expect(selected, DiscoverSelectionBar.categoriesTag);
     semantics.dispose();
   });
 }
