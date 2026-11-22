@@ -50,12 +50,13 @@ class _HomePageState extends State<HomePage> {
     if (index == _homeNavIndex) {
       _showProfileRoot();
       _pageController.jumpToPage(_homePageIndex);
-      DeliveryReminderHost.retryPending(context);
+      DeliveryReminderHost.setHomeSelected(context, true);
       return;
     }
 
     if (FeatureFlags.showInbox && index == _inboxNavIndex) {
       _showProfileRoot();
+      DeliveryReminderHost.setHomeSelected(context, false);
       _pageController.jumpToPage(_inboxPageIndex);
       return;
     }
@@ -83,15 +84,14 @@ class _HomePageState extends State<HomePage> {
       if (_selectedIndex == _profileNavIndex) {
         context.read<ProfileListingsViewModel>().refreshListings();
       }
+      DeliveryReminderHost.setHomeSelected(context, false);
       _pageController.jumpToPage(_profilePageIndex);
     }
   }
 
   void _onPageChanged(int index) {
     var nextSelectedIndex = _homeNavIndex;
-    if (index == _homePageIndex) {
-      DeliveryReminderHost.retryPending(context);
-    } else if (index == _profilePageIndex) {
+    if (index == _profilePageIndex) {
       nextSelectedIndex = _profileNavIndex;
       context.read<ProfileListingsViewModel>().refreshListings();
     } else if (FeatureFlags.showInbox && index == _inboxPageIndex) {
@@ -104,6 +104,7 @@ class _HomePageState extends State<HomePage> {
         _showOrders = false;
       }
     });
+    DeliveryReminderHost.setHomeSelected(context, index == _homePageIndex);
   }
 
   @override

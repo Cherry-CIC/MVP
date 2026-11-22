@@ -18,9 +18,11 @@ class DeliveryReminderHost extends StatefulWidget {
   final String userId;
   final Widget Function(BuildContext context, Widget? timer) builder;
 
-  static void retryPending(BuildContext context) {
-    context.findAncestorStateOfType<_DeliveryReminderHostState>()?._retryPending();
+  static void setHomeSelected(BuildContext context, bool isSelected) {
+    context.findAncestorStateOfType<_DeliveryReminderHostState>()?._setHomeSelected(isSelected);
   }
+
+  static void retryPending(BuildContext context) => setHomeSelected(context, true);
 
   @override
   State<DeliveryReminderHost> createState() => _DeliveryReminderHostState();
@@ -34,9 +36,12 @@ class _DeliveryReminderHostState extends State<DeliveryReminderHost> with Widget
 
   String get _preferenceKey => 'deliveryReminder.${widget.userId}';
 
+  bool _homeSelected = true;
   bool _pending = true;
   int _generation = 0;
   DialogRoute<DeliveryReminderAction>? _dialog;
+
+  bool get _canPresent => _homeSelected && ModalRoute.of(context)?.isCurrent == true;
 
   @override
   void initState() {
@@ -50,7 +55,7 @@ class _DeliveryReminderHostState extends State<DeliveryReminderHost> with Widget
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (ModalRoute.isCurrentOf(context) == true) _scheduleCheck();
+    if (_homeSelected && ModalRoute.isCurrentOf(context) == true) _scheduleCheck();
   }
 
   @override
@@ -73,7 +78,7 @@ class _DeliveryReminderHostState extends State<DeliveryReminderHost> with Widget
       if (mounted &&
           _pending &&
           _dialog == null &&
-          ModalRoute.of(context)?.isCurrent == true &&
+          _canPresent &&
           WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed) {
         _pending = false;
         _check(++_generation);
@@ -82,8 +87,9 @@ class _DeliveryReminderHostState extends State<DeliveryReminderHost> with Widget
     WidgetsBinding.instance.ensureVisualUpdate();
   }
 
-  void _retryPending() {
-    if (_pending) _scheduleCheck();
+  void _setHomeSelected(bool isSelected) {
+    _homeSelected = isSelected;
+    if (isSelected && _pending) _scheduleCheck();
   }
 
   Future<void> _check(int generation) async {
@@ -95,7 +101,7 @@ class _DeliveryReminderHostState extends State<DeliveryReminderHost> with Widget
     }
     final prefs = await SharedPreferences.getInstance();
     if (!mounted || generation != _generation) return;
-    if (ModalRoute.of(context)?.isCurrent != true) {
+    if (!_canPresent) {
       _pending = true;
       return;
     }
@@ -118,7 +124,7 @@ class _DeliveryReminderHostState extends State<DeliveryReminderHost> with Widget
 
   Future<void> _showReminder(OrderSummary order) async {
     if (_dialog != null ||
-        ModalRoute.of(context)?.isCurrent != true ||
+        !_canPresent ||
         _resolved.contains(order.id) ||
         !order.canShowDeliveryReminder(DateTime.now())) {
       return;
@@ -141,7 +147,7 @@ class _DeliveryReminderHostState extends State<DeliveryReminderHost> with Widget
       if (!mounted) return;
       await prefs.setStringList(_preferenceKey, _dismissed.toList());
     }
-    if (!mounted || ModalRoute.of(context)?.isCurrent != true || !order.canShowDeliveryReminder(DateTime.now())) return;
+    if (!mounted || !_canPresent || !order.canShowDeliveryReminder(DateTime.now())) return;
     final orders = context.read<OrdersViewModel>();
     if (action == DeliveryReminderAction.view) {
       await OrderActions.viewItem(context, order, orders);

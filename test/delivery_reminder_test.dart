@@ -282,8 +282,12 @@ void main() {
   });
 
   testWidgets('problem action opens the dispute form for the displayed order', (tester) async {
+    final semantics = tester.ensureSemantics();
     final repo = _Repository()..orders = [order('a')];
     await _open(tester, repo);
+    expect(find.bySemanticsLabel('View item'), findsOneWidget);
+    expect(find.bySemanticsLabel('Something’s not right'), findsOneWidget);
+    expect(find.bySemanticsLabel(RegExp(r'^\d+ hours')), findsOneWidget);
     await tester.tap(find.text('Something’s not right'));
     await tester.pumpAndSettle();
     expect(find.text('Raise dispute'), findsOneWidget);
@@ -292,6 +296,7 @@ void main() {
     expect(repo.disputed, 'a');
     expect(timerBubble, findsNothing);
     expect(repo.confirmed, isNull);
+    semantics.dispose();
   });
 
   testWidgets('calculates 72-hour confirmation deadline from shipment.deliveredAt', (tester) async {

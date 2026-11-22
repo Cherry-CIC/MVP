@@ -279,6 +279,37 @@ void main() {
     expect(find.text('Your item has been delivered'), findsOneWidget);
   });
 
+  testWidgets('resuming while on Profile keeps delivery reminder pending until returning to Home', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    final repo = _OrdersRepositoryStub([]);
+    await _pumpHomePage(tester, ordersRepository: repo);
+
+    await tester.tap(find.text('Profile'));
+    await tester.pumpAndSettle();
+
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+    final deliveredOrder = OrderSummary.tryFromOrderJson({
+      'id': 'resume-1',
+      'productName': 'Wool jumper',
+      'deliveryState': 'awaiting_confirmation',
+      'shipment': {
+        'id': 's-resume',
+        'status': 'delivered',
+        'deliveredAt': DateTime.now().toUtc().subtract(const Duration(hours: 1)).toIso8601String(),
+      },
+    })!;
+    repo.orders.add(deliveredOrder);
+
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pumpAndSettle();
+    expect(find.text('Your item has been delivered'), findsNothing);
+
+    await tester.tap(find.text('Home'));
+    await tester.pumpAndSettle();
+    expect(find.text('Your item has been delivered'), findsOneWidget);
+  });
+
   testWidgets('successful Give result selects existing Profile and shows the new listing', (tester) async {
     final repository = _ProfileListingsRepositoryStub();
     final observer = _NavigationObserver();
