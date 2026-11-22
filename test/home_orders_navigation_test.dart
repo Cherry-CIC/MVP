@@ -234,8 +234,11 @@ void main() {
       'id': 'a',
       'productName': 'Winter coat',
       'deliveryState': 'awaiting_confirmation',
-      'collectedAt': DateTime.now().toUtc().subtract(const Duration(hours: 40)).toIso8601String(),
-      'confirmationDeadline': DateTime.now().toUtc().add(const Duration(hours: 8)).toIso8601String(),
+      'shipment': {
+        'id': 's-a',
+        'status': 'delivered',
+        'deliveredAt': DateTime.now().toUtc().subtract(const Duration(hours: 64)).toIso8601String(),
+      },
     })!;
     await _pumpHomePage(tester, ordersRepository: _OrdersRepositoryStub([order]));
     final timer = find.byType(DeliveryTimerBubble);

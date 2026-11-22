@@ -13,15 +13,14 @@ class OrderSummary {
   final String currency;
   final String deliveryState;
   final String deliveryLabel;
-  final DateTime? confirmationDeadline;
-  final DateTime? collectedAt;
   final DateTime? deliveredAt;
-  final bool usesDeliveryDeadline;
   final String condition;
 
+  DateTime? get confirmationDeadline => deliveredAt?.add(const Duration(hours: 72));
+
   bool canShowDeliveryReminder(DateTime now) =>
-      (collectedAt != null || deliveredAt != null) &&
-      (deliveryState == 'awaiting_confirmation' || deliveryState == 'collected') &&
+      deliveredAt != null &&
+      deliveryState == 'awaiting_confirmation' &&
       confirmationDeadline?.isAfter(now) == true;
 
   const OrderSummary({
@@ -36,10 +35,7 @@ class OrderSummary {
     required this.currency,
     required this.deliveryState,
     required this.deliveryLabel,
-    this.confirmationDeadline,
-    this.collectedAt,
     this.deliveredAt,
-    this.usesDeliveryDeadline = false,
     this.condition = '',
   });
 
@@ -60,16 +56,7 @@ class OrderSummary {
     final shipment = json['shipment'] is Map
         ? Map<String, dynamic>.from(json['shipment'] as Map)
         : null;
-    final deliveredAt =
-        DateTime.tryParse(_readString(shipment?['deliveredAt'])) ??
-        DateTime.tryParse(_readString(json['deliveredAt']));
-    final collectedAt = DateTime.tryParse(_readString(json['collectedAt']));
-    final serverDeadline = DateTime.tryParse(_readString(json['confirmationDeadline']));
-    final hasCollectionDeadline = collectedAt != null && serverDeadline != null;
-    final confirmationDeadline = hasCollectionDeadline
-        ? serverDeadline
-        : deliveredAt?.add(const Duration(hours: 72)) ?? serverDeadline;
-    final usesDeliveryDeadline = !hasCollectionDeadline && deliveredAt != null;
+    final deliveredAt = DateTime.tryParse(_readString(shipment?['deliveredAt']));
 
     return OrderSummary(
       id: id,
@@ -86,10 +73,7 @@ class OrderSummary {
         json['status'],
       ]),
       deliveryLabel: _readString(json['deliveryLabel']),
-      confirmationDeadline: confirmationDeadline,
-      collectedAt: collectedAt,
       deliveredAt: deliveredAt,
-      usesDeliveryDeadline: usesDeliveryDeadline,
     );
   }
 
@@ -117,10 +101,7 @@ class OrderSummary {
       itemPriceMinor: itemPriceMinor,
       totalAmountMinor: totalAmountMinor,
       currency: currency,
-      confirmationDeadline: confirmationDeadline,
-      collectedAt: collectedAt,
       deliveredAt: deliveredAt,
-      usesDeliveryDeadline: usesDeliveryDeadline,
       condition: condition ?? this.condition,
       deliveryState: deliveryState ?? this.deliveryState,
       deliveryLabel: deliveryLabel ?? this.deliveryLabel,
