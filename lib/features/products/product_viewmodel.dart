@@ -25,6 +25,8 @@ class ProductViewModel extends ChangeNotifier {
   final Map<String, Charity> _knownCharitiesById = {};
   final Map<String, Charity> _knownCharitiesByNormalizedName = {};
   final Set<String> _pendingCharityLikeUpdates = {};
+  int _charityMutationSequence = 0;
+  final Map<String, int> _charityMutationRevisions = {};
 
   final Set<String> _pendingSafetyActions = {};
   final String? Function() _currentUserIdProvider;
@@ -110,7 +112,29 @@ class ProductViewModel extends ChangeNotifier {
     return _likeCountOverrides[product.id] ?? product.likes;
   }
 
+  int get charityMutationSequence {
+    _ensureCurrentAccount();
+    return _charityMutationSequence;
+  }
+
+  bool hasCharityMutatedSince(
+    String charityId,
+    int sinceRevision, {
+    String? charityName,
+  }) {
+    _ensureCurrentAccount();
+    final resolvedId = resolveCharityId(charityId, charityName: charityName);
+    final resolvedRevision = _charityMutationRevisions[resolvedId] ?? 0;
+    final rawRevision = _charityMutationRevisions[charityId.trim()] ?? 0;
+    return resolvedRevision > sinceRevision || rawRevision > sinceRevision;
+  }
+
   String resolveCharityId(String? charityId, {String? charityName}) {
+    final trimmedId = charityId?.trim() ?? '';
+    if (trimmedId.isNotEmpty && _knownCharitiesById.containsKey(trimmedId)) {
+      return trimmedId;
+    }
+
     final trimmedName = charityName?.trim() ?? '';
     if (trimmedName.isNotEmpty) {
       final normalized = DiscoverRepository.normalizeCharityName(trimmedName);
@@ -120,7 +144,6 @@ class ProductViewModel extends ChangeNotifier {
       }
     }
 
-    final trimmedId = charityId?.trim() ?? '';
     if (trimmedId.isNotEmpty) {
       return trimmedId;
     }
@@ -195,6 +218,9 @@ class ProductViewModel extends ChangeNotifier {
   }
 
   Future<Result<void>> _hydrateCharities() async {
+    _ensureCurrentAccount();
+    final startRevision = _charityMutationSequence;
+    final accountStateVersion = _accountStateVersion;
     try {
       final result = await productRepository.fetchCharities();
       if (_disposed) {
@@ -204,7 +230,11 @@ class ProductViewModel extends ChangeNotifier {
         return Result.failure(result.error ?? 'Unable to load charities.');
       }
 
-      cacheCharities(result.value ?? const []);
+      final sameAccount = isAccountStateCurrent(accountStateVersion);
+      cacheCharities(
+        result.value ?? const [],
+        sinceMutationRevision: sameAccount ? startRevision : null,
+      );
       return Result.success(null);
     } finally {
       _charitiesHydration = null;
@@ -227,6 +257,7 @@ class ProductViewModel extends ChangeNotifier {
   }
 
   Future<Result<void>> _hydrateLikedCharities(int accountStateVersion) async {
+    final startRevision = _charityMutationSequence;
     try {
       final result = await productRepository.fetchLikedCharities();
       if (!isAccountStateCurrent(accountStateVersion)) {
@@ -237,8 +268,48 @@ class ProductViewModel extends ChangeNotifier {
         return Result.failure(result.error ?? 'Unable to restore liked charities.');
       }
 
+      final mutatedIds = <String>{
+        for (final entry in _charityMutationRevisions.entries)
+          if (entry.value > startRevision) entry.key,
+      };
+      final preservedLikedState = <String, bool>{
+        for (final id in mutatedIds)
+          if (_likedCharities.containsKey(id)) id: _likedCharities[id]!,
+      };
+      final preservedLikedCache = <String, Charity>{
+        for (final id in mutatedIds)
+          if (_likedCharityCache.containsKey(id)) id: _likedCharityCache[id]!,
+      };
+
       _clearCachedLikedCharitiesState(notify: false);
-      cacheLikedCharities(result.value ?? const []);
+
+      for (final charity in result.value ?? const <Charity>[]) {
+        final id = charity.id.trim();
+        if (id.isEmpty) continue;
+        if (mutatedIds.contains(id)) {
+          final preservedCount =
+              _charityLikeCountOverrides[id] ??
+              _knownCharitiesById[id]?.likes ??
+              charity.likes;
+          _registerKnownCharity(charity.copyWith(likes: preservedCount));
+          continue;
+        }
+        _registerKnownCharity(charity);
+        _likedCharities[id] = true;
+        _likedCharityCache[id] = charity;
+        _charityLikeCountOverrides[id] = charity.likes;
+      }
+
+      for (final id in mutatedIds) {
+        final liked = preservedLikedState[id];
+        if (liked != null) {
+          _likedCharities[id] = liked;
+          if (liked && preservedLikedCache.containsKey(id)) {
+            _likedCharityCache[id] = preservedLikedCache[id]!;
+          }
+        }
+      }
+
       notifyListeners();
       return Result.success(null);
     } finally {
@@ -415,6 +486,7 @@ class ProductViewModel extends ChangeNotifier {
         likes: update.likes,
       );
       _registerKnownCharity(updatedCharity);
+      _charityMutationRevisions[id] = ++_charityMutationSequence;
       _likedCharities[id] = update.liked;
       _charityLikeCountOverrides[id] = update.likes;
       if (update.liked) {
@@ -560,7 +632,10 @@ class ProductViewModel extends ChangeNotifier {
     }
   }
 
-  void cacheCharities(Iterable<Charity> charities) {
+  void cacheCharities(
+    Iterable<Charity> charities, {
+    int? sinceMutationRevision,
+  }) {
     if (_disposed) return;
     _ensureCurrentAccount();
     var changed = false;
@@ -569,6 +644,15 @@ class ProductViewModel extends ChangeNotifier {
       final id = charity.id.trim();
       if (id.isEmpty) continue;
       final previous = _knownCharitiesById[id];
+      final mutatedSinceStart =
+          sinceMutationRevision != null &&
+          (_charityMutationRevisions[id] ?? 0) > sinceMutationRevision;
+      if (mutatedSinceStart) {
+        final preservedCount =
+            _charityLikeCountOverrides[id] ?? previous?.likes ?? charity.likes;
+        _registerKnownCharity(charity.copyWith(likes: preservedCount));
+        continue;
+      }
       _registerKnownCharity(charity);
       if (previous?.likes != charity.likes ||
           _charityLikeCountOverrides[id] != charity.likes) {
@@ -582,7 +666,10 @@ class ProductViewModel extends ChangeNotifier {
     }
   }
 
-  void cacheLikedCharities(Iterable<Charity> charities) {
+  void cacheLikedCharities(
+    Iterable<Charity> charities, {
+    int? sinceMutationRevision,
+  }) {
     if (_disposed) return;
     _ensureCurrentAccount();
     var changed = false;
@@ -590,6 +677,13 @@ class ProductViewModel extends ChangeNotifier {
     for (final charity in charities) {
       final id = charity.id.trim();
       if (id.isEmpty) {
+        continue;
+      }
+
+      final mutatedSinceStart =
+          sinceMutationRevision != null &&
+          (_charityMutationRevisions[id] ?? 0) > sinceMutationRevision;
+      if (mutatedSinceStart) {
         continue;
       }
 
@@ -677,6 +771,8 @@ class ProductViewModel extends ChangeNotifier {
     _likedCharities.clear();
     _likedCharityCache.clear();
     _pendingCharityLikeUpdates.clear();
+    _charityMutationRevisions.clear();
+    _charityMutationSequence += 1;
     _pendingSafetyActions.clear();
     _likedProductsHydration = null;
     _likedProductsHydrationVersion = null;

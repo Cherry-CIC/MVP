@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cherry_mvp/features/search/widgets/search.dart';
 import 'package:cherry_mvp/core/config/config.dart';
 import 'package:cherry_mvp/core/config/app_spacing.dart';
@@ -293,6 +295,20 @@ class _LikedCharitiesList extends StatelessWidget {
   static final DiscoverRepository _defaultDiscoverRepository =
       DiscoverRepository();
 
+  Future<void> _handleUnlike(BuildContext context, Charity charity) async {
+    final viewModel = context.read<LikedItemsViewModel>();
+    final removed = await viewModel.unlikeCharity(charity);
+    if (!removed && context.mounted) {
+      final message =
+          viewModel.charitiesErrorMessage ??
+          'Unable to remove this liked charity.';
+      final messenger = ScaffoldMessenger.maybeOf(context);
+      messenger
+        ?..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text(message)));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final discoverRepository =
@@ -315,14 +331,14 @@ class _LikedCharitiesList extends StatelessWidget {
             (suppliedDescription != null && suppliedDescription.isNotEmpty)
             ? suppliedDescription
             : (discoverCharity?.description ?? AppStrings.charityDescription);
+        final assetUrl = charity.imageUrl.startsWith('assets/')
+            ? charity.imageUrl
+            : null;
         final imagePath =
             discoverCharity?.charityImage ??
-            (charity.imageUrl.isNotEmpty
-                ? charity.imageUrl
-                : AppImages.discoverImage1);
-        final logoPath =
-            discoverCharity?.charityLogo ??
-            (charity.imageUrl.isNotEmpty ? charity.imageUrl : null);
+            assetUrl ??
+            AppImages.discoverImage1;
+        final logoPath = discoverCharity?.charityLogo ?? assetUrl;
         final likes = productViewModel.getCharityLikesCount(
           charity.id,
           charityName: charity.name,
@@ -340,8 +356,7 @@ class _LikedCharitiesList extends StatelessWidget {
               discoverCharity?.logoUsesDarkBackground ?? false,
           likes: likes,
           isLiked: true,
-          onLikePressed: () =>
-              context.read<LikedItemsViewModel>().unlikeCharity(charity),
+          onLikePressed: () => unawaited(_handleUnlike(context, charity)),
         );
       },
     );

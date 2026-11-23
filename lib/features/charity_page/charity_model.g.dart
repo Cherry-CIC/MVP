@@ -7,12 +7,12 @@ part of 'charity_model.dart';
 // **************************************************************************
 
 Charity _$CharityFromJson(Map<String, dynamic> json) => Charity(
-  id: (json['id'] ?? json['_id']) as String,
+  id: Charity._readId(json, 'id') as String,
   name: json['name'] as String,
-  imageUrl: (json['imageUrl'] ?? json['image_url'] ?? '') as String,
+  imageUrl: Charity._readImageUrl(json, 'imageUrl') as String,
   description: json['description'] as String?,
   website: json['website'] as String?,
-  likes: Charity.parseLikes(json['likes']),
+  likes: json['likes'] == null ? 0 : Charity.parseLikes(json['likes']),
   createdAt: Charity.parseTimestamp(json['createdAt']),
   updatedAt: Charity.parseTimestamp(json['updatedAt']),
 );

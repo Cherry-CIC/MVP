@@ -5,13 +5,18 @@ part 'charity_model.g.dart';
 
 @JsonSerializable()
 class Charity {
+  @JsonKey(readValue: _readId)
   final String id;
   final String name;
+  @JsonKey(readValue: _readImageUrl)
   final String imageUrl;
   final String? description;
   final String? website;
+  @JsonKey(fromJson: parseLikes)
   final int likes;
+  @JsonKey(fromJson: parseTimestamp)
   final DateTime createdAt;
+  @JsonKey(fromJson: parseTimestamp)
   final DateTime updatedAt;
 
   const Charity({
@@ -24,6 +29,12 @@ class Charity {
     required this.createdAt,
     required this.updatedAt,
   });
+
+  static Object? _readId(Map<dynamic, dynamic> json, String key) =>
+      json['id'] ?? json['_id'];
+
+  static Object? _readImageUrl(Map<dynamic, dynamic> json, String key) =>
+      json['imageUrl'] ?? json['image_url'] ?? '';
 
   Charity copyWith({
     String? id,

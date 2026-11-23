@@ -76,6 +76,7 @@ void main() {
           'imageUrl': 'https://example.com/charity.jpg',
           'description': 'The chosen charity',
           'website': 'https://example.com/charity',
+          'likes': 0,
           'createdAt': '2026-09-01T00:00:00.000Z',
           'updatedAt': '2026-09-02T00:00:00.000Z',
         };

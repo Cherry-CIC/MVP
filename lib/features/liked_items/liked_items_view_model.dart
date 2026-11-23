@@ -140,6 +140,7 @@ class LikedItemsViewModel extends ChangeNotifier {
     if (_disposed) return;
     final request = ++_charitiesRequestSequence;
     final accountStateVersion = productViewModel.accountStateVersion;
+    final startRevision = productViewModel.charityMutationSequence;
     _accountStateVersion = accountStateVersion;
     _charitiesStatus = LikedItemsStatus.loading;
     _charitiesErrorMessage = null;
@@ -162,11 +163,15 @@ class LikedItemsViewModel extends ChangeNotifier {
       return;
     }
 
-    _charities = _mergeCharities(
-      result.value ?? const [],
-      productViewModel.cachedLikedCharities,
+    _charities = _mergeLoadedCharities(
+      fetchedCharities: result.value ?? const [],
+      cachedCharities: productViewModel.cachedLikedCharities,
+      sinceMutationRevision: startRevision,
     );
-    productViewModel.cacheLikedCharities(_charities);
+    productViewModel.cacheLikedCharities(
+      _charities,
+      sinceMutationRevision: startRevision,
+    );
     _charitiesStatus =
         _charities.isEmpty ? LikedItemsStatus.empty : LikedItemsStatus.loaded;
     notifyListeners();
@@ -275,6 +280,58 @@ class LikedItemsViewModel extends ChangeNotifier {
     }
     final normalizedName = DiscoverRepository.normalizeCharityName(charity.name);
     return normalizedName.isNotEmpty ? normalizedName : charity.id.trim();
+  }
+
+  List<Charity> _mergeLoadedCharities({
+    required Iterable<Charity> fetchedCharities,
+    required Iterable<Charity> cachedCharities,
+    required int sinceMutationRevision,
+  }) {
+    final charities = <Charity>[];
+    final seenKeys = <String>{};
+
+    for (final charity in fetchedCharities) {
+      final key = _charityIdentityKey(charity);
+      if (key.isEmpty || !seenKeys.add(key)) {
+        continue;
+      }
+      final mutatedSinceStart = productViewModel.hasCharityMutatedSince(
+        charity.id,
+        sinceMutationRevision,
+        charityName: charity.name,
+      );
+      if (mutatedSinceStart) {
+        if (!productViewModel.isCharityLiked(
+          charity.id,
+          charityName: charity.name,
+        )) {
+          continue;
+        }
+        final updatedCount = productViewModel.getCharityLikesCount(
+          charity.id,
+          charityName: charity.name,
+          fallback: charity.likes,
+        );
+        charities.add(charity.copyWith(likes: updatedCount));
+      } else {
+        charities.add(charity);
+      }
+    }
+
+    for (final charity in cachedCharities) {
+      final key = _charityIdentityKey(charity);
+      if (key.isEmpty || !seenKeys.add(key)) {
+        continue;
+      }
+      final updatedCount = productViewModel.getCharityLikesCount(
+        charity.id,
+        charityName: charity.name,
+        fallback: charity.likes,
+      );
+      charities.add(charity.copyWith(likes: updatedCount));
+    }
+
+    return List.unmodifiable(charities);
   }
 
   List<Charity> _mergeCharities(

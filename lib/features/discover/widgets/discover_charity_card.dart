@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:cherry_mvp/core/config/app_strings.dart';
-import 'package:cherry_mvp/core/utils/image_provider_helper.dart';
 import 'package:cherry_mvp/features/charity_page/charity_model.dart';
 import 'package:cherry_mvp/features/discover/discover_repository.dart';
 import 'package:cherry_mvp/features/products/product_viewmodel.dart';
@@ -59,37 +58,43 @@ class DiscoverCharityCardState extends State<DiscoverCharityCard> {
 
     final productViewModel = context.read<ProductViewModel?>();
     if (productViewModel != null) {
-      final resolvedId = productViewModel.resolveCharityId(
-        widget.charityId,
-        charityName: widget.title,
-      );
-      final currentLikes = productViewModel.getCharityLikesCount(
-        resolvedId,
-        charityName: widget.title,
-        fallback: widget.likes,
-      );
-      final epoch = DateTime.fromMillisecondsSinceEpoch(0, isUtc: true);
-      unawaited(
-        productViewModel.toggleCharityLike(
-          Charity(
-            id: resolvedId,
-            name: widget.title,
-            imageUrl: widget.logoPath ?? widget.imagePath,
-            description: widget.description,
-            likes: currentLikes,
-            createdAt: epoch,
-            updatedAt: epoch,
-          ),
-        ),
-      );
+      unawaited(_toggleCharityLike(productViewModel));
       return;
     }
 
     toggleLiked();
   }
 
-  bool _isNetworkPath(String path) =>
-      path.startsWith('http://') || path.startsWith('https://');
+  Future<void> _toggleCharityLike(ProductViewModel productViewModel) async {
+    final resolvedId = productViewModel.resolveCharityId(
+      widget.charityId,
+      charityName: widget.title,
+    );
+    final currentLikes = productViewModel.getCharityLikesCount(
+      resolvedId,
+      charityName: widget.title,
+      fallback: widget.likes,
+    );
+    final epoch = DateTime.fromMillisecondsSinceEpoch(0, isUtc: true);
+    final result = await productViewModel.toggleCharityLike(
+      Charity(
+        id: resolvedId,
+        name: widget.title,
+        imageUrl: widget.logoPath ?? widget.imagePath,
+        description: widget.description,
+        likes: currentLikes,
+        createdAt: epoch,
+        updatedAt: epoch,
+      ),
+    );
+    if (!result.isSuccess && mounted) {
+      final message = result.error ?? 'Unable to update this liked charity.';
+      final messenger = ScaffoldMessenger.maybeOf(context);
+      messenger
+        ?..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text(message)));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -127,23 +132,12 @@ class DiscoverCharityCardState extends State<DiscoverCharityCard> {
               borderRadius: BorderRadius.circular(12),
               child: ConstrainedBox(
                 constraints: const BoxConstraints(minHeight: 160),
-                child: _isNetworkPath(widget.imagePath)
-                    ? Semantics(
-                        image: true,
-                        label: 'Cover image for ${widget.title}',
-                        child: ImageProviderHelper.buildImage(
-                          imagePath: widget.imagePath,
-                          width: double.infinity,
-                          height: 180,
-                          fit: BoxFit.cover,
-                        ),
-                      )
-                    : Image.asset(
-                        widget.imagePath,
-                        width: double.infinity,
-                        fit: BoxFit.cover,
-                        semanticLabel: 'Cover image for ${widget.title}',
-                      ),
+                child: Image.asset(
+                  widget.imagePath,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                  semanticLabel: 'Cover image for ${widget.title}',
+                ),
               ),
             ),
             Positioned(
@@ -230,16 +224,10 @@ class _CharityLogoBadge extends StatelessWidget {
   final String? logoPath;
   final bool useDarkBackground;
 
-  bool _isNetworkPath(String path) =>
-      path.startsWith('http://') || path.startsWith('https://');
-
   @override
   Widget build(BuildContext context) {
-    final trimmedLogo = logoPath?.trim();
     return Semantics(
-      label: trimmedLogo == null || trimmedLogo.isEmpty
-          ? 'Temporary logo for $title'
-          : '$title logo',
+      label: logoPath == null ? 'Temporary logo for $title' : '$title logo',
       child: Container(
         width: 72,
         height: 48,
@@ -247,24 +235,15 @@ class _CharityLogoBadge extends StatelessWidget {
         alignment: Alignment.center,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(8),
-          color: useDarkBackground
-              ? Colors.black
-              : Theme.of(context).colorScheme.surface,
+          color: useDarkBackground ? Colors.black : Theme.of(context).colorScheme.surface,
         ),
         clipBehavior: Clip.antiAlias,
-        child: trimmedLogo == null || trimmedLogo.isEmpty
+        child: logoPath == null
             ? _TemporaryLogoMark(title: title)
-            : _isNetworkPath(trimmedLogo)
-            ? ImageProviderHelper.buildImage(
-                imagePath: trimmedLogo,
-                fit: BoxFit.contain,
-                errorWidget: _TemporaryLogoMark(title: title),
-              )
             : Image.asset(
-                trimmedLogo,
+                logoPath!,
                 fit: BoxFit.contain,
-                errorBuilder: (context, error, stackTrace) =>
-                    _TemporaryLogoMark(title: title),
+                errorBuilder: (context, error, stackTrace) => _TemporaryLogoMark(title: title),
               ),
       ),
     );

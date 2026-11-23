@@ -22,11 +22,11 @@ import 'support/unexpected_api_service.dart';
 class _CharityLikeProductRepository extends ProductRepository {
   _CharityLikeProductRepository({
     this.initialCharities = const [],
-    this.initialLikedCharities = const [],
+    this.likeFailureMessage,
   }) : super(const UnexpectedApiService());
 
   final List<Charity> initialCharities;
-  final List<Charity> initialLikedCharities;
+  final String? likeFailureMessage;
   final Map<String, int> _likesById = {};
 
   @override
@@ -39,14 +39,14 @@ class _CharityLikeProductRepository extends ProductRepository {
 
   @override
   Future<Result<List<Charity>>> fetchLikedCharities() async {
-    for (final charity in initialLikedCharities) {
-      _likesById[charity.id] = charity.likes;
-    }
-    return Result.success(initialLikedCharities);
+    return Result.success(const <Charity>[]);
   }
 
   @override
   Future<Result<CharityLikeUpdate>> likeCharity(Charity charity) async {
+    if (likeFailureMessage != null) {
+      return Result.failure(likeFailureMessage!);
+    }
     final nextLikes = (_likesById[charity.id] ?? charity.likes) + 1;
     _likesById[charity.id] = nextLikes;
     return Result.success(
@@ -449,5 +449,69 @@ void main() {
       findsOneWidget,
     );
     expect(productViewModel.cachedLikedCharities, isEmpty);
+  });
+
+  testWidgets('failed charity like on Discover shows error feedback and keeps count unchanged', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(430, 932);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final navigator = NavigationProvider();
+    final home = HomeViewModel(homeRepository: _Items());
+    addTearDown(home.dispose);
+    final productViewModel = ProductViewModel(
+      productRepository: _CharityLikeProductRepository(
+        likeFailureMessage: 'Unable to save this liked charity.',
+      ),
+      navigator: navigator,
+    );
+    addTearDown(productViewModel.dispose);
+
+    await tester.pumpWidget(
+      MultiProvider(
+        providers: [
+          Provider<NavigationProvider>.value(value: navigator),
+          ChangeNotifierProvider(
+            create: (_) => DiscoverViewModel(discoverRepository: DiscoverRepository()),
+          ),
+          ChangeNotifierProvider.value(value: home),
+          ChangeNotifierProvider(
+            create: (_) => CategoryViewModel(
+              categoryRepository: _Categories(),
+              navigator: navigator,
+            ),
+          ),
+          ChangeNotifierProvider.value(value: productViewModel),
+        ],
+        child: MaterialApp(
+          navigatorKey: navigator.navigatorKey,
+          theme: buildTheme(),
+          home: const DiscoverPage(showBackButton: false),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final waterAidLikeButton = find.byKey(
+      const ValueKey('discover-charity-like-WaterAid'),
+    );
+    await tester.tap(waterAidLikeButton);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Unable to save this liked charity.'), findsOneWidget);
+    expect(
+      find.descendant(
+        of: waterAidLikeButton,
+        matching: find.byIcon(Icons.favorite_border),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: waterAidLikeButton, matching: find.text('0')),
+      findsOneWidget,
+    );
   });
 }

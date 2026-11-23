@@ -475,5 +475,6 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('WaterAid'), findsOneWidget);
+    expect(find.text('Charity unlike failed'), findsOneWidget);
   });
 }
