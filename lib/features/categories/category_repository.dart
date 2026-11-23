@@ -18,9 +18,26 @@ final class CategoryRepository implements ICategoryRepository {
 
       if (result.isSuccess && result.value != null) {
         final data = result.value;
-        final List<dynamic> jsonList = data['data'] ?? data;
-        final categories =
-            jsonList.map((json) => Category.fromJson(json)).toList();
+        final jsonList = data is Map ? data['data'] : data;
+        if (jsonList is! List) {
+          return Result.failure('Unexpected categories response');
+        }
+        final categories = <Category>[];
+        for (final json in jsonList) {
+          if (json is! Map) continue;
+          try {
+            final category = Category.fromJson(Map<String, dynamic>.from(json));
+            if (category.id.trim().isNotEmpty && category.name.trim().isNotEmpty) {
+              categories.add(category);
+            }
+          } on FormatException {
+            // An invalid date must not hide the remaining categories.
+            continue;
+          } on TypeError {
+            // An incomplete record must not hide the remaining categories.
+            continue;
+          }
+        }
         return Result.success(categories);
       } else {
         return Result.failure(result.error ?? 'Failed to fetch categories');

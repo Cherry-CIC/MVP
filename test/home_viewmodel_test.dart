@@ -15,6 +15,7 @@ class _HomeRepositoryStub implements IHomeRepository {
     int limit = 20,
     String? cursor,
     String? search,
+    String? categoryId,
   }) async {
     return Result.success(page);
   }
