@@ -74,11 +74,16 @@ class _FakeProductRepository extends ProductRepository {
   _FakeProductRepository({
     required this.fetchResult,
     this.unlikeResult,
+    this.fetchCharitiesResult,
+    this.unlikeCharityResult,
   }) : super(const UnexpectedApiService());
 
   Result<List<Product>> fetchResult;
   Result<ProductLikeUpdate>? unlikeResult;
+  Result<List<Charity>>? fetchCharitiesResult;
+  Result<CharityLikeUpdate>? unlikeCharityResult;
   int fetchCount = 0;
+  int fetchCharitiesCount = 0;
 
   @override
   Future<Result<ProductLikeUpdate>> likeProduct(Product product) async {
@@ -97,6 +102,44 @@ class _FakeProductRepository extends ProductRepository {
   Future<Result<ProductLikeUpdate>> unlikeProduct(String productId) async {
     return unlikeResult ?? Result.success(const ProductLikeUpdate(liked: false, likes: 0));
   }
+
+  @override
+  Future<Result<CharityLikeUpdate>> likeCharity(Charity charity) async {
+    return Result.success(
+      CharityLikeUpdate(
+        liked: true,
+        likes: charity.likes + 1,
+        charity: charity.copyWith(likes: charity.likes + 1),
+      ),
+    );
+  }
+
+  @override
+  Future<Result<List<Charity>>> fetchLikedCharities() async {
+    fetchCharitiesCount += 1;
+    return fetchCharitiesResult ?? Result.success(const <Charity>[]);
+  }
+
+  @override
+  Future<Result<CharityLikeUpdate>> unlikeCharity(String charityId) async {
+    return unlikeCharityResult ??
+        Result.success(const CharityLikeUpdate(liked: false, likes: 0));
+  }
+}
+
+Charity _charity({
+  String id = 'ca6tjKqCRurG0hB49Dcp',
+  String name = 'WaterAid',
+  int likes = 5,
+}) {
+  return Charity(
+    id: id,
+    name: name,
+    imageUrl: AppImages.waterAidLogo,
+    likes: likes,
+    createdAt: DateTime.utc(2026),
+    updatedAt: DateTime.utc(2026),
+  );
 }
 
 Product _product({String id = 'liked-product', String name = 'Liked jacket'}) {
@@ -347,5 +390,90 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Liked jacket'), findsOneWidget);
+  });
+
+  testWidgets('slider switches between Liked items and Liked charities with empty state for each', (
+    tester,
+  ) async {
+    final repository = _FakeProductRepository(
+      fetchResult: Result.success(const <Product>[]),
+      fetchCharitiesResult: Result.success(const <Charity>[]),
+    );
+
+    await _pumpLikedItemsPage(tester, repository: repository);
+    await tester.pump();
+
+    expect(find.byType(LikedItemsSelectionBar), findsOneWidget);
+    expect(find.text(AppStrings.likedItemsTab), findsOneWidget);
+    expect(find.text(AppStrings.likedCharitiesTab), findsOneWidget);
+    expect(find.text(AppStrings.likedItemsEmptyTitle), findsOneWidget);
+
+    await tester.tap(find.text(AppStrings.likedCharitiesTab));
+    await tester.pumpAndSettle();
+
+    expect(repository.fetchCharitiesCount, 1);
+    expect(find.text(AppStrings.likedCharitiesEmptyTitle), findsOneWidget);
+    expect(find.text(AppStrings.likedCharitiesBrowseCharities), findsOneWidget);
+
+    await tester.tap(find.text(AppStrings.likedItemsTab));
+    await tester.pumpAndSettle();
+
+    expect(find.text(AppStrings.likedItemsEmptyTitle), findsOneWidget);
+  });
+
+  testWidgets('Liked charities tab displays real liked charities and removes charity on unlike', (
+    tester,
+  ) async {
+    final repository = _FakeProductRepository(
+      fetchResult: Result.success([_product()]),
+      fetchCharitiesResult: Result.success([_charity(likes: 5)]),
+    );
+
+    await _pumpLikedItemsPage(tester, repository: repository);
+    await tester.pump();
+
+    expect(find.text('Liked jacket'), findsOneWidget);
+
+    await tester.tap(find.text(AppStrings.likedCharitiesTab));
+    await tester.pumpAndSettle();
+
+    expect(find.text('WaterAid'), findsOneWidget);
+    expect(find.text('5'), findsOneWidget);
+    expect(find.byIcon(Icons.favorite), findsOneWidget);
+
+    final likeButton = find.byKey(const ValueKey('discover-charity-like-WaterAid'));
+    await tester.ensureVisible(likeButton);
+    await tester.pumpAndSettle();
+    await tester.tap(likeButton);
+    await tester.pumpAndSettle();
+
+    expect(find.text('WaterAid'), findsNothing);
+    expect(find.text(AppStrings.likedCharitiesEmptyTitle), findsOneWidget);
+  });
+
+  testWidgets('failed charity unlike keeps the charity card visible', (
+    tester,
+  ) async {
+    final repository = _FakeProductRepository(
+      fetchResult: Result.success(const <Product>[]),
+      fetchCharitiesResult: Result.success([_charity(likes: 2)]),
+      unlikeCharityResult: Result.failure('Charity unlike failed'),
+    );
+
+    await _pumpLikedItemsPage(tester, repository: repository);
+    await tester.pump();
+
+    await tester.tap(find.text(AppStrings.likedCharitiesTab));
+    await tester.pumpAndSettle();
+
+    expect(find.text('WaterAid'), findsOneWidget);
+
+    final likeButton = find.byKey(const ValueKey('discover-charity-like-WaterAid'));
+    await tester.ensureVisible(likeButton);
+    await tester.pumpAndSettle();
+    await tester.tap(likeButton);
+    await tester.pumpAndSettle();
+
+    expect(find.text('WaterAid'), findsOneWidget);
   });
 }

@@ -1,4 +1,5 @@
 class DummyCharity {
+  final String? id;
   final String charityName;
   final String charityImage;
   final String description;
@@ -8,6 +9,7 @@ class DummyCharity {
   final Set<String> tags;
 
   const DummyCharity({
+    this.id,
     required this.charityName,
     required this.charityImage,
     required this.description,

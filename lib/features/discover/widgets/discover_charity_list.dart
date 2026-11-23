@@ -22,6 +22,7 @@ class DiscoverCharityList extends StatelessWidget {
           child: Column(
             children: [
               DiscoverCharityCard(
+                charityId: charity.id,
                 title: charity.charityName,
                 description: charity.description,
                 imagePath: charity.charityImage,

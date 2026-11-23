@@ -1,24 +1,39 @@
+import 'dart:async';
+import 'dart:math' as math;
+
+import 'package:cherry_mvp/core/config/app_strings.dart';
+import 'package:cherry_mvp/core/utils/image_provider_helper.dart';
+import 'package:cherry_mvp/features/charity_page/charity_model.dart';
+import 'package:cherry_mvp/features/discover/discover_repository.dart';
+import 'package:cherry_mvp/features/products/product_viewmodel.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 const hasUserLiked = false;
 
 class DiscoverCharityCard extends StatefulWidget {
   const DiscoverCharityCard({
     super.key,
+    this.charityId,
     required this.title,
     required this.description,
     required this.imagePath,
     required this.logoPath,
     this.logoUsesDarkBackground = false,
     required this.likes,
+    this.isLiked,
+    this.onLikePressed,
   });
 
+  final String? charityId;
   final String title;
   final String description;
   final String imagePath;
   final String? logoPath;
   final bool logoUsesDarkBackground;
   final int likes;
+  final bool? isLiked;
+  final VoidCallback? onLikePressed;
 
   @override
   DiscoverCharityCardState createState() => DiscoverCharityCardState();
@@ -26,15 +41,83 @@ class DiscoverCharityCard extends StatefulWidget {
 
 class DiscoverCharityCardState extends State<DiscoverCharityCard> {
   bool isLiked = hasUserLiked;
+  int? _localLikes;
 
   void toggleLiked() {
     setState(() {
       isLiked = !isLiked;
+      final currentLikes = _localLikes ?? widget.likes;
+      _localLikes = isLiked ? currentLikes + 1 : math.max(0, currentLikes - 1);
     });
   }
 
+  void _handleLikeTap() {
+    if (widget.onLikePressed != null) {
+      widget.onLikePressed!();
+      return;
+    }
+
+    final productViewModel = context.read<ProductViewModel?>();
+    if (productViewModel != null) {
+      final resolvedId = productViewModel.resolveCharityId(
+        widget.charityId,
+        charityName: widget.title,
+      );
+      final currentLikes = productViewModel.getCharityLikesCount(
+        resolvedId,
+        charityName: widget.title,
+        fallback: widget.likes,
+      );
+      final epoch = DateTime.fromMillisecondsSinceEpoch(0, isUtc: true);
+      unawaited(
+        productViewModel.toggleCharityLike(
+          Charity(
+            id: resolvedId,
+            name: widget.title,
+            imageUrl: widget.logoPath ?? widget.imagePath,
+            description: widget.description,
+            likes: currentLikes,
+            createdAt: epoch,
+            updatedAt: epoch,
+          ),
+        ),
+      );
+      return;
+    }
+
+    toggleLiked();
+  }
+
+  bool _isNetworkPath(String path) =>
+      path.startsWith('http://') || path.startsWith('https://');
+
   @override
   Widget build(BuildContext context) {
+    final productViewModel = context.watch<ProductViewModel?>();
+    final resolvedId =
+        productViewModel?.resolveCharityId(
+          widget.charityId,
+          charityName: widget.title,
+        ) ??
+        (widget.charityId?.trim().isNotEmpty == true
+            ? widget.charityId!.trim()
+            : DiscoverRepository.normalizeCharityName(widget.title));
+    final effectiveIsLiked =
+        widget.isLiked ??
+        (productViewModel != null
+            ? productViewModel.isCharityLiked(
+                resolvedId,
+                charityName: widget.title,
+              )
+            : isLiked);
+    final displayLikes = productViewModel != null
+        ? productViewModel.getCharityLikesCount(
+            resolvedId,
+            charityName: widget.title,
+            fallback: widget.likes,
+          )
+        : (_localLikes ?? widget.likes);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -42,11 +125,25 @@ class DiscoverCharityCardState extends State<DiscoverCharityCard> {
           children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(12),
-              child: Image.asset(
-                widget.imagePath,
-                width: double.infinity,
-                fit: BoxFit.cover,
-                semanticLabel: 'Cover image for ${widget.title}',
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(minHeight: 160),
+                child: _isNetworkPath(widget.imagePath)
+                    ? Semantics(
+                        image: true,
+                        label: 'Cover image for ${widget.title}',
+                        child: ImageProviderHelper.buildImage(
+                          imagePath: widget.imagePath,
+                          width: double.infinity,
+                          height: 180,
+                          fit: BoxFit.cover,
+                        ),
+                      )
+                    : Image.asset(
+                        widget.imagePath,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                        semanticLabel: 'Cover image for ${widget.title}',
+                      ),
               ),
             ),
             Positioned(
@@ -61,29 +158,48 @@ class DiscoverCharityCardState extends State<DiscoverCharityCard> {
             Positioned(
               bottom: 9,
               right: 9,
-              child: GestureDetector(
-                onTap: toggleLiked,
-                child: Container(
-                  constraints: const BoxConstraints(minWidth: 35, minHeight: 25),
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(5),
-                    color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.15),
-                        blurRadius: 4,
-                        offset: Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      isLiked ? Icon(Icons.favorite, size: 16) : Icon(Icons.favorite_border, size: 16),
-                      SizedBox(width: 4),
-                      Text('${widget.likes}'),
-                    ],
+              child: Semantics(
+                key: ValueKey('charity-like-$resolvedId'),
+                button: true,
+                label: effectiveIsLiked
+                    ? AppStrings.unlikeCharity
+                    : AppStrings.likeCharity,
+                child: GestureDetector(
+                  key: ValueKey('discover-charity-like-${widget.title}'),
+                  behavior: HitTestBehavior.opaque,
+                  onTap: _handleLikeTap,
+                  child: Container(
+                    constraints: const BoxConstraints(
+                      minWidth: 35,
+                      minHeight: 25,
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(5),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.surfaceContainerHighest,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.15),
+                          blurRadius: 4,
+                          offset: Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        effectiveIsLiked
+                            ? Icon(Icons.favorite, size: 16)
+                            : Icon(Icons.favorite_border, size: 16),
+                        SizedBox(width: 4),
+                        Text('$displayLikes'),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -94,7 +210,9 @@ class DiscoverCharityCardState extends State<DiscoverCharityCard> {
         Text(widget.title, style: Theme.of(context).textTheme.titleMedium),
         Text(
           widget.description,
-          style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
         ),
       ],
     );
@@ -112,10 +230,16 @@ class _CharityLogoBadge extends StatelessWidget {
   final String? logoPath;
   final bool useDarkBackground;
 
+  bool _isNetworkPath(String path) =>
+      path.startsWith('http://') || path.startsWith('https://');
+
   @override
   Widget build(BuildContext context) {
+    final trimmedLogo = logoPath?.trim();
     return Semantics(
-      label: logoPath == null ? 'Temporary logo for $title' : '$title logo',
+      label: trimmedLogo == null || trimmedLogo.isEmpty
+          ? 'Temporary logo for $title'
+          : '$title logo',
       child: Container(
         width: 72,
         height: 48,
@@ -123,15 +247,24 @@ class _CharityLogoBadge extends StatelessWidget {
         alignment: Alignment.center,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(8),
-          color: useDarkBackground ? Colors.black : Theme.of(context).colorScheme.surface,
+          color: useDarkBackground
+              ? Colors.black
+              : Theme.of(context).colorScheme.surface,
         ),
         clipBehavior: Clip.antiAlias,
-        child: logoPath == null
+        child: trimmedLogo == null || trimmedLogo.isEmpty
             ? _TemporaryLogoMark(title: title)
-            : Image.asset(
-                logoPath!,
+            : _isNetworkPath(trimmedLogo)
+            ? ImageProviderHelper.buildImage(
+                imagePath: trimmedLogo,
                 fit: BoxFit.contain,
-                errorBuilder: (context, error, stackTrace) => _TemporaryLogoMark(title: title),
+                errorWidget: _TemporaryLogoMark(title: title),
+              )
+            : Image.asset(
+                trimmedLogo,
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) =>
+                    _TemporaryLogoMark(title: title),
               ),
       ),
     );

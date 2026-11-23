@@ -3,6 +3,8 @@ import 'package:cherry_mvp/core/models/model.dart';
 import 'package:cherry_mvp/core/router/nav_provider.dart';
 import 'package:cherry_mvp/core/router/nav_routes.dart';
 import 'package:cherry_mvp/core/utils/result.dart';
+import 'package:cherry_mvp/features/charity_page/charity_model.dart';
+import 'package:cherry_mvp/features/discover/discover_repository.dart';
 import 'package:cherry_mvp/features/products/deleted_listings.dart';
 import 'package:cherry_mvp/features/products/product_repository.dart';
 import 'package:cherry_mvp/features/products/safety_repository.dart';
@@ -15,6 +17,15 @@ class ProductViewModel extends ChangeNotifier {
   final Map<String, Product> _likedProductCache = {};
   final Map<String, int> _likeCountOverrides = {};
   final Set<String> _pendingLikeUpdates = {};
+
+  // Centralized tracker for charities: Map<CharityID, IsLiked>
+  final Map<String, bool> _likedCharities = {};
+  final Map<String, Charity> _likedCharityCache = {};
+  final Map<String, int> _charityLikeCountOverrides = {};
+  final Map<String, Charity> _knownCharitiesById = {};
+  final Map<String, Charity> _knownCharitiesByNormalizedName = {};
+  final Set<String> _pendingCharityLikeUpdates = {};
+
   final Set<String> _pendingSafetyActions = {};
   final String? Function() _currentUserIdProvider;
   int _accountStateVersion = 0;
@@ -22,6 +33,9 @@ class ProductViewModel extends ChangeNotifier {
   String? _accountOwnerId;
   Future<Result<void>>? _likedProductsHydration;
   int? _likedProductsHydrationVersion;
+  Future<Result<void>>? _likedCharitiesHydration;
+  int? _likedCharitiesHydrationVersion;
+  Future<Result<void>>? _charitiesHydration;
   bool _accountChangeNotificationPending = false;
   bool _disposed = false;
 
@@ -94,6 +108,157 @@ class ProductViewModel extends ChangeNotifier {
     _ensureCurrentAccount();
     if (isProductDeleted(product.id)) return 0;
     return _likeCountOverrides[product.id] ?? product.likes;
+  }
+
+  String resolveCharityId(String? charityId, {String? charityName}) {
+    final trimmedName = charityName?.trim() ?? '';
+    if (trimmedName.isNotEmpty) {
+      final normalized = DiscoverRepository.normalizeCharityName(trimmedName);
+      final knownByName = _knownCharitiesByNormalizedName[normalized];
+      if (knownByName != null && knownByName.id.trim().isNotEmpty) {
+        return knownByName.id.trim();
+      }
+    }
+
+    final trimmedId = charityId?.trim() ?? '';
+    if (trimmedId.isNotEmpty) {
+      return trimmedId;
+    }
+
+    if (trimmedName.isNotEmpty) {
+      final discoverMatch = DiscoverRepository().findCharity(name: trimmedName);
+      if (discoverMatch?.id != null && discoverMatch!.id!.trim().isNotEmpty) {
+        return discoverMatch.id!.trim();
+      }
+      return DiscoverRepository.normalizeCharityName(trimmedName);
+    }
+
+    return '';
+  }
+
+  bool isCharityLiked(String charityId, {String? charityName}) {
+    _ensureCurrentAccount();
+    final resolvedId = resolveCharityId(charityId, charityName: charityName);
+    if (resolvedId.isNotEmpty && _likedCharities[resolvedId] == true) {
+      return true;
+    }
+    final trimmedId = charityId.trim();
+    if (trimmedId.isNotEmpty && _likedCharities[trimmedId] == true) {
+      return true;
+    }
+    return false;
+  }
+
+  bool isCharityLikeUpdatePending(String charityId, {String? charityName}) {
+    _ensureCurrentAccount();
+    final resolvedId = resolveCharityId(charityId, charityName: charityName);
+    return _pendingCharityLikeUpdates.contains(resolvedId) ||
+        _pendingCharityLikeUpdates.contains(charityId.trim());
+  }
+
+  int getCharityLikesCount(
+    String charityId, {
+    String? charityName,
+    int fallback = 0,
+  }) {
+    _ensureCurrentAccount();
+    final resolvedId = resolveCharityId(charityId, charityName: charityName);
+    final trimmedId = charityId.trim();
+    return _charityLikeCountOverrides[resolvedId] ??
+        _charityLikeCountOverrides[trimmedId] ??
+        _knownCharitiesById[resolvedId]?.likes ??
+        _knownCharitiesById[trimmedId]?.likes ??
+        fallback;
+  }
+
+  List<Charity> get cachedLikedCharities {
+    _ensureCurrentAccount();
+    final charities = <Charity>[];
+    for (final entry in _likedCharityCache.entries) {
+      if (_likedCharities[entry.key] == true) {
+        final count = _charityLikeCountOverrides[entry.key] ?? entry.value.likes;
+        charities.add(entry.value.copyWith(likes: count));
+      }
+    }
+    return List.unmodifiable(charities);
+  }
+
+  Future<Result<void>> hydrateCharities() {
+    final pendingHydration = _charitiesHydration;
+    if (pendingHydration != null) {
+      return pendingHydration;
+    }
+
+    final hydration = _hydrateCharities();
+    _charitiesHydration = hydration;
+    return hydration;
+  }
+
+  Future<Result<void>> _hydrateCharities() async {
+    try {
+      final result = await productRepository.fetchCharities();
+      if (_disposed) {
+        return Result.failure('Unable to load charities.');
+      }
+      if (!result.isSuccess) {
+        return Result.failure(result.error ?? 'Unable to load charities.');
+      }
+
+      cacheCharities(result.value ?? const []);
+      return Result.success(null);
+    } finally {
+      _charitiesHydration = null;
+    }
+  }
+
+  Future<Result<void>> hydrateLikedCharities() {
+    _ensureCurrentAccount();
+    final accountStateVersion = _accountStateVersion;
+    final pendingHydration = _likedCharitiesHydration;
+    if (pendingHydration != null &&
+        _likedCharitiesHydrationVersion == accountStateVersion) {
+      return pendingHydration;
+    }
+
+    final hydration = _hydrateLikedCharities(accountStateVersion);
+    _likedCharitiesHydration = hydration;
+    _likedCharitiesHydrationVersion = accountStateVersion;
+    return hydration;
+  }
+
+  Future<Result<void>> _hydrateLikedCharities(int accountStateVersion) async {
+    try {
+      final result = await productRepository.fetchLikedCharities();
+      if (!isAccountStateCurrent(accountStateVersion)) {
+        return Result.failure('Unable to restore liked charities.');
+      }
+
+      if (!result.isSuccess) {
+        return Result.failure(result.error ?? 'Unable to restore liked charities.');
+      }
+
+      _clearCachedLikedCharitiesState(notify: false);
+      cacheLikedCharities(result.value ?? const []);
+      notifyListeners();
+      return Result.success(null);
+    } finally {
+      if (_likedCharitiesHydrationVersion == accountStateVersion) {
+        _likedCharitiesHydration = null;
+        _likedCharitiesHydrationVersion = null;
+      }
+    }
+  }
+
+  void _clearCachedLikedCharitiesState({bool notify = true}) {
+    if (_likedCharities.isEmpty && _likedCharityCache.isEmpty) {
+      return;
+    }
+
+    _likedCharities.clear();
+    _likedCharityCache.clear();
+    if (notify) {
+      notifyListeners();
+    }
   }
 
   Future<Result<void>> hydrateLikedProducts() {
@@ -203,6 +368,66 @@ class ProductViewModel extends ChangeNotifier {
 
     notifyListeners();
     return Result.failure(result.error ?? 'Unable to update this liked item.');
+  }
+
+  Future<Result<bool>> toggleCharityLike(Charity charity) async {
+    _ensureCurrentAccount();
+    final resolvedId = resolveCharityId(charity.id, charityName: charity.name);
+    final currentStatus = isCharityLiked(resolvedId, charityName: charity.name);
+
+    return setCharityLiked(
+      charity.copyWith(id: resolvedId.isNotEmpty ? resolvedId : charity.id),
+      !currentStatus,
+    );
+  }
+
+  Future<Result<bool>> setCharityLiked(Charity charity, bool liked) async {
+    _ensureCurrentAccount();
+    final accountStateVersion = _accountStateVersion;
+    final id = resolveCharityId(charity.id, charityName: charity.name);
+    if (_disposed ||
+        id.trim().isEmpty ||
+        _pendingCharityLikeUpdates.contains(id)) {
+      return Result.failure('Unable to update this liked charity.');
+    }
+
+    final resolvedCharity = charity.copyWith(id: id);
+    _pendingCharityLikeUpdates.add(id);
+    notifyListeners();
+
+    final result = liked
+        ? await productRepository.likeCharity(resolvedCharity)
+        : await productRepository.unlikeCharity(id);
+
+    if (!isAccountStateCurrent(accountStateVersion)) {
+      return Result.failure('Unable to update this liked charity.');
+    }
+
+    _pendingCharityLikeUpdates.remove(id);
+
+    final update = result.value;
+    if (result.isSuccess && update != null && update.liked == liked) {
+      final updatedCharity = (update.charity ?? resolvedCharity).copyWith(
+        id: id,
+        name: resolvedCharity.name.trim().isNotEmpty
+            ? resolvedCharity.name
+            : update.charity?.name,
+        likes: update.likes,
+      );
+      _registerKnownCharity(updatedCharity);
+      _likedCharities[id] = update.liked;
+      _charityLikeCountOverrides[id] = update.likes;
+      if (update.liked) {
+        _likedCharityCache[id] = updatedCharity;
+      } else {
+        _likedCharityCache.remove(id);
+      }
+      notifyListeners();
+      return Result.success(update.liked);
+    }
+
+    notifyListeners();
+    return Result.failure(result.error ?? 'Unable to update this liked charity.');
   }
 
   Future<Result<void>> reportProduct(
@@ -325,6 +550,72 @@ class ProductViewModel extends ChangeNotifier {
     }
   }
 
+  void _registerKnownCharity(Charity charity) {
+    final trimmedId = charity.id.trim();
+    if (trimmedId.isEmpty) return;
+    _knownCharitiesById[trimmedId] = charity;
+    final normalizedName = DiscoverRepository.normalizeCharityName(charity.name);
+    if (normalizedName.isNotEmpty) {
+      _knownCharitiesByNormalizedName[normalizedName] = charity;
+    }
+  }
+
+  void cacheCharities(Iterable<Charity> charities) {
+    if (_disposed) return;
+    _ensureCurrentAccount();
+    var changed = false;
+
+    for (final charity in charities) {
+      final id = charity.id.trim();
+      if (id.isEmpty) continue;
+      final previous = _knownCharitiesById[id];
+      _registerKnownCharity(charity);
+      if (previous?.likes != charity.likes ||
+          _charityLikeCountOverrides[id] != charity.likes) {
+        _charityLikeCountOverrides[id] = charity.likes;
+        changed = true;
+      }
+    }
+
+    if (changed) {
+      notifyListeners();
+    }
+  }
+
+  void cacheLikedCharities(Iterable<Charity> charities) {
+    if (_disposed) return;
+    _ensureCurrentAccount();
+    var changed = false;
+
+    for (final charity in charities) {
+      final id = charity.id.trim();
+      if (id.isEmpty) {
+        continue;
+      }
+
+      _registerKnownCharity(charity);
+
+      if (_likedCharities[id] != true) {
+        _likedCharities[id] = true;
+        changed = true;
+      }
+
+      if (_likedCharityCache[id] != charity) {
+        _likedCharityCache[id] = charity;
+        changed = true;
+      }
+
+      if (_charityLikeCountOverrides[id] != charity.likes) {
+        _charityLikeCountOverrides[id] = charity.likes;
+        changed = true;
+      }
+    }
+
+    if (changed) {
+      notifyListeners();
+    }
+  }
+
   void reconcileProductCounts(Iterable<Product> products) {
     var changed = false;
 
@@ -383,9 +674,14 @@ class ProductViewModel extends ChangeNotifier {
     _likedProducts.clear();
     _likedProductCache.clear();
     _pendingLikeUpdates.clear();
+    _likedCharities.clear();
+    _likedCharityCache.clear();
+    _pendingCharityLikeUpdates.clear();
     _pendingSafetyActions.clear();
     _likedProductsHydration = null;
     _likedProductsHydrationVersion = null;
+    _likedCharitiesHydration = null;
+    _likedCharitiesHydrationVersion = null;
     _accountOwnerId = currentUserId;
     _accountOwnerInitialised = true;
     _accountStateVersion += 1;

@@ -1,5 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:cherry_mvp/core/models/product.dart';
+import 'package:cherry_mvp/features/charity_page/charity_model.dart';
+import 'package:cherry_mvp/features/discover/discover_repository.dart';
 import 'package:cherry_mvp/features/products/deleted_listings.dart';
 import 'package:cherry_mvp/features/products/product_repository.dart';
 import 'package:cherry_mvp/features/products/product_viewmodel.dart';
@@ -10,6 +14,11 @@ enum LikedItemsStatus {
   loaded,
   empty,
   error,
+}
+
+enum LikedItemsTab {
+  items,
+  charities,
 }
 
 class LikedItemsViewModel extends ChangeNotifier {
@@ -28,15 +37,40 @@ class LikedItemsViewModel extends ChangeNotifier {
   final DeletedListings? deletedListings;
   late int _accountStateVersion;
   int _requestSequence = 0;
+  int _charitiesRequestSequence = 0;
   bool _disposed = false;
 
+  LikedItemsTab _selectedTab = LikedItemsTab.items;
   LikedItemsStatus _status = LikedItemsStatus.initial;
   List<Product> _products = const [];
   String? _errorMessage;
 
+  LikedItemsStatus _charitiesStatus = LikedItemsStatus.initial;
+  List<Charity> _charities = const [];
+  String? _charitiesErrorMessage;
+
+  LikedItemsTab get selectedTab => _selectedTab;
   LikedItemsStatus get status => _status;
   List<Product> get products => _products;
   String? get errorMessage => _errorMessage;
+
+  LikedItemsStatus get charitiesStatus => _charitiesStatus;
+  List<Charity> get charities => _charities;
+  String? get charitiesErrorMessage => _charitiesErrorMessage;
+
+  void selectTab(LikedItemsTab tab) {
+    if (_disposed || _selectedTab == tab) return;
+    _selectedTab = tab;
+    notifyListeners();
+
+    if (tab == LikedItemsTab.charities &&
+        _charitiesStatus == LikedItemsStatus.initial) {
+      unawaited(loadLikedCharities());
+    } else if (tab == LikedItemsTab.items &&
+        _status == LikedItemsStatus.initial) {
+      unawaited(loadLikedProducts());
+    }
+  }
 
   Future<void> loadLikedProducts() async {
     if (_disposed) return;
@@ -102,17 +136,96 @@ class LikedItemsViewModel extends ChangeNotifier {
     return true;
   }
 
+  Future<void> loadLikedCharities() async {
+    if (_disposed) return;
+    final request = ++_charitiesRequestSequence;
+    final accountStateVersion = productViewModel.accountStateVersion;
+    _accountStateVersion = accountStateVersion;
+    _charitiesStatus = LikedItemsStatus.loading;
+    _charitiesErrorMessage = null;
+    notifyListeners();
+
+    final result = await productRepository.fetchLikedCharities();
+
+    if (_disposed || request != _charitiesRequestSequence) return;
+    if (!productViewModel.isAccountStateCurrent(accountStateVersion)) {
+      _clearProductsAfterAccountChange();
+      return;
+    }
+
+    if (!result.isSuccess) {
+      _charities = const [];
+      _charitiesStatus = LikedItemsStatus.error;
+      _charitiesErrorMessage =
+          result.error ?? 'We couldn’t load your liked charities.';
+      notifyListeners();
+      return;
+    }
+
+    _charities = _mergeCharities(
+      result.value ?? const [],
+      productViewModel.cachedLikedCharities,
+    );
+    productViewModel.cacheLikedCharities(_charities);
+    _charitiesStatus =
+        _charities.isEmpty ? LikedItemsStatus.empty : LikedItemsStatus.loaded;
+    notifyListeners();
+  }
+
+  Future<bool> unlikeCharity(Charity charity) async {
+    if (_disposed) return false;
+    final resolvedTargetKey = _charityIdentityKey(charity);
+    if (!_charities.any((item) => _charityIdentityKey(item) == resolvedTargetKey)) {
+      return true;
+    }
+
+    final accountStateVersion = productViewModel.accountStateVersion;
+    final result = await productViewModel.setCharityLiked(charity, false);
+    if (_disposed) return false;
+    if (!productViewModel.isAccountStateCurrent(accountStateVersion)) {
+      _clearProductsAfterAccountChange();
+      return false;
+    }
+
+    if (!result.isSuccess) {
+      _charitiesErrorMessage =
+          result.error ?? 'Unable to remove this liked charity.';
+      notifyListeners();
+      return false;
+    }
+
+    _charities = List.unmodifiable(
+      _charities.where((item) => _charityIdentityKey(item) != resolvedTargetKey),
+    );
+    _charitiesStatus =
+        _charities.isEmpty ? LikedItemsStatus.empty : LikedItemsStatus.loaded;
+    _charitiesErrorMessage = null;
+    notifyListeners();
+    return true;
+  }
+
   Future<void> retry() {
+    if (_selectedTab == LikedItemsTab.charities) {
+      return loadLikedCharities();
+    }
     return loadLikedProducts();
+  }
+
+  Future<void> retryCharities() {
+    return loadLikedCharities();
   }
 
   void _clearProductsAfterAccountChange() {
     if (_disposed) return;
     _requestSequence++;
+    _charitiesRequestSequence++;
     _accountStateVersion = productViewModel.accountStateVersion;
     _products = const [];
     _status = LikedItemsStatus.empty;
     _errorMessage = null;
+    _charities = const [];
+    _charitiesStatus = LikedItemsStatus.empty;
+    _charitiesErrorMessage = null;
     notifyListeners();
   }
 
@@ -123,6 +236,68 @@ class LikedItemsViewModel extends ChangeNotifier {
       return;
     }
     _removeDeletedListings();
+    _syncCharitiesFromSharedState();
+  }
+
+  void _syncCharitiesFromSharedState() {
+    if (_charitiesStatus != LikedItemsStatus.loaded &&
+        _charitiesStatus != LikedItemsStatus.empty) {
+      return;
+    }
+
+    final synced = _mergeCharities(
+      _charities.where(
+        (charity) => productViewModel.isCharityLiked(
+          charity.id,
+          charityName: charity.name,
+        ),
+      ),
+      productViewModel.cachedLikedCharities,
+    );
+
+    if (listEquals(synced, _charities)) {
+      return;
+    }
+
+    _charities = synced;
+    _charitiesStatus =
+        _charities.isEmpty ? LikedItemsStatus.empty : LikedItemsStatus.loaded;
+    notifyListeners();
+  }
+
+  String _charityIdentityKey(Charity charity) {
+    final resolvedId = productViewModel.resolveCharityId(
+      charity.id,
+      charityName: charity.name,
+    );
+    if (resolvedId.isNotEmpty) {
+      return resolvedId;
+    }
+    final normalizedName = DiscoverRepository.normalizeCharityName(charity.name);
+    return normalizedName.isNotEmpty ? normalizedName : charity.id.trim();
+  }
+
+  List<Charity> _mergeCharities(
+    Iterable<Charity> primaryCharities,
+    Iterable<Charity> cachedCharities,
+  ) {
+    final charities = <Charity>[];
+    final seenKeys = <String>{};
+
+    for (final charity in [...primaryCharities, ...cachedCharities]) {
+      final key = _charityIdentityKey(charity);
+      if (key.isEmpty || !seenKeys.add(key)) {
+        continue;
+      }
+      final updatedCount = productViewModel.getCharityLikesCount(
+        charity.id,
+        charityName: charity.name,
+        fallback: charity.likes,
+      );
+      charities.add(charity.copyWith(likes: updatedCount));
+    }
+
+    return List.unmodifiable(charities);
   }
 
   List<Product> _mergeProducts(
@@ -159,6 +334,7 @@ class LikedItemsViewModel extends ChangeNotifier {
   void dispose() {
     _disposed = true;
     _requestSequence++;
+    _charitiesRequestSequence++;
     productViewModel.removeListener(_handleProductStateChange);
     deletedListings?.removeListener(_removeDeletedListings);
     super.dispose();

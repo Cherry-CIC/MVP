@@ -3,6 +3,9 @@ import 'package:cherry_mvp/core/config/config.dart';
 import 'package:cherry_mvp/core/config/app_spacing.dart';
 import 'package:cherry_mvp/core/models/product.dart';
 import 'package:cherry_mvp/core/router/router.dart';
+import 'package:cherry_mvp/features/charity_page/charity_model.dart';
+import 'package:cherry_mvp/features/discover/discover_repository.dart';
+import 'package:cherry_mvp/features/discover/widgets/discover_charity_card.dart';
 import 'package:cherry_mvp/features/donation/donation_page.dart';
 import 'package:cherry_mvp/features/home/widgets/bottom_nav_bar.dart';
 import 'package:cherry_mvp/features/liked_items/liked_items_view_model.dart';
@@ -30,6 +33,99 @@ class LikedItemsPage extends StatelessWidget {
   }
 }
 
+class LikedItemsSelectionBar extends StatelessWidget {
+  const LikedItemsSelectionBar({
+    required this.selectedTab,
+    required this.onSelected,
+    super.key,
+  });
+
+  final LikedItemsTab selectedTab;
+  final ValueChanged<LikedItemsTab> onSelected;
+
+  static const _tabs = [
+    (AppStrings.likedItemsTab, LikedItemsTab.items),
+    (AppStrings.likedCharitiesTab, LikedItemsTab.charities),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(4),
+        child: Row(
+          children: _tabs
+              .map(
+                (tab) => _LikedTabButton(
+                  key: ValueKey('liked-tab-${tab.$2.name}'),
+                  label: tab.$1,
+                  semanticsLabel: tab.$1,
+                  isSelected: selectedTab == tab.$2,
+                  onTap: () => onSelected(tab.$2),
+                ),
+              )
+              .toList(),
+        ),
+      ),
+    );
+  }
+}
+
+class _LikedTabButton extends StatelessWidget {
+  const _LikedTabButton({
+    required this.label,
+    required this.semanticsLabel,
+    required this.isSelected,
+    required this.onTap,
+    super.key,
+  });
+
+  final String label;
+  final String semanticsLabel;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colourScheme = Theme.of(context).colorScheme;
+
+    return Expanded(
+      child: Semantics(
+        button: true,
+        selected: isSelected,
+        excludeSemantics: true,
+        label: semanticsLabel,
+        onTap: onTap,
+        child: Material(
+          color: isSelected ? colourScheme.surface : Colors.transparent,
+          borderRadius: BorderRadius.circular(8),
+          elevation: isSelected ? 2 : 0,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(8),
+            onTap: onTap,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                  color: isSelected ? colourScheme.primary : colourScheme.secondary,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _LikedItemsView extends StatelessWidget {
   const _LikedItemsView();
 
@@ -44,20 +140,22 @@ class _LikedItemsView extends StatelessWidget {
       body: SafeArea(
         child: Consumer<LikedItemsViewModel>(
           builder: (context, viewModel, _) {
-            switch (viewModel.status) {
-              case LikedItemsStatus.initial:
-              case LikedItemsStatus.loading:
-                return const Center(child: CircularProgressIndicator());
-              case LikedItemsStatus.empty:
-                return const _LikedItemsEmptyState();
-              case LikedItemsStatus.error:
-                return _LikedItemsErrorState(
-                  message: viewModel.errorMessage ?? AppStrings.likedItemsLoadError,
-                  onRetry: viewModel.retry,
-                );
-              case LikedItemsStatus.loaded:
-                return _LikedProductsGrid(products: viewModel.products);
-            }
+            return Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                  child: LikedItemsSelectionBar(
+                    selectedTab: viewModel.selectedTab,
+                    onSelected: viewModel.selectTab,
+                  ),
+                ),
+                Expanded(
+                  child: viewModel.selectedTab == LikedItemsTab.charities
+                      ? _buildCharitiesContent(viewModel)
+                      : _buildProductsContent(viewModel),
+                ),
+              ],
+            );
           },
         ),
       ),
@@ -68,6 +166,42 @@ class _LikedItemsView extends StatelessWidget {
         unselectedColor: Theme.of(context).colorScheme.secondary,
       ),
     );
+  }
+
+  Widget _buildProductsContent(LikedItemsViewModel viewModel) {
+    switch (viewModel.status) {
+      case LikedItemsStatus.initial:
+      case LikedItemsStatus.loading:
+        return const Center(child: CircularProgressIndicator());
+      case LikedItemsStatus.empty:
+        return const _LikedItemsEmptyState();
+      case LikedItemsStatus.error:
+        return _LikedItemsErrorState(
+          message: viewModel.errorMessage ?? AppStrings.likedItemsLoadError,
+          onRetry: viewModel.retry,
+        );
+      case LikedItemsStatus.loaded:
+        return _LikedProductsGrid(products: viewModel.products);
+    }
+  }
+
+  Widget _buildCharitiesContent(LikedItemsViewModel viewModel) {
+    switch (viewModel.charitiesStatus) {
+      case LikedItemsStatus.initial:
+      case LikedItemsStatus.loading:
+        return const Center(child: CircularProgressIndicator());
+      case LikedItemsStatus.empty:
+        return const _LikedCharitiesEmptyState();
+      case LikedItemsStatus.error:
+        return _LikedItemsErrorState(
+          message:
+              viewModel.charitiesErrorMessage ??
+              AppStrings.likedCharitiesLoadError,
+          onRetry: viewModel.retryCharities,
+        );
+      case LikedItemsStatus.loaded:
+        return _LikedCharitiesList(charities: viewModel.charities);
+    }
   }
 
   void _handleNavTap(BuildContext context, int index) async {
@@ -147,6 +281,117 @@ class _LikedProductsGrid extends StatelessWidget {
           onLikePressed: () => context.read<LikedItemsViewModel>().unlikeProduct(product),
         );
       },
+    );
+  }
+}
+
+class _LikedCharitiesList extends StatelessWidget {
+  const _LikedCharitiesList({required this.charities});
+
+  final List<Charity> charities;
+
+  static final DiscoverRepository _defaultDiscoverRepository =
+      DiscoverRepository();
+
+  @override
+  Widget build(BuildContext context) {
+    final discoverRepository =
+        context.read<DiscoverRepository?>() ?? _defaultDiscoverRepository;
+    final productViewModel = context.watch<ProductViewModel>();
+
+    return ListView.separated(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+      itemCount: charities.length,
+      separatorBuilder: (_, _) => const SizedBox(height: 24),
+      itemBuilder: (context, index) {
+        final charity = charities[index];
+        final discoverCharity = discoverRepository.findCharity(
+          id: charity.id,
+          name: charity.name,
+        );
+        final title = discoverCharity?.charityName ?? charity.name;
+        final suppliedDescription = charity.description?.trim();
+        final description =
+            (suppliedDescription != null && suppliedDescription.isNotEmpty)
+            ? suppliedDescription
+            : (discoverCharity?.description ?? AppStrings.charityDescription);
+        final imagePath =
+            discoverCharity?.charityImage ??
+            (charity.imageUrl.isNotEmpty
+                ? charity.imageUrl
+                : AppImages.discoverImage1);
+        final logoPath =
+            discoverCharity?.charityLogo ??
+            (charity.imageUrl.isNotEmpty ? charity.imageUrl : null);
+        final likes = productViewModel.getCharityLikesCount(
+          charity.id,
+          charityName: charity.name,
+          fallback: charity.likes,
+        );
+
+        return DiscoverCharityCard(
+          key: ValueKey('liked-charity-${charity.id}'),
+          charityId: charity.id,
+          title: title,
+          description: description,
+          imagePath: imagePath,
+          logoPath: logoPath,
+          logoUsesDarkBackground:
+              discoverCharity?.logoUsesDarkBackground ?? false,
+          likes: likes,
+          isLiked: true,
+          onLikePressed: () =>
+              context.read<LikedItemsViewModel>().unlikeCharity(charity),
+        );
+      },
+    );
+  }
+}
+
+class _LikedCharitiesEmptyState extends StatelessWidget {
+  const _LikedCharitiesEmptyState();
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.favorite_border,
+              size: 48,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              AppStrings.likedCharitiesEmptyTitle,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              AppStrings.likedCharitiesEmptyBody,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 24),
+            FilledButton(
+              onPressed: () {
+                if (Navigator.of(context).canPop()) {
+                  Navigator.of(context).pop(CherryNavIndices.discover);
+                } else {
+                  context.read<NavigationProvider>().navigateTo(
+                    AppRoutes.discover,
+                  );
+                }
+              },
+              child: const Text(AppStrings.likedCharitiesBrowseCharities),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

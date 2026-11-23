@@ -10,6 +10,7 @@ class Charity {
   final String imageUrl;
   final String? description;
   final String? website;
+  final int likes;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -19,9 +20,55 @@ class Charity {
     required this.imageUrl,
     this.description,
     this.website,
+    this.likes = 0,
     required this.createdAt,
     required this.updatedAt,
   });
+
+  Charity copyWith({
+    String? id,
+    String? name,
+    String? imageUrl,
+    String? description,
+    String? website,
+    int? likes,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) {
+    return Charity(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      imageUrl: imageUrl ?? this.imageUrl,
+      description: description ?? this.description,
+      website: website ?? this.website,
+      likes: likes ?? this.likes,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
+
+  static int parseLikes(dynamic value) {
+    final parsed = switch (value) {
+      int() => value,
+      num() => value.toInt(),
+      String() => int.tryParse(value),
+      _ => null,
+    };
+    return parsed != null && parsed >= 0 ? parsed : 0;
+  }
+
+  static DateTime parseTimestamp(dynamic value) {
+    if (value is DateTime) return value;
+    if (value is String) {
+      final parsed = DateTime.tryParse(value);
+      if (parsed != null) return parsed;
+    }
+    if (value is Map && value['_seconds'] is num) {
+      final seconds = (value['_seconds'] as num).toInt();
+      return DateTime.fromMillisecondsSinceEpoch(seconds * 1000, isUtc: true);
+    }
+    return DateTime.fromMillisecondsSinceEpoch(0, isUtc: true);
+  }
 
   // Use generated methods
   factory Charity.fromJson(Map<String, dynamic> json) => _$CharityFromJson(json);

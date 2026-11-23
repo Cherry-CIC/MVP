@@ -9,6 +9,7 @@ import 'package:cherry_mvp/features/discover/discover_viewmodel.dart';
 import 'package:cherry_mvp/features/discover/widgets/discover_categories_list.dart';
 import 'package:cherry_mvp/features/discover/widgets/discover_charity_list.dart';
 import 'package:cherry_mvp/features/discover/widgets/discover_selection_bar.dart';
+import 'package:cherry_mvp/features/products/product_viewmodel.dart';
 import 'package:cherry_mvp/features/search/widgets/search.dart';
 
 class DiscoverPage extends StatefulWidget {
@@ -23,6 +24,23 @@ class DiscoverPage extends StatefulWidget {
 
 class _DiscoverPageState extends State<DiscoverPage> {
   String _selectedTag = DiscoverSelectionBar.popularTag;
+  bool _hasInitialized = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_hasInitialized) {
+      _hasInitialized = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        final productViewModel = context.read<ProductViewModel?>();
+        if (productViewModel != null) {
+          unawaited(productViewModel.hydrateCharities());
+          unawaited(productViewModel.hydrateLikedCharities());
+        }
+      });
+    }
+  }
 
   void _onTagSelected(String tag) {
     setState(() => _selectedTag = tag);

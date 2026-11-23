@@ -119,10 +119,16 @@ class AppStrings {
   static const myOrdersPriceUnavailable = 'Price unavailable';
   static const myOrdersSizeUnavailable = 'Size unavailable';
   static const likedItemsTitle = 'Liked Items ❤️';
+  static const likedItemsTab = 'Liked items';
+  static const likedCharitiesTab = 'Liked charities';
   static const likedItemsEmptyTitle = 'No likes??? 👀';
   static const likedItemsEmptyBody = 'Tap the heart on anything you want to find again.';
   static const likedItemsBrowseProducts = 'Browse products';
   static const likedItemsLoadError = 'We couldn’t load your liked items.';
+  static const likedCharitiesEmptyTitle = 'No liked charities yet';
+  static const likedCharitiesEmptyBody = 'Tap the heart on any charity you want to find again.';
+  static const likedCharitiesBrowseCharities = 'Browse charities';
+  static const likedCharitiesLoadError = 'We couldn’t load your liked charities.';
 
   // Profile: Donations & Activity
   static const profileUserActivityBought = 'Bought';
@@ -311,6 +317,8 @@ class AppStrings {
   static const askSeller = 'Ask seller';
   static const likeProduct = 'Like product';
   static const unlikeProduct = 'Unlike product';
+  static const likeCharity = 'Like charity';
+  static const unlikeCharity = 'Unlike charity';
 
   // Checkout
   static const checkoutTitle = 'Checkout';

@@ -4,6 +4,7 @@ import 'package:cherry_mvp/core/config/app_images.dart';
 import 'package:cherry_mvp/core/models/product.dart';
 import 'package:cherry_mvp/core/router/nav_provider.dart';
 import 'package:cherry_mvp/core/utils/result.dart';
+import 'package:cherry_mvp/features/charity_page/charity_model.dart';
 import 'package:cherry_mvp/features/liked_items/liked_items_view_model.dart';
 import 'package:cherry_mvp/features/products/product_repository.dart';
 import 'package:cherry_mvp/features/products/product_viewmodel.dart';
@@ -17,6 +18,10 @@ class _FakeProductRepository extends ProductRepository {
     this.unlikeResult,
     this.fetchCompleter,
     this.likeCompleter,
+    this.fetchCharitiesResult,
+    this.unlikeCharityResult,
+    this.fetchCharitiesCompleter,
+    this.likeCharityCompleter,
   }) : super(const UnexpectedApiService());
 
   Result<List<Product>>? fetchResult;
@@ -24,6 +29,12 @@ class _FakeProductRepository extends ProductRepository {
   Completer<Result<List<Product>>>? fetchCompleter;
   Completer<Result<ProductLikeUpdate>>? likeCompleter;
   final unlikedIds = <String>[];
+
+  Result<List<Charity>>? fetchCharitiesResult;
+  Result<CharityLikeUpdate>? unlikeCharityResult;
+  Completer<Result<List<Charity>>>? fetchCharitiesCompleter;
+  Completer<Result<CharityLikeUpdate>>? likeCharityCompleter;
+  final unlikedCharityIds = <String>[];
 
   @override
   Future<Result<ProductLikeUpdate>> likeProduct(Product product) async {
@@ -46,6 +57,47 @@ class _FakeProductRepository extends ProductRepository {
     return unlikeResult ??
         Result.success(const ProductLikeUpdate(liked: false, likes: 0));
   }
+
+  @override
+  Future<Result<CharityLikeUpdate>> likeCharity(Charity charity) async {
+    return likeCharityCompleter?.future ??
+        Result.success(
+          CharityLikeUpdate(
+            liked: true,
+            likes: charity.likes + 1,
+            charity: charity.copyWith(likes: charity.likes + 1),
+          ),
+        );
+  }
+
+  @override
+  Future<Result<List<Charity>>> fetchLikedCharities() async {
+    return fetchCharitiesCompleter?.future ??
+        fetchCharitiesResult ??
+        Result.success(const <Charity>[]);
+  }
+
+  @override
+  Future<Result<CharityLikeUpdate>> unlikeCharity(String charityId) async {
+    unlikedCharityIds.add(charityId);
+    return unlikeCharityResult ??
+        Result.success(const CharityLikeUpdate(liked: false, likes: 0));
+  }
+}
+
+Charity _charity({
+  String id = 'ca6tjKqCRurG0hB49Dcp',
+  String name = 'WaterAid',
+  int likes = 1,
+}) {
+  return Charity(
+    id: id,
+    name: name,
+    imageUrl: AppImages.waterAidLogo,
+    likes: likes,
+    createdAt: DateTime.utc(2026),
+    updatedAt: DateTime.utc(2026),
+  );
 }
 
 Product _product({String id = 'liked-product'}) {
@@ -309,5 +361,98 @@ void main() {
         expect(productViewModel.cachedLikedProducts, isEmpty);
       },
     );
+
+    test('selecting charities tab loads liked charities and marks them as liked', () async {
+      final charity = _charity(likes: 4);
+      final repository = _FakeProductRepository(
+        fetchCharitiesResult: Result.success([charity]),
+      );
+      final productViewModel = ProductViewModel(
+        productRepository: repository,
+        navigator: NavigationProvider(),
+      );
+      final viewModel = LikedItemsViewModel(
+        productRepository: repository,
+        productViewModel: productViewModel,
+      );
+
+      viewModel.selectTab(LikedItemsTab.charities);
+      await Future<void>.delayed(Duration.zero);
+
+      expect(viewModel.selectedTab, LikedItemsTab.charities);
+      expect(viewModel.charitiesStatus, LikedItemsStatus.loaded);
+      expect(viewModel.charities, hasLength(1));
+      expect(viewModel.charities.first.id, charity.id);
+      expect(productViewModel.isCharityLiked(charity.id), isTrue);
+      expect(productViewModel.getCharityLikesCount(charity.id), 4);
+    });
+
+    test('sets empty state when there are no liked charities', () async {
+      final repository = _FakeProductRepository(
+        fetchCharitiesResult: Result.success(const <Charity>[]),
+      );
+      final viewModel = LikedItemsViewModel(
+        productRepository: repository,
+        productViewModel: ProductViewModel(
+          productRepository: repository,
+          navigator: NavigationProvider(),
+        ),
+      );
+
+      await viewModel.loadLikedCharities();
+
+      expect(viewModel.charitiesStatus, LikedItemsStatus.empty);
+      expect(viewModel.charities, isEmpty);
+    });
+
+    test('unlikeCharity removes a charity and updates shared heart and count', () async {
+      final charity = _charity(likes: 1);
+      final repository = _FakeProductRepository(
+        fetchCharitiesResult: Result.success([charity]),
+      );
+      final productViewModel = ProductViewModel(
+        productRepository: repository,
+        navigator: NavigationProvider(),
+      );
+      final viewModel = LikedItemsViewModel(
+        productRepository: repository,
+        productViewModel: productViewModel,
+      );
+
+      await viewModel.loadLikedCharities();
+      expect(productViewModel.isCharityLiked(charity.id), isTrue);
+      expect(productViewModel.getCharityLikesCount(charity.id), 1);
+
+      final removed = await viewModel.unlikeCharity(charity);
+
+      expect(removed, isTrue);
+      expect(repository.unlikedCharityIds, [charity.id]);
+      expect(viewModel.charitiesStatus, LikedItemsStatus.empty);
+      expect(viewModel.charities, isEmpty);
+      expect(productViewModel.isCharityLiked(charity.id), isFalse);
+      expect(productViewModel.getCharityLikesCount(charity.id), 0);
+    });
+
+    test('failed unlikeCharity keeps the charity visible', () async {
+      final charity = _charity(likes: 2);
+      final repository = _FakeProductRepository(
+        fetchCharitiesResult: Result.success([charity]),
+        unlikeCharityResult: Result.failure('Unable to unlike charity'),
+      );
+      final viewModel = LikedItemsViewModel(
+        productRepository: repository,
+        productViewModel: ProductViewModel(
+          productRepository: repository,
+          navigator: NavigationProvider(),
+        ),
+      );
+
+      await viewModel.loadLikedCharities();
+      final removed = await viewModel.unlikeCharity(charity);
+
+      expect(removed, isFalse);
+      expect(viewModel.charities, hasLength(1));
+      expect(viewModel.charitiesErrorMessage, 'Unable to unlike charity');
+    });
   });
 }
