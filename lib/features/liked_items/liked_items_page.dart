@@ -1,3 +1,4 @@
+import 'package:cherry_mvp/features/search/widgets/search.dart';
 import 'package:cherry_mvp/core/config/config.dart';
 import 'package:cherry_mvp/core/config/app_spacing.dart';
 import 'package:cherry_mvp/core/models/product.dart';
@@ -32,12 +33,6 @@ class LikedItemsPage extends StatelessWidget {
 class _LikedItemsView extends StatelessWidget {
   const _LikedItemsView();
 
-  static const int _homeNavIndex = 0;
-  static const int _inboxNavIndex = 1;
-  static const int _giveNavIndex = FeatureFlags.showInbox ? 2 : 1;
-  static const int _searchNavIndex = _giveNavIndex + 1;
-  static const int _profileNavIndex = _giveNavIndex + (FeatureFlags.showSearchNavigation ? 2 : 1);
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -67,7 +62,7 @@ class _LikedItemsView extends StatelessWidget {
         ),
       ),
       bottomNavigationBar: CherryBottomNavBar(
-        selectedIndex: _profileNavIndex,
+        selectedIndex: CherryNavIndices.profile,
         onItemSelected: (index) => _handleNavTap(context, index),
         selectedColor: Theme.of(context).colorScheme.primary,
         unselectedColor: Theme.of(context).colorScheme.secondary,
@@ -78,17 +73,26 @@ class _LikedItemsView extends StatelessWidget {
   void _handleNavTap(BuildContext context, int index) async {
     final navigator = context.read<NavigationProvider>();
 
-    if (index == _homeNavIndex) {
+    if (index == CherryNavIndices.home) {
       navigator.navigateToAndRemoveUntil(AppRoutes.home, (_) => false);
       return;
     }
 
-    if (FeatureFlags.showInbox && index == _inboxNavIndex) {
+    if (index == CherryNavIndices.discover) {
+      if (Navigator.of(context).canPop()) {
+        Navigator.of(context).pop(CherryNavIndices.discover);
+      } else {
+        navigator.navigateTo(AppRoutes.discover);
+      }
+      return;
+    }
+
+    if (FeatureFlags.showInbox && index == CherryNavIndices.inbox) {
       navigator.navigateToAndRemoveUntil(AppRoutes.home, (_) => false);
       return;
     }
 
-    if (index == _giveNavIndex) {
+    if (index == CherryNavIndices.give) {
       final posted = await showDialog<bool>(
         context: context,
         builder: (context) => const Dialog.fullscreen(child: DonationPage()),
@@ -100,12 +104,12 @@ class _LikedItemsView extends StatelessWidget {
       return;
     }
 
-    if (FeatureFlags.showSearchNavigation && index == _searchNavIndex) {
-      context.read<SearchController>().openView();
+    if (FeatureFlags.showSearchNavigation && index == CherryNavIndices.search) {
+      openSearch(context);
       return;
     }
 
-    if (index == _profileNavIndex && Navigator.of(context).canPop()) {
+    if (index == CherryNavIndices.profile && Navigator.of(context).canPop()) {
       Navigator.of(context).pop();
     }
   }

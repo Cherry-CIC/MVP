@@ -24,7 +24,12 @@ class _HomeRepository implements IHomeRepository {
   final responses = <Future<Result<ProductPage>>>[];
 
   @override
-  Future<Result<ProductPage>> fetchProducts({int limit = 20, String? cursor, String? search}) => responses.removeAt(0);
+  Future<Result<ProductPage>> fetchProducts({
+    int limit = 20,
+    String? cursor,
+    String? search,
+    String? categoryId,
+  }) => responses.removeAt(0);
 }
 
 class _ListingsRepository implements IProfileListingsRepository {
