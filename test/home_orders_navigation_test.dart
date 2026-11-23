@@ -228,6 +228,7 @@ void main() {
     final labels = ['Home', 'Discover', 'Give', 'Profile'];
     final positions = [for (final label in labels) tester.getTopLeft(find.text(label)).dx];
     expect(positions, orderedEquals([...positions]..sort()));
+    expect(find.byIcon(Icons.public_rounded), findsOneWidget);
   });
 
   testWidgets('Discover footer tab shows the Discover page and returns to Home', (tester) async {

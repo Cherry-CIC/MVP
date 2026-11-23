@@ -69,7 +69,7 @@ class CherryBottomNavBar extends StatelessWidget {
           ),
           BottomNavigationBarItem(
             icon: Icon(
-              selectedIndex == CherryNavIndices.discover ? Icons.grid_view_rounded : Icons.grid_view_outlined,
+              Icons.public_rounded,
               size: 24,
               color: selectedIndex == CherryNavIndices.discover ? selectedColor : unselectedColor,
             ),
