@@ -10,10 +10,8 @@ class AppImages {
   static const icProfile = '${_path}profile.png';
   static const backIcon = '${_path}back_icon.png';
   static const icAdd = '${_path}add.png';
-  static const icCam = '${_path}cam.png';
   static const icButton = '${_path}ic_button.png';
   static const welcomeBg = '${_path}welcome_bg.png';
-  static const bubbles = '${_path}Bubbles.png';
   static const profileImg = '${_path}image.png';
   static const passwordHome = '${_path}password_home.png';
   static const notYouHome = '${_path}not_you_bg.png';
