@@ -75,6 +75,7 @@ enum SafeHttpOperation {
   findPickupPoints,
   loadCategories,
   loadCharities,
+  loadLikedCharities,
   loadLikedProducts,
   loadOrders,
   loadPostageSizes,
@@ -85,6 +86,7 @@ enum SafeHttpOperation {
   loadShippingMethods,
   syncAuthentication,
   unclassifiedRequest,
+  updateCharityLike,
   updateProductLike,
 }
 

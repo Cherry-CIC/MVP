@@ -249,6 +249,62 @@ void main() {
       expect(order.deliveryLabel, 'On the way');
     });
 
+    test('preserves order charityId and resolves logo when product enrichment omits charityId', () async {
+      final deliveredAt = DateTime.now().toUtc().subtract(const Duration(hours: 1));
+      final apiService = _FakeApiService((endpoint) {
+        if (endpoint == ApiEndpoints.myOrders) {
+          return Result.success({
+            'success': true,
+            'data': {
+              'orders': [
+                {
+                  ..._orderJson(
+                    id: 'order-with-charity',
+                    productId: 'product-1',
+                    deliveryState: 'awaiting_confirmation',
+                  ),
+                  'charityId': 'charity-1',
+                  'shipment': {'deliveredAt': deliveredAt.toIso8601String()},
+                },
+              ],
+            },
+          });
+        }
+        if (endpoint == ApiEndpoints.charities) {
+          return Result.success({
+            'success': true,
+            'data': [
+              {
+                'id': 'charity-1',
+                'imageUrl': 'https://example.com/charity-1.png',
+              },
+            ],
+          });
+        }
+        if (endpoint == ApiEndpoints.productById('product-1')) {
+          return Result.success({
+            'success': true,
+            'data': {
+              ..._productJson(id: 'product-1', charityId: ''),
+              'quality': 'Good condition',
+            },
+          });
+        }
+        return Result.failure('Unexpected endpoint');
+      });
+
+      final result = await OrdersRepository(apiService).fetchOrders(deliveryRemindersOnly: true);
+
+      expect(result.isSuccess, isTrue);
+      final order = result.value!.single;
+      expect(order.charityId, 'charity-1');
+      expect(order.charityLogoUrl, 'https://example.com/charity-1.png');
+      expect(order.condition, 'Good condition');
+      expect(order.deliveredAt, deliveredAt);
+      expect(order.confirmationDeadline, deliveredAt.add(const Duration(hours: 72)));
+      expect(order.canShowDeliveryReminder(DateTime.now()), isTrue);
+    });
+
     test('keeps valid orders and tolerates malformed records', () async {
       final apiService = _FakeApiService((endpoint) {
         if (endpoint == ApiEndpoints.myOrders) {

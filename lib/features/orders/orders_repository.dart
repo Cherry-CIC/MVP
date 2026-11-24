@@ -107,6 +107,8 @@ final class OrdersRepository implements IOrdersRepository {
               return order;
             }
 
+            final resolvedCharityId = product.charityId.isNotEmpty ? product.charityId : order.charityId;
+
             return order.copyWith(
               productName: order.productName == OrderSummary.fallbackProductName && product.name.isNotEmpty
                   ? product.name
@@ -114,7 +116,8 @@ final class OrdersRepository implements IOrdersRepository {
               imageUrl: product.imageUrl,
               size: product.size,
               condition: product.condition,
-              charityLogoUrl: charityLogos[product.charityId] ?? '',
+              charityId: resolvedCharityId,
+              charityLogoUrl: charityLogos[resolvedCharityId] ?? order.charityLogoUrl,
             );
           })
           .toList(growable: false);

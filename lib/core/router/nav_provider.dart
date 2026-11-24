@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:cherry_mvp/features/charity_page/charity_model.dart';
+import 'package:cherry_mvp/features/charity_page/charity_profile_args.dart';
 import 'package:cherry_mvp/features/checkout/purchase_security.dart';
 import 'package:cherry_mvp/core/router/nav_routes.dart';
 
@@ -27,6 +30,49 @@ class NavigationProvider {
     final validatedId = publicProfileUserId(userId);
     if (validatedId == null) return;
     await navigateTo(AppRoutes.publicUserProfile, arguments: validatedId);
+  }
+
+  /// Opens [CharityProfilePage] for a loaded [Charity].
+  Future<void> openCharityProfile(Charity charity) {
+    return openCharityProfileByDetails(
+      CharityProfileArgs(
+        charity: charity,
+        charityId: charity.id,
+        charityName: charity.name,
+        charityImageUrl: charity.imageUrl,
+      ),
+    );
+  }
+
+  /// Opens [CharityProfilePage] from partial charity metadata (e.g. product cards).
+  Future<void> openCharityProfileByDetails(CharityProfileArgs args) async {
+    final validated = CharityProfileArgs.fromRouteArgument(args);
+    if (validated == null) return;
+    await navigateTo(AppRoutes.charityProfile, arguments: validated);
+  }
+
+  /// Opens [CharityProfilePage] using [NavigationProvider] when mounted, or falls
+  /// back to the nearest [Navigator] for standalone widget trees and tests.
+  static Future<void> openCharityProfileFromContext(
+    BuildContext context,
+    CharityProfileArgs args,
+  ) async {
+    final validated = CharityProfileArgs.fromRouteArgument(args);
+    if (validated == null) return;
+    NavigationProvider? navigator;
+    try {
+      navigator = Provider.of<NavigationProvider>(context, listen: false);
+    } on ProviderNotFoundException {
+      navigator = null;
+    }
+    if (navigator != null && navigator.navigatorKey.currentState != null) {
+      await navigator.openCharityProfileByDetails(validated);
+    } else if (context.mounted) {
+      await Navigator.of(context).pushNamed(
+        AppRoutes.charityProfile,
+        arguments: validated,
+      );
+    }
   }
 
   Future<dynamic> replaceWith(String routeName, {Object? arguments}) {

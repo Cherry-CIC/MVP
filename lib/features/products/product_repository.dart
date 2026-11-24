@@ -2,6 +2,7 @@ import 'package:cherry_mvp/core/models/product.dart';
 import 'package:cherry_mvp/core/services/network/api_endpoints.dart';
 import 'package:cherry_mvp/core/services/network/api_service.dart';
 import 'package:cherry_mvp/core/utils/result.dart';
+import 'package:cherry_mvp/features/charity_page/charity_model.dart';
 import 'package:cherry_mvp/features/products/deleted_listings.dart';
 
 final class ProductLikeUpdate {
@@ -11,11 +12,25 @@ final class ProductLikeUpdate {
   final int likes;
 }
 
+final class CharityLikeUpdate {
+  const CharityLikeUpdate({
+    required this.liked,
+    required this.likes,
+    this.charity,
+  });
+
+  final bool liked;
+  final int likes;
+  final Charity? charity;
+}
+
 class ProductRepository {
   ProductRepository(this._apiService, {this.deletedListings});
 
   static const int _likedProductsPageLimit = 50;
+  static const int _likedCharitiesPageLimit = 50;
   static const String _loadFailureMessage = 'We couldn’t load your liked items.';
+  static const String _loadCharitiesFailureMessage = 'We couldn’t load your liked charities.';
 
   final ApiService _apiService;
   final DeletedListings? deletedListings;
@@ -116,6 +131,63 @@ class ProductRepository {
     return _setProductLiked(productId, liked: false);
   }
 
+  Future<Result<CharityLikeUpdate>> likeCharity(Charity charity) async {
+    return _setCharityLiked(charity.id, liked: true);
+  }
+
+  Future<Result<CharityLikeUpdate>> unlikeCharity(String charityId) async {
+    return _setCharityLiked(charityId, liked: false);
+  }
+
+  Future<Result<List<Charity>>> fetchCharities() async {
+    try {
+      final result = await _apiService.get<dynamic>(ApiEndpoints.charities);
+      if (!result.isSuccess) {
+        return Result.failure(result.error ?? 'Failed to fetch charities');
+      }
+
+      final response = result.value;
+      if (_isUnsuccessfulResponse(response)) {
+        return Result.failure('Failed to fetch charities');
+      }
+
+      final charityList = _extractCharityList(response);
+      if (charityList == null) {
+        return Result.success(const <Charity>[]);
+      }
+
+      return Result.success(_parseCharityList(charityList));
+    } catch (_) {
+      return Result.failure('Failed to fetch charities');
+    }
+  }
+
+  Future<Result<List<Charity>>> fetchLikedCharities() async {
+    try {
+      final result = await _apiService.get<dynamic>(
+        ApiEndpoints.likedCharities,
+        queryParameters: const {'limit': _likedCharitiesPageLimit},
+      );
+      if (!result.isSuccess) {
+        return Result.failure(result.error ?? _loadCharitiesFailureMessage);
+      }
+
+      final response = result.value;
+      if (_isUnsuccessfulResponse(response)) {
+        return Result.failure(_loadCharitiesFailureMessage);
+      }
+
+      final charityList = _extractCharityList(response);
+      if (charityList == null) {
+        return Result.success(const <Charity>[]);
+      }
+
+      return Result.success(_parseCharityList(charityList));
+    } catch (_) {
+      return Result.failure(_loadCharitiesFailureMessage);
+    }
+  }
+
   Future<Result<List<Product>>> fetchLikedProducts() async {
     try {
       final result = await _apiService.get<dynamic>(
@@ -203,6 +275,116 @@ class ProductRepository {
     } catch (_) {
       return Result.failure(failureMessage);
     }
+  }
+
+  Future<Result<CharityLikeUpdate>> _setCharityLiked(
+    String charityId, {
+    required bool liked,
+  }) async {
+    final validationError = _validateCharityId(charityId);
+    if (validationError != null) {
+      return Result.failure(validationError);
+    }
+
+    final failureMessage = liked
+        ? 'Unable to save this liked charity. Please try again.'
+        : 'Unable to remove this liked charity. Please try again.';
+
+    try {
+      final result = await _apiService.post<dynamic>(
+        ApiEndpoints.charityLike(charityId),
+        data: {'like': liked},
+      );
+      if (!result.isSuccess) {
+        return Result.failure(result.error ?? failureMessage);
+      }
+
+      final response = result.value;
+      if (response is! Map || response['success'] != true) {
+        return Result.failure(failureMessage);
+      }
+
+      final responseData = response['data'];
+      if (responseData is! Map || responseData['liked'] != liked) {
+        return Result.failure(failureMessage);
+      }
+
+      final likes = _parseLikeCount(responseData['likes']);
+      if (likes == null) {
+        return Result.failure(failureMessage);
+      }
+
+      Charity? parsedCharity;
+      try {
+        parsedCharity = Charity.fromJson(Map<String, dynamic>.from(responseData));
+      } catch (_) {
+        parsedCharity = null;
+      }
+
+      return Result.success(
+        CharityLikeUpdate(
+          liked: liked,
+          likes: likes,
+          charity: parsedCharity,
+        ),
+      );
+    } catch (_) {
+      return Result.failure(failureMessage);
+    }
+  }
+
+  List<Charity> _parseCharityList(List<dynamic> charityList) {
+    final charities = <Charity>[];
+    final seenCharityIds = <String>{};
+
+    for (final charityData in charityList) {
+      if (charityData is! Map) {
+        continue;
+      }
+
+      try {
+        final charity = Charity.fromJson(
+          Map<String, dynamic>.from(charityData),
+        );
+        if (charity.id.trim().isNotEmpty && seenCharityIds.add(charity.id)) {
+          charities.add(charity);
+        }
+      } catch (_) {
+        continue;
+      }
+    }
+
+    return charities;
+  }
+
+  List<dynamic>? _extractCharityList(dynamic response) {
+    if (response is List) {
+      return response;
+    }
+    if (response is! Map) {
+      return null;
+    }
+
+    final data = response['data'];
+    if (data is List) {
+      return data;
+    }
+    if (data is Map && data['charities'] is List) {
+      return data['charities'] as List<dynamic>;
+    }
+    if (response['charities'] is List) {
+      return response['charities'] as List<dynamic>;
+    }
+
+    return null;
+  }
+
+  String? _validateCharityId(String charityId) {
+    if (charityId.trim().isEmpty || charityId.contains('/')) {
+      return 'Invalid charity ID.';
+    }
+
+    return null;
   }
 
   int? _parseLikeCount(dynamic value) {

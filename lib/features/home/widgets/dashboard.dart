@@ -41,6 +41,9 @@ class _DashboardPageState extends State<DashboardPage> {
         unawaited(
           context.read<ProductViewModel>().hydrateLikedProducts(),
         );
+        unawaited(
+          context.read<ProductViewModel>().hydrateLikedCharities(),
+        );
         unawaited(context.read<HomeViewModel>().fetchProducts());
       });
     }
@@ -178,7 +181,7 @@ class _DashboardPageState extends State<DashboardPage> {
     return GestureDetector(
       onTap: () {
         productViewModel.setProduct(product);
-        navigator.navigateTo(AppRoutes.product);
+        navigator.navigateTo(AppRoutes.product, arguments: product);
       },
       child: ProductCard(
         key: ValueKey(product.id),

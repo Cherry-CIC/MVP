@@ -119,10 +119,16 @@ class AppStrings {
   static const myOrdersPriceUnavailable = 'Price unavailable';
   static const myOrdersSizeUnavailable = 'Size unavailable';
   static const likedItemsTitle = 'Liked Items ❤️';
+  static const likedItemsTab = 'Liked items';
+  static const likedCharitiesTab = 'Liked charities';
   static const likedItemsEmptyTitle = 'No likes??? 👀';
   static const likedItemsEmptyBody = 'Tap the heart on anything you want to find again.';
   static const likedItemsBrowseProducts = 'Browse products';
   static const likedItemsLoadError = 'We couldn’t load your liked items.';
+  static const likedCharitiesEmptyTitle = 'No liked charities yet';
+  static const likedCharitiesEmptyBody = 'Tap the heart on any charity you want to find again.';
+  static const likedCharitiesBrowseCharities = 'Browse charities';
+  static const likedCharitiesLoadError = 'We couldn’t load your liked charities.';
 
   // Profile: Donations & Activity
   static const profileUserActivityBought = 'Bought';
@@ -311,6 +317,8 @@ class AppStrings {
   static const askSeller = 'Ask seller';
   static const likeProduct = 'Like product';
   static const unlikeProduct = 'Unlike product';
+  static const likeCharity = 'Like charity';
+  static const unlikeCharity = 'Unlike charity';
 
   // Checkout
   static const checkoutTitle = 'Checkout';
@@ -524,4 +532,32 @@ class AppStrings {
   static const refundPolicyQuestion = 'What’s the refund policy?';
   static const refundPolicyAnswer =
       'Your order is protected when paying through Cherry, and you\'ll get a refund if your item doesn\'t arrive, is damaged in transit, or is significantly not as described (SNAD). You must submit a claim within 7 days of being notified the item should have been delivered or seems lost. Unless otherwise agreed, the buyer must cover the cost of the return';
+
+  // Charity Profile
+  static const charityProfileTitle = 'Charity';
+  static const charityProfileLocation = 'United Kingdom';
+  static const charityProfileViewButton = 'View Charity Profile';
+  static const charityProfileNoDescription =
+      'A description is not available for this charity yet.';
+  static const charityProfileEmptyListings =
+      'No items are currently listed on behalf of this charity.';
+  static const charityProfileListAnItem = 'List an item for this charity';
+  static const charityProfileUnavailable =
+      'This charity profile is unavailable.';
+  static const charityProfileLoadError =
+      'Unable to load this charity profile right now.';
+  static const charityProfileBlockedMessage =
+      'You have blocked this charity. Their listings are hidden for your account.';
+  static const reportCharityMenuLabel = 'Report charity';
+  static const blockCharityMenuLabel = 'Block charity';
+  static const reportCharityConfirmTitle = 'Report charity?';
+  static const reportCharityConfirmBody =
+      'Would you like to report this charity for review by our team?';
+  static const reportCharityConfirmAction = 'Continue to report';
+  static const blockCharityConfirmTitle = 'Block charity?';
+  static const blockCharityConfirmBody =
+      'Are you sure you want to block this charity? You will no longer see listings on behalf of this charity.';
+  static const blockCharityConfirmAction = 'Block charity';
+  static const charityBlockedFeedback = 'Charity blocked.';
+  static const charityReportedFeedback = 'Thank you for your report.';
 }

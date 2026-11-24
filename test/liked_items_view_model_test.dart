@@ -4,6 +4,7 @@ import 'package:cherry_mvp/core/config/app_images.dart';
 import 'package:cherry_mvp/core/models/product.dart';
 import 'package:cherry_mvp/core/router/nav_provider.dart';
 import 'package:cherry_mvp/core/utils/result.dart';
+import 'package:cherry_mvp/features/charity_page/charity_model.dart';
 import 'package:cherry_mvp/features/liked_items/liked_items_view_model.dart';
 import 'package:cherry_mvp/features/products/product_repository.dart';
 import 'package:cherry_mvp/features/products/product_viewmodel.dart';
@@ -17,6 +18,12 @@ class _FakeProductRepository extends ProductRepository {
     this.unlikeResult,
     this.fetchCompleter,
     this.likeCompleter,
+    this.fetchAllCharitiesCompleter,
+    this.fetchAllCharitiesCompleters,
+    this.fetchCharitiesResult,
+    this.unlikeCharityResult,
+    this.fetchCharitiesCompleter,
+    this.fetchCharitiesCompleters,
   }) : super(const UnexpectedApiService());
 
   Result<List<Product>>? fetchResult;
@@ -24,6 +31,24 @@ class _FakeProductRepository extends ProductRepository {
   Completer<Result<List<Product>>>? fetchCompleter;
   Completer<Result<ProductLikeUpdate>>? likeCompleter;
   final unlikedIds = <String>[];
+
+  Completer<Result<List<Charity>>>? fetchAllCharitiesCompleter;
+  List<Completer<Result<List<Charity>>>>? fetchAllCharitiesCompleters;
+  Result<List<Charity>>? fetchCharitiesResult;
+  Result<CharityLikeUpdate>? unlikeCharityResult;
+  Completer<Result<List<Charity>>>? fetchCharitiesCompleter;
+  List<Completer<Result<List<Charity>>>>? fetchCharitiesCompleters;
+  final unlikedCharityIds = <String>[];
+
+  @override
+  Future<Result<List<Charity>>> fetchCharities() async {
+    if (fetchAllCharitiesCompleters != null &&
+        fetchAllCharitiesCompleters!.isNotEmpty) {
+      return fetchAllCharitiesCompleters!.removeAt(0).future;
+    }
+    return fetchAllCharitiesCompleter?.future ??
+        Result.success(const <Charity>[]);
+  }
 
   @override
   Future<Result<ProductLikeUpdate>> likeProduct(Product product) async {
@@ -46,6 +71,50 @@ class _FakeProductRepository extends ProductRepository {
     return unlikeResult ??
         Result.success(const ProductLikeUpdate(liked: false, likes: 0));
   }
+
+  @override
+  Future<Result<CharityLikeUpdate>> likeCharity(Charity charity) async {
+    return Result.success(
+      CharityLikeUpdate(
+        liked: true,
+        likes: charity.likes + 1,
+        charity: charity.copyWith(likes: charity.likes + 1),
+      ),
+    );
+  }
+
+  @override
+  Future<Result<List<Charity>>> fetchLikedCharities() async {
+    if (fetchCharitiesCompleters != null &&
+        fetchCharitiesCompleters!.isNotEmpty) {
+      return fetchCharitiesCompleters!.removeAt(0).future;
+    }
+    return fetchCharitiesCompleter?.future ??
+        fetchCharitiesResult ??
+        Result.success(const <Charity>[]);
+  }
+
+  @override
+  Future<Result<CharityLikeUpdate>> unlikeCharity(String charityId) async {
+    unlikedCharityIds.add(charityId);
+    return unlikeCharityResult ??
+        Result.success(const CharityLikeUpdate(liked: false, likes: 0));
+  }
+}
+
+Charity _charity({
+  String id = 'ca6tjKqCRurG0hB49Dcp',
+  String name = 'WaterAid',
+  int likes = 1,
+}) {
+  return Charity(
+    id: id,
+    name: name,
+    imageUrl: AppImages.waterAidLogo,
+    likes: likes,
+    createdAt: DateTime.utc(2026),
+    updatedAt: DateTime.utc(2026),
+  );
 }
 
 Product _product({String id = 'liked-product'}) {
@@ -309,5 +378,464 @@ void main() {
         expect(productViewModel.cachedLikedProducts, isEmpty);
       },
     );
+
+    test('selecting charities tab loads liked charities and marks them as liked', () async {
+      final charity = _charity(likes: 4);
+      final repository = _FakeProductRepository(
+        fetchCharitiesResult: Result.success([charity]),
+      );
+      final productViewModel = ProductViewModel(
+        productRepository: repository,
+        navigator: NavigationProvider(),
+      );
+      final viewModel = LikedItemsViewModel(
+        productRepository: repository,
+        productViewModel: productViewModel,
+      );
+
+      viewModel.selectTab(LikedItemsTab.charities);
+      await Future<void>.delayed(Duration.zero);
+
+      expect(viewModel.selectedTab, LikedItemsTab.charities);
+      expect(viewModel.charitiesStatus, LikedItemsStatus.loaded);
+      expect(viewModel.charities, hasLength(1));
+      expect(viewModel.charities.first.id, charity.id);
+      expect(productViewModel.isCharityLiked(charity.id), isTrue);
+      expect(productViewModel.getCharityLikesCount(charity.id), 4);
+    });
+
+    test('sets empty state when there are no liked charities', () async {
+      final repository = _FakeProductRepository(
+        fetchCharitiesResult: Result.success(const <Charity>[]),
+      );
+      final viewModel = LikedItemsViewModel(
+        productRepository: repository,
+        productViewModel: ProductViewModel(
+          productRepository: repository,
+          navigator: NavigationProvider(),
+        ),
+      );
+
+      await viewModel.loadLikedCharities();
+
+      expect(viewModel.charitiesStatus, LikedItemsStatus.empty);
+      expect(viewModel.charities, isEmpty);
+    });
+
+    test('unlikeCharity removes a charity and updates shared heart and count', () async {
+      final charity = _charity(likes: 1);
+      final repository = _FakeProductRepository(
+        fetchCharitiesResult: Result.success([charity]),
+      );
+      final productViewModel = ProductViewModel(
+        productRepository: repository,
+        navigator: NavigationProvider(),
+      );
+      final viewModel = LikedItemsViewModel(
+        productRepository: repository,
+        productViewModel: productViewModel,
+      );
+
+      await viewModel.loadLikedCharities();
+      expect(productViewModel.isCharityLiked(charity.id), isTrue);
+      expect(productViewModel.getCharityLikesCount(charity.id), 1);
+
+      final removed = await viewModel.unlikeCharity(charity);
+
+      expect(removed, isTrue);
+      expect(repository.unlikedCharityIds, [charity.id]);
+      expect(viewModel.charitiesStatus, LikedItemsStatus.empty);
+      expect(viewModel.charities, isEmpty);
+      expect(productViewModel.isCharityLiked(charity.id), isFalse);
+      expect(productViewModel.getCharityLikesCount(charity.id), 0);
+    });
+
+    test('failed unlikeCharity keeps the charity visible', () async {
+      final charity = _charity(likes: 2);
+      final repository = _FakeProductRepository(
+        fetchCharitiesResult: Result.success([charity]),
+        unlikeCharityResult: Result.failure('Unable to unlike charity'),
+      );
+      final viewModel = LikedItemsViewModel(
+        productRepository: repository,
+        productViewModel: ProductViewModel(
+          productRepository: repository,
+          navigator: NavigationProvider(),
+        ),
+      );
+
+      await viewModel.loadLikedCharities();
+      final removed = await viewModel.unlikeCharity(charity);
+
+      expect(removed, isFalse);
+      expect(viewModel.charities, hasLength(1));
+      expect(viewModel.charitiesErrorMessage, 'Unable to unlike charity');
+    });
+
+    test('Charity.fromJson supports _id, image_url, likes, and timestamp fallbacks', () {
+      final charity = Charity.fromJson({
+        '_id': 'mongo-charity-id',
+        'name': 'Fallback Charity',
+        'image_url': 'assets/images/shelter.png',
+        'likes': '12',
+        'createdAt': {'_seconds': 1700000000},
+        'updatedAt': null,
+      });
+
+      expect(charity.id, 'mongo-charity-id');
+      expect(charity.imageUrl, 'assets/images/shelter.png');
+      expect(charity.likes, 12);
+      expect(charity.createdAt, DateTime.fromMillisecondsSinceEpoch(1700000000 * 1000, isUtc: true));
+      expect(charity.updatedAt, DateTime.fromMillisecondsSinceEpoch(0, isUtc: true));
+    });
+
+    test('resolveCharityId prefers known API ID over normalized name collisions', () async {
+      final first = _charity(id: 'api-1', name: 'Helping Hands', likes: 2);
+      final second = _charity(id: 'api-2', name: 'The Helping-Hands', likes: 5);
+      final repository = _FakeProductRepository();
+      final productViewModel = ProductViewModel(
+        productRepository: repository,
+        navigator: NavigationProvider(),
+      )..cacheCharities([first, second]);
+
+      expect(
+        productViewModel.resolveCharityId(first.id, charityName: first.name),
+        'api-1',
+      );
+      expect(
+        productViewModel.resolveCharityId(second.id, charityName: second.name),
+        'api-2',
+      );
+
+      await productViewModel.setCharityLiked(first, true);
+      expect(productViewModel.isCharityLiked('api-1', charityName: 'Helping Hands'), isTrue);
+      expect(productViewModel.isCharityLiked('api-2', charityName: 'The Helping-Hands'), isFalse);
+      expect(productViewModel.getCharityLikesCount('api-1', charityName: 'Helping Hands'), 3);
+      expect(productViewModel.getCharityLikesCount('api-2', charityName: 'The Helping-Hands'), 5);
+    });
+
+    test('hydrateLikedCharities does not restore a charity unliked while fetch is in flight', () async {
+      final charity = _charity(id: 'charity-c', name: 'Shelter', likes: 4);
+      final fetchCompleter = Completer<Result<List<Charity>>>();
+      final repository = _FakeProductRepository(
+        fetchCharitiesCompleter: fetchCompleter,
+        unlikeCharityResult: Result.success(
+          const CharityLikeUpdate(liked: false, likes: 3),
+        ),
+      );
+      final productViewModel = ProductViewModel(
+        productRepository: repository,
+        navigator: NavigationProvider(),
+      )..cacheLikedCharities([charity]);
+
+      final hydration = productViewModel.hydrateLikedCharities();
+      final unlikeResult = await productViewModel.setCharityLiked(charity, false);
+      expect(unlikeResult.isSuccess, isTrue);
+
+      fetchCompleter.complete(Result.success([charity]));
+      await hydration;
+
+      expect(productViewModel.isCharityLiked('charity-c'), isFalse);
+      expect(productViewModel.cachedLikedCharities, isEmpty);
+      expect(productViewModel.getCharityLikesCount('charity-c'), 3);
+    });
+
+    test('hydrateLikedCharities does not remove a charity liked while fetch is in flight', () async {
+      final charity = _charity(id: 'charity-c', name: 'Shelter', likes: 4);
+      final fetchCompleter = Completer<Result<List<Charity>>>();
+      final repository = _FakeProductRepository(
+        fetchCharitiesCompleter: fetchCompleter,
+      );
+      final productViewModel = ProductViewModel(
+        productRepository: repository,
+        navigator: NavigationProvider(),
+      );
+
+      final hydration = productViewModel.hydrateLikedCharities();
+      final likeResult = await productViewModel.setCharityLiked(charity, true);
+      expect(likeResult.isSuccess, isTrue);
+
+      fetchCompleter.complete(Result.success(const <Charity>[]));
+      await hydration;
+
+      expect(productViewModel.isCharityLiked('charity-c'), isTrue);
+      expect(productViewModel.cachedLikedCharities, hasLength(1));
+      expect(productViewModel.getCharityLikesCount('charity-c'), 5);
+    });
+
+    test('hydrateCharities preserves newer mutation counts while refreshing unmutated charities', () async {
+      final mutated = _charity(id: 'charity-a', name: 'WaterAid', likes: 10);
+      final unmutated = _charity(id: 'charity-b', name: 'WWF', likes: 2);
+      final catalogueCompleter = Completer<Result<List<Charity>>>();
+      final repository = _FakeProductRepository(
+        fetchAllCharitiesCompleter: catalogueCompleter,
+      );
+      final productViewModel = ProductViewModel(
+        productRepository: repository,
+        navigator: NavigationProvider(),
+      )..cacheCharities([mutated, unmutated]);
+
+      final hydration = productViewModel.hydrateCharities();
+      await productViewModel.setCharityLiked(mutated, true);
+      expect(productViewModel.getCharityLikesCount('charity-a'), 11);
+
+      catalogueCompleter.complete(
+        Result.success([
+          mutated.copyWith(likes: 10),
+          unmutated.copyWith(likes: 6),
+        ]),
+      );
+      await hydration;
+
+      expect(productViewModel.getCharityLikesCount('charity-a'), 11);
+      expect(productViewModel.getCharityLikesCount('charity-b'), 6);
+    });
+
+    test('loadLikedCharities excludes charities unliked via shared state during fetch', () async {
+      final unlikedDuringLoad = _charity(id: 'charity-a', name: 'WaterAid', likes: 3);
+      final stillLiked = _charity(id: 'charity-b', name: 'WWF', likes: 2);
+      final fetchCompleter = Completer<Result<List<Charity>>>();
+      final repository = _FakeProductRepository(
+        fetchCharitiesCompleter: fetchCompleter,
+        unlikeCharityResult: Result.success(
+          const CharityLikeUpdate(liked: false, likes: 2),
+        ),
+      );
+      final productViewModel = ProductViewModel(
+        productRepository: repository,
+        navigator: NavigationProvider(),
+      )..cacheLikedCharities([unlikedDuringLoad, stillLiked]);
+      final viewModel = LikedItemsViewModel(
+        productRepository: repository,
+        productViewModel: productViewModel,
+      );
+
+      final loadFuture = viewModel.loadLikedCharities();
+      await productViewModel.setCharityLiked(unlikedDuringLoad, false);
+      fetchCompleter.complete(Result.success([unlikedDuringLoad, stillLiked]));
+      await loadFuture;
+
+      expect(viewModel.charities.map((c) => c.id), ['charity-b']);
+      expect(productViewModel.isCharityLiked('charity-a'), isFalse);
+      expect(productViewModel.isCharityLiked('charity-b'), isTrue);
+    });
+
+    test('loadLikedCharities accepts refreshed API counts over older cached overrides', () async {
+      final cachedCharity = _charity(id: 'charity-a', name: 'WaterAid', likes: 4);
+      final refreshedCharity = _charity(id: 'charity-a', name: 'WaterAid', likes: 7);
+      final repository = _FakeProductRepository(
+        fetchCharitiesResult: Result.success([refreshedCharity]),
+      );
+      final productViewModel = ProductViewModel(
+        productRepository: repository,
+        navigator: NavigationProvider(),
+      )..cacheLikedCharities([cachedCharity]);
+      final viewModel = LikedItemsViewModel(
+        productRepository: repository,
+        productViewModel: productViewModel,
+      );
+
+      await viewModel.loadLikedCharities();
+
+      expect(viewModel.charities.single.likes, 7);
+      expect(productViewModel.getCharityLikesCount('charity-a'), 7);
+    });
+
+    test('loadLikedCharities drops unmutated cached charities omitted by the API', () async {
+      final staleCached = _charity(id: 'charity-stale', name: 'WaterAid', likes: 4);
+      final otherCharity = _charity(id: 'charity-other', name: 'WWF', likes: 1);
+      final repository = _FakeProductRepository(
+        fetchCharitiesResult: Result.success(const <Charity>[]),
+      );
+      final productViewModel = ProductViewModel(
+        productRepository: repository,
+        navigator: NavigationProvider(),
+      )..cacheLikedCharities([staleCached]);
+      final viewModel = LikedItemsViewModel(
+        productRepository: repository,
+        productViewModel: productViewModel,
+      );
+
+      await viewModel.loadLikedCharities();
+
+      expect(viewModel.charitiesStatus, LikedItemsStatus.empty);
+      expect(viewModel.charities, isEmpty);
+      expect(productViewModel.isCharityLiked('charity-stale'), isFalse);
+      expect(productViewModel.cachedLikedCharities, isEmpty);
+
+      // Subsequent shared-state updates must not resurrect the omitted charity.
+      await productViewModel.setCharityLiked(otherCharity, true);
+      expect(viewModel.charities.map((c) => c.id), ['charity-other']);
+      viewModel.dispose();
+    });
+
+    test('loadLikedCharities preserves charities newly liked while fetch is in flight', () async {
+      final existing = _charity(id: 'charity-a', name: 'WaterAid', likes: 3);
+      final likedDuringFetch = _charity(id: 'charity-b', name: 'WWF', likes: 2);
+      final fetchCompleter = Completer<Result<List<Charity>>>();
+      final repository = _FakeProductRepository(
+        fetchCharitiesCompleter: fetchCompleter,
+      );
+      final productViewModel = ProductViewModel(
+        productRepository: repository,
+        navigator: NavigationProvider(),
+      );
+      final viewModel = LikedItemsViewModel(
+        productRepository: repository,
+        productViewModel: productViewModel,
+      );
+
+      final loadFuture = viewModel.loadLikedCharities();
+      final likeResult = await productViewModel.setCharityLiked(likedDuringFetch, true);
+      expect(likeResult.isSuccess, isTrue);
+
+      fetchCompleter.complete(Result.success([existing]));
+      await loadFuture;
+
+      expect(viewModel.charitiesStatus, LikedItemsStatus.loaded);
+      expect(viewModel.charities.map((c) => c.id), ['charity-a', 'charity-b']);
+      expect(productViewModel.isCharityLiked('charity-a'), isTrue);
+      expect(productViewModel.isCharityLiked('charity-b'), isTrue);
+      expect(productViewModel.getCharityLikesCount('charity-b'), 3);
+      viewModel.dispose();
+    });
+
+    test('older dashboard hydrateLikedCharities response does not restore a charity after newer Profile load', () async {
+      final unlikedRemotely = _charity(id: 'charity-remote', name: 'WaterAid', likes: 3);
+      final dashboardCompleter = Completer<Result<List<Charity>>>();
+      final profileCompleter = Completer<Result<List<Charity>>>();
+      final repository = _FakeProductRepository(
+        fetchCharitiesCompleters: [dashboardCompleter, profileCompleter],
+      );
+      final productViewModel = ProductViewModel(
+        productRepository: repository,
+        navigator: NavigationProvider(),
+      );
+      final viewModel = LikedItemsViewModel(
+        productRepository: repository,
+        productViewModel: productViewModel,
+      );
+
+      final dashboardHydration = productViewModel.hydrateLikedCharities();
+      final profileLoad = viewModel.loadLikedCharities();
+
+      // Newer Profile GET completes first with empty list (charity was unliked remotely).
+      profileCompleter.complete(Result.success(const <Charity>[]));
+      await profileLoad;
+      expect(viewModel.charitiesStatus, LikedItemsStatus.empty);
+      expect(viewModel.charities, isEmpty);
+
+      // Older Dashboard GET completes afterwards with stale snapshot containing the charity.
+      dashboardCompleter.complete(Result.success([unlikedRemotely]));
+      await dashboardHydration;
+
+      expect(productViewModel.isCharityLiked('charity-remote'), isFalse);
+      expect(productViewModel.cachedLikedCharities, isEmpty);
+      expect(viewModel.charitiesStatus, LikedItemsStatus.empty);
+      expect(viewModel.charities, isEmpty);
+      viewModel.dispose();
+    });
+
+    test('loadLikedCharities keeps distinct API IDs even when normalized names collide', () async {
+      final first = _charity(id: 'api-1', name: 'Helping Hands', likes: 2);
+      final second = _charity(id: 'api-2', name: 'The Helping-Hands', likes: 5);
+      final repository = _FakeProductRepository(
+        fetchCharitiesResult: Result.success([first, second]),
+      );
+      final productViewModel = ProductViewModel(
+        productRepository: repository,
+        navigator: NavigationProvider(),
+      )..cacheCharities([first]);
+      final viewModel = LikedItemsViewModel(
+        productRepository: repository,
+        productViewModel: productViewModel,
+      );
+
+      await viewModel.loadLikedCharities();
+
+      expect(viewModel.charitiesStatus, LikedItemsStatus.loaded);
+      expect(viewModel.charities.map((c) => c.id), ['api-1', 'api-2']);
+      expect(productViewModel.isCharityLiked('api-1'), isTrue);
+      expect(productViewModel.isCharityLiked('api-2'), isTrue);
+      viewModel.dispose();
+    });
+
+    test('switching accounts resets inactive charities tab to initial so selecting it loads new account charities', () async {
+      var currentUserId = 'account-a';
+      final accountACharity = _charity(id: 'charity-a', name: 'WaterAid', likes: 1);
+      final accountBCharity = _charity(id: 'charity-b', name: 'WWF', likes: 4);
+      final repository = _FakeProductRepository(
+        fetchResult: Result.success(const <Product>[]),
+        fetchCharitiesResult: Result.success([accountACharity]),
+      );
+      final productViewModel = ProductViewModel(
+        productRepository: repository,
+        navigator: NavigationProvider(),
+        currentUserIdProvider: () => currentUserId,
+      );
+      final viewModel = LikedItemsViewModel(
+        productRepository: repository,
+        productViewModel: productViewModel,
+      );
+
+      await viewModel.loadLikedProducts();
+      viewModel.selectTab(LikedItemsTab.charities);
+      await Future<void>.delayed(Duration.zero);
+      expect(viewModel.charities.map((c) => c.id), ['charity-a']);
+
+      // Return to items tab, switch account, then switch back to charities tab.
+      viewModel.selectTab(LikedItemsTab.items);
+      currentUserId = 'account-b';
+      repository.fetchCharitiesResult = Result.success([accountBCharity]);
+      productViewModel.isCharityLiked('charity-a');
+      await Future<void>.microtask(() {});
+
+      expect(viewModel.status, LikedItemsStatus.empty);
+      expect(viewModel.charitiesStatus, LikedItemsStatus.initial);
+      expect(viewModel.charities, isEmpty);
+
+      viewModel.selectTab(LikedItemsTab.charities);
+      await Future<void>.delayed(Duration.zero);
+
+      expect(viewModel.charitiesStatus, LikedItemsStatus.loaded);
+      expect(viewModel.charities.map((c) => c.id), ['charity-b']);
+      viewModel.dispose();
+    });
+
+    test('hydrateCharities ignores previous account response and preserves newer account mutation count', () async {
+      var currentUserId = 'account-a';
+      final charity = _charity(id: 'charity-shared', name: 'WaterAid', likes: 10);
+      final accountACompleter = Completer<Result<List<Charity>>>();
+      final accountBCompleter = Completer<Result<List<Charity>>>();
+      final repository = _FakeProductRepository(
+        fetchAllCharitiesCompleters: [accountACompleter, accountBCompleter],
+      );
+      final productViewModel = ProductViewModel(
+        productRepository: repository,
+        navigator: NavigationProvider(),
+        currentUserIdProvider: () => currentUserId,
+      );
+
+      final accountAHydration = productViewModel.hydrateCharities();
+
+      currentUserId = 'account-b';
+      final accountBHydration = productViewModel.hydrateCharities();
+      await productViewModel.setCharityLiked(charity, true);
+      expect(productViewModel.isCharityLiked('charity-shared'), isTrue);
+      expect(productViewModel.getCharityLikesCount('charity-shared'), 11);
+
+      // Account A's stale catalogue GET completes after Account B liked the charity.
+      accountACompleter.complete(Result.success([charity.copyWith(likes: 10)]));
+      final accountAResult = await accountAHydration;
+      expect(accountAResult.isSuccess, isFalse);
+      expect(productViewModel.getCharityLikesCount('charity-shared'), 11);
+
+      // Account B's own catalogue GET is still tracked and preserves B's mutation count.
+      expect(identical(productViewModel.hydrateCharities(), accountBHydration), isTrue);
+      accountBCompleter.complete(Result.success([charity.copyWith(likes: 10)]));
+      final accountBResult = await accountBHydration;
+      expect(accountBResult.isSuccess, isTrue);
+      expect(productViewModel.getCharityLikesCount('charity-shared'), 11);
+    });
   });
 }

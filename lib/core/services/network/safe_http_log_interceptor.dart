@@ -136,6 +136,8 @@ SafeHttpOperation classifyHttpOperation({
         return SafeHttpOperation.loadProfileListings;
       case ApiEndpoints.likedProducts:
         return SafeHttpOperation.loadLikedProducts;
+      case ApiEndpoints.likedCharities:
+        return SafeHttpOperation.loadLikedCharities;
       case ApiEndpoints.categories:
         return SafeHttpOperation.loadCategories;
       case ApiEndpoints.inpostLockers:
@@ -171,6 +173,10 @@ SafeHttpOperation classifyHttpOperation({
 
     if (RegExp(r'^/api/products/[^/]+/like$').hasMatch(path)) {
       return SafeHttpOperation.updateProductLike;
+    }
+
+    if (RegExp(r'^/api/charities/[^/]+/like$').hasMatch(path)) {
+      return SafeHttpOperation.updateCharityLike;
     }
   }
 
