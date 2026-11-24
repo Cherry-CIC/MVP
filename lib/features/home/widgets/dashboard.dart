@@ -41,6 +41,9 @@ class _DashboardPageState extends State<DashboardPage> {
         unawaited(
           context.read<ProductViewModel>().hydrateLikedProducts(),
         );
+        unawaited(
+          context.read<ProductViewModel>().hydrateLikedCharities(),
+        );
         unawaited(context.read<HomeViewModel>().fetchProducts());
       });
     }

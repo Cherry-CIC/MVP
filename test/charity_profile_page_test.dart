@@ -147,6 +147,20 @@ class _ProductRepositoryStub extends ProductRepository {
       Result.success(const []);
 
   @override
+  Future<Result<CharityLikeUpdate>> likeCharity(Charity charity) async =>
+      Result.success(
+        CharityLikeUpdate(
+          liked: true,
+          likes: charity.likes + 1,
+          charity: charity.copyWith(likes: charity.likes + 1),
+        ),
+      );
+
+  @override
+  Future<Result<CharityLikeUpdate>> unlikeCharity(String charityId) async =>
+      Result.success(const CharityLikeUpdate(liked: false, likes: 0));
+
+  @override
   Future<Result<Product>> fetchProduct(String productId) async {
     for (final item in [_dogsProduct1, _dogsProduct2, _otherCharityProduct]) {
       if (item.id == productId) return Result.success(item);

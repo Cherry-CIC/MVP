@@ -4,42 +4,47 @@ import 'package:cherry_mvp/core/models/model.dart';
 
 final List<DummyCharity> dummyCharities = [
   DummyCharity(
+    id: 'ca6tjKqCRurG0hB49Dcp',
     charityName: "WaterAid",
     description:
         "In a small village in Malawi, WaterAid recently completed the construction of a new well, providing clean, safe drinking water to hundreds of residents. No more long treks for water. No more toxic sources!",
     charityImage: AppImages.discoverImage1,
     charityLogo: AppImages.waterAidLogo,
-    likes: 3,
+    likes: 0,
     tags: {'popular'},
   ),
   DummyCharity(
+    id: 'KlcpMN9P9G4pmchBOpxe',
     charityName: "WWF",
     description:
         "After years of conservation efforts, WWF announced a rise in sea turtle hatchlings on a beach in Costa Rica! Thanks to beach patrols and community engagement, baby turtles are making their way to the ocean in record numbers. Help them shell-ebrate!",
     charityImage: AppImages.wwf,
     charityLogo: AppImages.wwfLogo,
-    likes: 3,
+    likes: 0,
     tags: {'popular'},
   ),
   DummyCharity(
+    id: 'eSVAvsPgBtqqzy7HCDtt',
     charityName: "Shelter",
     description:
         "Shelter UK helped dozens of families move into secure housing last month. Thanks to their advocacy and support, families now have a place to call home.",
     charityImage: AppImages.shelter,
     charityLogo: AppImages.shelterLogo,
-    likes: 3,
+    likes: 0,
     tags: {'smaller-charities'},
   ),
   DummyCharity(
+    id: '74mqwRm82kkWeqvDTrXp',
     charityName: "Mind",
     description:
         "The mental health charity Mind has rolled out a series of free community workshops across the UK, reaching over 5,000 people. These sessions equip individuals with tools to manage stress and anxiety.",
     charityImage: AppImages.mind,
     charityLogo: AppImages.mindLogo,
-    likes: 3,
+    likes: 0,
     tags: {'popular'},
   ),
   DummyCharity(
+    id: 'U5dPAQGCfDhYfWkAIONf',
     charityName: 'Maudsley Charity',
     description:
         'Maudsley Charity funds improvements and innovation in mental health care across south London. It supports clinical teams, researchers and community organisations working to ensure people experiencing mental illness can access the right care.',
@@ -49,6 +54,7 @@ final List<DummyCharity> dummyCharities = [
     tags: {'popular'},
   ),
   DummyCharity(
+    id: 'GN5KlYioMyAlTx1gZhHT',
     charityName: 'British Heart Foundation',
     description:
         'British Heart Foundation funds life-saving research into heart and circulatory diseases. It also supports people living with cardiovascular conditions and campaigns for improvements in prevention, diagnosis and treatment.',
@@ -58,6 +64,7 @@ final List<DummyCharity> dummyCharities = [
     tags: {'popular'},
   ),
   DummyCharity(
+    id: 'west-london-nhs-charity',
     charityName: 'West London NHS Charity',
     description:
         'West London NHS Charity raises funds to improve the wellbeing of patients, service users, carers and NHS staff. Donations support projects and improvements that cannot normally be funded through standard NHS budgets.',
@@ -66,6 +73,7 @@ final List<DummyCharity> dummyCharities = [
     tags: {'smaller-charities', 'local'},
   ),
   DummyCharity(
+    id: 'UcWbFLR1m7LqQcO3r0I1',
     charityName: 'Disaster Aid UK & Ireland',
     description:
         'Disaster Aid UK & Ireland provides humanitarian support to communities affected by disasters around the world. Working through Disaster Aid International, it helps fund and deliver practical aid while supporting communities as they recover and rebuild.',
@@ -75,6 +83,7 @@ final List<DummyCharity> dummyCharities = [
     tags: {'popular'},
   ),
   DummyCharity(
+    id: 'new-college-worcester',
     charityName: 'New College Worcester',
     description:
         'New College Worcester is a national residential school and college for young people who are blind or vision impaired. It provides specialist education, independent living skills and support to help students become confident and fulfilled adults.',
@@ -83,6 +92,7 @@ final List<DummyCharity> dummyCharities = [
     tags: {'smaller-charities'},
   ),
   DummyCharity(
+    id: 'groundwork',
     charityName: 'Groundwork',
     description:
         'Groundwork works with communities across the UK to create a fairer and greener future. Its projects improve local green spaces, tackle poverty and inequality, support healthier communities and help people access skills and employment.',
@@ -92,6 +102,7 @@ final List<DummyCharity> dummyCharities = [
     tags: {'popular'},
   ),
   DummyCharity(
+    id: '13JeymliPPUb5ZSMSuvY',
     charityName: "Alzheimer's Society",
     description:
         "Alzheimer's Society supports people affected by dementia with advice and practical guidance. It also funds research and campaigns for lasting change so dementia becomes a priority.",
@@ -101,6 +112,7 @@ final List<DummyCharity> dummyCharities = [
     tags: {'popular'},
   ),
   DummyCharity(
+    id: '73BZmlmJYyj18Rjrovex',
     charityName: 'World Animal Protection',
     description:
         'World Animal Protection works globally to end cruelty and create lasting change for animals. It challenges factory farming, opposes the exploitation of wild animals and campaigns for stronger welfare standards.',
@@ -110,6 +122,7 @@ final List<DummyCharity> dummyCharities = [
     tags: {'popular'},
   ),
   DummyCharity(
+    id: '7suUWna4TpXl21BIcUdk',
     charityName: 'Leicester Animal Aid',
     description:
         'Leicester Animal Aid rescues and rehomes cats and dogs that are lost, abandoned, neglected or unwanted. It also gives owners practical advice and runs support services that help people keep caring for their pets.',
@@ -119,6 +132,7 @@ final List<DummyCharity> dummyCharities = [
     tags: {'smaller-charities'},
   ),
   DummyCharity(
+    id: 'FtYyrHP2h5clA0sZ8dfB',
     charityName: 'British Red Cross',
     description:
         'British Red Cross helps people prepare for, respond to and recover from crises in the UK and overseas. Its humanitarian work includes emergency response, health and care services, and support for refugees and displaced people.',
@@ -128,6 +142,7 @@ final List<DummyCharity> dummyCharities = [
     tags: {'popular'},
   ),
   DummyCharity(
+    id: 'JjtnorVqAxWBSmX8wOX9',
     charityName: 'UNICEF',
     description:
         "UNICEF UK raises funds for UNICEF's emergency and development work for children worldwide. It also promotes children's rights and helps deliver healthcare, education, nutrition, clean water and protection in emergencies.",
@@ -137,6 +152,7 @@ final List<DummyCharity> dummyCharities = [
     tags: {'popular'},
   ),
   DummyCharity(
+    id: 'anCaH76a4cy9emv0PAo2',
     charityName: 'Save the Children',
     description:
         "Save the Children works with families and communities in the UK and around the world to keep children safe, healthy and learning. It provides emergency help and campaigns for lasting improvements to children's lives and rights.",
@@ -146,6 +162,7 @@ final List<DummyCharity> dummyCharities = [
     tags: {'popular'},
   ),
   DummyCharity(
+    id: 'bkWZ2InXZG6VQgob4w5y',
     charityName: 'Prostate Cancer Research',
     description:
         'Prostate Cancer Research funds research to improve survival and find better treatments for prostate cancer. It also works to turn discoveries into real-world diagnostics and treatments while improving access to care.',
@@ -155,6 +172,7 @@ final List<DummyCharity> dummyCharities = [
     tags: {'popular'},
   ),
   DummyCharity(
+    id: 'PFbfRutgbtzW2tH9cd7t',
     charityName: 'Macmillan Cancer Support',
     description:
         'Macmillan Cancer Support provides information, practical and emotional support, and services for people living with cancer. It also supports healthcare professionals, researches cancer care and campaigns for better services and fairer access.',
@@ -164,6 +182,7 @@ final List<DummyCharity> dummyCharities = [
     tags: {'popular'},
   ),
   DummyCharity(
+    id: 'O2llFSCODaF3b7pSU25w',
     charityName: 'RSPCA',
     description:
         'The RSPCA rescues and cares for animals facing cruelty, neglect or urgent need across England and Wales. It rehabilitates and rehomes animals, investigates cruelty, campaigns for stronger laws and works to improve welfare standards.',
@@ -173,6 +192,7 @@ final List<DummyCharity> dummyCharities = [
     tags: {'popular'},
   ),
   DummyCharity(
+    id: 'eiwmMk6YLjeWKKWiIEDK',
     charityName: 'The Cat Welfare Group',
     description:
         'The Cat Welfare Group rescues stray, abandoned and mistreated cats and kittens on the South Coast. It provides medical treatment before rehoming and neuters feral cats, returning them or finding a suitable new home when needed.',

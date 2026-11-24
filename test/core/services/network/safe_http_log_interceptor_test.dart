@@ -32,6 +32,11 @@ void main() {
         ),
         (
           method: 'GET',
+          endpoint: '/api/charities/my-liked-items',
+          expected: SafeHttpOperation.loadLikedCharities,
+        ),
+        (
+          method: 'GET',
           endpoint: '/api/auth/profile',
           expected: SafeHttpOperation.loadProfile,
         ),
@@ -77,6 +82,13 @@ void main() {
           endpoint: '/api/products/$_secret/like?token=$_secret',
         ),
         SafeHttpOperation.updateProductLike,
+      );
+      expect(
+        classifyHttpOperation(
+          method: 'POST',
+          endpoint: '/api/charities/$_secret/like?token=$_secret',
+        ),
+        SafeHttpOperation.updateCharityLike,
       );
     });
 
