@@ -4,6 +4,7 @@ import 'package:cherry_mvp/core/utils/result.dart';
 import 'package:cherry_mvp/features/charity_page/charity_model.dart';
 import 'package:cherry_mvp/features/charity_page/charity_profile_args.dart';
 import 'package:cherry_mvp/features/charity_page/charity_profile_repository.dart';
+import 'package:cherry_mvp/features/products/blocked_users.dart';
 import 'package:cherry_mvp/features/products/deleted_listings.dart';
 import 'package:flutter/foundation.dart';
 
@@ -24,14 +25,17 @@ class CharityProfileViewModel extends ChangeNotifier {
     required this.args,
     required this.repository,
     this.deletedListings,
+    this.blockedUsers,
     this.pageSize = 20,
   }) {
     deletedListings?.addListener(_onListingsChanged);
+    blockedUsers?.addListener(_onListingsChanged);
   }
 
   final CharityProfileArgs args;
   final ICharityProfileRepository repository;
   final DeletedListings? deletedListings;
+  final BlockedUsers? blockedUsers;
   final int pageSize;
 
   CharityProfileStatus _status = CharityProfileStatus.initial;
@@ -95,10 +99,14 @@ class CharityProfileViewModel extends ChangeNotifier {
     _charity = args.charity;
     notifyListeners();
 
+    final blockedHydration = blockedUsers?.ensureHydrated();
     final charityResult = await repository.fetchCharity(
       charityId: args.charityId ?? args.charity?.id,
       charityName: args.charityName ?? args.charity?.name,
     );
+    if (blockedHydration != null) {
+      await blockedHydration;
+    }
     if (_disposed || requestId != _requestSequence) return;
 
     final resolvedCharity = charityResult.value ?? args.charity;
@@ -359,14 +367,19 @@ class CharityProfileViewModel extends ChangeNotifier {
     return items.where(
       (product) =>
           product.charityId == charityId &&
-          deletedListings?.contains(product.id) != true,
+          deletedListings?.contains(product.id) != true &&
+          blockedUsers?.contains(product.userId) != true,
     );
   }
 
   void _onListingsChanged() {
-    if (_disposed || deletedListings == null) return;
+    if (_disposed || (deletedListings == null && blockedUsers == null)) return;
     final filtered = _products
-        .where((product) => deletedListings!.contains(product.id) != true)
+        .where(
+          (product) =>
+              deletedListings?.contains(product.id) != true &&
+              blockedUsers?.contains(product.userId) != true,
+        )
         .toList(growable: false);
     if (filtered.length != _products.length) {
       _products = List.unmodifiable(filtered);
@@ -378,6 +391,7 @@ class CharityProfileViewModel extends ChangeNotifier {
   void dispose() {
     _disposed = true;
     deletedListings?.removeListener(_onListingsChanged);
+    blockedUsers?.removeListener(_onListingsChanged);
     super.dispose();
   }
 }

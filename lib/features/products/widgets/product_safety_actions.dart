@@ -1,4 +1,6 @@
 import 'package:cherry_mvp/core/config/app_strings.dart';
+import 'package:cherry_mvp/core/models/product.dart';
+import 'package:cherry_mvp/core/router/nav_routes.dart';
 import 'package:flutter/material.dart';
 
 enum ProductSafetyMenuAction {
@@ -199,6 +201,39 @@ Future<bool> showBlockSellerDialog(BuildContext context) {
     message: AppStrings.productPageBlockSellerMessage,
     confirmLabel: AppStrings.productPageBlockSellerConfirm,
   );
+}
+
+/// Pops the current route and any stacked profile/product routes belonging to
+/// [sellerId], always stopping before removing the root route.
+void leaveBlockedSellerRoutes(BuildContext context, String sellerId) {
+  final normalizedSellerId = sellerId.trim();
+  if (normalizedSellerId.isEmpty) return;
+
+  final navigator = Navigator.maybeOf(context);
+  if (navigator == null || !navigator.canPop()) return;
+
+  final currentRoute = ModalRoute.of(context);
+  var poppedCurrent = false;
+  navigator.popUntil((route) {
+    if (route.isFirst) return true;
+    if (!poppedCurrent && identical(route, currentRoute)) {
+      poppedCurrent = true;
+      return false;
+    }
+    return !isRouteForBlockedSeller(route, normalizedSellerId);
+  });
+}
+
+bool isRouteForBlockedSeller(Route<dynamic> route, String sellerId) {
+  final name = route.settings.name;
+  final args = route.settings.arguments;
+  if (name == AppRoutes.publicUserProfile && args is String) {
+    return args.trim() == sellerId;
+  }
+  if (name == AppRoutes.product && args is Product) {
+    return args.userId?.trim() == sellerId;
+  }
+  return false;
 }
 
 /// Prompts the user to confirm before opening the report charity form.

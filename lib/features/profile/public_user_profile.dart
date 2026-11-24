@@ -1,5 +1,6 @@
 import 'package:cherry_mvp/core/config/app_strings.dart';
 import 'package:cherry_mvp/core/utils/result.dart';
+import 'package:cherry_mvp/features/products/blocked_users.dart';
 import 'package:cherry_mvp/features/products/product_viewmodel.dart';
 import 'package:cherry_mvp/features/products/deleted_listings.dart';
 import 'package:cherry_mvp/features/products/widgets/product_safety_actions.dart';
@@ -34,6 +35,7 @@ class _PublicUserProfileState extends State<PublicUserProfile> {
   void _createViewModel() {
     _viewModel = PublicUserProfileViewModel(
       deletedListings: context.read<DeletedListings?>(),
+      blockedUsers: context.read<BlockedUsers?>(),
       userId: widget.userId,
       repository: context.read<IPublicUserProfileRepository>(),
     )..loadProfile();
@@ -56,15 +58,15 @@ class _PublicUserProfileState extends State<PublicUserProfile> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(AppStrings.publicProfileTitle),
-        actions: _buildAppBarActions(context),
-      ),
-      body: SafeArea(
-        child: ListenableBuilder(
-          listenable: _viewModel,
-          builder: (context, _) => RefreshIndicator(
+    return ListenableBuilder(
+      listenable: _viewModel,
+      builder: (context, _) => Scaffold(
+        appBar: AppBar(
+          title: const Text(AppStrings.publicProfileTitle),
+          actions: _buildAppBarActions(context),
+        ),
+        body: SafeArea(
+          child: RefreshIndicator(
             onRefresh: _viewModel.loadProfile,
             child: ListView(
               physics: const AlwaysScrollableScrollPhysics(),
@@ -78,6 +80,9 @@ class _PublicUserProfileState extends State<PublicUserProfile> {
   }
 
   List<Widget> _buildAppBarActions(BuildContext context) {
+    if (_viewModel.status == PublicProfileStatus.unavailable) {
+      return const [];
+    }
     final currentUserId = context.read<FirebaseAuth>().currentUser?.uid.trim();
     final isOwnProfile = currentUserId != null && currentUserId.isNotEmpty && currentUserId == widget.userId.trim();
     if (isOwnProfile) {
@@ -279,7 +284,8 @@ class _PublicUserProfileState extends State<PublicUserProfile> {
       fallbackError: AppStrings.productPageBlockSellerFailed,
     );
     if (result.isSuccess) {
-      await _viewModel.loadProfile();
+      _viewModel.markUnavailable();
+      leaveBlockedSellerRoutes(context, widget.userId);
     }
   }
 

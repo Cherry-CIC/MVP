@@ -1,4 +1,5 @@
 import 'package:cherry_mvp/core/models/product.dart';
+import 'package:cherry_mvp/features/products/blocked_users.dart';
 import 'package:cherry_mvp/features/products/deleted_listings.dart';
 import 'package:cherry_mvp/features/profile/public_user_profile_repository.dart';
 import 'package:flutter/foundation.dart';
@@ -10,9 +11,16 @@ class PublicUserProfileViewModel extends ChangeNotifier {
   final String userId;
   final IPublicUserProfileRepository repository;
   final DeletedListings? deletedListings;
+  final BlockedUsers? blockedUsers;
 
-  PublicUserProfileViewModel({required this.userId, required this.repository, this.deletedListings}) {
+  PublicUserProfileViewModel({
+    required this.userId,
+    required this.repository,
+    this.deletedListings,
+    this.blockedUsers,
+  }) {
     deletedListings?.addListener(_removeDeletedListings);
+    blockedUsers?.addListener(_onBlockedUsersChanged);
   }
 
   PublicProfileStatus _status = PublicProfileStatus.loading;
@@ -39,10 +47,23 @@ class PublicUserProfileViewModel extends ChangeNotifier {
     _status = PublicProfileStatus.loading;
     notifyListeners();
 
+    if (blockedUsers != null && !blockedUsers!.isHydrated) {
+      await blockedUsers!.ensureHydrated();
+      if (!_isCurrent(request)) return;
+    }
+    if (blockedUsers?.contains(userId) == true) {
+      _status = PublicProfileStatus.unavailable;
+      notifyListeners();
+      return;
+    }
+
     try {
       final result = await repository.fetchProfile(userId);
       if (!_isCurrent(request)) return;
-      if (result.isSuccess && result.value != null) {
+      if (blockedUsers?.contains(userId) == true) {
+        _clearProfile();
+        _status = PublicProfileStatus.unavailable;
+      } else if (result.isSuccess && result.value != null) {
         _applyPage(result.value!);
         _status = PublicProfileStatus.ready;
       } else {
@@ -57,6 +78,10 @@ class PublicUserProfileViewModel extends ChangeNotifier {
 
   Future<void> loadMore() async {
     if (_disposed || _status != PublicProfileStatus.ready || _isLoadingMore || !_hasMore) return;
+    if (blockedUsers?.contains(userId) == true) {
+      markUnavailable();
+      return;
+    }
     final cursor = _nextCursor;
     if (cursor == null) return;
     final request = _requestSequence;
@@ -67,7 +92,10 @@ class PublicUserProfileViewModel extends ChangeNotifier {
     try {
       final result = await repository.fetchProfile(userId, cursor: cursor);
       if (!_isCurrent(request)) return;
-      if (result.isSuccess && result.value != null) {
+      if (blockedUsers?.contains(userId) == true) {
+        _clearProfile();
+        _status = PublicProfileStatus.unavailable;
+      } else if (result.isSuccess && result.value != null) {
         _applyPage(result.value!, append: true);
         // A repeated cursor must not cause endless requests for the same page.
         if (_nextCursor == cursor) {
@@ -89,6 +117,14 @@ class PublicUserProfileViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  void markUnavailable() {
+    if (_disposed) return;
+    _requestSequence++;
+    _clearProfile();
+    _status = PublicProfileStatus.unavailable;
+    notifyListeners();
+  }
+
   void _applyPage(PublicUserProfilePage page, {bool append = false}) {
     _user = page.user;
     final seenIds = <String>{};
@@ -97,7 +133,12 @@ class PublicUserProfileViewModel extends ChangeNotifier {
               if (append) ..._products,
               ...page.products,
             ]
-            .where((product) => deletedListings?.contains(product.id) != true && seenIds.add(product.id))
+            .where(
+              (product) =>
+                  deletedListings?.contains(product.id) != true &&
+                  blockedUsers?.contains(product.userId) != true &&
+                  seenIds.add(product.id),
+            )
             .toList(growable: false);
     final cursor = page.nextCursor?.trim();
     _nextCursor = cursor == null || cursor.isEmpty ? null : cursor;
@@ -127,11 +168,26 @@ class PublicUserProfileViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  void _onBlockedUsersChanged() {
+    if (_disposed) return;
+    if (blockedUsers?.contains(userId) == true) {
+      markUnavailable();
+      return;
+    }
+    final products = _products
+        .where((product) => blockedUsers?.contains(product.userId) != true)
+        .toList(growable: false);
+    if (products.length == _products.length) return;
+    _products = products;
+    notifyListeners();
+  }
+
   @override
   void dispose() {
     _disposed = true;
     _requestSequence++;
     deletedListings?.removeListener(_removeDeletedListings);
+    blockedUsers?.removeListener(_onBlockedUsersChanged);
     super.dispose();
   }
 }

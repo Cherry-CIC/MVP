@@ -3,6 +3,7 @@ import 'package:cherry_mvp/core/services/network/api_endpoints.dart';
 import 'package:cherry_mvp/core/services/network/api_service.dart';
 import 'package:cherry_mvp/core/utils/result.dart';
 import 'package:cherry_mvp/features/charity_page/charity_model.dart';
+import 'package:cherry_mvp/features/products/blocked_users.dart';
 import 'package:cherry_mvp/features/products/deleted_listings.dart';
 
 final class ProductLikeUpdate {
@@ -25,7 +26,7 @@ final class CharityLikeUpdate {
 }
 
 class ProductRepository {
-  ProductRepository(this._apiService, {this.deletedListings});
+  ProductRepository(this._apiService, {this.deletedListings, this.blockedUsers});
 
   static const int _likedProductsPageLimit = 50;
   static const int _likedCharitiesPageLimit = 50;
@@ -34,6 +35,7 @@ class ProductRepository {
 
   final ApiService _apiService;
   final DeletedListings? deletedListings;
+  final BlockedUsers? blockedUsers;
 
   Future<Result<Product>> fetchProduct(String productId) async {
     final validationError = _validateProductId(productId);
@@ -47,9 +49,13 @@ class ProductRepository {
     const failureMessage = 'We couldn’t load this listing.';
 
     try {
+      final blockedHydration = blockedUsers?.ensureHydrated();
       final result = await _apiService.get<dynamic>(
         ApiEndpoints.productWithDetailsById(productId),
       );
+      if (blockedHydration != null) {
+        await blockedHydration;
+      }
       // A response which started before deletion must not restore the listing.
       if (deletedListings?.contains(productId) ?? false) {
         return _deletedListingFailure();
@@ -79,6 +85,9 @@ class ProductRepository {
       // Ownership must be known before the detail page can offer buyer actions.
       if (product.id != productId || (product.userId?.trim().isEmpty ?? true)) {
         return Result.failure(failureMessage);
+      }
+      if (blockedUsers?.contains(product.userId) ?? false) {
+        return _deletedListingFailure();
       }
 
       return Result.success(product);
@@ -190,10 +199,14 @@ class ProductRepository {
 
   Future<Result<List<Product>>> fetchLikedProducts() async {
     try {
+      final blockedHydration = blockedUsers?.ensureHydrated();
       final result = await _apiService.get<dynamic>(
         ApiEndpoints.likedProducts,
         queryParameters: const {'limit': _likedProductsPageLimit},
       );
+      if (blockedHydration != null) {
+        await blockedHydration;
+      }
       if (!result.isSuccess) {
         return Result.failure(result.error ?? _loadFailureMessage);
       }
@@ -220,6 +233,10 @@ class ProductRepository {
           final product = Product.fromJson(
             Map<String, dynamic>.from(productData),
           );
+          if ((blockedUsers?.contains(product.userId) ?? false) ||
+              (deletedListings?.contains(product.id) ?? false)) {
+            continue;
+          }
           if (seenProductIds.add(product.id)) {
             products.add(product);
           }

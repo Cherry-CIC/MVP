@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:cherry_mvp/core/services/safe_log.dart';
 import 'package:cherry_mvp/features/home/home_repository.dart';
+import 'package:cherry_mvp/features/products/blocked_users.dart';
 import 'package:cherry_mvp/features/products/deleted_listings.dart';
 import 'package:cherry_mvp/features/search/recent_searches_store.dart';
 import 'package:cherry_mvp/core/models/model.dart';
@@ -10,22 +11,26 @@ import 'package:flutter/cupertino.dart';
 
 class HomeViewModel extends ChangeNotifier {
   static const int defaultPageSize = 20;
+  static const int maxAutoAdvanceEmptyPages = 4;
   static const Duration searchDebounceDuration = Duration(milliseconds: 400);
   static const Duration loadMoreRetryBackoff = Duration(seconds: 3);
 
   final IHomeRepository homeRepository;
   final void Function(Iterable<Product>)? onProductsLoaded;
   final DeletedListings? deletedListings;
+  final BlockedUsers? blockedUsers;
   final RecentSearchesStore _recentSearchesStore;
 
   HomeViewModel({
     required this.homeRepository,
     this.onProductsLoaded,
     this.deletedListings,
+    this.blockedUsers,
     RecentSearchesStore? recentSearchesStore,
   }) : _recentSearchesStore = recentSearchesStore ?? RecentSearchesStore.inMemory() {
     _recentSearches = _recentSearchesStore.load();
-    deletedListings?.addListener(_removeDeletedListings);
+    deletedListings?.addListener(_removeHiddenProducts);
+    blockedUsers?.addListener(_removeHiddenProducts);
   }
 
   // Private variables
@@ -240,6 +245,33 @@ class HomeViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  void clearForAccountChange() {
+    if (_disposed) return;
+    _searchDebounce?.cancel();
+    _homeRequestSequence++;
+    _searchRequestSequence++;
+    _homeProducts = const [];
+    _searchProducts = const [];
+    _nextCursor = null;
+    _searchNextCursor = null;
+    _hasMore = false;
+    _searchHasMore = false;
+    _isLoadingMore = false;
+    _isLoadingMoreSearch = false;
+    _isRefreshing = false;
+    _homeCategory = null;
+    _searchText = '';
+    _searchQuery = '';
+    _searchCategory = null;
+    _searchLoadMoreError = null;
+    _homeLoadMoreRetryAt = null;
+    _status = Status.uninitialized;
+    _searchStatus = Status.uninitialized;
+    _recentSearchesGeneration++;
+    _recentSearches = _recentSearchesStore.load();
+    notifyListeners();
+  }
+
   Future<void> loadMoreProducts() async {
     if (_disposed || _isLoadingMore || !_hasMore || _nextCursor == null) {
       return;
@@ -256,31 +288,59 @@ class HomeViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final result = await homeRepository.fetchProducts(
-        limit: defaultPageSize,
-        cursor: _nextCursor,
-        categoryId: categoryId,
-      );
+      final existingIds = _homeProducts.map((product) => product.id).toSet();
+      final added = <Product>[];
+      var cursor = _nextCursor;
+      var hasMore = _hasMore;
+      var attempts = 0;
 
-      if (result.isSuccess && result.value != null) {
-        if (requestId != _homeRequestSequence) {
+      while (cursor != null && attempts <= maxAutoAdvanceEmptyPages) {
+        attempts++;
+        final requestedCursor = cursor;
+        final result = await homeRepository.fetchProducts(
+          limit: defaultPageSize,
+          cursor: requestedCursor,
+          categoryId: categoryId,
+        );
+
+        if (_disposed || requestId != _homeRequestSequence) {
           return;
         }
+
+        if (!result.isSuccess || result.value == null) {
+          if (added.isEmpty) {
+            SafeLog.event(
+              AppLogEvent.homeProductsLoadFailed,
+              level: SafeLogLevel.warning,
+            );
+            _homeLoadMoreRetryAt = DateTime.now().add(loadMoreRetryBackoff);
+          }
+          break;
+        }
+
         final page = result.value!;
-        final existingIds = _homeProducts.map((product) => product.id).toSet();
+        final filteredByBlocked = _containsBlockedSeller(page.products);
         final visibleProducts = _visibleProducts(page.products);
-        final newProducts = visibleProducts.where((product) => !existingIds.contains(product.id));
-        _homeProducts = [..._homeProducts, ...newProducts];
-        onProductsLoaded?.call(visibleProducts);
-        _nextCursor = page.nextCursor;
-        _hasMore = page.hasMore;
+        final newProducts = visibleProducts.where((product) => existingIds.add(product.id)).toList(growable: false);
+        added.addAll(newProducts);
+        cursor = page.nextCursor;
+        hasMore = page.hasMore;
+        if (hasMore && (cursor == null || cursor == requestedCursor)) {
+          hasMore = false;
+          cursor = null;
+        }
+        _nextCursor = cursor;
+        _hasMore = hasMore;
         _homeLoadMoreRetryAt = null;
-      } else {
-        SafeLog.event(
-          AppLogEvent.homeProductsLoadFailed,
-          level: SafeLogLevel.warning,
-        );
-        _homeLoadMoreRetryAt = DateTime.now().add(loadMoreRetryBackoff);
+
+        if (added.isNotEmpty || !filteredByBlocked || !hasMore || cursor == null) {
+          break;
+        }
+      }
+
+      if (added.isNotEmpty) {
+        _homeProducts = [..._homeProducts, ...added];
+        onProductsLoaded?.call(added);
       }
     } catch (_) {
       SafeLog.event(
@@ -290,7 +350,7 @@ class HomeViewModel extends ChangeNotifier {
       _homeLoadMoreRetryAt = DateTime.now().add(loadMoreRetryBackoff);
     }
 
-    if (requestId != _homeRequestSequence) {
+    if (_disposed || requestId != _homeRequestSequence) {
       return;
     }
     _isLoadingMore = false;
@@ -308,33 +368,60 @@ class HomeViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final result = await homeRepository.fetchProducts(
-        limit: defaultPageSize,
-        cursor: _searchNextCursor,
-        search: _searchQuery,
-        categoryId: _searchCategory?.id,
-      );
+      final existingIds = _searchProducts.map((product) => product.id).toSet();
+      final added = <Product>[];
+      var cursor = _searchNextCursor;
+      var hasMore = _searchHasMore;
+      var attempts = 0;
 
-      if (requestId != _searchRequestSequence) return;
-
-      if (result.isSuccess && result.value != null) {
-        final page = result.value!;
-        final existingIds = _searchProducts.map((product) => product.id).toSet();
-        final visibleProducts = _visibleProducts(page.products);
-        final newProducts = visibleProducts.where((product) => !existingIds.contains(product.id));
-        _searchProducts = [..._searchProducts, ...newProducts];
-        onProductsLoaded?.call(visibleProducts);
-        _searchNextCursor = page.nextCursor;
-        _searchHasMore = page.hasMore;
-      } else {
-        _searchLoadMoreError = 'Could not load more items. Please try again.';
-        SafeLog.event(
-          AppLogEvent.homeSearchFailed,
-          level: SafeLogLevel.warning,
+      while (cursor != null && attempts <= maxAutoAdvanceEmptyPages) {
+        attempts++;
+        final requestedCursor = cursor;
+        final result = await homeRepository.fetchProducts(
+          limit: defaultPageSize,
+          cursor: requestedCursor,
+          search: _searchQuery,
+          categoryId: _searchCategory?.id,
         );
+
+        if (_disposed || requestId != _searchRequestSequence) return;
+
+        if (!result.isSuccess || result.value == null) {
+          if (added.isEmpty) {
+            _searchLoadMoreError = 'Could not load more items. Please try again.';
+            SafeLog.event(
+              AppLogEvent.homeSearchFailed,
+              level: SafeLogLevel.warning,
+            );
+          }
+          break;
+        }
+
+        final page = result.value!;
+        final filteredByBlocked = _containsBlockedSeller(page.products);
+        final visibleProducts = _visibleProducts(page.products);
+        final newProducts = visibleProducts.where((product) => existingIds.add(product.id)).toList(growable: false);
+        added.addAll(newProducts);
+        cursor = page.nextCursor;
+        hasMore = page.hasMore;
+        if (hasMore && (cursor == null || cursor == requestedCursor)) {
+          hasMore = false;
+          cursor = null;
+        }
+        _searchNextCursor = cursor;
+        _searchHasMore = hasMore;
+
+        if (added.isNotEmpty || !filteredByBlocked || !hasMore || cursor == null) {
+          break;
+        }
+      }
+
+      if (added.isNotEmpty) {
+        _searchProducts = [..._searchProducts, ...added];
+        onProductsLoaded?.call(added);
       }
     } catch (_) {
-      if (requestId != _searchRequestSequence) return;
+      if (_disposed || requestId != _searchRequestSequence) return;
       _searchLoadMoreError = 'Could not load more items. Please try again.';
       SafeLog.event(
         AppLogEvent.homeSearchFailed,
@@ -342,7 +429,7 @@ class HomeViewModel extends ChangeNotifier {
       );
     }
 
-    if (requestId != _searchRequestSequence) {
+    if (_disposed || requestId != _searchRequestSequence) {
       return;
     }
     _isLoadingMoreSearch = false;
@@ -368,25 +455,70 @@ class HomeViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
+      final blockedHydration = blockedUsers?.ensureHydrated(forceRefresh: !clearProducts);
       final result = await homeRepository.fetchProducts(
         limit: defaultPageSize,
         categoryId: categoryId,
       );
+      if (blockedHydration != null) {
+        await blockedHydration;
+      }
+
+      if (_disposed || requestId != _homeRequestSequence) {
+        return;
+      }
 
       if (result.isSuccess && result.value != null) {
-        if (requestId != _homeRequestSequence) {
-          return;
-        }
         final page = result.value!;
-        _homeProducts = _visibleProducts(page.products);
+        var filteredByBlocked = _containsBlockedSeller(page.products);
+        final seenIds = <String>{};
+        final visible = <Product>[
+          for (final product in _visibleProducts(page.products))
+            if (seenIds.add(product.id)) product,
+        ];
+        var cursor = page.nextCursor;
+        var hasMore = page.hasMore;
+        var extraPages = 0;
+
+        while (visible.isEmpty &&
+            filteredByBlocked &&
+            hasMore &&
+            cursor != null &&
+            extraPages < maxAutoAdvanceEmptyPages) {
+          extraPages++;
+          final requestedCursor = cursor;
+          final nextResult = await homeRepository.fetchProducts(
+            limit: defaultPageSize,
+            cursor: requestedCursor,
+            categoryId: categoryId,
+          );
+          if (_disposed || requestId != _homeRequestSequence) {
+            return;
+          }
+          if (!nextResult.isSuccess || nextResult.value == null) {
+            break;
+          }
+          final nextPage = nextResult.value!;
+          filteredByBlocked = _containsBlockedSeller(nextPage.products);
+          for (final product in _visibleProducts(nextPage.products)) {
+            if (seenIds.add(product.id)) {
+              visible.add(product);
+            }
+          }
+          cursor = nextPage.nextCursor;
+          hasMore = nextPage.hasMore;
+          if (hasMore && (cursor == null || cursor == requestedCursor)) {
+            hasMore = false;
+            cursor = null;
+          }
+        }
+
+        _homeProducts = List.unmodifiable(visible);
         onProductsLoaded?.call(_homeProducts);
-        _nextCursor = page.nextCursor;
-        _hasMore = page.hasMore;
+        _nextCursor = cursor;
+        _hasMore = hasMore;
         _status = Status.success;
       } else {
-        if (requestId != _homeRequestSequence) {
-          return;
-        }
         SafeLog.event(
           AppLogEvent.homeProductsLoadFailed,
           level: SafeLogLevel.warning,
@@ -398,7 +530,7 @@ class HomeViewModel extends ChangeNotifier {
         }
       }
     } catch (_) {
-      if (requestId != _homeRequestSequence) {
+      if (_disposed || requestId != _homeRequestSequence) {
         return;
       }
       SafeLog.event(
@@ -412,7 +544,7 @@ class HomeViewModel extends ChangeNotifier {
       }
     }
 
-    if (requestId != _homeRequestSequence) {
+    if (_disposed || requestId != _homeRequestSequence) {
       return;
     }
     _isRefreshing = false;
@@ -427,26 +559,72 @@ class HomeViewModel extends ChangeNotifier {
     final categoryId = _searchCategory?.id;
 
     try {
+      final blockedHydration = blockedUsers?.ensureHydrated();
       final result = await homeRepository.fetchProducts(
         limit: defaultPageSize,
         search: query,
         categoryId: categoryId,
       );
+      if (blockedHydration != null) {
+        await blockedHydration;
+      }
+
+      if (_disposed || requestId != _searchRequestSequence || query != _searchText) {
+        return;
+      }
 
       if (result.isSuccess && result.value != null) {
-        if (requestId != _searchRequestSequence || query != _searchText) {
-          return;
-        }
         final page = result.value!;
-        _searchProducts = _visibleProducts(page.products);
+        var filteredByBlocked = _containsBlockedSeller(page.products);
+        final seenIds = <String>{};
+        final visible = <Product>[
+          for (final product in _visibleProducts(page.products))
+            if (seenIds.add(product.id)) product,
+        ];
+        var cursor = page.nextCursor;
+        var hasMore = page.hasMore;
+        var extraPages = 0;
+
+        while (visible.isEmpty &&
+            filteredByBlocked &&
+            hasMore &&
+            cursor != null &&
+            extraPages < maxAutoAdvanceEmptyPages) {
+          extraPages++;
+          final requestedCursor = cursor;
+          final nextResult = await homeRepository.fetchProducts(
+            limit: defaultPageSize,
+            cursor: requestedCursor,
+            search: query,
+            categoryId: categoryId,
+          );
+          if (_disposed || requestId != _searchRequestSequence || query != _searchText) {
+            return;
+          }
+          if (!nextResult.isSuccess || nextResult.value == null) {
+            break;
+          }
+          final nextPage = nextResult.value!;
+          filteredByBlocked = _containsBlockedSeller(nextPage.products);
+          for (final product in _visibleProducts(nextPage.products)) {
+            if (seenIds.add(product.id)) {
+              visible.add(product);
+            }
+          }
+          cursor = nextPage.nextCursor;
+          hasMore = nextPage.hasMore;
+          if (hasMore && (cursor == null || cursor == requestedCursor)) {
+            hasMore = false;
+            cursor = null;
+          }
+        }
+
+        _searchProducts = List.unmodifiable(visible);
         onProductsLoaded?.call(_searchProducts);
-        _searchNextCursor = page.nextCursor;
-        _searchHasMore = page.hasMore;
+        _searchNextCursor = cursor;
+        _searchHasMore = hasMore;
         _searchStatus = Status.success;
       } else {
-        if (requestId != _searchRequestSequence || query != _searchText) {
-          return;
-        }
         SafeLog.event(
           AppLogEvent.homeSearchFailed,
           level: SafeLogLevel.warning,
@@ -455,7 +633,7 @@ class HomeViewModel extends ChangeNotifier {
         _searchStatus = Status.failure(result.error ?? 'Failed to search products');
       }
     } catch (_) {
-      if (requestId != _searchRequestSequence || query != _searchText) {
+      if (_disposed || requestId != _searchRequestSequence || query != _searchText) {
         return;
       }
       SafeLog.event(
@@ -466,23 +644,42 @@ class HomeViewModel extends ChangeNotifier {
       _searchStatus = Status.failure('Failed to search products');
     }
 
-    if (requestId != _searchRequestSequence || query != _searchText) {
+    if (_disposed || requestId != _searchRequestSequence || query != _searchText) {
       return;
     }
     notifyListeners();
   }
 
-  List<Product> _visibleProducts(Iterable<Product> products) =>
-      products.where((product) => deletedListings?.contains(product.id) != true).toList(growable: false);
+  bool _containsBlockedSeller(Iterable<Product> products) =>
+      blockedUsers != null && products.any((product) => blockedUsers!.contains(product.userId));
 
-  void _removeDeletedListings() {
+  List<Product> _visibleProducts(Iterable<Product> products) => products
+      .where(
+        (product) =>
+            deletedListings?.contains(product.id) != true &&
+            blockedUsers?.contains(product.userId) != true,
+      )
+      .toList(growable: false);
+
+  void _removeHiddenProducts() {
     if (_disposed) return;
+    final homeHadBlocked = _containsBlockedSeller(_homeProducts);
+    final searchHadBlocked = _containsBlockedSeller(_searchProducts);
     final homeProducts = _visibleProducts(_homeProducts);
     final searchProducts = _visibleProducts(_searchProducts);
     if (homeProducts.length == _homeProducts.length && searchProducts.length == _searchProducts.length) return;
+    final homeEmptied = homeHadBlocked && homeProducts.isEmpty;
+    final searchEmptied = searchHadBlocked && searchProducts.isEmpty;
     _homeProducts = homeProducts;
     _searchProducts = searchProducts;
     notifyListeners();
+
+    if (homeEmptied && _hasMore && !_isLoadingMore && _nextCursor != null) {
+      unawaited(loadMoreProducts());
+    }
+    if (searchEmptied && hasActiveSearch && _searchHasMore && !_isLoadingMoreSearch && _searchNextCursor != null) {
+      unawaited(loadMoreSearchProducts());
+    }
   }
 
   @override
@@ -491,7 +688,8 @@ class HomeViewModel extends ChangeNotifier {
     _homeRequestSequence++;
     _searchRequestSequence++;
     _searchDebounce?.cancel();
-    deletedListings?.removeListener(_removeDeletedListings);
+    deletedListings?.removeListener(_removeHiddenProducts);
+    blockedUsers?.removeListener(_removeHiddenProducts);
     super.dispose();
   }
 }

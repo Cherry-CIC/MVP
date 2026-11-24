@@ -4,6 +4,7 @@ import 'package:cherry_mvp/core/services/network/api_endpoints.dart';
 import 'package:cherry_mvp/core/services/network/api_service.dart';
 import 'package:cherry_mvp/core/utils/result.dart';
 import 'package:cherry_mvp/features/charity_page/charity_model.dart';
+import 'package:cherry_mvp/features/products/blocked_users.dart';
 import 'package:cherry_mvp/features/profile/models/public_user.dart';
 
 export 'package:cherry_mvp/features/profile/models/public_user.dart';
@@ -20,8 +21,9 @@ abstract class IPublicUserProfileRepository {
 
 class PublicUserProfileRepository implements IPublicUserProfileRepository {
   final ApiService _apiService;
+  final BlockedUsers? blockedUsers;
 
-  PublicUserProfileRepository(this._apiService);
+  PublicUserProfileRepository(this._apiService, {this.blockedUsers});
 
   static const _loadError = 'Could not load this profile. Please try again.';
   static const _unavailableError = 'This profile is unavailable.';
@@ -33,10 +35,20 @@ class PublicUserProfileRepository implements IPublicUserProfileRepository {
       return Result.failure(_unavailableError, statusCode: 404);
     }
 
+    if (blockedUsers != null && !blockedUsers!.isHydrated) {
+      await blockedUsers!.ensureHydrated();
+    }
+    if (blockedUsers?.contains(requestedId) ?? false) {
+      return Result.failure(_unavailableError, statusCode: 404);
+    }
+
     try {
       final profileResult = await _apiService.get<dynamic>(
         ApiEndpoints.publicUserProfile(requestedId),
       );
+      if (blockedUsers?.contains(requestedId) ?? false) {
+        return Result.failure(_unavailableError, statusCode: 404);
+      }
       if (!profileResult.isSuccess) {
         return Result.failure(
           profileResult.statusCode == 404 || profileResult.statusCode == 410 ? _unavailableError : _loadError,
@@ -66,6 +78,13 @@ class PublicUserProfileRepository implements IPublicUserProfileRepository {
     }
     final requestedCursor = _text(cursor);
 
+    if (blockedUsers != null && !blockedUsers!.isHydrated) {
+      await blockedUsers!.ensureHydrated();
+    }
+    if (blockedUsers?.contains(requestedId) ?? false) {
+      return Result.failure(_unavailableError, statusCode: 404);
+    }
+
     try {
       final userResult = await fetchUser(requestedId);
       if (!userResult.isSuccess || userResult.value == null) {
@@ -80,6 +99,9 @@ class PublicUserProfileRepository implements IPublicUserProfileRepository {
           'cursor': ?requestedCursor,
         },
       );
+      if (blockedUsers?.contains(requestedId) ?? false) {
+        return Result.failure(_unavailableError, statusCode: 404);
+      }
       if (!productsResult.isSuccess) {
         return Result.failure(
           productsResult.statusCode == 404 || productsResult.statusCode == 410 ? _unavailableError : _loadError,

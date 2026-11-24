@@ -45,12 +45,13 @@ class ApiEndpoints {
   }
 
   static const String reports = '$_apiPrefix/reports';
+  static const String blocks = '$_apiPrefix/blocks';
   static String blockUser(String userId) {
-    return '$_apiPrefix/blocks/${Uri.encodeComponent(userId)}';
+    return '$blocks/${Uri.encodeComponent(userId)}';
   }
 
   static String blockCharity(String charityId) {
-    return '$_apiPrefix/blocks/charities/${Uri.encodeComponent(charityId)}';
+    return '$blocks/charities/${Uri.encodeComponent(charityId)}';
   }
 
   // Auth related

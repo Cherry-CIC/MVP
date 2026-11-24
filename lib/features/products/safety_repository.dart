@@ -19,6 +19,8 @@ class SafetyRepository {
   static const String _blockUserFailureMessage = 'Could not block this seller.';
   static const String _blockCharityFailureMessage =
       'Could not block this charity.';
+  static const String _fetchBlockedUsersFailureMessage =
+      'Could not load blocked users.';
 
   final ApiService _apiService;
 
@@ -58,6 +60,36 @@ class SafetyRepository {
       return Result.success(null);
     } catch (_) {
       return Result.failure(_reportFailureMessage);
+    }
+  }
+
+  Future<Result<Set<String>>> fetchBlockedUsers() async {
+    try {
+      final result = await _apiService.get<dynamic>(ApiEndpoints.blocks);
+      if (!result.isSuccess || result.value == null) {
+        return Result.failure(result.error ?? _fetchBlockedUsersFailureMessage);
+      }
+
+      final response = result.value;
+      if (response is Map && response['success'] == false) {
+        return Result.failure(_fetchBlockedUsersFailureMessage);
+      }
+
+      final rawBlocks = _extractBlocks(response);
+      if (rawBlocks == null) {
+        return Result.failure(_fetchBlockedUsersFailureMessage);
+      }
+
+      final blockedUserIds = <String>{};
+      for (final entry in rawBlocks) {
+        final blockedUserId = _extractBlockedUserId(entry);
+        if (blockedUserId != null) {
+          blockedUserIds.add(blockedUserId);
+        }
+      }
+      return Result.success(Set.unmodifiable(blockedUserIds));
+    } catch (_) {
+      return Result.failure(_fetchBlockedUsersFailureMessage);
     }
   }
 
@@ -106,5 +138,27 @@ class SafetyRepository {
     } catch (_) {
       return Result.failure(failureMessage);
     }
+  }
+
+  List<dynamic>? _extractBlocks(dynamic response) {
+    if (response is List) return response;
+    if (response is! Map) return null;
+
+    final data = response['data'];
+    if (data is List) return data;
+    if (data is Map && data['blocks'] is List) return data['blocks'] as List;
+    if (response['blocks'] is List) return response['blocks'] as List;
+    return null;
+  }
+
+  String? _extractBlockedUserId(dynamic entry) {
+    final raw = switch (entry) {
+      String() => entry,
+      Map() => entry['blockedUserId'] ?? entry['blocked_user_id'] ?? entry['userId'],
+      _ => null,
+    };
+    if (raw is! String) return null;
+    final trimmed = raw.trim();
+    return trimmed.isEmpty ? null : trimmed;
   }
 }

@@ -13,6 +13,7 @@ import 'package:cherry_mvp/features/home/widgets/bottom_nav_bar.dart';
 import 'package:cherry_mvp/features/liked_items/liked_items_view_model.dart';
 import 'package:cherry_mvp/features/products/product_card.dart';
 import 'package:cherry_mvp/features/products/product_repository.dart';
+import 'package:cherry_mvp/features/products/blocked_users.dart';
 import 'package:cherry_mvp/features/products/deleted_listings.dart';
 import 'package:cherry_mvp/features/products/product_viewmodel.dart';
 import 'package:cherry_mvp/features/profile/profile_listings_view_model.dart';
@@ -27,6 +28,7 @@ class LikedItemsPage extends StatelessWidget {
     return ChangeNotifierProvider<LikedItemsViewModel>(
       create: (context) => LikedItemsViewModel(
         deletedListings: context.read<DeletedListings?>(),
+        blockedUsers: context.read<BlockedUsers?>(),
         productRepository: context.read<ProductRepository>(),
         productViewModel: context.read<ProductViewModel>(),
       )..loadLikedProducts(),

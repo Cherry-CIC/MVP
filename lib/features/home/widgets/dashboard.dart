@@ -13,6 +13,7 @@ import 'package:cherry_mvp/features/home/home_viewmodel.dart';
 import 'package:cherry_mvp/features/home/widgets/dashboard_loading_widget.dart';
 import 'package:cherry_mvp/features/home/widgets/dashboard_error_widget.dart';
 import 'package:cherry_mvp/features/home/widgets/dashboard_empty_widget.dart';
+import 'package:cherry_mvp/features/products/blocked_users.dart';
 import 'package:cherry_mvp/features/products/product_card.dart';
 import 'package:cherry_mvp/features/products/product_viewmodel.dart';
 
@@ -38,6 +39,10 @@ class _DashboardPageState extends State<DashboardPage> {
           return;
         }
 
+        final blockedUsers = context.read<BlockedUsers?>();
+        if (blockedUsers != null) {
+          unawaited(blockedUsers.ensureHydrated());
+        }
         unawaited(
           context.read<ProductViewModel>().hydrateLikedProducts(),
         );
@@ -180,6 +185,7 @@ class _DashboardPageState extends State<DashboardPage> {
   ) {
     return GestureDetector(
       onTap: () {
+        if (productViewModel.isProductHidden(product)) return;
         productViewModel.setProduct(product);
         navigator.navigateTo(AppRoutes.product, arguments: product);
       },

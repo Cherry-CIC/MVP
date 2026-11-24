@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:cherry_mvp/core/models/product.dart';
 import 'package:cherry_mvp/features/charity_page/charity_model.dart';
 import 'package:cherry_mvp/features/discover/discover_repository.dart';
+import 'package:cherry_mvp/features/products/blocked_users.dart';
 import 'package:cherry_mvp/features/products/deleted_listings.dart';
 import 'package:cherry_mvp/features/products/product_repository.dart';
 import 'package:cherry_mvp/features/products/product_viewmodel.dart';
@@ -26,15 +27,18 @@ class LikedItemsViewModel extends ChangeNotifier {
     required this.productRepository,
     required this.productViewModel,
     this.deletedListings,
+    this.blockedUsers,
   }) {
     _accountStateVersion = productViewModel.accountStateVersion;
     productViewModel.addListener(_handleProductStateChange);
-    deletedListings?.addListener(_removeDeletedListings);
+    deletedListings?.addListener(_removeHiddenListings);
+    blockedUsers?.addListener(_removeHiddenListings);
   }
 
   final ProductRepository productRepository;
   final ProductViewModel productViewModel;
   final DeletedListings? deletedListings;
+  final BlockedUsers? blockedUsers;
   late int _accountStateVersion;
   int _requestSequence = 0;
   int _charitiesRequestSequence = 0;
@@ -81,7 +85,11 @@ class LikedItemsViewModel extends ChangeNotifier {
     _errorMessage = null;
     notifyListeners();
 
+    final blockedHydration = blockedUsers?.ensureHydrated();
     final result = await productRepository.fetchLikedProducts();
+    if (blockedHydration != null) {
+      await blockedHydration;
+    }
 
     if (_disposed || request != _requestSequence) return;
     if (!productViewModel.isAccountStateCurrent(accountStateVersion)) {
@@ -120,7 +128,7 @@ class LikedItemsViewModel extends ChangeNotifier {
       return false;
     }
 
-    if (_isDeleted(product.id)) return true;
+    if (_isHidden(product)) return true;
 
     if (!result.isSuccess) {
       _errorMessage = result.error ?? 'Unable to remove this liked item.';
@@ -245,7 +253,7 @@ class LikedItemsViewModel extends ChangeNotifier {
       _clearProductsAfterAccountChange();
       return;
     }
-    _removeDeletedListings();
+    _removeHiddenListings();
     _syncCharitiesFromSharedState();
   }
 
@@ -288,7 +296,7 @@ class LikedItemsViewModel extends ChangeNotifier {
     final seenProductIds = <String>{};
 
     for (final product in [...primaryProducts, ...cachedProducts]) {
-      if (_isDeleted(product.id) || product.id.trim().isEmpty || !seenProductIds.add(product.id)) {
+      if (_isHidden(product) || product.id.trim().isEmpty || !seenProductIds.add(product.id)) {
         continue;
       }
       products.add(product);
@@ -299,9 +307,14 @@ class LikedItemsViewModel extends ChangeNotifier {
 
   bool _isDeleted(String id) => deletedListings?.contains(id) == true || productViewModel.isProductDeleted(id);
 
-  void _removeDeletedListings() {
+  bool _isSellerBlocked(String? userId) =>
+      blockedUsers?.contains(userId) == true || productViewModel.isSellerBlocked(userId);
+
+  bool _isHidden(Product product) => _isDeleted(product.id) || _isSellerBlocked(product.userId);
+
+  void _removeHiddenListings() {
     if (_disposed) return;
-    final products = _products.where((product) => !_isDeleted(product.id)).toList(growable: false);
+    final products = _products.where((product) => !_isHidden(product)).toList(growable: false);
     if (products.length == _products.length) return;
     _products = List.unmodifiable(products);
     if (_status == LikedItemsStatus.loaded || _status == LikedItemsStatus.empty) {
@@ -316,7 +329,8 @@ class LikedItemsViewModel extends ChangeNotifier {
     _requestSequence++;
     _charitiesRequestSequence++;
     productViewModel.removeListener(_handleProductStateChange);
-    deletedListings?.removeListener(_removeDeletedListings);
+    deletedListings?.removeListener(_removeHiddenListings);
+    blockedUsers?.removeListener(_removeHiddenListings);
     super.dispose();
   }
 }
