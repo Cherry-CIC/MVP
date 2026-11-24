@@ -8,11 +8,14 @@ import 'package:cherry_mvp/features/home/widgets/bottom_nav_bar.dart';
 import 'package:cherry_mvp/features/home/widgets/home_screen.dart';
 import 'package:cherry_mvp/features/messages/message_page.dart';
 import 'package:cherry_mvp/features/orders/orders_page.dart';
+import 'package:cherry_mvp/features/orders/widgets/delivery_reminder_host.dart';
 import 'package:cherry_mvp/features/profile/profile_page.dart';
 import 'package:cherry_mvp/features/profile/profile_listings_view_model.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  const HomePage({super.key, this.deliveryTimer});
+
+  final Widget? deliveryTimer;
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -44,17 +47,20 @@ class _HomePageState extends State<HomePage> {
     if (index == CherryNavIndices.home) {
       _showProfileRoot();
       _pageController.jumpToPage(_homePageIndex);
+      DeliveryReminderHost.setHomeSelected(context, true);
       return;
     }
 
     if (index == CherryNavIndices.discover) {
       _showProfileRoot();
+      DeliveryReminderHost.setHomeSelected(context, false);
       _pageController.jumpToPage(_discoverPageIndex);
       return;
     }
 
     if (FeatureFlags.showInbox && index == CherryNavIndices.inbox) {
       _showProfileRoot();
+      DeliveryReminderHost.setHomeSelected(context, false);
       _pageController.jumpToPage(_inboxPageIndex);
       return;
     }
@@ -82,6 +88,7 @@ class _HomePageState extends State<HomePage> {
       if (_selectedIndex == CherryNavIndices.profile) {
         context.read<ProfileListingsViewModel>().refreshListings();
       }
+      DeliveryReminderHost.setHomeSelected(context, false);
       _pageController.jumpToPage(_profilePageIndex);
     }
   }
@@ -103,6 +110,7 @@ class _HomePageState extends State<HomePage> {
         _showOrders = false;
       }
     });
+    DeliveryReminderHost.setHomeSelected(context, index == _homePageIndex);
   }
 
   @override
@@ -146,6 +154,7 @@ class _HomePageState extends State<HomePage> {
             ),
           ],
         ),
+        floatingActionButton: _selectedIndex == CherryNavIndices.home ? widget.deliveryTimer : null,
         bottomNavigationBar: CherryBottomNavBar(
           selectedIndex: _selectedIndex,
           onItemSelected: _onItemTapped,

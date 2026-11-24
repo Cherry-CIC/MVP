@@ -4,6 +4,7 @@ import 'package:cherry_mvp/core/services/services.dart';
 import 'package:cherry_mvp/core/utils/result.dart';
 import 'package:cherry_mvp/features/auth/username_setup_page.dart';
 import 'package:cherry_mvp/features/home/home_page.dart';
+import 'package:cherry_mvp/features/orders/widgets/delivery_reminder_host.dart';
 import 'package:cherry_mvp/features/welcome/welcome_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -111,7 +112,13 @@ class _PostAuthUsernameGateState extends State<PostAuthUsernameGate> {
 
         final username = result.value?.trim();
         if (username != null && username.isNotEmpty) {
-          return widget.homeBuilder != null ? widget.homeBuilder!(context) : const HomePage();
+          return widget.homeBuilder != null
+              ? widget.homeBuilder!(context)
+              : DeliveryReminderHost(
+                  key: ValueKey(currentUser.uid),
+                  userId: currentUser.uid,
+                  builder: (_, timer) => HomePage(deliveryTimer: timer),
+                );
         }
 
         return widget.usernameSetupBuilder != null

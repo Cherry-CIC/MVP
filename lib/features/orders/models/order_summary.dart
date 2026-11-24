@@ -14,6 +14,15 @@ class OrderSummary {
   final String currency;
   final String deliveryState;
   final String deliveryLabel;
+  final DateTime? deliveredAt;
+  final String condition;
+
+  DateTime? get confirmationDeadline => deliveredAt?.add(const Duration(hours: 48));
+
+  bool canShowDeliveryReminder(DateTime now) =>
+      deliveredAt != null &&
+      deliveryState == 'awaiting_confirmation' &&
+      confirmationDeadline?.isAfter(now) == true;
 
   const OrderSummary({
     required this.id,
@@ -28,6 +37,8 @@ class OrderSummary {
     required this.currency,
     required this.deliveryState,
     required this.deliveryLabel,
+    this.deliveredAt,
+    this.condition = '',
   });
 
   static OrderSummary? tryFromOrderJson(dynamic value) {
@@ -44,6 +55,10 @@ class OrderSummary {
     final productId = _readString(json['productId']);
     final productName = _readString(json['productName']);
     final imageUrl = _readString(json['imageUrl']);
+    final shipment = json['shipment'] is Map
+        ? Map<String, dynamic>.from(json['shipment'] as Map)
+        : null;
+    final deliveredAt = DateTime.tryParse(_readString(shipment?['deliveredAt']));
 
     return OrderSummary(
       id: id,
@@ -61,6 +76,7 @@ class OrderSummary {
         json['status'],
       ]),
       deliveryLabel: _readString(json['deliveryLabel']),
+      deliveredAt: deliveredAt,
     );
   }
 
@@ -75,6 +91,7 @@ class OrderSummary {
     String? size,
     String? charityId,
     String? charityLogoUrl,
+    String? condition,
     String? deliveryState,
     String? deliveryLabel,
   }) {
@@ -89,6 +106,8 @@ class OrderSummary {
       itemPriceMinor: itemPriceMinor,
       totalAmountMinor: totalAmountMinor,
       currency: currency,
+      deliveredAt: deliveredAt,
+      condition: condition ?? this.condition,
       deliveryState: deliveryState ?? this.deliveryState,
       deliveryLabel: deliveryLabel ?? this.deliveryLabel,
     );
