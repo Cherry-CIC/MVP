@@ -301,7 +301,7 @@ void main() {
       expect(order.charityLogoUrl, 'https://example.com/charity-1.png');
       expect(order.condition, 'Good condition');
       expect(order.deliveredAt, deliveredAt);
-      expect(order.confirmationDeadline, deliveredAt.add(const Duration(hours: 72)));
+      expect(order.confirmationDeadline, deliveredAt.add(const Duration(hours: 48)));
       expect(order.canShowDeliveryReminder(DateTime.now()), isTrue);
     });
 

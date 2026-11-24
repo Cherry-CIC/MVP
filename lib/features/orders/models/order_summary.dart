@@ -17,7 +17,7 @@ class OrderSummary {
   final DateTime? deliveredAt;
   final String condition;
 
-  DateTime? get confirmationDeadline => deliveredAt?.add(const Duration(hours: 72));
+  DateTime? get confirmationDeadline => deliveredAt?.add(const Duration(hours: 48));
 
   bool canShowDeliveryReminder(DateTime now) =>
       deliveredAt != null &&

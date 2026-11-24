@@ -253,7 +253,7 @@ void main() {
       'shipment': {
         'id': 's-a',
         'status': 'delivered',
-        'deliveredAt': DateTime.now().toUtc().subtract(const Duration(hours: 64)).toIso8601String(),
+        'deliveredAt': DateTime.now().toUtc().subtract(const Duration(hours: 40)).toIso8601String(),
       },
     })!;
     await _pumpHomePage(tester, ordersRepository: _OrdersRepositoryStub([order]));

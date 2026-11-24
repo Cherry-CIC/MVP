@@ -44,7 +44,7 @@ OrderSummary order(String id, {int? hours = 12, String state = 'awaiting_confirm
         'shipment': {
           'id': 'shipment-$id',
           'status': 'delivered',
-          'deliveredAt': DateTime.now().toUtc().add(Duration(hours: hours - 72)).toIso8601String(),
+          'deliveredAt': DateTime.now().toUtc().add(Duration(hours: hours - 48)).toIso8601String(),
         },
     })!.copyWith(size: 'L');
 
@@ -116,10 +116,10 @@ void main() {
     expect(timerBubble, findsNothing);
 
     background(tester);
-    repo.orders = [order('a', hours: 72)];
+    repo.orders = [order('a', hours: 48)];
     await resume(tester);
     expect(find.text('Your item has been delivered'), findsOneWidget);
-    expect(find.text('The 72 hours started when your parcel was delivered.'), findsOneWidget);
+    expect(find.text('The 48 hours started when your parcel was delivered.'), findsOneWidget);
     await dismissReminder(tester);
     expect(timerBubble, findsOneWidget);
     await reopenReminder(tester);
@@ -299,7 +299,7 @@ void main() {
     semantics.dispose();
   });
 
-  testWidgets('calculates 72-hour confirmation deadline from shipment.deliveredAt', (tester) async {
+  testWidgets('calculates 48-hour confirmation deadline from shipment.deliveredAt', (tester) async {
     final deliveredAt = DateTime.now().toUtc().subtract(const Duration(hours: 2));
     final deliveredOrder = OrderSummary.tryFromOrderJson({
       'id': 'd1',
@@ -313,13 +313,13 @@ void main() {
     })!;
 
     expect(deliveredOrder.deliveredAt, deliveredAt);
-    expect(deliveredOrder.confirmationDeadline, deliveredAt.add(const Duration(hours: 72)));
+    expect(deliveredOrder.confirmationDeadline, deliveredAt.add(const Duration(hours: 48)));
 
     final repo = _Repository()..orders = [deliveredOrder];
     await _open(tester, repo);
     expect(find.byType(DeliveryReminderDialog), findsOneWidget);
     expect(find.text('Your item has been delivered'), findsOneWidget);
-    expect(find.text('The 72 hours started when your parcel was delivered.'), findsOneWidget);
+    expect(find.text('The 48 hours started when your parcel was delivered.'), findsOneWidget);
 
     await dismissReminder(tester);
     expect(timerBubble, findsOneWidget);
@@ -331,7 +331,7 @@ void main() {
       'shipment': {
         'id': 's2',
         'status': 'delivered',
-        'deliveredAt': DateTime.now().toUtc().subtract(const Duration(hours: 73)).toIso8601String(),
+        'deliveredAt': DateTime.now().toUtc().subtract(const Duration(hours: 49)).toIso8601String(),
       },
     })!;
     expect(expiredDelivered.canShowDeliveryReminder(DateTime.now().toUtc()), isFalse);
