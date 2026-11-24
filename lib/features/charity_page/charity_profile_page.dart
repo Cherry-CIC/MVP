@@ -10,6 +10,7 @@ import 'package:cherry_mvp/features/charity_page/charity_model.dart';
 import 'package:cherry_mvp/features/charity_page/charity_profile_args.dart';
 import 'package:cherry_mvp/features/charity_page/charity_profile_repository.dart';
 import 'package:cherry_mvp/features/charity_page/charity_profile_view_model.dart';
+import 'package:cherry_mvp/features/products/blocked_users.dart';
 import 'package:cherry_mvp/features/products/deleted_listings.dart';
 import 'package:cherry_mvp/features/products/product_card.dart';
 import 'package:cherry_mvp/features/products/product_viewmodel.dart';
@@ -57,6 +58,7 @@ class _CharityProfilePageState extends State<CharityProfilePage> {
       args: widget.args,
       repository: repo,
       deletedListings: _maybeRead<DeletedListings>(),
+      blockedUsers: _maybeRead<BlockedUsers>(),
     );
     _viewModel.loadInitial();
   }

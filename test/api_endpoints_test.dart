@@ -22,6 +22,7 @@ void main() {
 
   test('uses report and encoded block routes', () {
     expect(ApiEndpoints.reports, '/api/reports');
+    expect(ApiEndpoints.blocks, '/api/blocks');
     expect(
       ApiEndpoints.blockUser('user/with spaces'),
       '/api/blocks/user%2Fwith%20spaces',

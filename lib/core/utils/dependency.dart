@@ -31,6 +31,7 @@ import 'package:cherry_mvp/features/forgot_password/forgot_password_repository.d
 import 'package:cherry_mvp/features/forgot_password/forgot_password_viewmodel.dart';
 import 'package:cherry_mvp/features/orders/orders_repository.dart';
 import 'package:cherry_mvp/features/orders/orders_view_model.dart';
+import 'package:cherry_mvp/features/products/blocked_users.dart';
 import 'package:cherry_mvp/features/products/product_repository.dart';
 import 'package:cherry_mvp/features/products/deleted_listings.dart';
 import 'package:cherry_mvp/features/products/delete_listing_view_model.dart';
@@ -64,6 +65,21 @@ List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
       create: (context) => DioApiService(
         firebaseAuth: Provider.of<FirebaseAuth>(context, listen: false),
       ),
+    ),
+    Provider<SafetyRepository>(
+      create: (context) => SafetyRepository(
+        Provider.of<ApiService>(context, listen: false),
+      ),
+    ),
+    ChangeNotifierProvider<BlockedUsers>(
+      create: (context) {
+        final safetyRepository = context.read<SafetyRepository>();
+        final firebaseAuth = context.read<FirebaseAuth>();
+        return BlockedUsers(
+          fetchBlockedUsers: safetyRepository.fetchBlockedUsers,
+          currentUserIdProvider: () => firebaseAuth.currentUser?.uid,
+        );
+      },
     ),
 
     Provider<FirebaseAuthService>(
@@ -123,6 +139,7 @@ List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
       create: (context) => ProductRepository(
         context.read<ApiService>(),
         deletedListings: context.read<DeletedListings>(),
+        blockedUsers: context.read<BlockedUsers>(),
       ),
     ),
     Provider<IEditListingRepository>(
@@ -131,11 +148,6 @@ List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
         productRepository: context.read<ProductRepository>(),
         storageProvider: context.read<StorageProvider>(),
         currentUserId: () => context.read<FirebaseAuth>().currentUser?.uid,
-      ),
-    ),
-    Provider<SafetyRepository>(
-      create: (context) => SafetyRepository(
-        Provider.of<ApiService>(context, listen: false),
       ),
     ),
     Provider<IDonationRepository>(
@@ -179,6 +191,7 @@ List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
     Provider<IPublicUserProfileRepository>(
       create: (context) => PublicUserProfileRepository(
         Provider.of<ApiService>(context, listen: false),
+        blockedUsers: context.read<BlockedUsers>(),
       ),
     ),
     Provider<IEditProfileRepository>(
@@ -229,6 +242,7 @@ List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
     ChangeNotifierProvider<ProductViewModel>(
       create: (context) => ProductViewModel(
         deletedListings: context.read<DeletedListings>(),
+        blockedUsers: context.read<BlockedUsers>(),
         productRepository: Provider.of<ProductRepository>(
           context,
           listen: false,
@@ -250,6 +264,7 @@ List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
         final firebaseAuth = Provider.of<FirebaseAuth>(context, listen: false);
         return HomeViewModel(
           deletedListings: context.read<DeletedListings>(),
+          blockedUsers: context.read<BlockedUsers>(),
           homeRepository: Provider.of<IHomeRepository>(context, listen: false),
           onProductsLoaded: productViewModel.reconcileProductCounts,
           recentSearchesStore: RecentSearchesStore(
@@ -337,6 +352,7 @@ List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
         final profile = context.read<ProfileListingsViewModel>();
         final products = context.read<ProductViewModel>();
         final home = context.read<HomeViewModel>();
+        final blockedUsers = context.read<BlockedUsers>();
         return DeleteListingViewModel(
           repository: context.read<ProductRepository>(),
           deletedListings: context.read<DeletedListings>(),
@@ -348,8 +364,12 @@ List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
             profile.clearListings();
             profile.updateCurrentAccount();
             products.clearUserState();
-            home.loadRecentSearches();
-            if (auth.currentUser != null) unawaited(profile.loadInitialListings());
+            blockedUsers.clear();
+            home.clearForAccountChange();
+            if (auth.currentUser != null) {
+              unawaited(blockedUsers.ensureHydrated());
+              unawaited(profile.loadInitialListings());
+            }
           },
         );
       },
@@ -367,10 +387,11 @@ List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
         firebaseAuth: Provider.of<FirebaseAuth>(context, listen: false),
         firestore: Provider.of<FirebaseFirestore>(context, listen: false),
         apiService: Provider.of<ApiService>(context, listen: false),
-        clearUserState: Provider.of<ProductViewModel>(
-          context,
-          listen: false,
-        ).clearUserState,
+        clearUserState: () {
+          Provider.of<ProductViewModel>(context, listen: false).clearUserState();
+          Provider.of<BlockedUsers>(context, listen: false).clear();
+          Provider.of<HomeViewModel>(context, listen: false).clearForAccountChange();
+        },
       ),
     ),
     ChangeNotifierProvider<AppInfoProvider>(

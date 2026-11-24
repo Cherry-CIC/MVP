@@ -307,7 +307,7 @@ class AppStrings {
   static const productPageReportSubmitted = 'Report submitted';
   static const productPageReportFailed = 'Could not submit this report';
   static const productPageBlockSellerTitle = 'Block this seller?';
-  static const productPageBlockSellerMessage = 'You will not see this seller\'s listings on their profile pages.';
+  static const productPageBlockSellerMessage = 'You will no longer see this seller\'s profile or listings.';
   static const productPageBlockSellerConfirm = 'Block seller';
   static const productPageBlockSellerSuccess = 'Seller blocked';
   static const productPageBlockSellerFailed = 'Could not block this seller';

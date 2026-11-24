@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:cherry_mvp/features/shared_widgets/bottom_cta.dart';
+import 'package:cherry_mvp/features/products/blocked_users.dart';
 import 'package:cherry_mvp/features/products/deleted_listings.dart';
 import 'package:cherry_mvp/features/products/delete_listing_view_model.dart';
 import 'package:cherry_mvp/features/products/widgets/delete_listing_dialog.dart';
@@ -45,6 +48,8 @@ class _ProductPageState extends State<ProductPage> {
   String? _requestedProductId;
   String? _sellerRequestId;
   Future<PublicUser?>? _sellerLoad;
+  bool _sellerBlocked = false;
+  int _productGeneration = 0;
 
   @override
   void initState() {
@@ -54,6 +59,10 @@ class _ProductPageState extends State<ProductPage> {
     if (widget.product == null && widget.productId == null) {
       _initialSelectedProduct = context.read<ProductViewModel>().product;
     }
+    final blockedUsers = context.read<BlockedUsers?>();
+    if (blockedUsers != null && !blockedUsers.isHydrated) {
+      unawaited(blockedUsers.ensureHydrated());
+    }
     _loadProduct();
   }
 
@@ -61,6 +70,8 @@ class _ProductPageState extends State<ProductPage> {
   void didUpdateWidget(covariant ProductPage oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.productId != widget.productId || oldWidget.product != widget.product) {
+      _productGeneration++;
+      _sellerBlocked = false;
       _loadProduct();
     }
   }
@@ -79,17 +90,19 @@ class _ProductPageState extends State<ProductPage> {
   Widget build(BuildContext context) {
     final fallbackProduct = widget.product ?? _initialSelectedProduct ?? context.watch<ProductViewModel>().product;
     final deleted = context.watch<DeletedListings?>();
+    final blockedUsers = context.watch<BlockedUsers?>();
     final id = widget.productId ?? fallbackProduct?.id;
-    if (id != null && deleted?.contains(id) == true) {
-      return Scaffold(
-        appBar: AppBar(),
-        body: const Center(child: Text('This listing is no longer available.')),
-      );
+    final fallbackSellerId = NavigationProvider.publicProfileUserId(fallbackProduct?.userId);
+    if ((id != null && deleted?.contains(id) == true) ||
+        _sellerBlocked ||
+        (_productLoad == null && fallbackSellerId != null && blockedUsers?.contains(fallbackSellerId) == true)) {
+      return _buildUnavailableScaffold();
     }
     if (_productLoad == null) {
       return _buildDetails(
         context,
         fallbackProduct,
+        blockedUsers: blockedUsers,
       );
     }
 
@@ -106,6 +119,9 @@ class _ProductPageState extends State<ProductPage> {
         }
 
         final result = snapshot.data;
+        if (result?.errorCode == 'LISTING_NOT_FOUND') {
+          return _buildUnavailableScaffold();
+        }
         if (snapshot.hasError || result == null || !result.isSuccess || result.value == null) {
           return Scaffold(
             appBar: AppBar(),
@@ -131,17 +147,29 @@ class _ProductPageState extends State<ProductPage> {
           );
         }
 
-        return _buildDetails(context, result.value);
+        return _buildDetails(context, result.value, blockedUsers: blockedUsers);
       },
     );
   }
 
-  Widget _buildDetails(BuildContext context, Product? product) {
+  Widget _buildUnavailableScaffold() {
+    return Scaffold(
+      appBar: AppBar(),
+      body: const Center(child: Text('This listing is no longer available.')),
+    );
+  }
+
+  Widget _buildDetails(BuildContext context, Product? product, {BlockedUsers? blockedUsers}) {
     if (product == null) {
       return Scaffold(
         appBar: AppBar(),
         body: const Center(child: Text('No product selected')),
       );
+    }
+
+    final sellerId = NavigationProvider.publicProfileUserId(product.userId);
+    if (_sellerBlocked || (sellerId != null && blockedUsers?.contains(sellerId) == true)) {
+      return _buildUnavailableScaffold();
     }
 
     final checkoutViewModel = context.watch<CheckoutViewModel>();
@@ -160,7 +188,6 @@ class _ProductPageState extends State<ProductPage> {
     final hasOptionalProductHighlights =
         !displayedProduct.isSold &&
         (FeatureFlags.showDonorDiscounts || (canBuy && FeatureFlags.showOtherCharityRequests));
-    final sellerId = NavigationProvider.publicProfileUserId(displayedProduct.userId);
     final sellerLoad = _sellerFuture(context, sellerId);
     final canUseSafetyActions = !isOwnListing && sellerId != null && sellerId.isNotEmpty;
 
@@ -452,8 +479,9 @@ class _ProductPageState extends State<ProductPage> {
   }
 
   Future<void> _blockSeller(BuildContext context, String sellerId) async {
+    final generation = _productGeneration;
     final confirmed = await showBlockSellerDialog(context);
-    if (!confirmed || !context.mounted) {
+    if (!confirmed || !context.mounted || generation != _productGeneration) {
       return;
     }
 
@@ -471,5 +499,9 @@ class _ProductPageState extends State<ProductPage> {
         ),
       ),
     );
+    if (result.isSuccess && generation == _productGeneration) {
+      setState(() => _sellerBlocked = true);
+      leaveBlockedSellerRoutes(context, sellerId);
+    }
   }
 }

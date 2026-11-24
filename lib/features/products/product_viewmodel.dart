@@ -5,6 +5,7 @@ import 'package:cherry_mvp/core/router/nav_routes.dart';
 import 'package:cherry_mvp/core/utils/result.dart';
 import 'package:cherry_mvp/features/charity_page/charity_model.dart';
 import 'package:cherry_mvp/features/discover/discover_repository.dart';
+import 'package:cherry_mvp/features/products/blocked_users.dart';
 import 'package:cherry_mvp/features/products/deleted_listings.dart';
 import 'package:cherry_mvp/features/products/product_repository.dart';
 import 'package:cherry_mvp/features/products/safety_repository.dart';
@@ -50,15 +51,18 @@ class ProductViewModel extends ChangeNotifier {
   final SafetyRepository? safetyRepository;
   final NavigationProvider navigator;
   final DeletedListings? deletedListings;
+  final BlockedUsers? blockedUsers;
 
   ProductViewModel({
     required this.productRepository,
     required this.navigator,
     this.safetyRepository,
     this.deletedListings,
+    this.blockedUsers,
     String? Function()? currentUserIdProvider,
   }) : _currentUserIdProvider = currentUserIdProvider ?? _unauthenticatedUserId {
     deletedListings?.addListener(_removeDeletedListings);
+    blockedUsers?.addListener(_removeBlockedUsers);
   }
 
   static String? _unauthenticatedUserId() => null;
@@ -101,7 +105,7 @@ class ProductViewModel extends ChangeNotifier {
     _ensureCurrentAccount();
     final products = <Product>[];
     for (final entry in _likedProductCache.entries) {
-      if (_likedProducts[entry.key] == true) {
+      if (_likedProducts[entry.key] == true && !isProductHidden(entry.value)) {
         products.add(entry.value);
       }
     }
@@ -325,7 +329,11 @@ class ProductViewModel extends ChangeNotifier {
     try {
       _clearCachedLikedState();
 
+      final blockedHydration = blockedUsers?.ensureHydrated();
       final result = await productRepository.fetchLikedProducts();
+      if (blockedHydration != null) {
+        await blockedHydration;
+      }
       if (!isAccountStateCurrent(accountStateVersion)) {
         return Result.failure('Unable to restore liked items.');
       }
@@ -355,13 +363,13 @@ class ProductViewModel extends ChangeNotifier {
   }
 
   void setProduct(Product product) {
-    if (_disposed || isProductDeleted(product.id)) return;
+    if (_disposed || isProductHidden(product)) return;
     _product = product;
     notifyListeners();
   }
 
   void applyListingUpdate(Product product) {
-    if (_disposed || isProductDeleted(product.id)) return;
+    if (_disposed || isProductHidden(product)) return;
     if (_product?.id == product.id) {
       _product = product;
       notifyListeners();
@@ -381,7 +389,7 @@ class ProductViewModel extends ChangeNotifier {
     final accountStateVersion = _accountStateVersion;
     final id = product.id;
     if (_disposed ||
-        isProductDeleted(id) ||
+        isProductHidden(product) ||
         id.trim().isEmpty ||
         _pendingLikeUpdates.contains(id) ||
         (liked && isOwnProduct(product))) {
@@ -393,7 +401,12 @@ class ProductViewModel extends ChangeNotifier {
 
     final result = liked ? await productRepository.likeProduct(product) : await productRepository.unlikeProduct(id);
 
-    if (!isAccountStateCurrent(accountStateVersion) || isProductDeleted(id)) {
+    if (!isAccountStateCurrent(accountStateVersion)) {
+      return Result.failure('Unable to update this liked item.');
+    }
+    if (isProductHidden(product)) {
+      _pendingLikeUpdates.remove(id);
+      notifyListeners();
       return Result.failure('Unable to update this liked item.');
     }
 
@@ -509,11 +522,16 @@ class ProductViewModel extends ChangeNotifier {
     );
   }
 
-  Future<Result<void>> blockSeller(String sellerId) {
-    return _runSafetyAction(
-      'block-seller:$sellerId',
-      () => _requireSafetyRepository().blockUser(sellerId),
+  Future<Result<void>> blockSeller(String sellerId) async {
+    final cleanSellerId = sellerId.trim();
+    final result = await _runSafetyAction(
+      'block-seller:$cleanSellerId',
+      () => _requireSafetyRepository().blockUser(cleanSellerId),
     );
+    if (result.isSuccess && cleanSellerId.isNotEmpty) {
+      blockedUsers?.add(cleanSellerId);
+    }
+    return result;
   }
 
   /// Submits an abuse or accuracy report against [charityId].
@@ -597,7 +615,7 @@ class ProductViewModel extends ChangeNotifier {
     var changed = false;
 
     for (final product in products) {
-      if (isProductDeleted(product.id) || product.id.trim().isEmpty) {
+      if (isProductHidden(product) || product.id.trim().isEmpty) {
         continue;
       }
 
@@ -798,6 +816,7 @@ class ProductViewModel extends ChangeNotifier {
     }
 
     _resetAccountState(_currentUserIdProvider());
+    blockedUsers?.clear();
     _accountChangeNotificationPending = false;
     notifyListeners();
   }
@@ -864,12 +883,16 @@ class ProductViewModel extends ChangeNotifier {
   }
 
   void goToProductPage(Product product) async {
-    if (_disposed || isProductDeleted(product.id)) return;
+    if (_disposed || isProductHidden(product)) return;
     setProduct(product);
     await navigator.navigateTo(AppRoutes.product, arguments: product);
   }
 
   bool isProductDeleted(String productId) => deletedListings?.contains(productId) == true;
+
+  bool isSellerBlocked(String? userId) => blockedUsers?.contains(userId) == true;
+
+  bool isProductHidden(Product product) => isProductDeleted(product.id) || isSellerBlocked(product.userId);
 
   void _removeDeletedListings() {
     if (_disposed) return;
@@ -894,11 +917,33 @@ class ProductViewModel extends ChangeNotifier {
     if (changed) notifyListeners();
   }
 
+  void _removeBlockedUsers() {
+    if (_disposed) return;
+    var changed = false;
+    if (_product != null && isSellerBlocked(_product!.userId)) {
+      _product = null;
+      changed = true;
+    }
+    final blockedProductIds = <String>[
+      for (final entry in _likedProductCache.entries)
+        if (isSellerBlocked(entry.value.userId)) entry.key,
+    ];
+    for (final id in blockedProductIds) {
+      _likedProducts.remove(id);
+      _likedProductCache.remove(id);
+      _likeCountOverrides.remove(id);
+      _pendingLikeUpdates.remove(id);
+      changed = true;
+    }
+    if (changed) notifyListeners();
+  }
+
   @override
   void dispose() {
     _disposed = true;
     _accountChangeNotificationPending = false;
     deletedListings?.removeListener(_removeDeletedListings);
+    blockedUsers?.removeListener(_removeBlockedUsers);
     super.dispose();
   }
 }
