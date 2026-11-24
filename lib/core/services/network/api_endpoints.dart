@@ -21,10 +21,6 @@ class ApiEndpoints {
   static String charityById(String charityId) {
     return '$charities/${Uri.encodeComponent(charityId)}';
   }
-
-  static String charityProducts(String charityId) {
-    return '${charityById(charityId)}/products';
-  }
   static const String postageSizes = '$_apiPrefix/postage-sizes';
   static const String paymentIntent = '$_apiPrefix/payment/create-payment-intent';
   static const String createOrder = '$_apiPrefix/order/create';

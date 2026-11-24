@@ -32,14 +32,10 @@ void main() {
     );
   });
 
-  test('encodes charity identifiers in charity profile and products routes', () {
+  test('encodes charity identifiers in charity profile route', () {
     expect(
       ApiEndpoints.charityById('charity/with spaces'),
       '/api/charities/charity%2Fwith%20spaces',
-    );
-    expect(
-      ApiEndpoints.charityProducts('charity/with spaces'),
-      '/api/charities/charity%2Fwith%20spaces/products',
     );
   });
 }
