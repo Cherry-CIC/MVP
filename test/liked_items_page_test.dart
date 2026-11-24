@@ -7,6 +7,8 @@ import 'package:cherry_mvp/core/utils/result.dart';
 import 'package:cherry_mvp/features/categories/category_repository.dart';
 import 'package:cherry_mvp/features/categories/category_view_model.dart';
 import 'package:cherry_mvp/features/charity_page/charity_model.dart';
+import 'package:cherry_mvp/features/charity_page/charity_profile_page.dart';
+import 'package:cherry_mvp/features/charity_page/charity_profile_repository.dart';
 import 'package:cherry_mvp/features/charity_page/charity_repository.dart';
 import 'package:cherry_mvp/features/charity_page/charity_viewmodel.dart';
 import 'package:cherry_mvp/features/checkout/checkout_repository.dart';
@@ -47,6 +49,40 @@ class _CategoryRepositoryStub implements ICategoryRepository {
 class _CharityRepositoryStub implements ICharityRepository {
   @override
   Future<Result<List<Charity>>> fetchCharities() async => Result.success([]);
+}
+
+class _FakeCharityProfileRepository implements ICharityProfileRepository {
+  _FakeCharityProfileRepository({required this.charity});
+
+  final Charity charity;
+  final requestedIds = <String?>[];
+  final requestedNames = <String?>[];
+
+  @override
+  Future<Result<Charity>> fetchCharity({
+    String? charityId,
+    String? charityName,
+  }) async {
+    requestedIds.add(charityId);
+    requestedNames.add(charityName);
+    return Result.success(charity);
+  }
+
+  @override
+  Future<Result<CharityProfilePageData>> fetchProducts(
+    Charity charity, {
+    int limit = 20,
+    String? cursor,
+  }) async {
+    return Result.success(
+      CharityProfilePageData(
+        charity: charity,
+        products: const [],
+        nextCursor: null,
+        hasMore: false,
+      ),
+    );
+  }
 }
 
 class _ProfileListingsRepositoryStub implements IProfileListingsRepository {
@@ -163,6 +199,7 @@ Future<NavigationProvider> _pumpLikedItemsPage(
   WidgetTester tester, {
   required _FakeProductRepository repository,
   ProfileListingsViewModel? listingsViewModel,
+  ICharityProfileRepository? charityProfileRepository,
 }) async {
   final navigator = NavigationProvider();
   final productViewModel = ProductViewModel(
@@ -203,6 +240,8 @@ Future<NavigationProvider> _pumpLikedItemsPage(
           ),
         ),
         if (listingsViewModel != null) ChangeNotifierProvider<ProfileListingsViewModel>.value(value: listingsViewModel),
+        if (charityProfileRepository != null)
+          Provider<ICharityProfileRepository>.value(value: charityProfileRepository),
       ],
       child: MaterialApp(
         navigatorKey: navigator.navigatorKey,
@@ -476,5 +515,52 @@ void main() {
 
     expect(find.text('WaterAid'), findsOneWidget);
     expect(find.text('Charity unlike failed'), findsOneWidget);
+  });
+
+  testWidgets('tapping a liked charity picture or logo opens CharityProfilePage', (
+    tester,
+  ) async {
+    final waterAid = _charity(likes: 5);
+    final profileRepository = _FakeCharityProfileRepository(charity: waterAid);
+    final repository = _FakeProductRepository(
+      fetchResult: Result.success(const <Product>[]),
+      fetchCharitiesResult: Result.success([waterAid]),
+    );
+
+    final navigator = await _pumpLikedItemsPage(
+      tester,
+      repository: repository,
+      charityProfileRepository: profileRepository,
+    );
+    await tester.pump();
+
+    await tester.tap(find.text(AppStrings.likedCharitiesTab));
+    await tester.pumpAndSettle();
+
+    // Tapping the charity cover image navigates directly to CharityProfilePage.
+    final coverImage = find.byKey(const ValueKey('discover-charity-image-WaterAid'));
+    await tester.ensureVisible(coverImage);
+    await tester.pumpAndSettle();
+    await tester.tap(coverImage);
+    await tester.pumpAndSettle();
+
+    expect(find.byType(CharityProfilePage), findsOneWidget);
+    expect(profileRepository.requestedIds, [waterAid.id]);
+    expect(profileRepository.requestedNames, ['WaterAid']);
+
+    navigator.goBack();
+    await tester.pumpAndSettle();
+    expect(find.byType(LikedItemsPage), findsOneWidget);
+
+    // Tapping the charity logo badge also navigates directly to CharityProfilePage.
+    final logoBadge = find.byKey(const ValueKey('discover-charity-logo-WaterAid'));
+    await tester.ensureVisible(logoBadge);
+    await tester.pumpAndSettle();
+    await tester.tap(logoBadge);
+    await tester.pumpAndSettle();
+
+    expect(find.byType(CharityProfilePage), findsOneWidget);
+    expect(profileRepository.requestedIds, [waterAid.id, waterAid.id]);
+    expect(profileRepository.requestedNames, ['WaterAid', 'WaterAid']);
   });
 }

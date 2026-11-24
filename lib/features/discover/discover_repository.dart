@@ -35,8 +35,8 @@ class DiscoverRepository {
   }
 
   String? descriptionForCharityName(String name) {
-    // Discovery's local catalogue has no API charity IDs, so match full names
-    // rather than risking a description from a partial name match.
+    // Match full names (ignoring spacing, hyphen, and leading-"The"
+    // variations) rather than risking a description from a partial match.
     final charity = findCharity(name: name);
     final description = charity?.description.trim();
     return (description == null || description.isEmpty) ? null : description;

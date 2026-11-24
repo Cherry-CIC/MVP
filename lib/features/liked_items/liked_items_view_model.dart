@@ -163,13 +163,14 @@ class LikedItemsViewModel extends ChangeNotifier {
       return;
     }
 
+    final fetchedCharities = result.value ?? const <Charity>[];
     _charities = _mergeLoadedCharities(
-      fetchedCharities: result.value ?? const [],
+      fetchedCharities: fetchedCharities,
       cachedCharities: productViewModel.cachedLikedCharities,
       sinceMutationRevision: startRevision,
     );
-    productViewModel.cacheLikedCharities(
-      _charities,
+    productViewModel.reconcileLikedCharities(
+      fetchedCharities,
       sinceMutationRevision: startRevision,
     );
     _charitiesStatus =
@@ -321,6 +322,18 @@ class LikedItemsViewModel extends ChangeNotifier {
     for (final charity in cachedCharities) {
       final key = _charityIdentityKey(charity);
       if (key.isEmpty || !seenKeys.add(key)) {
+        continue;
+      }
+      final mutatedSinceStart = productViewModel.hasCharityMutatedSince(
+        charity.id,
+        sinceMutationRevision,
+        charityName: charity.name,
+      );
+      if (!mutatedSinceStart ||
+          !productViewModel.isCharityLiked(
+            charity.id,
+            charityName: charity.name,
+          )) {
         continue;
       }
       final updatedCount = productViewModel.getCharityLikesCount(

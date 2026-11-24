@@ -19,6 +19,10 @@ class ApiEndpoints {
   static const String inpostShippingMethods = '$_apiPrefix/shipping/shipping-methods';
   static const String charities = '$_apiPrefix/charities';
   static const String likedCharities = '$charities/my-liked-items';
+  static String charityById(String charityId) {
+    return '$charities/${Uri.encodeComponent(charityId)}';
+  }
+
   static String charityLike(String charityId) => '$charities/${Uri.encodeComponent(charityId)}/like';
   static const String postageSizes = '$_apiPrefix/postage-sizes';
   static const String paymentIntent = '$_apiPrefix/payment/create-payment-intent';
@@ -43,6 +47,10 @@ class ApiEndpoints {
   static const String reports = '$_apiPrefix/reports';
   static String blockUser(String userId) {
     return '$_apiPrefix/blocks/${Uri.encodeComponent(userId)}';
+  }
+
+  static String blockCharity(String charityId) {
+    return '$_apiPrefix/blocks/charities/${Uri.encodeComponent(charityId)}';
   }
 
   // Auth related

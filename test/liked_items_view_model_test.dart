@@ -628,5 +628,64 @@ void main() {
       expect(viewModel.charities.single.likes, 7);
       expect(productViewModel.getCharityLikesCount('charity-a'), 7);
     });
+
+    test('loadLikedCharities drops unmutated cached charities omitted by the API', () async {
+      final staleCached = _charity(id: 'charity-stale', name: 'WaterAid', likes: 4);
+      final otherCharity = _charity(id: 'charity-other', name: 'WWF', likes: 1);
+      final repository = _FakeProductRepository(
+        fetchCharitiesResult: Result.success(const <Charity>[]),
+      );
+      final productViewModel = ProductViewModel(
+        productRepository: repository,
+        navigator: NavigationProvider(),
+      )..cacheLikedCharities([staleCached]);
+      final viewModel = LikedItemsViewModel(
+        productRepository: repository,
+        productViewModel: productViewModel,
+      );
+
+      await viewModel.loadLikedCharities();
+
+      expect(viewModel.charitiesStatus, LikedItemsStatus.empty);
+      expect(viewModel.charities, isEmpty);
+      expect(productViewModel.isCharityLiked('charity-stale'), isFalse);
+      expect(productViewModel.cachedLikedCharities, isEmpty);
+
+      // Subsequent shared-state updates must not resurrect the omitted charity.
+      await productViewModel.setCharityLiked(otherCharity, true);
+      expect(viewModel.charities.map((c) => c.id), ['charity-other']);
+      viewModel.dispose();
+    });
+
+    test('loadLikedCharities preserves charities newly liked while fetch is in flight', () async {
+      final existing = _charity(id: 'charity-a', name: 'WaterAid', likes: 3);
+      final likedDuringFetch = _charity(id: 'charity-b', name: 'WWF', likes: 2);
+      final fetchCompleter = Completer<Result<List<Charity>>>();
+      final repository = _FakeProductRepository(
+        fetchCharitiesCompleter: fetchCompleter,
+      );
+      final productViewModel = ProductViewModel(
+        productRepository: repository,
+        navigator: NavigationProvider(),
+      );
+      final viewModel = LikedItemsViewModel(
+        productRepository: repository,
+        productViewModel: productViewModel,
+      );
+
+      final loadFuture = viewModel.loadLikedCharities();
+      final likeResult = await productViewModel.setCharityLiked(likedDuringFetch, true);
+      expect(likeResult.isSuccess, isTrue);
+
+      fetchCompleter.complete(Result.success([existing]));
+      await loadFuture;
+
+      expect(viewModel.charitiesStatus, LikedItemsStatus.loaded);
+      expect(viewModel.charities.map((c) => c.id), ['charity-a', 'charity-b']);
+      expect(productViewModel.isCharityLiked('charity-a'), isTrue);
+      expect(productViewModel.isCharityLiked('charity-b'), isTrue);
+      expect(productViewModel.getCharityLikesCount('charity-b'), 3);
+      viewModel.dispose();
+    });
   });
 }

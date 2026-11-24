@@ -268,49 +268,10 @@ class ProductViewModel extends ChangeNotifier {
         return Result.failure(result.error ?? 'Unable to restore liked charities.');
       }
 
-      final mutatedIds = <String>{
-        for (final entry in _charityMutationRevisions.entries)
-          if (entry.value > startRevision) entry.key,
-      };
-      final preservedLikedState = <String, bool>{
-        for (final id in mutatedIds)
-          if (_likedCharities.containsKey(id)) id: _likedCharities[id]!,
-      };
-      final preservedLikedCache = <String, Charity>{
-        for (final id in mutatedIds)
-          if (_likedCharityCache.containsKey(id)) id: _likedCharityCache[id]!,
-      };
-
-      _clearCachedLikedCharitiesState(notify: false);
-
-      for (final charity in result.value ?? const <Charity>[]) {
-        final id = charity.id.trim();
-        if (id.isEmpty) continue;
-        if (mutatedIds.contains(id)) {
-          final preservedCount =
-              _charityLikeCountOverrides[id] ??
-              _knownCharitiesById[id]?.likes ??
-              charity.likes;
-          _registerKnownCharity(charity.copyWith(likes: preservedCount));
-          continue;
-        }
-        _registerKnownCharity(charity);
-        _likedCharities[id] = true;
-        _likedCharityCache[id] = charity;
-        _charityLikeCountOverrides[id] = charity.likes;
-      }
-
-      for (final id in mutatedIds) {
-        final liked = preservedLikedState[id];
-        if (liked != null) {
-          _likedCharities[id] = liked;
-          if (liked && preservedLikedCache.containsKey(id)) {
-            _likedCharityCache[id] = preservedLikedCache[id]!;
-          }
-        }
-      }
-
-      notifyListeners();
+      reconcileLikedCharities(
+        result.value ?? const <Charity>[],
+        sinceMutationRevision: startRevision,
+      );
       return Result.success(null);
     } finally {
       if (_likedCharitiesHydrationVersion == accountStateVersion) {
@@ -541,6 +502,31 @@ class ProductViewModel extends ChangeNotifier {
     );
   }
 
+  /// Submits an abuse or accuracy report against [charityId].
+  Future<Result<void>> reportCharity(
+    String charityId, {
+    required String reason,
+    String? message,
+  }) {
+    return _runSafetyAction(
+      'report-charity:$charityId',
+      () => _requireSafetyRepository().submitReport(
+        targetType: ReportTargetType.charity,
+        targetId: charityId,
+        reason: reason,
+        message: message,
+      ),
+    );
+  }
+
+  /// Blocks [charityId] for the current user account.
+  Future<Result<void>> blockCharity(String charityId) {
+    return _runSafetyAction(
+      'block-charity:$charityId',
+      () => _requireSafetyRepository().blockCharity(charityId),
+    );
+  }
+
   Future<Result<void>> _runSafetyAction(
     String key,
     Future<Result<void>> Function() action,
@@ -664,6 +650,60 @@ class ProductViewModel extends ChangeNotifier {
     if (changed) {
       notifyListeners();
     }
+  }
+
+  void reconcileLikedCharities(
+    Iterable<Charity> fetchedCharities, {
+    int? sinceMutationRevision,
+  }) {
+    if (_disposed) return;
+    _ensureCurrentAccount();
+
+    final mutatedIds = sinceMutationRevision == null
+        ? const <String>{}
+        : <String>{
+            for (final entry in _charityMutationRevisions.entries)
+              if (entry.value > sinceMutationRevision) entry.key,
+          };
+    final preservedLikedState = <String, bool>{
+      for (final id in mutatedIds)
+        if (_likedCharities.containsKey(id)) id: _likedCharities[id]!,
+    };
+    final preservedLikedCache = <String, Charity>{
+      for (final id in mutatedIds)
+        if (_likedCharityCache.containsKey(id)) id: _likedCharityCache[id]!,
+    };
+
+    _clearCachedLikedCharitiesState(notify: false);
+
+    for (final charity in fetchedCharities) {
+      final id = charity.id.trim();
+      if (id.isEmpty) continue;
+      if (mutatedIds.contains(id)) {
+        final preservedCount =
+            _charityLikeCountOverrides[id] ??
+            _knownCharitiesById[id]?.likes ??
+            charity.likes;
+        _registerKnownCharity(charity.copyWith(likes: preservedCount));
+        continue;
+      }
+      _registerKnownCharity(charity);
+      _likedCharities[id] = true;
+      _likedCharityCache[id] = charity;
+      _charityLikeCountOverrides[id] = charity.likes;
+    }
+
+    for (final id in mutatedIds) {
+      final liked = preservedLikedState[id];
+      if (liked != null) {
+        _likedCharities[id] = liked;
+        if (liked && preservedLikedCache.containsKey(id)) {
+          _likedCharityCache[id] = preservedLikedCache[id]!;
+        }
+      }
+    }
+
+    notifyListeners();
   }
 
   void cacheLikedCharities(

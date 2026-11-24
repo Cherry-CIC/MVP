@@ -2,7 +2,9 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:cherry_mvp/core/config/app_strings.dart';
+import 'package:cherry_mvp/core/router/nav_provider.dart';
 import 'package:cherry_mvp/features/charity_page/charity_model.dart';
+import 'package:cherry_mvp/features/charity_page/charity_profile_args.dart';
 import 'package:cherry_mvp/features/discover/discover_repository.dart';
 import 'package:cherry_mvp/features/products/product_viewmodel.dart';
 import 'package:flutter/material.dart';
@@ -96,6 +98,17 @@ class DiscoverCharityCardState extends State<DiscoverCharityCard> {
     }
   }
 
+  void _openCharityProfile(BuildContext context, {String? charityId}) {
+    NavigationProvider.openCharityProfileFromContext(
+      context,
+      CharityProfileArgs(
+        charityId: charityId,
+        charityName: widget.title,
+        charityImageUrl: widget.logoPath,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final productViewModel = context.watch<ProductViewModel?>();
@@ -128,15 +141,27 @@ class DiscoverCharityCardState extends State<DiscoverCharityCard> {
       children: [
         Stack(
           children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(minHeight: 160),
-                child: Image.asset(
-                  widget.imagePath,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                  semanticLabel: 'Cover image for ${widget.title}',
+            Semantics(
+              button: true,
+              label: 'Cover image for ${widget.title}',
+              child: GestureDetector(
+                key: ValueKey('discover-charity-image-${widget.title}'),
+                behavior: HitTestBehavior.opaque,
+                onTap: () => _openCharityProfile(
+                  context,
+                  charityId: widget.charityId,
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(minHeight: 160),
+                    child: Image.asset(
+                      widget.imagePath,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                      semanticLabel: 'Cover image for ${widget.title}',
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -144,6 +169,7 @@ class DiscoverCharityCardState extends State<DiscoverCharityCard> {
               bottom: 5,
               left: 5,
               child: _CharityLogoBadge(
+                charityId: widget.charityId,
                 title: widget.title,
                 logoPath: widget.logoPath,
                 useDarkBackground: widget.logoUsesDarkBackground,
@@ -215,11 +241,13 @@ class DiscoverCharityCardState extends State<DiscoverCharityCard> {
 
 class _CharityLogoBadge extends StatelessWidget {
   const _CharityLogoBadge({
+    this.charityId,
     required this.title,
     required this.logoPath,
     required this.useDarkBackground,
   });
 
+  final String? charityId;
   final String title;
   final String? logoPath;
   final bool useDarkBackground;
@@ -227,24 +255,37 @@ class _CharityLogoBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Semantics(
+      button: true,
       label: logoPath == null ? 'Temporary logo for $title' : '$title logo',
-      child: Container(
-        width: 72,
-        height: 48,
-        padding: const EdgeInsets.all(4),
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(8),
-          color: useDarkBackground ? Colors.black : Theme.of(context).colorScheme.surface,
+      child: GestureDetector(
+        key: ValueKey('discover-charity-logo-$title'),
+        behavior: HitTestBehavior.opaque,
+        onTap: () => NavigationProvider.openCharityProfileFromContext(
+          context,
+          CharityProfileArgs(
+            charityId: charityId,
+            charityName: title,
+            charityImageUrl: logoPath,
+          ),
         ),
-        clipBehavior: Clip.antiAlias,
-        child: logoPath == null
-            ? _TemporaryLogoMark(title: title)
-            : Image.asset(
-                logoPath!,
-                fit: BoxFit.contain,
-                errorBuilder: (context, error, stackTrace) => _TemporaryLogoMark(title: title),
-              ),
+        child: Container(
+          width: 72,
+          height: 48,
+          padding: const EdgeInsets.all(4),
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(8),
+            color: useDarkBackground ? Colors.black : Theme.of(context).colorScheme.surface,
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: logoPath == null
+              ? _TemporaryLogoMark(title: title)
+              : Image.asset(
+                  logoPath!,
+                  fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace) => _TemporaryLogoMark(title: title),
+                ),
+        ),
       ),
     );
   }

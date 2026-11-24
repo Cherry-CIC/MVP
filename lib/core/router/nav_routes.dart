@@ -3,7 +3,10 @@ import 'package:cherry_mvp/features/profile/profile_page.dart';
 import 'package:cherry_mvp/core/config/app_strings.dart';
 import 'package:cherry_mvp/core/models/product.dart';
 import 'package:cherry_mvp/core/router/nav_provider.dart';
+import 'package:cherry_mvp/features/charity_page/charity_model.dart';
 import 'package:cherry_mvp/features/charity_page/charity_page.dart';
+import 'package:cherry_mvp/features/charity_page/charity_profile_args.dart';
+import 'package:cherry_mvp/features/charity_page/charity_profile_page.dart';
 import 'package:cherry_mvp/features/checkout/checkout_complete_page.dart';
 import 'package:cherry_mvp/features/checkout/checkout_page.dart';
 import 'package:cherry_mvp/features/checkout/pickup_point_selection_page.dart';
@@ -51,6 +54,7 @@ class AppRoutes {
   static const String communityRulesPage = '/community-rules';
   static const String category = '/category';
   static const String charity = '/charity';
+  static const String charityProfile = '/charity-profile';
   static const String postageSize = '/postageSize';
   static const String pickupPointSelector = '/pickupPointSelector';
   static const String likedItems = '/liked-items';
@@ -117,7 +121,13 @@ class AppRoutes {
       case settingspage:
         return MaterialPageRoute(builder: (_) => SettingsPage());
       case donations:
-        return MaterialPageRoute(builder: (_) => DonationPage());
+        final initialCharity = settings.arguments is Charity
+            ? settings.arguments as Charity
+            : null;
+        return MaterialPageRoute(
+          settings: settings,
+          builder: (_) => DonationPage(initialCharity: initialCharity),
+        );
       case faqsPage:
         return MaterialPageRoute(builder: (_) => FaqPage());
       case legalInformationPage:
@@ -157,6 +167,21 @@ class AppRoutes {
             selectionMode: args?['selectionMode'] ?? false,
             initialCharityId: args?['initialCharityId'],
           ),
+        );
+      case charityProfile:
+        final args = CharityProfileArgs.fromRouteArgument(settings.arguments);
+        return MaterialPageRoute(
+          settings: settings,
+          builder: (_) => args == null
+              ? Scaffold(
+                  appBar: AppBar(
+                    title: const Text(AppStrings.charityProfileTitle),
+                  ),
+                  body: const Center(
+                    child: Text(AppStrings.charityProfileUnavailable),
+                  ),
+                )
+              : CharityProfilePage(args: args),
         );
       case postageSize:
         final args = settings.arguments;
