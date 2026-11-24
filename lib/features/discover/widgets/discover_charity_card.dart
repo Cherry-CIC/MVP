@@ -88,7 +88,7 @@ class DiscoverCharityCardState extends State<DiscoverCharityCard> {
                 onTap: toggleLiked,
                 child: Container(
                   constraints: const BoxConstraints(minWidth: 35, minHeight: 25),
-                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(5),
                     color: Theme.of(context).colorScheme.surfaceContainerHighest,
@@ -101,6 +101,7 @@ class DiscoverCharityCardState extends State<DiscoverCharityCard> {
                     ],
                   ),
                   child: Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       isLiked ? Icon(Icons.favorite, size: 16) : Icon(Icons.favorite_border, size: 16),
                       SizedBox(width: 4),

@@ -15,7 +15,12 @@ class _HomeRepository implements IHomeRepository {
   final requests = <({String? cursor, String? search})>[];
 
   @override
-  Future<Result<ProductPage>> fetchProducts({int limit = 20, String? cursor, String? search}) {
+  Future<Result<ProductPage>> fetchProducts({
+    int limit = 20,
+    String? cursor,
+    String? search,
+    String? categoryId,
+  }) {
     requests.add((cursor: cursor, search: search));
     return responses.removeAt(0);
   }

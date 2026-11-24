@@ -3,6 +3,18 @@ import 'package:cherry_mvp/core/config/feature_flags.dart';
 import 'package:cherry_mvp/features/search/widgets/search.dart';
 import 'package:flutter/material.dart';
 
+/// Footer item positions, shared by every screen that shows [CherryBottomNavBar].
+class CherryNavIndices {
+  const CherryNavIndices._();
+
+  static const int home = 0;
+  static const int discover = 1;
+  static const int inbox = 2;
+  static const int give = FeatureFlags.showInbox ? 3 : 2;
+  static const int search = give + 1;
+  static const int profile = give + (FeatureFlags.showSearchNavigation ? 2 : 1);
+}
+
 /// A reusable navigation bar widget that be use across the app.
 class CherryBottomNavBar extends StatelessWidget {
   final int selectedIndex;
@@ -20,14 +32,10 @@ class CherryBottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const giveIndex = FeatureFlags.showInbox ? 2 : 1;
-    const profileIndex = giveIndex + (FeatureFlags.showSearchNavigation ? 2 : 1);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final selectedColor = this.selectedColor ?? Theme.of(context).colorScheme.primary;
     final unselectedColor = this.unselectedColor ?? Theme.of(context).colorScheme.onSurfaceVariant;
-    final gradientColors = isDark
-        ? const [Color(0xFF2E1A22), Color(0xFF18181B)]
-        : const [Color(0xFFFFC0D4), Color(0xFFFFF2F6)];
+    final backgroundColor = isDark ? const Color(0xFF18181B) : const Color(0xFFFFF2F6);
 
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -35,10 +43,7 @@ class CherryBottomNavBar extends StatelessWidget {
           bottomLeft: Radius.circular(40),
           bottomRight: Radius.circular(20),
         ),
-        gradient: RadialGradient(
-          transform: const GradientRotation(-12.58),
-          colors: gradientColors,
-        ),
+        color: backgroundColor,
       ),
       child: BottomNavigationBar(
         currentIndex: selectedIndex,
@@ -58,9 +63,17 @@ class CherryBottomNavBar extends StatelessWidget {
               AppImages.icHome,
               width: 24,
               height: 24,
-              color: selectedIndex == 0 ? selectedColor : unselectedColor,
+              color: selectedIndex == CherryNavIndices.home ? selectedColor : unselectedColor,
             ),
             label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(
+              Icons.public_rounded,
+              size: 24,
+              color: selectedIndex == CherryNavIndices.discover ? selectedColor : unselectedColor,
+            ),
+            label: 'Discover',
           ),
           if (FeatureFlags.showInbox)
             BottomNavigationBarItem(
@@ -68,7 +81,7 @@ class CherryBottomNavBar extends StatelessWidget {
                 AppImages.icMessage,
                 width: 24,
                 height: 24,
-                color: selectedIndex == 1 ? selectedColor : unselectedColor,
+                color: selectedIndex == CherryNavIndices.inbox ? selectedColor : unselectedColor,
               ),
               label: 'Inbox',
             ),
@@ -77,7 +90,7 @@ class CherryBottomNavBar extends StatelessWidget {
               AppImages.icAdd,
               width: 24,
               height: 24,
-              color: selectedIndex == giveIndex ? selectedColor : unselectedColor,
+              color: selectedIndex == CherryNavIndices.give ? selectedColor : unselectedColor,
             ),
             label: 'Give',
           ),
@@ -87,7 +100,7 @@ class CherryBottomNavBar extends StatelessWidget {
               AppImages.icProfile,
               width: 24,
               height: 24,
-              color: selectedIndex == profileIndex ? selectedColor : unselectedColor,
+              color: selectedIndex == CherryNavIndices.profile ? selectedColor : unselectedColor,
             ),
             label: 'Profile',
           ),

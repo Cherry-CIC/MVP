@@ -10,6 +10,7 @@ abstract class IHomeRepository {
     int limit = 20,
     String? cursor,
     String? search,
+    String? categoryId,
   });
 }
 
@@ -41,6 +42,7 @@ final class HomeRepository implements IHomeRepository {
     int limit = 20,
     String? cursor,
     String? search,
+    String? categoryId,
   }) async {
     try {
       SafeLog.event(AppLogEvent.homeProductsLoadStarted);
@@ -50,6 +52,7 @@ final class HomeRepository implements IHomeRepository {
           'limit': limit,
           if (cursor != null && cursor.isNotEmpty) 'cursor': cursor,
           if (search != null && search.trim().isNotEmpty) 'search': search.trim(),
+          if (categoryId != null && categoryId.trim().isNotEmpty) 'categoryId': categoryId.trim(),
         },
       );
 
@@ -189,6 +192,7 @@ final class HomeRepositoryMock implements IHomeRepository {
     int limit = 20,
     String? cursor,
     String? search,
+    String? categoryId,
   }) async {
     return Result.success(
       ProductPage(

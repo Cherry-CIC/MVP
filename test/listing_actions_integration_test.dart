@@ -98,7 +98,12 @@ class _Profile implements IProfileListingsRepository {
 class _Home implements home.IHomeRepository {
   int reads = 0;
   @override
-  Future<Result<home.ProductPage>> fetchProducts({int limit = 20, String? cursor, String? search}) async {
+  Future<Result<home.ProductPage>> fetchProducts({
+    int limit = 20,
+    String? cursor,
+    String? search,
+    String? categoryId,
+  }) async {
     reads++;
     return Result.success(const home.ProductPage(products: [_product], limit: 20, nextCursor: null, hasMore: false));
   }
