@@ -45,12 +45,38 @@ class _DonationPageState extends State<DonationPage> {
     });
   }
 
+  Future<void> _cancelListing() async {
+    if (_formKey.currentState?.hasDraftContent ?? false) {
+      final discard = await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: const Text('Discard listing?'),
+          content: const Text('You’ll lose the details you’ve added to this listing.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text('Keep editing'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: const Text('Discard listing'),
+            ),
+          ],
+        ),
+      );
+      if (!mounted || discard != true) return;
+    }
+    if (ModalRoute.of(context)?.isCurrent == true) {
+      await Navigator.maybePop(context);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
-        leading: const CloseButton(),
+        leading: CloseButton(onPressed: _cancelListing),
         title: const Text(
           AppStrings.donationsText,
           style: TextStyle(fontWeight: FontWeight.bold),

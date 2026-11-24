@@ -72,6 +72,22 @@ class DonationFormState extends State<DonationForm> {
     }
   }
 
+  bool get hasDraftContent =>
+      (widget.selectedImages?.isNotEmpty ?? false) ||
+      _titleController.text.isNotEmpty ||
+      _descriptionController.text.isNotEmpty ||
+      _addToCollectionController.text.isNotEmpty ||
+      _priceController.text.isNotEmpty ||
+      selectedCategoryId.isNotEmpty ||
+      selectedCondition.isNotEmpty ||
+      selectedQuality.isNotEmpty ||
+      selectedSize.isNotEmpty ||
+      selectedPostageSize != null ||
+      (selectedCharity != null && selectedCharity?.id != widget.initialCharity?.id) ||
+      isSwitchedOpenToOtherCharity ||
+      isSwitchedOpenToOffer ||
+      isSwitchedApplicableBuyerDiscounts;
+
   void toggleSwitchOpenToOtherCharity(bool value) {
     setState(() => isSwitchedOpenToOtherCharity = value);
   }
