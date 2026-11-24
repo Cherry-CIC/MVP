@@ -7,7 +7,7 @@ const dummyProducts = [
     id: "1",
     name: "Men's Grey Button-up T-Shirt",
     description:
-        "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+        "Grey short-sleeve button-up shirt in a soft cotton blend. Worn a few times, no marks or fading. True to size.",
     quality: "8/Great",
     size: "M",
     postageSizeId: "AbCdE",
@@ -26,7 +26,7 @@ const dummyProducts = [
     id: "2",
     name: "Shoes",
     description:
-        "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+        "Casual trainers with light wear on the soles. Clean inside and out, laces included.",
     quality: "6/Good",
     size: "8",
     postageSizeId: "AbCdEfGhI",
@@ -45,7 +45,7 @@ const dummyProducts = [
     id: "3",
     name: "Shoes",
     description:
-        "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+        "Everyday trainers with some creasing on the toe box. Plenty of wear left in the soles.",
     quality: "6/Good",
     size: "8",
     postageSizeId: "AbCdEdCfE",
@@ -63,7 +63,7 @@ const dummyProducts = [
     id: "4",
     name: "Shoes",
     description:
-        "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+        "Comfortable trainers, gently used. Minor scuffs on the sides, otherwise in good shape.",
     quality: "6/Good",
     size: "8",
     postageSizeId: "AbCdEkLoI",
