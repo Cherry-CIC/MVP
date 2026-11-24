@@ -60,6 +60,16 @@ class DiscoverCharityCardState extends State<DiscoverCharityCard> {
 
     final productViewModel = context.read<ProductViewModel?>();
     if (productViewModel != null) {
+      final resolvedId = productViewModel.resolveCharityId(
+        widget.charityId,
+        charityName: widget.title,
+      );
+      if (productViewModel.isCharityLikeUpdatePending(
+        resolvedId,
+        charityName: widget.title,
+      )) {
+        return;
+      }
       unawaited(_toggleCharityLike(productViewModel));
       return;
     }
@@ -135,6 +145,13 @@ class DiscoverCharityCardState extends State<DiscoverCharityCard> {
             fallback: widget.likes,
           )
         : (_localLikes ?? widget.likes);
+    final isLikePending =
+        widget.onLikePressed == null &&
+        productViewModel != null &&
+        productViewModel.isCharityLikeUpdatePending(
+          resolvedId,
+          charityName: widget.title,
+        );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -181,13 +198,14 @@ class DiscoverCharityCardState extends State<DiscoverCharityCard> {
               child: Semantics(
                 key: ValueKey('charity-like-$resolvedId'),
                 button: true,
+                enabled: !isLikePending,
                 label: effectiveIsLiked
                     ? AppStrings.unlikeCharity
                     : AppStrings.likeCharity,
                 child: GestureDetector(
                   key: ValueKey('discover-charity-like-${widget.title}'),
                   behavior: HitTestBehavior.opaque,
-                  onTap: _handleLikeTap,
+                  onTap: isLikePending ? null : _handleLikeTap,
                   child: Container(
                     constraints: const BoxConstraints(
                       minWidth: 35,

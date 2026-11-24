@@ -19,9 +19,11 @@ class _FakeProductRepository extends ProductRepository {
     this.fetchCompleter,
     this.likeCompleter,
     this.fetchAllCharitiesCompleter,
+    this.fetchAllCharitiesCompleters,
     this.fetchCharitiesResult,
     this.unlikeCharityResult,
     this.fetchCharitiesCompleter,
+    this.fetchCharitiesCompleters,
   }) : super(const UnexpectedApiService());
 
   Result<List<Product>>? fetchResult;
@@ -31,13 +33,19 @@ class _FakeProductRepository extends ProductRepository {
   final unlikedIds = <String>[];
 
   Completer<Result<List<Charity>>>? fetchAllCharitiesCompleter;
+  List<Completer<Result<List<Charity>>>>? fetchAllCharitiesCompleters;
   Result<List<Charity>>? fetchCharitiesResult;
   Result<CharityLikeUpdate>? unlikeCharityResult;
   Completer<Result<List<Charity>>>? fetchCharitiesCompleter;
+  List<Completer<Result<List<Charity>>>>? fetchCharitiesCompleters;
   final unlikedCharityIds = <String>[];
 
   @override
   Future<Result<List<Charity>>> fetchCharities() async {
+    if (fetchAllCharitiesCompleters != null &&
+        fetchAllCharitiesCompleters!.isNotEmpty) {
+      return fetchAllCharitiesCompleters!.removeAt(0).future;
+    }
     return fetchAllCharitiesCompleter?.future ??
         Result.success(const <Charity>[]);
   }
@@ -77,6 +85,10 @@ class _FakeProductRepository extends ProductRepository {
 
   @override
   Future<Result<List<Charity>>> fetchLikedCharities() async {
+    if (fetchCharitiesCompleters != null &&
+        fetchCharitiesCompleters!.isNotEmpty) {
+      return fetchCharitiesCompleters!.removeAt(0).future;
+    }
     return fetchCharitiesCompleter?.future ??
         fetchCharitiesResult ??
         Result.success(const <Charity>[]);
@@ -686,6 +698,144 @@ void main() {
       expect(productViewModel.isCharityLiked('charity-b'), isTrue);
       expect(productViewModel.getCharityLikesCount('charity-b'), 3);
       viewModel.dispose();
+    });
+
+    test('older dashboard hydrateLikedCharities response does not restore a charity after newer Profile load', () async {
+      final unlikedRemotely = _charity(id: 'charity-remote', name: 'WaterAid', likes: 3);
+      final dashboardCompleter = Completer<Result<List<Charity>>>();
+      final profileCompleter = Completer<Result<List<Charity>>>();
+      final repository = _FakeProductRepository(
+        fetchCharitiesCompleters: [dashboardCompleter, profileCompleter],
+      );
+      final productViewModel = ProductViewModel(
+        productRepository: repository,
+        navigator: NavigationProvider(),
+      );
+      final viewModel = LikedItemsViewModel(
+        productRepository: repository,
+        productViewModel: productViewModel,
+      );
+
+      final dashboardHydration = productViewModel.hydrateLikedCharities();
+      final profileLoad = viewModel.loadLikedCharities();
+
+      // Newer Profile GET completes first with empty list (charity was unliked remotely).
+      profileCompleter.complete(Result.success(const <Charity>[]));
+      await profileLoad;
+      expect(viewModel.charitiesStatus, LikedItemsStatus.empty);
+      expect(viewModel.charities, isEmpty);
+
+      // Older Dashboard GET completes afterwards with stale snapshot containing the charity.
+      dashboardCompleter.complete(Result.success([unlikedRemotely]));
+      await dashboardHydration;
+
+      expect(productViewModel.isCharityLiked('charity-remote'), isFalse);
+      expect(productViewModel.cachedLikedCharities, isEmpty);
+      expect(viewModel.charitiesStatus, LikedItemsStatus.empty);
+      expect(viewModel.charities, isEmpty);
+      viewModel.dispose();
+    });
+
+    test('loadLikedCharities keeps distinct API IDs even when normalized names collide', () async {
+      final first = _charity(id: 'api-1', name: 'Helping Hands', likes: 2);
+      final second = _charity(id: 'api-2', name: 'The Helping-Hands', likes: 5);
+      final repository = _FakeProductRepository(
+        fetchCharitiesResult: Result.success([first, second]),
+      );
+      final productViewModel = ProductViewModel(
+        productRepository: repository,
+        navigator: NavigationProvider(),
+      )..cacheCharities([first]);
+      final viewModel = LikedItemsViewModel(
+        productRepository: repository,
+        productViewModel: productViewModel,
+      );
+
+      await viewModel.loadLikedCharities();
+
+      expect(viewModel.charitiesStatus, LikedItemsStatus.loaded);
+      expect(viewModel.charities.map((c) => c.id), ['api-1', 'api-2']);
+      expect(productViewModel.isCharityLiked('api-1'), isTrue);
+      expect(productViewModel.isCharityLiked('api-2'), isTrue);
+      viewModel.dispose();
+    });
+
+    test('switching accounts resets inactive charities tab to initial so selecting it loads new account charities', () async {
+      var currentUserId = 'account-a';
+      final accountACharity = _charity(id: 'charity-a', name: 'WaterAid', likes: 1);
+      final accountBCharity = _charity(id: 'charity-b', name: 'WWF', likes: 4);
+      final repository = _FakeProductRepository(
+        fetchResult: Result.success(const <Product>[]),
+        fetchCharitiesResult: Result.success([accountACharity]),
+      );
+      final productViewModel = ProductViewModel(
+        productRepository: repository,
+        navigator: NavigationProvider(),
+        currentUserIdProvider: () => currentUserId,
+      );
+      final viewModel = LikedItemsViewModel(
+        productRepository: repository,
+        productViewModel: productViewModel,
+      );
+
+      await viewModel.loadLikedProducts();
+      viewModel.selectTab(LikedItemsTab.charities);
+      await Future<void>.delayed(Duration.zero);
+      expect(viewModel.charities.map((c) => c.id), ['charity-a']);
+
+      // Return to items tab, switch account, then switch back to charities tab.
+      viewModel.selectTab(LikedItemsTab.items);
+      currentUserId = 'account-b';
+      repository.fetchCharitiesResult = Result.success([accountBCharity]);
+      productViewModel.isCharityLiked('charity-a');
+      await Future<void>.microtask(() {});
+
+      expect(viewModel.status, LikedItemsStatus.empty);
+      expect(viewModel.charitiesStatus, LikedItemsStatus.initial);
+      expect(viewModel.charities, isEmpty);
+
+      viewModel.selectTab(LikedItemsTab.charities);
+      await Future<void>.delayed(Duration.zero);
+
+      expect(viewModel.charitiesStatus, LikedItemsStatus.loaded);
+      expect(viewModel.charities.map((c) => c.id), ['charity-b']);
+      viewModel.dispose();
+    });
+
+    test('hydrateCharities ignores previous account response and preserves newer account mutation count', () async {
+      var currentUserId = 'account-a';
+      final charity = _charity(id: 'charity-shared', name: 'WaterAid', likes: 10);
+      final accountACompleter = Completer<Result<List<Charity>>>();
+      final accountBCompleter = Completer<Result<List<Charity>>>();
+      final repository = _FakeProductRepository(
+        fetchAllCharitiesCompleters: [accountACompleter, accountBCompleter],
+      );
+      final productViewModel = ProductViewModel(
+        productRepository: repository,
+        navigator: NavigationProvider(),
+        currentUserIdProvider: () => currentUserId,
+      );
+
+      final accountAHydration = productViewModel.hydrateCharities();
+
+      currentUserId = 'account-b';
+      final accountBHydration = productViewModel.hydrateCharities();
+      await productViewModel.setCharityLiked(charity, true);
+      expect(productViewModel.isCharityLiked('charity-shared'), isTrue);
+      expect(productViewModel.getCharityLikesCount('charity-shared'), 11);
+
+      // Account A's stale catalogue GET completes after Account B liked the charity.
+      accountACompleter.complete(Result.success([charity.copyWith(likes: 10)]));
+      final accountAResult = await accountAHydration;
+      expect(accountAResult.isSuccess, isFalse);
+      expect(productViewModel.getCharityLikesCount('charity-shared'), 11);
+
+      // Account B's own catalogue GET is still tracked and preserves B's mutation count.
+      expect(identical(productViewModel.hydrateCharities(), accountBHydration), isTrue);
+      accountBCompleter.complete(Result.success([charity.copyWith(likes: 10)]));
+      final accountBResult = await accountBHydration;
+      expect(accountBResult.isSuccess, isTrue);
+      expect(productViewModel.getCharityLikesCount('charity-shared'), 11);
     });
   });
 }

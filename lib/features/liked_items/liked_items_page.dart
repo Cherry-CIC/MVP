@@ -296,6 +296,13 @@ class _LikedCharitiesList extends StatelessWidget {
       DiscoverRepository();
 
   Future<void> _handleUnlike(BuildContext context, Charity charity) async {
+    final productViewModel = context.read<ProductViewModel>();
+    if (productViewModel.isCharityLikeUpdatePending(
+      charity.id,
+      charityName: charity.name,
+    )) {
+      return;
+    }
     final viewModel = context.read<LikedItemsViewModel>();
     final removed = await viewModel.unlikeCharity(charity);
     if (!removed && context.mounted) {

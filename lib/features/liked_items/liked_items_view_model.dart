@@ -141,6 +141,7 @@ class LikedItemsViewModel extends ChangeNotifier {
     final request = ++_charitiesRequestSequence;
     final accountStateVersion = productViewModel.accountStateVersion;
     final startRevision = productViewModel.charityMutationSequence;
+    final fetchSequence = productViewModel.beginLikedCharitiesFetch();
     _accountStateVersion = accountStateVersion;
     _charitiesStatus = LikedItemsStatus.loading;
     _charitiesErrorMessage = null;
@@ -164,14 +165,13 @@ class LikedItemsViewModel extends ChangeNotifier {
     }
 
     final fetchedCharities = result.value ?? const <Charity>[];
-    _charities = _mergeLoadedCharities(
-      fetchedCharities: fetchedCharities,
-      cachedCharities: productViewModel.cachedLikedCharities,
-      sinceMutationRevision: startRevision,
-    );
     productViewModel.reconcileLikedCharities(
       fetchedCharities,
       sinceMutationRevision: startRevision,
+      fetchSequence: fetchSequence,
+    );
+    _charities = List<Charity>.unmodifiable(
+      productViewModel.cachedLikedCharities,
     );
     _charitiesStatus =
         _charities.isEmpty ? LikedItemsStatus.empty : LikedItemsStatus.loaded;
@@ -227,10 +227,14 @@ class LikedItemsViewModel extends ChangeNotifier {
     _charitiesRequestSequence++;
     _accountStateVersion = productViewModel.accountStateVersion;
     _products = const [];
-    _status = LikedItemsStatus.empty;
+    _status = _selectedTab == LikedItemsTab.items
+        ? LikedItemsStatus.empty
+        : LikedItemsStatus.initial;
     _errorMessage = null;
     _charities = const [];
-    _charitiesStatus = LikedItemsStatus.empty;
+    _charitiesStatus = _selectedTab == LikedItemsTab.charities
+        ? LikedItemsStatus.empty
+        : LikedItemsStatus.initial;
     _charitiesErrorMessage = null;
     notifyListeners();
   }
@@ -251,16 +255,9 @@ class LikedItemsViewModel extends ChangeNotifier {
       return;
     }
 
-    final synced = _mergeCharities(
-      _charities.where(
-        (charity) => productViewModel.isCharityLiked(
-          charity.id,
-          charityName: charity.name,
-        ),
-      ),
+    final synced = List<Charity>.unmodifiable(
       productViewModel.cachedLikedCharities,
     );
-
     if (listEquals(synced, _charities)) {
       return;
     }
@@ -281,93 +278,6 @@ class LikedItemsViewModel extends ChangeNotifier {
     }
     final normalizedName = DiscoverRepository.normalizeCharityName(charity.name);
     return normalizedName.isNotEmpty ? normalizedName : charity.id.trim();
-  }
-
-  List<Charity> _mergeLoadedCharities({
-    required Iterable<Charity> fetchedCharities,
-    required Iterable<Charity> cachedCharities,
-    required int sinceMutationRevision,
-  }) {
-    final charities = <Charity>[];
-    final seenKeys = <String>{};
-
-    for (final charity in fetchedCharities) {
-      final key = _charityIdentityKey(charity);
-      if (key.isEmpty || !seenKeys.add(key)) {
-        continue;
-      }
-      final mutatedSinceStart = productViewModel.hasCharityMutatedSince(
-        charity.id,
-        sinceMutationRevision,
-        charityName: charity.name,
-      );
-      if (mutatedSinceStart) {
-        if (!productViewModel.isCharityLiked(
-          charity.id,
-          charityName: charity.name,
-        )) {
-          continue;
-        }
-        final updatedCount = productViewModel.getCharityLikesCount(
-          charity.id,
-          charityName: charity.name,
-          fallback: charity.likes,
-        );
-        charities.add(charity.copyWith(likes: updatedCount));
-      } else {
-        charities.add(charity);
-      }
-    }
-
-    for (final charity in cachedCharities) {
-      final key = _charityIdentityKey(charity);
-      if (key.isEmpty || !seenKeys.add(key)) {
-        continue;
-      }
-      final mutatedSinceStart = productViewModel.hasCharityMutatedSince(
-        charity.id,
-        sinceMutationRevision,
-        charityName: charity.name,
-      );
-      if (!mutatedSinceStart ||
-          !productViewModel.isCharityLiked(
-            charity.id,
-            charityName: charity.name,
-          )) {
-        continue;
-      }
-      final updatedCount = productViewModel.getCharityLikesCount(
-        charity.id,
-        charityName: charity.name,
-        fallback: charity.likes,
-      );
-      charities.add(charity.copyWith(likes: updatedCount));
-    }
-
-    return List.unmodifiable(charities);
-  }
-
-  List<Charity> _mergeCharities(
-    Iterable<Charity> primaryCharities,
-    Iterable<Charity> cachedCharities,
-  ) {
-    final charities = <Charity>[];
-    final seenKeys = <String>{};
-
-    for (final charity in [...primaryCharities, ...cachedCharities]) {
-      final key = _charityIdentityKey(charity);
-      if (key.isEmpty || !seenKeys.add(key)) {
-        continue;
-      }
-      final updatedCount = productViewModel.getCharityLikesCount(
-        charity.id,
-        charityName: charity.name,
-        fallback: charity.likes,
-      );
-      charities.add(charity.copyWith(likes: updatedCount));
-    }
-
-    return List.unmodifiable(charities);
   }
 
   List<Product> _mergeProducts(

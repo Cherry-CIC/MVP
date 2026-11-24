@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cherry_mvp/core/config/app_theme.dart';
 import 'package:cherry_mvp/core/models/model.dart';
 import 'package:cherry_mvp/core/router/router.dart';
@@ -23,11 +25,14 @@ class _CharityLikeProductRepository extends ProductRepository {
   _CharityLikeProductRepository({
     this.initialCharities = const [],
     this.likeFailureMessage,
+    this.likeCompleter,
   }) : super(const UnexpectedApiService());
 
   final List<Charity> initialCharities;
   final String? likeFailureMessage;
+  final Completer<Result<CharityLikeUpdate>>? likeCompleter;
   final Map<String, int> _likesById = {};
+  int likeCallCount = 0;
 
   @override
   Future<Result<List<Charity>>> fetchCharities() async {
@@ -44,6 +49,10 @@ class _CharityLikeProductRepository extends ProductRepository {
 
   @override
   Future<Result<CharityLikeUpdate>> likeCharity(Charity charity) async {
+    likeCallCount += 1;
+    if (likeCompleter != null) {
+      return likeCompleter!.future;
+    }
     if (likeFailureMessage != null) {
       return Result.failure(likeFailureMessage!);
     }
@@ -511,6 +520,98 @@ void main() {
     );
     expect(
       find.descendant(of: waterAidLikeButton, matching: find.text('0')),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('second tap on Discover heart while like request is pending is ignored without error snackbar', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(430, 932);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final likeCompleter = Completer<Result<CharityLikeUpdate>>();
+    final repository = _CharityLikeProductRepository(
+      likeCompleter: likeCompleter,
+    );
+    final navigator = NavigationProvider();
+    final home = HomeViewModel(homeRepository: _Items());
+    addTearDown(home.dispose);
+    final productViewModel = ProductViewModel(
+      productRepository: repository,
+      navigator: navigator,
+    );
+    addTearDown(productViewModel.dispose);
+
+    await tester.pumpWidget(
+      MultiProvider(
+        providers: [
+          Provider<NavigationProvider>.value(value: navigator),
+          ChangeNotifierProvider(
+            create: (_) => DiscoverViewModel(discoverRepository: DiscoverRepository()),
+          ),
+          ChangeNotifierProvider.value(value: home),
+          ChangeNotifierProvider(
+            create: (_) => CategoryViewModel(
+              categoryRepository: _Categories(),
+              navigator: navigator,
+            ),
+          ),
+          ChangeNotifierProvider.value(value: productViewModel),
+        ],
+        child: MaterialApp(
+          navigatorKey: navigator.navigatorKey,
+          theme: buildTheme(),
+          home: const DiscoverPage(showBackButton: false),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final waterAidLikeButton = find.byKey(
+      const ValueKey('discover-charity-like-WaterAid'),
+    );
+
+    await tester.tap(waterAidLikeButton);
+    await tester.pump();
+
+    // Tapping again while the first request is in flight should be ignored.
+    await tester.tap(waterAidLikeButton);
+    await tester.pump();
+
+    expect(repository.likeCallCount, 1);
+    expect(find.byType(SnackBar), findsNothing);
+
+    likeCompleter.complete(
+      Result.success(
+        CharityLikeUpdate(
+          liked: true,
+          likes: 1,
+          charity: Charity(
+            id: 'ca6tjKqCRurG0hB49Dcp',
+            name: 'WaterAid',
+            imageUrl: '',
+            likes: 1,
+            createdAt: DateTime.utc(2026),
+            updatedAt: DateTime.utc(2026),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byType(SnackBar), findsNothing);
+    expect(
+      find.descendant(
+        of: waterAidLikeButton,
+        matching: find.byIcon(Icons.favorite),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: waterAidLikeButton, matching: find.text('1')),
       findsOneWidget,
     );
   });
