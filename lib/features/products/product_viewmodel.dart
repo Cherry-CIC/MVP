@@ -401,8 +401,12 @@ class ProductViewModel extends ChangeNotifier {
 
     final result = liked ? await productRepository.likeProduct(product) : await productRepository.unlikeProduct(id);
 
-    if (!isAccountStateCurrent(accountStateVersion) || isProductHidden(product)) {
+    if (!isAccountStateCurrent(accountStateVersion)) {
+      return Result.failure('Unable to update this liked item.');
+    }
+    if (isProductHidden(product)) {
       _pendingLikeUpdates.remove(id);
+      notifyListeners();
       return Result.failure('Unable to update this liked item.');
     }
 

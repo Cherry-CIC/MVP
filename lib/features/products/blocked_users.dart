@@ -42,6 +42,19 @@ class BlockedUsers extends ChangeNotifier {
     return _hydrated;
   }
 
+  /// Whether blocked-user state is known for the current account.
+  ///
+  /// Returns `true` when no remote fetcher is configured, when signed out, or
+  /// after remote hydration succeeds.
+  bool get isAuthoritative {
+    _ensureCurrentAccount();
+    if (_fetchBlockedUsers == null) return true;
+    if (_currentUserIdProvider != null && _normalizeId(_currentUserIdProvider()) == null) {
+      return true;
+    }
+    return _hydrated;
+  }
+
   void add(String userId) {
     if (_disposed) return;
     _ensureCurrentAccount();

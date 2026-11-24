@@ -333,8 +333,9 @@ class CharityProfileViewModel extends ChangeNotifier {
     required bool hasMore,
     required String? loadMoreErrorMessage,
   }) {
+    final visible = _filterOwnedVisible(merged, charity.id).toList(growable: false);
     _charity = charity;
-    _products = List.unmodifiable(merged);
+    _products = List.unmodifiable(visible);
     _nextCursor = nextCursor;
     _hasMore = hasMore;
     _status = CharityProfileStatus.loaded;

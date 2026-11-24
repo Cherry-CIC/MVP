@@ -126,18 +126,26 @@ class _StubProductRepository extends ProductRepository {
   _StubProductRepository({
     super.blockedUsers,
     this.likedProducts = const [],
+    this.likeHandler,
   }) : super(const UnexpectedApiService());
 
   final List<Product> likedProducts;
+  final Future<Result<ProductLikeUpdate>> Function(Product product)? likeHandler;
 
   @override
   Future<Result<List<Product>>> fetchLikedProducts() async {
     return Result.success(likedProducts);
   }
+
+  @override
+  Future<Result<ProductLikeUpdate>> likeProduct(Product product) async {
+    if (likeHandler != null) return likeHandler!(product);
+    return Result.success(const ProductLikeUpdate(liked: true, likes: 2));
+  }
 }
 
 class _StubCharityProfileRepository implements ICharityProfileRepository {
-  _StubCharityProfileRepository(this._pages);
+  _StubCharityProfileRepository(this._pages, {this.fetchHandler});
 
   final Charity _charity = Charity(
     id: 'charity-1',
@@ -147,6 +155,7 @@ class _StubCharityProfileRepository implements ICharityProfileRepository {
     updatedAt: DateTime.utc(2026),
   );
   final Map<String?, List<Product>> _pages;
+  final Future<Result<CharityProfilePageData>> Function(Charity charity, String? cursor)? fetchHandler;
   final Map<String?, String?> _cursors = {null: 'page-2', 'page-2': null};
   final calls = <String?>[];
 
@@ -162,6 +171,9 @@ class _StubCharityProfileRepository implements ICharityProfileRepository {
     String? cursor,
   }) async {
     calls.add(cursor);
+    if (fetchHandler != null) {
+      return fetchHandler!(charity, cursor);
+    }
     final nextCursor = _cursors[cursor];
     return Result.success(
       CharityProfilePageData(
@@ -468,6 +480,308 @@ void main() {
       expect(viewModel.user, isNull);
       expect(repo.calls, isEmpty);
     });
+
+    test(
+      'HomeViewModel reports continuation failures during blocked auto-advance, retains cursor, and normalizes missing cursors',
+      () async {
+        final blockedUsers = BlockedUsers(
+          fetchBlockedUsers: () async => Result.success({'blocked-seller'}),
+        );
+        addTearDown(blockedUsers.dispose);
+
+        final blockedItem = _product(id: 'p-blocked', userId: 'blocked-seller', name: 'Blocked boots');
+        final openItem = _product(id: 'p-open', userId: 'open-seller', name: 'Open coat');
+        var failPage2 = true;
+
+        final homeRepo = _QueueHomeRepository(({limit = 20, cursor, search, categoryId}) async {
+          if (search == 'missing-cursor') {
+            return Result.success(
+              home.ProductPage(
+                products: const [],
+                limit: limit,
+                nextCursor: null,
+                hasMore: true,
+              ),
+            );
+          }
+          if (cursor == null) {
+            return Result.success(
+              home.ProductPage(
+                products: [blockedItem],
+                limit: limit,
+                nextCursor: 'page-2',
+                hasMore: true,
+              ),
+            );
+          }
+          if (failPage2) {
+            return Result.failure('offline');
+          }
+          return Result.success(
+            home.ProductPage(
+              products: [openItem],
+              limit: limit,
+              nextCursor: null,
+              hasMore: false,
+            ),
+          );
+        });
+
+        final homeModel = HomeViewModel(
+          homeRepository: homeRepo,
+          blockedUsers: blockedUsers,
+        );
+        addTearDown(homeModel.dispose);
+
+        // Home auto-advance continuation failure exposes retryable error and retains cursor.
+        await homeModel.fetchProducts();
+        expect(homeModel.products, isEmpty);
+        expect(homeModel.hasMore, isTrue);
+        expect(homeModel.nextCursor, 'page-2');
+        expect(homeModel.homeLoadMoreError, isNotEmpty);
+
+        // Explicit retry bypasses backoff and resumes from the failed cursor.
+        failPage2 = false;
+        await homeModel.loadMoreProducts(ignoreBackoff: true);
+        expect(homeModel.products.map((p) => p.id), ['p-open']);
+        expect(homeModel.homeLoadMoreError, isNull);
+        expect(homeModel.hasMore, isFalse);
+
+        // Search auto-advance continuation failure exposes searchLoadMoreError and retries from failed cursor.
+        failPage2 = true;
+        await homeModel.submitSearch('coat');
+        expect(homeModel.searchProducts, isEmpty);
+        expect(homeModel.searchHasMore, isTrue);
+        expect(homeModel.isSearchEmpty, isFalse);
+        expect(homeModel.searchNextCursor, 'page-2');
+        expect(homeModel.searchLoadMoreError, isNotEmpty);
+
+        failPage2 = false;
+        await homeModel.loadMoreSearchProducts();
+        expect(homeModel.searchProducts.map((p) => p.id), ['p-open']);
+        expect(homeModel.searchLoadMoreError, isNull);
+        expect(homeModel.searchHasMore, isFalse);
+
+        // First-page pagination normalizes hasMore=true with null cursor to hasMore=false.
+        await homeModel.submitSearch('missing-cursor');
+        expect(homeModel.searchHasMore, isFalse);
+        expect(homeModel.searchNextCursor, isNull);
+        expect(homeModel.isSearchEmpty, isTrue);
+      },
+    );
+
+    test(
+      'ProductRepository fails closed with retryable failure when block hydration fails and succeeds on retry',
+      () async {
+        var shouldFailBlocks = true;
+        final blockedUsers = BlockedUsers(
+          currentUserIdProvider: () => 'viewer-1',
+          fetchBlockedUsers: () async =>
+              shouldFailBlocks ? Result.failure('offline') : Result.success({'blocked-seller'}),
+        );
+        addTearDown(blockedUsers.dispose);
+
+        final api = _FakeApiService(
+          getHandler: (endpoint, _) async {
+            if (endpoint == ApiEndpoints.productWithDetailsById('p-blocked')) {
+              return Result.success({
+                'success': true,
+                'data': {
+                  'id': 'p-blocked',
+                  'userId': 'blocked-seller',
+                  'name': 'Boots',
+                  'description': 'Worn',
+                  'quality': 'Good',
+                  'product_images': [AppImages.product1],
+                  'donation': 10,
+                  'price': 15,
+                  'likes': 0,
+                  'number': 1,
+                  'size': 'M',
+                  'postageSize': 'small',
+                },
+              });
+            }
+            if (endpoint == ApiEndpoints.likedProducts) {
+              return Result.success({
+                'success': true,
+                'data': {
+                  'products': [
+                    {
+                      'id': 'p-blocked',
+                      'userId': 'blocked-seller',
+                      'name': 'Boots',
+                      'description': 'Worn',
+                      'quality': 'Good',
+                      'product_images': [AppImages.product1],
+                      'donation': 10,
+                      'price': 15,
+                      'likes': 1,
+                      'number': 1,
+                      'size': 'M',
+                      'postageSize': 'small',
+                    },
+                    {
+                      'id': 'p-open',
+                      'userId': 'open-seller',
+                      'name': 'Shirt',
+                      'description': 'Clean',
+                      'quality': 'Good',
+                      'product_images': [AppImages.product1],
+                      'donation': 10,
+                      'price': 15,
+                      'likes': 1,
+                      'number': 1,
+                      'size': 'M',
+                      'postageSize': 'small',
+                    },
+                  ],
+                },
+              });
+            }
+            return Result.failure('Unexpected GET $endpoint');
+          },
+        );
+
+        final productRepo = ProductRepository(api, blockedUsers: blockedUsers);
+
+        final failedProduct = await productRepo.fetchProduct('p-blocked');
+        expect(failedProduct.isSuccess, isFalse);
+        expect(failedProduct.errorCode, isNot('LISTING_NOT_FOUND'));
+        expect(failedProduct.statusCode, isNot(404));
+
+        final failedLiked = await productRepo.fetchLikedProducts();
+        expect(failedLiked.isSuccess, isFalse);
+
+        // Once block hydration succeeds, blocked listing is hidden and liked items are filtered.
+        shouldFailBlocks = false;
+        final blockedResult = await productRepo.fetchProduct('p-blocked');
+        expect(blockedResult.isSuccess, isFalse);
+        expect(blockedResult.errorCode, 'LISTING_NOT_FOUND');
+        expect(blockedResult.statusCode, 404);
+
+        final likedResult = await productRepo.fetchLikedProducts();
+        expect(likedResult.isSuccess, isTrue);
+        expect(likedResult.value!.map((p) => p.id), ['p-open']);
+      },
+    );
+
+    test('ProductViewModel stale account like response does not clear new account pending state', () async {
+      var currentUserId = 'viewer-a';
+      final likeA = Completer<Result<ProductLikeUpdate>>();
+      final likeB = Completer<Result<ProductLikeUpdate>>();
+      var likeCalls = 0;
+
+      final product = _product(id: 'p-1', userId: 'seller-1', name: 'Jacket');
+      final repo = _StubProductRepository(
+        likeHandler: (_) {
+          likeCalls++;
+          return likeCalls == 1 ? likeA.future : likeB.future;
+        },
+      );
+      final viewModel = ProductViewModel(
+        productRepository: repo,
+        navigator: NavigationProvider(),
+        currentUserIdProvider: () => currentUserId,
+      );
+      addTearDown(viewModel.dispose);
+
+      final pendingA = viewModel.setProductLiked(product, true);
+      expect(viewModel.isLikeUpdatePending('p-1'), isTrue);
+
+      // Switch to account B and start a like update for the same product.
+      currentUserId = 'viewer-b';
+      final pendingB = viewModel.setProductLiked(product, true);
+      expect(viewModel.isLikeUpdatePending('p-1'), isTrue);
+
+      // Stale completion from account A must not clear account B's pending marker.
+      likeA.complete(Result.success(const ProductLikeUpdate(liked: true, likes: 2)));
+      await pendingA;
+      expect(viewModel.isLikeUpdatePending('p-1'), isTrue);
+
+      likeB.complete(Result.success(const ProductLikeUpdate(liked: true, likes: 2)));
+      final resultB = await pendingB;
+      expect(resultB.isSuccess, isTrue);
+      expect(viewModel.isLikeUpdatePending('p-1'), isFalse);
+      expect(viewModel.isProductLiked('p-1'), isTrue);
+    });
+
+    test('PublicUserProfileRepository.fetchProfile hydrates blocked users only once when hydration fails', () async {
+      var hydrationCalls = 0;
+      final blockedUsers = BlockedUsers(
+        currentUserIdProvider: () => 'viewer-1',
+        fetchBlockedUsers: () async {
+          hydrationCalls++;
+          return Result.failure('offline');
+        },
+      );
+      addTearDown(blockedUsers.dispose);
+
+      final api = _FakeApiService();
+      final repo = PublicUserProfileRepository(api, blockedUsers: blockedUsers);
+
+      final result = await repo.fetchProfile('seller-1');
+      expect(result.isSuccess, isFalse);
+      expect(result.statusCode, isNot(404));
+      expect(hydrationCalls, 1);
+      expect(api.getCalls, isEmpty);
+    });
+
+    test('CharityProfileViewModel does not restore a seller blocked while loadMore is in flight', () async {
+      final blockedUsers = BlockedUsers();
+      addTearDown(blockedUsers.dispose);
+
+      final itemA = _product(id: 'p-a', userId: 'seller-a', name: 'Blocked mid-load');
+      final itemB = _product(id: 'p-b', userId: 'seller-b', name: 'Kept item');
+      final itemC = _product(id: 'p-c', userId: 'seller-c', name: 'Page 2 item');
+      final page2Completer = Completer<Result<CharityProfilePageData>>();
+
+      late final _StubCharityProfileRepository repo;
+      repo = _StubCharityProfileRepository(
+        const {},
+        fetchHandler: (charity, cursor) async {
+          if (cursor == null) {
+            return Result.success(
+              CharityProfilePageData(
+                charity: charity,
+                products: [itemA, itemB],
+                nextCursor: 'page-2',
+                hasMore: true,
+              ),
+            );
+          }
+          return page2Completer.future;
+        },
+      );
+
+      final viewModel = CharityProfileViewModel(
+        args: const CharityProfileArgs(charityId: 'charity-1'),
+        repository: repo,
+        blockedUsers: blockedUsers,
+      );
+      addTearDown(viewModel.dispose);
+
+      await viewModel.loadInitial();
+      expect(viewModel.products.map((p) => p.id), ['p-a', 'p-b']);
+
+      final loadMoreFuture = viewModel.loadMore();
+      blockedUsers.add('seller-a');
+      expect(viewModel.products.map((p) => p.id), ['p-b']);
+
+      page2Completer.complete(
+        Result.success(
+          CharityProfilePageData(
+            charity: viewModel.charity!,
+            products: [itemC],
+            nextCursor: null,
+            hasMore: false,
+          ),
+        ),
+      );
+      await loadMoreFuture;
+
+      expect(viewModel.products.map((p) => p.id), ['p-b', 'p-c']);
+    });
   });
 
   group('End-to-end widget blocking flows', () {
@@ -701,6 +1015,219 @@ void main() {
         expect(app.api.getCalls, contains(ApiEndpoints.blocks));
         expect(find.text('North Face Hedgehog'), findsNothing);
         expect(find.text('Peanut shirt'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'DashboardPage offers Load more when auto-advance stops at the page cap and Retry on continuation failure',
+      (tester) async {
+        SharedPreferences.setMockInitialValues({});
+        tester.view.physicalSize = const Size(1000, 2200);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+
+        final blockedUsers = BlockedUsers(
+          fetchBlockedUsers: () async => Result.success({'blocked-seller'}),
+        );
+        final navigator = NavigationProvider();
+        final auth = _MockFirebaseAuth();
+        when(auth.currentUser).thenReturn(_MockUser('viewer-1'));
+        final productRepo = _StubProductRepository(blockedUsers: blockedUsers);
+        final productViewModel = ProductViewModel(
+          productRepository: productRepo,
+          navigator: navigator,
+          blockedUsers: blockedUsers,
+          currentUserIdProvider: () => 'viewer-1',
+        );
+
+        // 5 consecutive blocked pages (exhausting initial + maxAutoAdvanceEmptyPages=4),
+        // followed by a 6th page that fails once and then returns a visible product.
+        var failFinalPage = true;
+        final homeRepo = _QueueHomeRepository(({limit = 20, cursor, search, categoryId}) async {
+          final pageIndex = cursor == null ? 0 : int.parse(cursor.replaceFirst('p-', ''));
+          if (pageIndex < HomeViewModel.maxAutoAdvanceEmptyPages + 1) {
+            return Result.success(
+              home.ProductPage(
+                products: [_product(id: 'blocked-$pageIndex', userId: 'blocked-seller', name: 'Hidden $pageIndex')],
+                limit: limit,
+                nextCursor: 'p-${pageIndex + 1}',
+                hasMore: true,
+              ),
+            );
+          }
+          if (failFinalPage) {
+            return Result.failure('offline');
+          }
+          return Result.success(
+            home.ProductPage(
+              products: [_product(id: 'visible-final', userId: 'open-seller', name: 'Visible Jacket')],
+              limit: limit,
+              nextCursor: null,
+              hasMore: false,
+            ),
+          );
+        });
+        final homeViewModel = HomeViewModel(
+          homeRepository: homeRepo,
+          blockedUsers: blockedUsers,
+        );
+
+        addTearDown(blockedUsers.dispose);
+        addTearDown(productViewModel.dispose);
+        addTearDown(homeViewModel.dispose);
+
+        await tester.pumpWidget(
+          MultiProvider(
+            providers: [
+              Provider<FirebaseAuth>.value(value: auth),
+              Provider<NavigationProvider>.value(value: navigator),
+              ChangeNotifierProvider<BlockedUsers>.value(value: blockedUsers),
+              ChangeNotifierProvider<ProductViewModel>.value(value: productViewModel),
+              ChangeNotifierProvider<HomeViewModel>.value(value: homeViewModel),
+            ],
+            child: MaterialApp(
+              navigatorKey: navigator.navigatorKey,
+              home: const HomeScreen(),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        // Stopped at auto-advance cap with hasMore=true: must show Load more, not empty state.
+        expect(find.text(AppStrings.noProductsAvailable), findsNothing);
+        expect(find.text(AppStrings.profileListingsLoadMore), findsOneWidget);
+
+        // Tap Load more when next page fails -> shows retryable error + Retry button.
+        await tester.tap(find.text(AppStrings.profileListingsLoadMore));
+        await tester.pumpAndSettle();
+        expect(find.text('Could not load more items. Please try again.'), findsOneWidget);
+        expect(find.text(AppStrings.retry), findsOneWidget);
+
+        // Tap Retry immediately (ignoring backoff) -> loads visible listing.
+        failFinalPage = false;
+        await tester.tap(find.text(AppStrings.retry));
+        await tester.pumpAndSettle();
+        expect(find.text('Visible Jacket'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'ProductPage renders unavailable scaffold for blocked ID-only listing and ignores stale block after product change',
+      (tester) async {
+        tester.view.physicalSize = const Size(1000, 2200);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+
+        final blockedUsers = BlockedUsers(
+          fetchBlockedUsers: () async => Result.success({'blocked-seller'}),
+        );
+        final blockCompleter = Completer<Result<dynamic>>();
+        final api = _FakeApiService(
+          getHandler: (endpoint, _) async {
+            if (endpoint == ApiEndpoints.productWithDetailsById('p-blocked')) {
+              return Result.success({
+                'success': true,
+                'data': {
+                  'id': 'p-blocked',
+                  'userId': 'blocked-seller',
+                  'name': 'Blocked Boots',
+                  'description': 'Worn',
+                  'quality': 'Good',
+                  'product_images': [AppImages.product1],
+                  'donation': 10,
+                  'price': 15,
+                  'likes': 0,
+                  'number': 1,
+                  'size': 'M',
+                  'postageSize': 'small',
+                },
+              });
+            }
+            return Result.failure('Unexpected GET $endpoint');
+          },
+          postHandler: (_, _) => blockCompleter.future,
+        );
+        final auth = _MockFirebaseAuth();
+        when(auth.currentUser).thenReturn(_MockUser('viewer-1'));
+        final navigator = NavigationProvider();
+        final productRepo = ProductRepository(api, blockedUsers: blockedUsers);
+        final productViewModel = ProductViewModel(
+          productRepository: productRepo,
+          safetyRepository: SafetyRepository(api),
+          navigator: navigator,
+          blockedUsers: blockedUsers,
+          currentUserIdProvider: () => 'viewer-1',
+        );
+        final checkoutViewModel = CheckoutViewModel(
+          donationRepository: _DonationRepositoryStub(),
+          checkoutRepository: _CheckoutRepositoryStub(),
+          navigator: navigator,
+          currentUserIdProvider: () => 'viewer-1',
+        );
+
+        addTearDown(blockedUsers.dispose);
+        addTearDown(productViewModel.dispose);
+        addTearDown(checkoutViewModel.dispose);
+
+        Widget wrap(Widget child) => MultiProvider(
+          providers: [
+            Provider<FirebaseAuth>.value(value: auth),
+            Provider<NavigationProvider>.value(value: navigator),
+            ChangeNotifierProvider<BlockedUsers>.value(value: blockedUsers),
+            ChangeNotifierProvider<ProductViewModel>.value(value: productViewModel),
+            ChangeNotifierProvider<CheckoutViewModel>.value(value: checkoutViewModel),
+          ],
+          child: MaterialApp(
+            navigatorKey: navigator.navigatorKey,
+            home: child,
+          ),
+        );
+
+        // 1. ID-only ProductPage for blocked seller renders unavailable scaffold, not Retry.
+        await tester.pumpWidget(wrap(const ProductPage(productId: 'p-blocked')));
+        await tester.pumpAndSettle();
+        expect(find.text('This listing is no longer available.'), findsOneWidget);
+        expect(find.text(AppStrings.retry), findsNothing);
+
+        // 2. Replacing ProductPage with another seller's listing while block is in flight
+        //    must not hide or close the new product when the older block completes.
+        final productA = _product(id: 'p-a', userId: 'seller-a', name: 'Seller A Boots');
+        final productB = _product(id: 'p-b', userId: 'seller-b', name: 'Seller B Shirt');
+        final activeProduct = ValueNotifier<Product>(productA);
+        addTearDown(activeProduct.dispose);
+
+        await tester.pumpWidget(
+          wrap(
+            ValueListenableBuilder<Product>(
+              valueListenable: activeProduct,
+              builder: (_, product, _) => ProductPage(product: product),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        expect(find.text('Seller A Boots'), findsOneWidget);
+
+        await tester.tap(find.byTooltip(AppStrings.productPageMoreActions));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text(AppStrings.productPageBlockSeller));
+        await tester.pumpAndSettle();
+        await tester.tap(find.widgetWithText(FilledButton, AppStrings.productPageBlockSellerConfirm));
+        await tester.pump();
+
+        // Replace displayed product while block request for seller-a is still pending.
+        activeProduct.value = productB;
+        await tester.pumpAndSettle();
+        expect(find.text('Seller B Shirt'), findsOneWidget);
+
+        // Complete the earlier block for seller-a.
+        blockCompleter.complete(Result.success(const {'success': true}));
+        await tester.pumpAndSettle();
+
+        expect(blockedUsers.contains('seller-a'), isTrue);
+        expect(find.text('Seller B Shirt'), findsOneWidget);
+        expect(find.text('This listing is no longer available.'), findsNothing);
       },
     );
   });

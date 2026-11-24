@@ -35,8 +35,24 @@ class PublicUserProfileRepository implements IPublicUserProfileRepository {
       return Result.failure(_unavailableError, statusCode: 404);
     }
 
+    return _fetchUser(requestedId, hydrateBlockedUsers: true);
+  }
+
+  Future<void> _hydrateBlockedUsersIfNeeded() async {
     if (blockedUsers != null && !blockedUsers!.isHydrated) {
       await blockedUsers!.ensureHydrated();
+    }
+  }
+
+  Future<Result<PublicUser>> _fetchUser(
+    String requestedId, {
+    required bool hydrateBlockedUsers,
+  }) async {
+    if (hydrateBlockedUsers) {
+      await _hydrateBlockedUsersIfNeeded();
+    }
+    if (blockedUsers != null && !blockedUsers!.isAuthoritative) {
+      return Result.failure(_loadError);
     }
     if (blockedUsers?.contains(requestedId) ?? false) {
       return Result.failure(_unavailableError, statusCode: 404);
@@ -78,15 +94,16 @@ class PublicUserProfileRepository implements IPublicUserProfileRepository {
     }
     final requestedCursor = _text(cursor);
 
-    if (blockedUsers != null && !blockedUsers!.isHydrated) {
-      await blockedUsers!.ensureHydrated();
+    await _hydrateBlockedUsersIfNeeded();
+    if (blockedUsers != null && !blockedUsers!.isAuthoritative) {
+      return Result.failure(_loadError);
     }
     if (blockedUsers?.contains(requestedId) ?? false) {
       return Result.failure(_unavailableError, statusCode: 404);
     }
 
     try {
-      final userResult = await fetchUser(requestedId);
+      final userResult = await _fetchUser(requestedId, hydrateBlockedUsers: false);
       if (!userResult.isSuccess || userResult.value == null) {
         return Result.failure(userResult.error, statusCode: userResult.statusCode);
       }

@@ -60,6 +60,9 @@ class ProductRepository {
       if (deletedListings?.contains(productId) ?? false) {
         return _deletedListingFailure();
       }
+      if (blockedUsers != null && !blockedUsers!.isAuthoritative) {
+        return Result.failure(failureMessage);
+      }
       if (!result.isSuccess) {
         return Result.failure(
           result.error ?? failureMessage,
@@ -206,6 +209,9 @@ class ProductRepository {
       );
       if (blockedHydration != null) {
         await blockedHydration;
+      }
+      if (blockedUsers != null && !blockedUsers!.isAuthoritative) {
+        return Result.failure(_loadFailureMessage);
       }
       if (!result.isSuccess) {
         return Result.failure(result.error ?? _loadFailureMessage);

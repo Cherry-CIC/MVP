@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cherry_mvp/core/config/feature_flags.dart';
 import 'package:cherry_mvp/core/config/app_spacing.dart';
+import 'package:cherry_mvp/core/config/app_strings.dart';
 import 'package:cherry_mvp/core/models/product.dart';
 import 'package:cherry_mvp/core/router/nav_provider.dart';
 import 'package:cherry_mvp/core/router/nav_routes.dart';
@@ -84,6 +85,63 @@ class _DashboardPageState extends State<DashboardPage> {
 
         if (products.isEmpty) {
           final selectedCategory = homeViewModel.homeCategory;
+          if (homeViewModel.isLoadingMore) {
+            return const SliverPadding(
+              padding: EdgeInsets.all(24),
+              sliver: SliverToBoxAdapter(
+                child: Center(child: CircularProgressIndicator()),
+              ),
+            );
+          }
+          if (homeViewModel.hasMore) {
+            final loadMoreError = homeViewModel.homeLoadMoreError;
+            return SliverPadding(
+              padding: const EdgeInsets.all(12),
+              sliver: SliverToBoxAdapter(
+                child: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(40.0),
+                    child: Column(
+                      children: [
+                        Icon(
+                          loadMoreError != null
+                              ? Icons.error_outline
+                              : Icons.shopping_bag_outlined,
+                          size: 48,
+                          color: Colors.grey,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          loadMoreError ?? 'More listings are available to check.',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            color: Colors.grey,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        TextButton(
+                          onPressed: () => homeViewModel.loadMoreProducts(ignoreBackoff: true),
+                          child: Text(
+                            loadMoreError != null
+                                ? AppStrings.retry
+                                : AppStrings.profileListingsLoadMore,
+                          ),
+                        ),
+                        if (selectedCategory != null) ...[
+                          const SizedBox(height: 4),
+                          TextButton(
+                            onPressed: () => homeViewModel.selectHomeCategory(null),
+                            child: const Text('Show all items'),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            );
+          }
           return SliverPadding(
             padding: const EdgeInsets.all(12),
             sliver: SliverToBoxAdapter(

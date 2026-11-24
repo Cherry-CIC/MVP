@@ -49,6 +49,7 @@ class _ProductPageState extends State<ProductPage> {
   String? _sellerRequestId;
   Future<PublicUser?>? _sellerLoad;
   bool _sellerBlocked = false;
+  int _productGeneration = 0;
 
   @override
   void initState() {
@@ -69,6 +70,7 @@ class _ProductPageState extends State<ProductPage> {
   void didUpdateWidget(covariant ProductPage oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.productId != widget.productId || oldWidget.product != widget.product) {
+      _productGeneration++;
       _sellerBlocked = false;
       _loadProduct();
     }
@@ -117,6 +119,9 @@ class _ProductPageState extends State<ProductPage> {
         }
 
         final result = snapshot.data;
+        if (result?.errorCode == 'LISTING_NOT_FOUND') {
+          return _buildUnavailableScaffold();
+        }
         if (snapshot.hasError || result == null || !result.isSuccess || result.value == null) {
           return Scaffold(
             appBar: AppBar(),
@@ -474,8 +479,9 @@ class _ProductPageState extends State<ProductPage> {
   }
 
   Future<void> _blockSeller(BuildContext context, String sellerId) async {
+    final generation = _productGeneration;
     final confirmed = await showBlockSellerDialog(context);
-    if (!confirmed || !context.mounted) {
+    if (!confirmed || !context.mounted || generation != _productGeneration) {
       return;
     }
 
@@ -493,7 +499,7 @@ class _ProductPageState extends State<ProductPage> {
         ),
       ),
     );
-    if (result.isSuccess) {
+    if (result.isSuccess && generation == _productGeneration) {
       setState(() => _sellerBlocked = true);
       leaveBlockedSellerRoutes(context, sellerId);
     }
