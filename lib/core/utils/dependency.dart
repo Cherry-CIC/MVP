@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
 import 'package:provider/single_child_widget.dart';
@@ -44,6 +43,7 @@ import 'package:cherry_mvp/features/profile/profile_listings_view_model.dart';
 import 'package:cherry_mvp/features/profile/public_user_profile_repository.dart';
 import 'package:cherry_mvp/features/register/register_repository.dart';
 import 'package:cherry_mvp/features/register/register_viewmodel.dart';
+import 'package:cherry_mvp/features/search/recent_searches_store.dart';
 import 'package:cherry_mvp/features/search/search_repository.dart';
 import 'package:cherry_mvp/features/search/search_viewmodel.dart';
 
@@ -102,7 +102,6 @@ List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
       ),
     ),
 
-    ChangeNotifierProvider(create: (_) => SearchController()),
     Provider<IHomeRepository>(
       create: (context) {
         final firebaseAuth = Provider.of<FirebaseAuth>(context, listen: false);
@@ -242,10 +241,15 @@ List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
           context,
           listen: false,
         );
+        final firebaseAuth = Provider.of<FirebaseAuth>(context, listen: false);
         return HomeViewModel(
           deletedListings: context.read<DeletedListings>(),
           homeRepository: Provider.of<IHomeRepository>(context, listen: false),
           onProductsLoaded: productViewModel.reconcileProductCounts,
+          recentSearchesStore: RecentSearchesStore(
+            prefs: prefs,
+            currentUserIdProvider: () => firebaseAuth.currentUser?.uid,
+          ),
         );
       },
     ),
@@ -326,6 +330,7 @@ List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
         final auth = context.read<FirebaseAuth>();
         final profile = context.read<ProfileListingsViewModel>();
         final products = context.read<ProductViewModel>();
+        final home = context.read<HomeViewModel>();
         return DeleteListingViewModel(
           repository: context.read<ProductRepository>(),
           deletedListings: context.read<DeletedListings>(),
@@ -337,6 +342,7 @@ List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
             profile.clearListings();
             profile.updateCurrentAccount();
             products.clearUserState();
+            home.loadRecentSearches();
             if (auth.currentUser != null) unawaited(profile.loadInitialListings());
           },
         );

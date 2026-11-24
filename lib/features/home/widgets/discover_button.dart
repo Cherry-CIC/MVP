@@ -6,9 +6,16 @@ import 'package:cherry_mvp/core/router/nav_provider.dart';
 import 'package:cherry_mvp/core/router/nav_routes.dart';
 
 class DiscoverButton extends StatelessWidget {
-  const DiscoverButton({super.key});
+  /// Overrides the default push to the Discover route (e.g. to select the Discover tab).
+  final VoidCallback? onTap;
+
+  const DiscoverButton({this.onTap, super.key});
 
   void _navigate(BuildContext context) {
+    if (onTap != null) {
+      onTap!();
+      return;
+    }
     final navigator = Provider.of<NavigationProvider>(context, listen: false);
     navigator.navigateTo(AppRoutes.discover);
   }

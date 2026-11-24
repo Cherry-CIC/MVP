@@ -75,9 +75,17 @@ class _DashboardPageState extends State<DashboardPage> {
         }
 
         if (products.isEmpty) {
-          return const SliverPadding(
-            padding: EdgeInsets.all(12),
-            sliver: SliverToBoxAdapter(child: DashboardEmptyWidget()),
+          final selectedCategory = homeViewModel.homeCategory;
+          return SliverPadding(
+            padding: const EdgeInsets.all(12),
+            sliver: SliverToBoxAdapter(
+              child: DashboardEmptyWidget(
+                categoryName: selectedCategory?.name,
+                onResetCategory: selectedCategory == null
+                    ? null
+                    : () => homeViewModel.selectHomeCategory(null),
+              ),
+            ),
           );
         }
 

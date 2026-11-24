@@ -10,6 +10,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cherry_mvp/core/config/app_theme.dart';
 import 'package:cherry_mvp/core/config/environment_config.dart';
+import 'package:cherry_mvp/core/config/responsive_text_scaler.dart';
 import 'package:cherry_mvp/core/router/router.dart';
 import 'package:cherry_mvp/core/services/safe_log.dart';
 import 'package:cherry_mvp/core/utils/dependency.dart';
@@ -104,6 +105,7 @@ class MyApp extends StatelessWidget {
           theme: buildTheme(),
           darkTheme: buildTheme(Brightness.dark),
           themeMode: themeNotifier.mode,
+          builder: ResponsiveTextScaler.builder,
           home: child,
         );
       },
