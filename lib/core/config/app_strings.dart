@@ -32,7 +32,9 @@ class AppStrings {
   static const continueWithEmail = 'Continue with email';
   static const continueWithApple = 'Continue with Apple';
   static const continueWithGoogle = 'Continue with Google';
-  static const forgotPassword = 'Forgot Password?';
+  static const forgotPassword = 'Forgot password?';
+  static const noAccountPrompt = 'Don’t have an account?';
+  static const createOne = 'Create one';
   static String showPassword(String fieldLabel) => 'Show ${fieldLabel.toLowerCase()}';
   static String hidePassword(String fieldLabel) => 'Hide ${fieldLabel.toLowerCase()}';
   static const forgotPasswordInstruction = 'Please type your email and we’ll get in touch';
