@@ -241,6 +241,10 @@ void main() {
     expect(find.text('Unable to save profile'), findsOneWidget);
     expect(find.byType(RegisterPage), findsOneWidget);
     expect(find.byType(VerifyEmailPage), findsNothing);
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(find.byType(RegisterPage), findsNothing);
+    expect(h.nav.navigatorKey.currentState!.canPop(), isFalse);
   });
 
   testWidgets('resume reloads Firebase and continues once when verified', (tester) async {
