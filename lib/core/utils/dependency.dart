@@ -199,6 +199,7 @@ List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
         context.read<ApiService>(),
         context.read<StorageProvider>(),
         context.read<FirebaseAuth>(),
+        context.read<FirebaseFirestore>(),
       ),
     ),
     Provider<ICharityRepository>(

@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cherry_mvp/core/models/profile_photo.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cherry_mvp/core/config/config.dart';
@@ -19,7 +20,22 @@ class EditProfileRepository implements IEditProfileRepository {
   final StorageProvider storage;
   final FirebaseAuth auth;
 
-  EditProfileRepository(this.apiService, this.storage, this.auth);
+  final FirebaseFirestore firestore;
+
+  EditProfileRepository(this.apiService, this.storage, this.auth, this.firestore);
+
+  // Some existing profiles are keyed by UID but have no id field for the API lookup.
+  Future<bool> _linkExistingProfile(String uid) {
+    final profile = firestore.collection(FirestoreConstants.users).doc(uid);
+    return firestore.runTransaction((transaction) async {
+      final data = (await transaction.get(profile)).data();
+      if (data == null || auth.currentUser?.uid != uid) return false;
+      if (data.containsKey('firebaseUid') && data['firebaseUid'] != uid) return false;
+      if (data.containsKey('id')) return data['id'] == uid;
+      transaction.update(profile, {'id': uid});
+      return true;
+    });
+  }
 
   @override
   Future<Result<void>> updateProfile({
@@ -43,14 +59,23 @@ class EditProfileRepository implements IEditProfileRepository {
     }
     if (auth.currentUser?.uid != uid) return Result.failure(AppStrings.editProfileSaveFailed);
 
-    final result = await apiService.put<Map<String, dynamic>>(
-      ApiEndpoints.profile,
-      data: {
-        'photoURL': ?photoUrl,
-        'displayName': ?displayName,
-        'phoneNumber': ?phoneNumber,
-      },
-    );
+    final changes = {
+      'photoURL': ?photoUrl,
+      'displayName': ?displayName,
+      'phoneNumber': ?phoneNumber,
+    };
+    Future<Result<Map<String, dynamic>>> saveChanges() =>
+        apiService.put<Map<String, dynamic>>(ApiEndpoints.profile, data: changes);
+
+    var result = await saveChanges();
+    if (photo != null && result.statusCode == 404 && auth.currentUser?.uid == uid) {
+      try {
+        final linked = await _linkExistingProfile(uid);
+        if (linked && auth.currentUser?.uid == uid) result = await saveChanges();
+      } on FirebaseException {
+        return Result.failure(AppStrings.editProfileSaveFailed);
+      }
+    }
 
     if (!result.isSuccess) {
       final message = result.error;
