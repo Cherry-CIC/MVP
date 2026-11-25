@@ -61,21 +61,20 @@ class LoginRepository {
         FirestoreConstants.phone,
         userCredentials?.phoneNumber,
       );
-      final photoUrl = _getExistingOrCredential(
-        existingData,
-        FirestoreConstants.photoUrl,
-        userCredentials?.photoUrl,
-      );
-
-      // If login is successful,save user data into firestore
-      // any change in google profile will be updated automatically like pic and name
+      // A provider may omit a photo on subsequent sign-ins, particularly Apple.
+      // Seed a provider photo only when the profile has no saved photo.
+      final providerPhoto = userCredentials?.photoUrl?.trim();
+      final seedPhoto = existingUserResult.isSuccess &&
+          UserCredentials.storedPhotoUrl(existingData) == null &&
+          providerPhoto != null &&
+          providerPhoto.isNotEmpty;
 
       Map<String, dynamic> data = {
         FirestoreConstants.firstname: firstName,
         FirestoreConstants.email: email,
         FirestoreConstants.phone: phone,
         FirestoreConstants.id: uId,
-        FirestoreConstants.photoUrl: photoUrl,
+        if (seedPhoto) FirestoreConstants.photoUrl: providerPhoto,
         FirestoreConstants.createdAt: FieldValue.serverTimestamp(),
       };
       await _firestoreService.firebaseFirestore
