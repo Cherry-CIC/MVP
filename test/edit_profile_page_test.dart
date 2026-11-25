@@ -1,4 +1,4 @@
-import 'dart:convert';
+import 'dart:io';
 
 import 'package:image_picker_platform_interface/image_picker_platform_interface.dart';
 import 'package:cherry_mvp/core/models/profile_photo.dart';
@@ -157,12 +157,14 @@ void main() {
     testWidgets('previews the selected photo and uploads only on Save changes', (tester) async {
       final original = ImagePickerPlatform.instance;
       addTearDown(() => ImagePickerPlatform.instance = original);
-      final bytes = base64Decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aZE0AAAAASUVORK5CYII=');
+      final bytes = File('assets/images/profile.png').readAsBytesSync();
       ImagePickerPlatform.instance = _TestPicker()..selection = XFile.fromData(bytes, name: 'avatar.png');
       final repository = _StubEditProfileRepository();
       final auth = _TestAuthViewModel()..emitCredentials(_credentials);
       await tester.pumpWidget(_wrap(auth, repository));
-      await tester.tap(find.text(AppStrings.addProfilePhoto));
+      final chooser = tester.widget<TextButton>(find.widgetWithText(TextButton, AppStrings.addProfilePhoto));
+      // The native image decoder completes outside the widget test's fake clock.
+      await tester.runAsync(chooser.onPressed! as Future<void> Function());
       await tester.pumpAndSettle();
       expect(find.text(AppStrings.changeProfilePhoto), findsOneWidget);
       expect(repository.savedPhoto, isNull);

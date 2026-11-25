@@ -1,4 +1,5 @@
 import 'dart:typed_data';
+import 'dart:ui' as ui;
 
 import 'package:crypto/crypto.dart';
 import 'package:image_picker/image_picker.dart';
@@ -27,6 +28,14 @@ class ProfilePhoto {
       if (bytes.isEmpty || bytes.length >= maxBytes) return Result.failure(AppStrings.profilePhotoSizeError);
       final type = lookupMimeType('', headerBytes: bytes);
       if (type == null || !_types.contains(type)) return Result.failure(AppStrings.profilePhotoTypeError);
+      // A matching signature can also belong to an incomplete image.
+      final codec = await ui.instantiateImageCodec(bytes, targetWidth: 1, targetHeight: 1, allowUpscaling: false);
+      try {
+        final frame = await codec.getNextFrame();
+        frame.image.dispose();
+      } finally {
+        codec.dispose();
+      }
       return Result.success(ProfilePhoto._(bytes, type));
     } catch (_) {
       return Result.failure(AppStrings.errorPickingImage);

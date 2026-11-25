@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:cherry_mvp/core/models/profile_photo.dart';
@@ -48,6 +49,8 @@ Future<Result<ProfilePhoto>> readPhoto(List<int> bytes) =>
     ProfilePhoto.read(XFile.fromData(Uint8List.fromList(bytes), name: 'selected.jpg'));
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   test('reads legacy and current saved photo fields', () {
     expect(
       UserCredentials.storedPhotoUrl({'photoUrl': ' ', 'photoURL': 'https://example.org/a'}),
@@ -61,6 +64,7 @@ void main() {
     for (final bytes in [
       <int>[],
       [1, 2, 3],
+      [0xff, 0xd8],
       Uint8List(ProfilePhoto.maxBytes),
     ]) {
       expect((await readPhoto(bytes)).isSuccess, isFalse);
@@ -68,20 +72,20 @@ void main() {
   });
 
   test('photo-only save writes the uploaded URL with the backend field name', () async {
-    final photo = (await readPhoto([0xff, 0xd8, 1])).value!;
+    final photo = (await readPhoto(File('assets/images/profile.png').readAsBytesSync())).value!;
     final storage = _Storage();
     final api = _Api();
     final vm = EditProfileViewModel(repository: EditProfileRepository(api, storage, _Auth()));
     expect((await vm.saveProfile(uid: 'owner', photo: photo)).isSuccess, isTrue);
     expect(api.payload, {'photoURL': storage.result.value});
     expect(storage.path, startsWith('user_images/owner/'));
-    expect(photo.contentType, 'image/jpeg');
-    final replacement = (await readPhoto([0xff, 0xd8, 2])).value!;
+    expect(photo.contentType, 'image/png');
+    final replacement = (await readPhoto(File('assets/images/profile_profile_icon.png').readAsBytesSync())).value!;
     expect(photo.pathFor('owner'), isNot(replacement.pathFor('owner')));
   });
 
   test('failed upload or changed account leaves the saved URL alone', () async {
-    final photo = (await readPhoto([0xff, 0xd8])).value!;
+    final photo = (await readPhoto(File('assets/images/profile.png').readAsBytesSync())).value!;
     final api = _Api();
     final auth = _Auth();
     final storage = _Storage()..result = Result.failure('Upload failed');

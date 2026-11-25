@@ -130,6 +130,7 @@ RegisterRequest _request({File? image}) {
 }
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
   late SharedPreferences prefs;
   late _FakeAuthService authService;
   late _FakeFirestoreService firestoreService;
@@ -150,7 +151,7 @@ void main() {
   test('registration saves the photo in the new account’s own folder', () async {
     final directory = Directory.systemTemp.createTempSync();
     addTearDown(() => directory.deleteSync(recursive: true));
-    final image = File('${directory.path}/avatar.jpg')..writeAsBytesSync([0xff, 0xd8, 1]);
+    final image = File('assets/images/profile.png').copySync('${directory.path}/avatar.png');
     final storage = _PhotoStorage();
     repository = RegisterRepository(authService, firestoreService, storage);
 

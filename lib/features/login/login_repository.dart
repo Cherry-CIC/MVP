@@ -64,7 +64,8 @@ class LoginRepository {
       // A provider may omit a photo on subsequent sign-ins, particularly Apple.
       // Seed a provider photo only when the profile has no saved photo.
       final providerPhoto = userCredentials?.photoUrl?.trim();
-      final seedPhoto = existingUserResult.isSuccess &&
+      final profileLookupKnown = existingUserResult.isSuccess || existingUserResult.error == ErrorStrings.documentError;
+      final seedPhoto = profileLookupKnown &&
           UserCredentials.storedPhotoUrl(existingData) == null &&
           providerPhoto != null &&
           providerPhoto.isNotEmpty;
