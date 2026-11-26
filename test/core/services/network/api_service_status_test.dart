@@ -17,6 +17,15 @@ void main() {
     expect(result.isSuccess, isFalse);
   });
 
+  test('PUT exposes a profile lookup 404 to the save flow', () async {
+    final dio = Dio(BaseOptions(baseUrl: 'https://example.test'))..httpClientAdapter = _StatusAdapter(404);
+    final service = DioApiService.forTesting(_AuthWithoutUser(), dio: dio, safeHttpLogSink: (_) {});
+    final result = await service.put<Map<String, dynamic>>('/api/auth/profile', data: {'photoURL': 'https://example.test/p'});
+    expect(result.isSuccess, isFalse);
+    expect(result.statusCode, 404);
+    expect(result.error, isNot(contains('PRIVATE_BACKEND_ERROR')));
+  });
+
   for (final status in [404, 410, 403, 500]) {
     test('GET preserves HTTP $status using safe error copy', () async {
       final dio = Dio(BaseOptions(baseUrl: 'https://example.test'))..httpClientAdapter = _StatusAdapter(status);

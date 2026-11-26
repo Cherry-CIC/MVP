@@ -1,3 +1,4 @@
+import 'package:cherry_mvp/core/models/profile_photo.dart';
 import 'package:flutter/material.dart';
 import 'package:cherry_mvp/core/config/config.dart';
 import 'package:cherry_mvp/core/services/services.dart';
@@ -34,6 +35,7 @@ class EditProfileViewModel extends ChangeNotifier {
   /// Saves the changed fields only; pass null for anything unchanged.
   Future<Result<void>> saveProfile({
     required String uid,
+    ProfilePhoto? photo,
     String? firstName,
     String? username,
     String? phoneNumber,
@@ -60,8 +62,10 @@ class EditProfileViewModel extends ChangeNotifier {
         }
       }
 
-      if (firstName != null || phoneNumber != null) {
+      if (photo != null || firstName != null || phoneNumber != null) {
         final result = await repository.updateProfile(
+          uid: uid,
+          photo: photo,
           displayName: firstName,
           phoneNumber: phoneNumber,
         );

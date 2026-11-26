@@ -21,6 +21,8 @@ dependencies:
     git: #see https://github.com/ponnamkarthik/FlutterToast/issues/591
       url: https://github.com/taufiqsejati/FlutterToast.git
       ref: master
+  crypto: ^3.0.8
+  mime: ^2.1.0
   image_picker: ^1.2.4
   image_picker_android: ^0.8.13+25
   image_picker_platform_interface: ^2.11.2
