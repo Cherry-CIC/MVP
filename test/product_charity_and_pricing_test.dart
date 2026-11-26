@@ -73,15 +73,19 @@ final _samaritans = Charity(
   updatedAt: DateTime(2025),
 );
 
-Product _buildProduct({Charity? charity}) => Product(
+Product _buildProduct({
+  Charity? charity,
+  double donation = 8.00,
+  double price = 8.00,
+}) => Product(
   id: 'shirt-1',
   userId: 'seller-1',
   name: 'Beige Cargo Shirt',
   description: 'Comfortable cotton cargo shirt.',
   quality: 'Good',
   productImages: const [AppImages.product1],
-  donation: 8.00,
-  price: 8.00,
+  donation: donation,
+  price: price,
   securityFee: 1.00,
   likes: 3,
   number: 1,
@@ -364,4 +368,43 @@ void main() {
       },
     );
   }
+
+  testWidgets(
+    'ProductCard displays product.donation beside the heart when donation and price differ',
+    (tester) async {
+      final navigator = _RecordingNavigator();
+      final productViewModel = ProductViewModel(
+        productRepository: ProductRepository(const UnexpectedApiService()),
+        navigator: navigator,
+        currentUserIdProvider: () => 'buyer-1',
+      );
+      addTearDown(productViewModel.dispose);
+      final product = _buildProduct(
+        charity: _samaritans,
+        donation: 6.50,
+        price: 8.00,
+      );
+
+      await tester.pumpWidget(
+        ChangeNotifierProvider<ProductViewModel>.value(
+          value: productViewModel,
+          child: MaterialApp(
+            theme: buildTheme(Brightness.light),
+            home: Scaffold(
+              body: SizedBox(
+                width: 180,
+                child: ProductCard(product: product),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('£6.50'), findsOneWidget);
+      expect(find.text('£8.00'), findsNothing);
+      expect(find.text('£9.00'), findsOneWidget);
+      expect(find.text(AppStrings.productIncl), findsOneWidget);
+    },
+  );
 }
