@@ -1,4 +1,7 @@
 import 'dart:async';
+import 'dart:io';
+
+import 'package:cherry_mvp/core/models/profile_photo.dart';
 
 import 'package:cherry_mvp/core/config/firestore_constants.dart';
 import 'package:cherry_mvp/core/models/model.dart';
@@ -104,18 +107,30 @@ class _FakeFirestoreService extends FirestoreService {
   }
 }
 
-RegisterRequest _request() {
+class _PhotoStorage extends StorageProvider {
+  _PhotoStorage() : super(firebaseStorage: _FakeFirebaseStorage());
+  String? path;
+
+  @override
+  Future<Result<String>> uploadProfilePhoto(String uid, ProfilePhoto photo) async {
+    path = photo.pathFor(uid);
+    return Result.success('https://example.org/registered');
+  }
+}
+
+RegisterRequest _request({File? image}) {
   return RegisterRequest(
     firstname: 'Taylor',
     email: 'taylor@example.com',
     phone: '07123456789',
     username: 'taylor',
     password: 'password123',
-    imageFile: null,
+    imageFile: image,
   );
 }
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
   late SharedPreferences prefs;
   late _FakeAuthService authService;
   late _FakeFirestoreService firestoreService;
@@ -131,6 +146,18 @@ void main() {
       firestoreService,
       StorageProvider(firebaseStorage: _FakeFirebaseStorage()),
     );
+  });
+
+  test('registration saves the photo in the new account’s own folder', () async {
+    final directory = Directory.systemTemp.createTempSync();
+    addTearDown(() => directory.deleteSync(recursive: true));
+    final image = File('assets/images/profile.png').copySync('${directory.path}/avatar.png');
+    final storage = _PhotoStorage();
+    repository = RegisterRepository(authService, firestoreService, storage);
+
+    expect((await repository.register(_request(image: image))).isSuccess, isTrue);
+    expect(storage.path, startsWith('user_images/user-123/'));
+    expect(firestoreService.savedData?[FirestoreConstants.photoUrl], 'https://example.org/registered');
   });
 
   test('successful registration dispatches a verification email', () async {

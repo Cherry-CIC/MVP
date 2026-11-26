@@ -196,7 +196,10 @@ List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
     ),
     Provider<IEditProfileRepository>(
       create: (context) => EditProfileRepository(
-        Provider.of<ApiService>(context, listen: false),
+        context.read<ApiService>(),
+        context.read<StorageProvider>(),
+        context.read<FirebaseAuth>(),
+        context.read<FirebaseFirestore>(),
       ),
     ),
     Provider<ICharityRepository>(

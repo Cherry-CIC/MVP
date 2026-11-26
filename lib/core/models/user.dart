@@ -23,9 +23,17 @@ class UserCredentials {
       email: data['email'],
       username: data['username'],
       firstname: data['firstname'],
-      photoUrl: data['photoUrl'],
+      photoUrl: storedPhotoUrl(data),
       phoneNumber: data['phone'],
     );
+  }
+
+  static String? storedPhotoUrl(Map<String, dynamic> data) {
+    for (final field in ['photoUrl', 'photoURL']) {
+      final value = data[field];
+      if (value is String && value.trim().isNotEmpty) return value.trim();
+    }
+    return null;
   }
 
   factory UserCredentials.fromAuth(User user) {

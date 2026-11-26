@@ -93,6 +93,10 @@ class AppStrings {
   static const publicProfileListingsLoadMoreFailed = 'We couldn’t load more listings.';
 
   // Edit profile
+  static const addProfilePhoto = 'Add photo';
+  static const changeProfilePhoto = 'Change photo';
+  static const profilePhotoTypeError = 'Choose a JPEG, PNG, WebP, HEIC or HEIF photo.';
+  static const profilePhotoSizeError = 'Choose a photo smaller than 5 MiB.';
   static const editProfileTitle = 'Edit profile';
   static const editProfileFirstNameLabel = 'First name';
   static const editProfileUsernameLabel = 'Username';
