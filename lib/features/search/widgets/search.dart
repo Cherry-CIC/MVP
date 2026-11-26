@@ -3,11 +3,20 @@ import 'dart:async';
 import 'package:cherry_mvp/core/config/config.dart';
 import 'package:cherry_mvp/core/models/category.dart';
 import 'package:cherry_mvp/core/models/product.dart';
+import 'package:cherry_mvp/core/router/nav_provider.dart';
+import 'package:cherry_mvp/core/utils/image_provider_helper.dart';
 import 'package:cherry_mvp/core/utils/utils.dart';
+import 'package:cherry_mvp/features/charity_page/charity_model.dart';
+import 'package:cherry_mvp/features/charity_page/charity_viewmodel.dart';
+import 'package:cherry_mvp/features/discover/discover_repository.dart';
 import 'package:cherry_mvp/features/home/home_viewmodel.dart';
 import 'package:cherry_mvp/features/products/product_viewmodel.dart';
+import 'package:cherry_mvp/features/search/charity_search.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
+/// Hint shown in every search entry point.
+const String searchHint = 'Find something';
 
 /// Both shop entry points use the same search route and lifecycle.
 ///
@@ -39,7 +48,7 @@ class Search extends StatelessWidget {
     final borderRadius = BorderRadius.circular(10);
     return Semantics(
       button: true,
-      label: 'Search items',
+      label: searchHint,
       excludeSemantics: true,
       onTap: () => openSearch(context),
       child: Material(
@@ -60,7 +69,7 @@ class Search extends StatelessWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'Search items',
+                    searchHint,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -95,7 +104,12 @@ class _SearchPageState extends State<SearchPage> {
     super.initState();
     _controller.text = context.read<HomeViewModel>().searchText;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) context.read<HomeViewModel>().loadRecentSearches();
+      if (!mounted) return;
+      context.read<HomeViewModel>().loadRecentSearches();
+      // Charities from the backend are optional extras: if they fail to load,
+      // search still finds every charity in the Discover catalogue.
+      final charities = context.read<CharityViewModel?>();
+      if (charities != null) unawaited(charities.ensureCharitiesLoaded());
     });
   }
 
@@ -147,7 +161,7 @@ class _SearchPageState extends State<SearchPage> {
                       },
                       onTapOutside: (_) => _focusNode.unfocus(),
                       decoration: InputDecoration(
-                        hintText: 'Search items',
+                        hintText: searchHint,
                         counterText: '',
                         isDense: true,
                         prefixIcon: const Icon(Icons.search, size: 18),
@@ -208,10 +222,32 @@ class _SearchBody extends StatelessWidget {
   const _SearchBody({required this.onRecentSearchSelected});
   final ValueChanged<String> onRecentSearchSelected;
 
+  void _openCharity(BuildContext context, CharitySearchResult charity) {
+    FocusManager.instance.primaryFocus?.unfocus();
+    final homeModel = context.read<HomeViewModel>();
+    if (homeModel.searchText.isNotEmpty) {
+      unawaited(homeModel.recordRecentSearch(homeModel.searchText));
+    }
+    unawaited(NavigationProvider.openCharityProfileFromContext(context, charity.profileArgs));
+  }
+
   @override
   Widget build(BuildContext context) {
     final model = context.watch<HomeViewModel>();
     final browsing = !model.hasActiveSearch;
+
+    // Charities are matched by name as the user types. They are left out when
+    // a category is selected, because categories only contain items.
+    final charitySearch =
+        context.read<CharitySearch?>() ??
+        CharitySearch(
+          discoverRepository: context.read<DiscoverRepository?>() ?? DiscoverRepository(),
+        );
+    final apiCharities = context.watch<CharityViewModel?>()?.charities ?? const <Charity>[];
+    final charities = (!browsing && model.searchCategory == null)
+        ? charitySearch.search(model.searchText, apiCharities: apiCharities)
+        : const <CharitySearchResult>[];
+
     Widget content;
     if (browsing) {
       final recentSearches = model.recentSearches;
@@ -262,7 +298,9 @@ class _SearchBody extends StatelessWidget {
       content = SliverToBoxAdapter(
         child: _SearchMessage(
           title: 'No items found',
-          message: model.searchCategory == null ? 'Try different words.' : 'Try different words or clear the category.',
+          message: charities.isNotEmpty
+              ? null
+              : (model.searchCategory == null ? 'Try different words.' : 'Try different words or clear the category.'),
         ),
       );
     } else {
@@ -287,9 +325,27 @@ class _SearchBody extends StatelessWidget {
         },
       );
     }
+    if (charities.isNotEmpty) {
+      content = SliverMainAxisGroup(
+        slivers: [
+          const SliverToBoxAdapter(child: _SectionHeader('Charities')),
+          SliverList.list(
+            children: [
+              for (final charity in charities)
+                _CharityResultTile(
+                  charity: charity,
+                  onTap: () => _openCharity(context, charity),
+                ),
+            ],
+          ),
+          const SliverToBoxAdapter(child: _SectionHeader('Items')),
+          content,
+        ],
+      );
+    }
     return Stack(
       children: [
-        if (model.isSearchEmpty && Theme.of(context).brightness == Brightness.light)
+        if (model.isSearchEmpty && charities.isEmpty && Theme.of(context).brightness == Brightness.light)
           Positioned.fill(
             child: IgnorePointer(
               child: Image.asset('assets/images/search/empty_background.png', fit: BoxFit.cover),
@@ -336,7 +392,7 @@ class _EmptySearchPrompt extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'Explore pre-loved items across Cherry.',
+              'Find pre-loved items and charities across Cherry.',
               textAlign: TextAlign.center,
               style: textTheme.bodyMedium?.copyWith(color: colours.onSurfaceVariant),
             ),
@@ -419,6 +475,65 @@ class _SearchMessage extends StatelessWidget {
       ),
     ),
   );
+}
+
+class _SectionHeader extends StatelessWidget {
+  const _SectionHeader(this.title);
+  final String title;
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+    header: true,
+    child: Padding(
+      padding: const EdgeInsets.only(top: 12, bottom: 4),
+      child: Text(
+        title,
+        style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+      ),
+    ),
+  );
+}
+
+class _CharityResultTile extends StatelessWidget {
+  const _CharityResultTile({required this.charity, required this.onTap});
+  final CharitySearchResult charity;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colours = Theme.of(context).colorScheme;
+    final fallbackIcon = Icon(
+      Icons.volunteer_activism_outlined,
+      size: 24,
+      color: charity.usesDarkLogoBackground ? Colors.white70 : Colors.black54,
+    );
+    final logoPath = charity.logoPath;
+    return ListTile(
+      onTap: onTap,
+      leading: ExcludeSemantics(
+        child: Container(
+          width: 48,
+          height: 48,
+          padding: const EdgeInsets.all(4),
+          decoration: BoxDecoration(
+            color: charity.usesDarkLogoBackground ? Colors.black : Colors.white,
+            borderRadius: BorderRadius.circular(6),
+            border: Border.all(color: colours.outlineVariant),
+          ),
+          child: logoPath == null
+              ? fallbackIcon
+              : ImageProviderHelper.buildImage(
+                  imagePath: logoPath,
+                  fit: BoxFit.contain,
+                  errorWidget: fallbackIcon,
+                ),
+        ),
+      ),
+      title: Text(charity.name, maxLines: 2, overflow: TextOverflow.ellipsis),
+      subtitle: const Text('Charity'),
+      trailing: const Icon(Icons.chevron_right),
+    );
+  }
 }
 
 class _ProductSuggestionTile extends StatelessWidget {
