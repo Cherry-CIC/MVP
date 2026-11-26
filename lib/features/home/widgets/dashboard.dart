@@ -162,7 +162,7 @@ class _DashboardPageState extends State<DashboardPage> {
         const imageAspectRatio = AppSpacing.imageContainerAspectRatio;
         final imageHeight = cardWidth / imageAspectRatio;
 
-        final textHeight = 120.0 * textScale;
+        final textHeight = 128.0 * textScale;
         final totalCardHeight = imageHeight + textHeight;
 
         final numProductRows = (products.length / 2).ceil();

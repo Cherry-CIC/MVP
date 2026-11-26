@@ -1,6 +1,7 @@
 import 'package:cherry_mvp/features/products/widgets/product_quality_label.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:cherry_mvp/core/config/app_colors.dart';
 import 'package:cherry_mvp/core/config/app_images.dart';
 import 'package:cherry_mvp/core/config/app_strings.dart';
 import 'package:cherry_mvp/core/config/app_spacing.dart';
@@ -63,6 +64,7 @@ class ProductCard extends StatelessWidget {
       builder: (context, viewModel, child) {
         final bool isLiked = viewModel.isProductLiked(product.id);
         final int displayLikes = viewModel.getLikesCount(product);
+        final Color donationColor = AppColors.donationPrice(context);
 
         return Material(
           type: MaterialType.transparency,
@@ -218,12 +220,27 @@ class ProductCard extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              '£${product.price.toStringAsFixed(2)}',
-                              style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                                color: Theme.of(context).colorScheme.secondary,
-                                fontSize: 14,
-                              ),
+                            Wrap(
+                              crossAxisAlignment: WrapCrossAlignment.center,
+                              spacing: 4,
+                              runSpacing: 2,
+                              children: [
+                                Text(
+                                  '£${product.price.toStringAsFixed(2)}',
+                                  style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                                    color: donationColor,
+                                    fontSize: 18,
+                                  ),
+                                ),
+                                Image.asset(
+                                  AppImages.emptyHeart,
+                                  key: ValueKey('product-card-donation-heart-${product.id}'),
+                                  width: 20,
+                                  height: 20,
+                                  color: donationColor,
+                                  excludeFromSemantics: true,
+                                ),
+                              ],
                             ),
                             const SizedBox(height: 2),
                             Wrap(
