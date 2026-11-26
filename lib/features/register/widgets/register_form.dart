@@ -108,6 +108,9 @@ class _RegisterFormState extends State<RegisterForm> {
     try {
       final XFile? pickedFile = await _picker.pickImage(
         source: ImageSource.gallery,
+        maxWidth: 1024,
+        maxHeight: 1024,
+        imageQuality: 85,
         requestFullMetadata: false,
       );
       if (!mounted || pickedFile == null) return;

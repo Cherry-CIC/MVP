@@ -1,3 +1,4 @@
+import 'package:cherry_mvp/core/models/profile_photo.dart';
 import 'package:cherry_mvp/core/config/app_strings.dart';
 import 'package:cherry_mvp/core/utils/result.dart';
 import 'package:cherry_mvp/core/utils/status.dart';
@@ -16,6 +17,8 @@ class _FakeEditProfileRepository implements IEditProfileRepository {
 
   @override
   Future<Result<void>> updateProfile({
+    required String uid,
+    ProfilePhoto? photo,
     String? displayName,
     String? phoneNumber,
   }) async {

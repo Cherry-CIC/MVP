@@ -32,7 +32,9 @@ class AppStrings {
   static const continueWithEmail = 'Continue with email';
   static const continueWithApple = 'Continue with Apple';
   static const continueWithGoogle = 'Continue with Google';
-  static const forgotPassword = 'Forgot Password?';
+  static const forgotPassword = 'Forgot password?';
+  static const noAccountPrompt = 'Don’t have an account?';
+  static const createOne = 'Create one';
   static String showPassword(String fieldLabel) => 'Show ${fieldLabel.toLowerCase()}';
   static String hidePassword(String fieldLabel) => 'Hide ${fieldLabel.toLowerCase()}';
   static const forgotPasswordInstruction = 'Please type your email and we’ll get in touch';
@@ -91,6 +93,10 @@ class AppStrings {
   static const publicProfileListingsLoadMoreFailed = 'We couldn’t load more listings.';
 
   // Edit profile
+  static const addProfilePhoto = 'Add photo';
+  static const changeProfilePhoto = 'Change photo';
+  static const profilePhotoTypeError = 'Choose a JPEG, PNG, WebP, HEIC or HEIF photo.';
+  static const profilePhotoSizeError = 'Choose a photo smaller than 5 MiB.';
   static const editProfileTitle = 'Edit profile';
   static const editProfileFirstNameLabel = 'First name';
   static const editProfileUsernameLabel = 'Username';
