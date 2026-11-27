@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
+import 'package:cherry_mvp/features/welcome/widgets/email_action_page.dart';
 import 'package:provider/provider.dart';
 import 'package:cherry_mvp/core/config/config.dart';
 import 'package:cherry_mvp/core/utils/utils.dart';
@@ -18,34 +18,30 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _emailController = TextEditingController();
   final _scrollController = ScrollController();
-  final _emailFocus = FocusNode();
-  final _emailKey = GlobalKey();
+  String? _confirmationEmail;
+  String? _error;
 
-  @override
-  void initState() {
-    super.initState();
-    _emailFocus.addListener(() => _onFocusChanged(_emailFocus, _emailKey));
-  }
-
-  void _onFocusChanged(FocusNode node, GlobalKey key) {
-    if (!node.hasFocus) return;
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final ctx = key.currentContext;
-      if (ctx == null) return;
-
-      Scrollable.ensureVisible(
-        ctx,
-        alignment: 0.25,
-        duration: const Duration(milliseconds: 200),
-        curve: Curves.easeOut,
-      );
+  Future<void> _submit() async {
+    final viewModel = context.read<ForgotPasswordViewModel>();
+    if (viewModel.status.type == StatusType.loading) return;
+    final email = _emailController.text.trim();
+    _emailController.text = email;
+    if (!_formKey.currentState!.validate()) return;
+    FocusScope.of(context).unfocus();
+    setState(() => _error = null);
+    final result = await viewModel.sendPasswordResetEmail(email);
+    if (!mounted || ModalRoute.isCurrentOf(context) != true) return;
+    setState(() {
+      if (result.isSuccess) {
+        _confirmationEmail = email;
+      } else {
+        _error = result.error ?? 'Unable to send reset email. Please try again.';
+      }
     });
   }
 
   @override
   void dispose() {
-    _emailFocus.dispose();
     _scrollController.dispose();
     _emailController.dispose();
     super.dispose();
@@ -53,6 +49,22 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
 
   @override
   Widget build(BuildContext context) {
+    final email = _confirmationEmail;
+    if (email != null) {
+      return EmailActionPage(
+        title: 'Check your email',
+        email: email,
+        message:
+            'If there’s a cherry account linked to this address, you’ll receive a password reset link. Check your inbox and junk folder, then open the link to choose a new password.',
+        actions: [
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Back to login'),
+          ),
+        ],
+      );
+    }
+    final sending = context.watch<ForgotPasswordViewModel>().status.type == StatusType.loading;
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -61,10 +73,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
             width: 24,
             height: 24,
           ),
-          onPressed: () {
-            context.read<ForgotPasswordViewModel>().clearStatus();
-            context.read<ForgotPasswordViewModel>().goBack();
-          },
+          onPressed: () => Navigator.of(context).pop(),
         ),
         title: const Text('Reset Password'),
       ),
@@ -78,18 +87,17 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: 16),
-                
+
                 // Instructions label
                 Text(
                   AppStrings.forgotPasswordInstruction,
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
-                
+
                 const SizedBox(height: 24),
 
                 // Email Field
                 LabeledInputField(
-                  key: _emailKey,
                   label: AppStrings.email,
                   hint: 'Enter your email',
                   controller: _emailController,
@@ -101,46 +109,13 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
 
                 const SizedBox(height: 24),
 
-                Consumer<ForgotPasswordViewModel>(
-                  builder: (context, viewModel, child) {
-                    return Column(
-                      children: [
-                        viewModel.status.type == StatusType.loading
-                            ? const Center(child: CircularProgressIndicator())
-                            : SizedBox(
-                                width: double.infinity,
-                                child: FilledButton(
-                                  onPressed: () async {
-                                    final trimmedEmail = _emailController.text.trim();
-
-                                    _emailController.value = _emailController.value.copyWith(
-                                      text: trimmedEmail,
-                                      selection: TextSelection.collapsed(offset: trimmedEmail.length),
-                                    );
-
-                                    if (_formKey.currentState!.validate()) {
-                                      final result = await viewModel.sendPasswordResetEmail(trimmedEmail);
-                                      if (result.isSuccess) {
-                                        Fluttertoast.showToast(
-                                          msg: "Reset link sent! Please check your email.",
-                                        );
-                                        viewModel.clearStatus();
-                                        if (context.mounted) {
-                                          viewModel.goBack();
-                                        }
-                                      } else {
-                                        Fluttertoast.showToast(
-                                          msg: viewModel.status.message ?? "Failed to send reset email",
-                                        );
-                                      }
-                                    }
-                                  },
-                                  child: const Text("Send Reset Email"),
-                                ),
-                              ),
-                      ],
-                    );
-                  },
+                if (_error != null) Semantics(liveRegion: true, child: Text(_error!)),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton(
+                    onPressed: sending ? null : _submit,
+                    child: Text(sending ? 'Sending…' : 'Send Reset Email'),
+                  ),
                 ),
               ],
             ),

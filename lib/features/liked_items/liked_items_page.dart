@@ -264,7 +264,7 @@ class _LikedProductsGrid extends StatelessWidget {
     final textScale = MediaQuery.textScalerOf(context).scale(1.0).clamp(1.0, 1.4);
     final cardWidth = (size.width - 24 - 12) / 2;
     final imageHeight = cardWidth / AppSpacing.imageContainerAspectRatio;
-    final cardHeight = imageHeight + (120.0 * textScale);
+    final cardHeight = imageHeight + (128.0 * textScale);
 
     return GridView.builder(
       padding: const EdgeInsets.fromLTRB(12, 12, 12, 24),

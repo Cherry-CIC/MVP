@@ -94,7 +94,11 @@ class FirebaseAuthService {
       if (e.code == 'invalid-email') {
         return Result.failure('Please enter a valid email address.');
       }
-      return Result.success(null);
+      if (e.code == 'user-not-found' || e.code == 'user-disabled') {
+        // Keep the response independent of whether this account exists.
+        return Result.success(null);
+      }
+      return Result.failure('Unable to send reset email right now. Please try again.');
     } catch (_) {
       SafeLog.event(
         AppLogEvent.authenticationOperationFailed,

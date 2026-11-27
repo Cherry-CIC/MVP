@@ -31,6 +31,7 @@ class AppImages {
 
   static const likeHeart = '${_path}like_heart.png';
   static const emptyHeart = '${_path}like_heart_empty.png';
+  static const donationHeart = '${_path}donation_heart.png';
 
   static const charityWeekVard = '${_path}charity_week_card.png';
   static const emptyStateBg = '${_path}emptystatebg.png';

@@ -118,11 +118,19 @@ class RegisterRepository {
       FirestoreConstants.createdAt: FieldValue.serverTimestamp(),
     };
 
-    final result = await _firestoreService.saveDocument(
-      FirestoreConstants.pathUserCollection,
-      uid,
-      data,
-    );
+    // An offline Firestore write can stay queued until connectivity returns.
+    final result = await _firestoreService
+        .saveDocument(
+          FirestoreConstants.pathUserCollection,
+          uid,
+          data,
+        )
+        .timeout(
+          const Duration(seconds: 30),
+          onTimeout: () => Result.failure(
+            'Your account was created. We couldn’t confirm your profile was saved. Check your connection and use Back to continue.',
+          ),
+        );
 
     if (result.isSuccess) {
       await _firestoreService.fetchUser(uid);

@@ -23,6 +23,7 @@ import 'package:cherry_mvp/features/products/edit_listing/edit_listing_page.dart
 import 'package:cherry_mvp/features/products/edit_listing/edit_listing_repository.dart';
 import 'package:cherry_mvp/features/home/home_viewmodel.dart';
 import 'package:cherry_mvp/features/profile/profile_listings_view_model.dart';
+import 'package:cherry_mvp/features/products/widgets/product_charity_card.dart';
 import 'package:cherry_mvp/features/products/widgets/product_highlight_title.dart';
 import 'package:cherry_mvp/features/products/widgets/product_information.dart';
 import 'package:cherry_mvp/features/products/widgets/product_safety_actions.dart';
@@ -267,7 +268,6 @@ class _ProductPageState extends State<ProductPage> {
                       awards: 0,
                       hasBuyerDiscounts: false,
                     ),
-                    charityDetails: displayedProduct.charity,
                     padding: const EdgeInsets.fromLTRB(16, 24, 16, 16),
                   );
                 },
@@ -277,6 +277,8 @@ class _ProductPageState extends State<ProductPage> {
                 product: displayedProduct,
                 padding: const EdgeInsets.all(16),
               ),
+              if (displayedProduct.charity != null)
+                ProductCharityCard(charity: displayedProduct.charity!),
               const Divider(thickness: 8),
               ListTile(
                 title: Text(AppStrings.productPageDescription),

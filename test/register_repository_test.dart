@@ -75,6 +75,7 @@ class _FakeFirestoreService extends FirestoreService {
          firebaseAuth: _FakeFirebaseAuth(),
        );
 
+  Completer<Result<void>>? pendingSave;
   int saveDocumentCalls = 0;
   int fetchUserCalls = 0;
   Map<String, dynamic>? savedData;
@@ -97,6 +98,7 @@ class _FakeFirestoreService extends FirestoreService {
   }) async {
     saveDocumentCalls += 1;
     savedData = data;
+    if (pendingSave != null) return pendingSave!.future;
     return Result.success(null);
   }
 
@@ -172,6 +174,24 @@ void main() {
       firestoreService.savedData?[FirestoreConstants.email],
       'taylor@example.com',
     );
+  });
+
+  testWidgets('an unacknowledged write releases registration without treating a late save as a new success', (
+    tester,
+  ) async {
+    final pending = firestoreService.pendingSave = Completer<Result<void>>();
+    final registration = repository.register(_request());
+    await tester.pump();
+    expect(firestoreService.saveDocumentCalls, 1);
+    await tester.pump(const Duration(seconds: 30));
+    final result = await registration;
+    expect(result.isSuccess, isFalse);
+    expect(result.error, contains('Your account was created'));
+    pending.complete(Result.success(null));
+    await tester.pump();
+    expect(authService.signUpCalls, 1);
+    expect(firestoreService.fetchUserCalls, 0);
+    expect(authService.verificationEmailCalls, 0);
   });
 
   test('registration does not wait for verification email delivery', () async {

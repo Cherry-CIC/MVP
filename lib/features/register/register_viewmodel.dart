@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:cherry_mvp/core/models/user.dart';
 import 'package:flutter/foundation.dart';
 import 'package:cherry_mvp/core/router/nav_provider.dart';
 import 'package:cherry_mvp/core/services/safe_log.dart';
@@ -19,7 +20,7 @@ class RegisterViewModel extends ChangeNotifier {
   //public (exposed to loginpage)
   Status get status => _status;
 
-  Future<void> register(
+  Future<UserCredentials?> register(
     String firstName,
     String email,
     String username,
@@ -27,6 +28,7 @@ class RegisterViewModel extends ChangeNotifier {
     String password,
     File? image,
   ) async {
+    if (_status.type == StatusType.loading) return null;
     _status = Status.loading;
     notifyListeners();
 
@@ -43,7 +45,7 @@ class RegisterViewModel extends ChangeNotifier {
       );
       if (result.isSuccess) {
         _status = Status.success;
-        navigator.goBack();
+        return result.value;
       } else {
         _status = Status.failure(result.error ?? "");
         SafeLog.event(
@@ -53,9 +55,10 @@ class RegisterViewModel extends ChangeNotifier {
       }
     } catch (e) {
       _status = Status.failure(e.toString());
+    } finally {
+      notifyListeners();
     }
-
-    notifyListeners();
+    return null;
   }
 
   void goBack() {
