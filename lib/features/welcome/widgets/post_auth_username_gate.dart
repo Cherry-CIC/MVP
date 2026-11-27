@@ -1,6 +1,5 @@
 import 'package:provider/provider.dart';
 import 'package:cherry_mvp/features/notifications/collection_push_controller.dart';
-import 'package:cherry_mvp/features/notifications/push_messaging_gateway.dart';
 import 'package:cherry_mvp/features/notifications/locker_push_host.dart';
 import 'package:cherry_mvp/core/config/config.dart';
 import 'package:cherry_mvp/core/services/google_auth_service.dart';
@@ -129,11 +128,12 @@ class _PostAuthUsernameGateState extends State<PostAuthUsernameGate> {
             userId: currentUser.uid,
             builder: (_, timer) => HomePage(deliveryTimer: timer),
           );
-          final gateway = context.read<PushMessagingGateway?>();
-          if (gateway == null) return home;
+          final push = context.read<CollectionPushController?>();
+          if (push == null) return home;
           return LockerPushHost(
             key: ValueKey(currentUser.uid),
-            gateway: gateway,
+            gateway: push.gateway,
+            foregroundAlertsEnabled: () => push.allowsForegroundAlerts(currentUser.uid),
             userId: currentUser.uid,
             child: home,
           );

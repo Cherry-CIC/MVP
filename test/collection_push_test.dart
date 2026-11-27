@@ -184,6 +184,22 @@ void main() {
     expect(controller.registered, isTrue);
     expect(controller.error, isNull);
   });
+  test('opting out takes effect while a registration is still pending', () async {
+    await start();
+    await prefs.setBool('collectionPush.enabled.buyer', true);
+    devices.pending = Completer<bool>();
+    final registration = controller.refresh();
+    await Future<void>.delayed(Duration.zero);
+    expect(controller.allowsForegroundAlerts('buyer'), isTrue);
+    expect(controller.allowsForegroundAlerts('other'), isFalse);
+    final optOut = controller.setEnabled(false);
+    expect(controller.allowsForegroundAlerts('buyer'), isFalse);
+    devices.pending!.complete(true);
+    await registration;
+    await optOut;
+    expect(devices.removals, ['buyer:token-a']);
+    expect(controller.registered, isFalse);
+  });
   test('offline logout retains a rotation marker and blocks another account until cleanup', () async {
     await start();
     await controller.setEnabled(true);
@@ -214,6 +230,37 @@ void main() {
     expect(devices.removals, contains('buyer:token-a'));
     expect(controller.registered, isFalse);
     expect(prefs.getString('collectionPush.token'), isNull);
+  });
+  test('slow registration cannot hold up sign-out or reuse the old account token', () async {
+    await start();
+    await prefs.setBool('collectionPush.enabled.buyer', true);
+    devices.pending = Completer<bool>();
+    final registration = controller.refresh();
+    await Future<void>.delayed(Duration.zero);
+    expect(devices.registrations, ['buyer:token-a:android']);
+
+    var maySignOut = false;
+    final logout = controller.beforeSignOut().then((_) => maySignOut = true);
+    await Future<void>.delayed(Duration.zero);
+    expect(controller.allowsForegroundAlerts('buyer'), isFalse);
+    expect(prefs.getBool('collectionPush.rotate'), isTrue);
+    expect(maySignOut, isFalse);
+    await logout.timeout(const Duration(seconds: 5));
+    expect(maySignOut, isTrue);
+
+    uid = 'other';
+    accounts.add(uid);
+    await prefs.setBool('collectionPush.enabled.other', true);
+    gateway.deviceToken = 'token-new';
+    await Future<void>.delayed(Duration.zero);
+    expect(devices.registrations, ['buyer:token-a:android']);
+    devices.pending!.complete(true);
+    await registration;
+    await controller.refresh();
+    expect(devices.removals, ['buyer:token-a']);
+    expect(gateway.deletes, 1);
+    expect(devices.registrations.last, 'other:token-new:android');
+    expect(prefs.getBool('collectionPush.rotate'), isNull);
   });
   testWidgets('notification settings have a labelled switch and fit large text', (tester) async {
     await tester.runAsync(start);

@@ -56,11 +56,13 @@ void main() {
     'entityId': 'order-1',
     'notificationId': 'event-1',
   };
+  late bool alertsEnabled;
   late _Auth auth;
   late _Api api;
   late _Messages messages;
   late Map<String, dynamic> order;
   setUp(() {
+    alertsEnabled = true;
     auth = _Auth();
     messages = _Messages();
     order = {
@@ -94,6 +96,7 @@ void main() {
           home: LockerPushHost(
             gateway: messages,
             userId: 'buyer',
+            foregroundAlertsEnabled: () => alertsEnabled,
             child: const Scaffold(body: Text('Home')),
           ),
         ),
@@ -114,6 +117,34 @@ void main() {
     expect(find.text('Green jumper'), findsOneWidget);
     expect(find.textContaining('Station locker'), findsOneWidget);
     expect(api.requests, ['/api/order/order-1', '/api/order/order-1']);
+  });
+
+  testWidgets('opt-out skips foreground lookups and still allows an intentional tap', (tester) async {
+    alertsEnabled = false;
+    await mount(tester);
+    messages.foreground.add(event);
+    await tester.pumpAndSettle();
+    expect(api.requests, isEmpty);
+    expect(find.text('View order'), findsNothing);
+
+    messages.opened.add(event);
+    await tester.pumpAndSettle();
+    expect(api.requests, ['/api/order/order-1']);
+    expect(find.text('Green jumper'), findsOneWidget);
+  });
+
+  testWidgets('opting out during an order lookup suppresses the foreground banner', (tester) async {
+    final pending = Completer<Result<dynamic>>();
+    final response = api.read;
+    api.read = () => pending.future;
+    await mount(tester);
+    messages.foreground.add(event);
+    await tester.pump();
+    expect(api.requests, ['/api/order/order-1']);
+    alertsEnabled = false;
+    pending.complete(await response());
+    await tester.pumpAndSettle();
+    expect(find.text('View order'), findsNothing);
   });
 
   testWidgets('cold-start and repeated background taps open one current order', (tester) async {

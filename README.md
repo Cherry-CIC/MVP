@@ -56,6 +56,15 @@ Development uses `cherry-mvp` and `uk.org.cherry.app.dev`. Production uses `cher
 
 On an Android or iOS build, add `--dart-define=COLLECTION_PUSH_ENABLED=true` to enable a one-time opt-in prompt on the first signed-in Home visit and matching switches in Settings and on the checkout confirmation screen. The choice is saved per account on this device. The default is off. Use a backend with device registration and the locker-arrival trigger enabled. [Backend PR #80](https://github.com/Cherry-CIC/cherry-Backend/pull/80)
 
+For a push-enabled iOS build, select the push entitlements as well. From the repository root, for example, run
+
+```bash
+FLUTTER_XCODE_CHERRY_RUNNER_ENTITLEMENTS=Runner/RunnerPush.entitlements \
+  flutter build ios --flavor dev --dart-define=APP_ENV=dev --dart-define=COLLECTION_PUSH_ENABLED=true
+```
+
+When archiving directly with `xcodebuild`, pass `CHERRY_RUNNER_ENTITLEMENTS=Runner/RunnerPush.entitlements` with the same Dart defines configured for Flutter. Standard builds keep the existing Apple Pay and Sign in with Apple entitlements.
+
 For a device check, opt in as a test buyer, put the app in the background and verify that a locker-arrival alert opens the matching order. Also check a cold start, a foreground alert, denied permission and sign-out. iPhone delivery requires a push-enabled signing profile and an APNs credential configured in the corresponding Firebase project.
 
 ## What to Contribute

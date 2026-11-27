@@ -10,10 +10,17 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 class LockerPushHost extends StatefulWidget {
-  const LockerPushHost({super.key, required this.gateway, required this.userId, required this.child});
+  const LockerPushHost({
+    super.key,
+    required this.gateway,
+    required this.userId,
+    required this.foregroundAlertsEnabled,
+    required this.child,
+  });
 
   final PushMessagingGateway gateway;
   final String userId;
+  final bool Function() foregroundAlertsEnabled;
   final Widget child;
 
   @override
@@ -88,9 +95,15 @@ class _LockerPushHostState extends State<LockerPushHost> {
       if (_remember(_opened, id)) _open(orderId, session);
       return;
     }
-    if (_opened.contains(id) || !_remember(_shown, id)) return;
+    if (!widget.foregroundAlertsEnabled() || _opened.contains(id) || !_remember(_shown, id)) return;
     final lookup = await _readOrder(orderId, session);
-    if (!mounted || !_isActive(session) || _opened.contains(id) || lookup.value?.awaitingPickup != true) return;
+    if (!mounted ||
+        !_isActive(session) ||
+        !widget.foregroundAlertsEnabled() ||
+        _opened.contains(id) ||
+        lookup.value?.awaitingPickup != true) {
+      return;
+    }
     _hideBanner();
     final host = ScaffoldMessenger.of(context);
     _bannerHost = host;

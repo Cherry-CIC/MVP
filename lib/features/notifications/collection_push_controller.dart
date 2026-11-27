@@ -44,6 +44,7 @@ class CollectionPushController extends ChangeNotifier with WidgetsBindingObserve
   bool get supported => gateway.supported;
   bool get busy => _busy;
   bool get enabled => _userId != null && preferences.getBool('${preferencePrefix}enabled.$_userId') == true;
+  bool allowsForegroundAlerts(String uid) => _active(uid, _generation) && enabled;
   bool needsFirstChoice(String uid) =>
       supported && !_busy && _active(uid, _generation) && !preferences.containsKey('${preferencePrefix}enabled.$uid');
 
@@ -168,6 +169,11 @@ class CollectionPushController extends ChangeNotifier with WidgetsBindingObserve
     final uid = _userId!;
     final generation = _generation;
     try {
+      // Apply opt-out immediately, even when an earlier registration is still pending.
+      if (!value) {
+        final saved = await preferences.setBool('${preferencePrefix}enabled.$uid', false).catchError((_) => false);
+        if (!saved) _error = 'Could not save your notification preference. Please try again.';
+      }
       await _serial(() async {
         if (!_active(uid, generation)) return;
         if (value) {
@@ -178,7 +184,6 @@ class CollectionPushController extends ChangeNotifier with WidgetsBindingObserve
             _error = 'Notifications are off. You can allow them in your phone settings.';
           }
         } else {
-          await preferences.setBool('${preferencePrefix}enabled.$uid', false);
           await _resetDevice();
         }
       });
@@ -218,10 +223,21 @@ class CollectionPushController extends ChangeNotifier with WidgetsBindingObserve
     _suspended = true;
     _generation++;
     _retry?.cancel();
-    if (supported) {
-      await _serial(() async {
-        if (preferences.containsKey(_ownerKey)) await _resetDevice();
-      });
+    final owner = preferences.getString(_ownerKey);
+    if (!supported || owner == null) return;
+
+    // Record the pending rotation even if another request is ahead of cleanup.
+    // Keep cleanup in the queue so it finishes before the next registration.
+    final cleanup = _serial(() async {
+      if (preferences.getString(_ownerKey) == owner) await _resetDevice();
+    });
+    try {
+      await Future.wait<void>([
+        preferences.setBool(_rotateKey, true),
+        cleanup,
+      ]).timeout(const Duration(seconds: 3));
+    } catch (_) {
+      // A timeout or failed preference write must still allow sign-out.
     }
   }
 
