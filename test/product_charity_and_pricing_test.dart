@@ -290,7 +290,7 @@ void main() {
         );
 
         expect(donationPriceText.style?.color, expectedGreen);
-        expect((heartImage.image as AssetImage).assetName, AppImages.emptyHeart);
+        expect((heartImage.image as AssetImage).assetName, AppImages.donationHeart);
         expect(heartImage.color, expectedGreen);
         expect(
           donationPriceText.style!.fontSize!,
@@ -354,7 +354,7 @@ void main() {
         );
 
         expect(basePriceText.style?.color, expectedGreen);
-        expect((heartImage.image as AssetImage).assetName, AppImages.emptyHeart);
+        expect((heartImage.image as AssetImage).assetName, AppImages.donationHeart);
         expect(heartImage.color, expectedGreen);
         expect(
           basePriceText.style!.fontSize!,

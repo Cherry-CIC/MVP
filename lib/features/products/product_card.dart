@@ -233,10 +233,10 @@ class ProductCard extends StatelessWidget {
                                   ),
                                 ),
                                 Image.asset(
-                                  AppImages.emptyHeart,
+                                  AppImages.donationHeart,
                                   key: ValueKey('product-card-donation-heart-${product.id}'),
-                                  width: 20,
-                                  height: 20,
+                                  width: 18,
+                                  height: 18,
                                   color: donationColor,
                                   excludeFromSemantics: true,
                                 ),
