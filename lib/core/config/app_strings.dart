@@ -289,6 +289,8 @@ class AppStrings {
   static const photoUnavailable = 'This photo could not be loaded.';
   static const photoLoading = 'Loading photo';
   static const productPageDescription = "Description";
+  static const productPageDonatingTo = 'Donating to';
+  static const productPageCharityLearnMore = 'Learn More';
   static const productPageBuyerDiscountActive = 'Donor discounts active';
   static const productPageDonorDiscountInactive = 'Donor discounts inactive';
   static const productPageDonorDiscountInactiveDetail = 'Donor Discounts Currently Inactive';
