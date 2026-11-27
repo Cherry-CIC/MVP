@@ -8,8 +8,10 @@ import 'package:cherry_mvp/core/utils/result.dart';
 import 'package:cherry_mvp/features/checkout/checkout_repository.dart';
 import 'package:cherry_mvp/features/checkout/checkout_view_model.dart';
 import 'package:cherry_mvp/features/donation/donation_repository.dart';
+import 'package:cherry_mvp/features/charity_page/charity_model.dart';
 import 'package:cherry_mvp/features/products/product_repository.dart';
 import 'package:cherry_mvp/features/products/product_viewmodel.dart';
+import 'package:cherry_mvp/features/products/widgets/product_charity_card.dart';
 import 'package:cherry_mvp/features/products/widgets/seller_information.dart';
 import 'package:cherry_mvp/features/profile/widgets/seller_listing_card.dart';
 import 'package:cherry_mvp/features/profile/public_user_profile.dart';
@@ -308,19 +310,32 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
-          body: SellerInformation(
-            user: UserInformation(
-              username: 'Alex',
-              location: '',
-              reviewsCount: 0,
-              followersCount: 0,
-              followingCount: 0,
-              rating: 0,
-              awards: 0,
-              hasBuyerDiscounts: false,
-            ),
-            onViewProfile: () => taps += 1,
-            charity: Image.asset(AppImages.product1, key: const ValueKey('charity')),
+          body: Column(
+            children: [
+              SellerInformation(
+                user: UserInformation(
+                  username: 'Alex',
+                  location: '',
+                  reviewsCount: 0,
+                  followersCount: 0,
+                  followingCount: 0,
+                  rating: 0,
+                  awards: 0,
+                  hasBuyerDiscounts: false,
+                ),
+                onViewProfile: () => taps += 1,
+              ),
+              ProductCharityCard(
+                charity: Charity(
+                  id: 'charity-1',
+                  name: 'Samaritans',
+                  imageUrl: AppImages.mind,
+                  description: 'Charity description',
+                  createdAt: DateTime(2025),
+                  updatedAt: DateTime(2025),
+                ),
+              ),
+            ],
           ),
         ),
       ),
@@ -330,8 +345,11 @@ void main() {
     expect(tester.getSize(target).width, greaterThanOrEqualTo(48));
     expect(find.bySemanticsLabel('View Alex’s public profile'), findsOneWidget);
     semantics.dispose();
-    await tester.tap(find.byKey(const ValueKey('charity')));
+    await tester.tap(find.byKey(const ValueKey('product-charity-details')));
+    await tester.pumpAndSettle();
     expect(taps, 0);
+    await tester.tap(find.byTooltip('Close'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Alex'));
     expect(taps, 1);
   });

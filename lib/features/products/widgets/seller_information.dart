@@ -4,14 +4,10 @@ import 'package:cherry_mvp/core/config/app_images.dart';
 import 'package:cherry_mvp/core/config/app_strings.dart';
 import 'package:cherry_mvp/core/models/user_section.dart';
 import 'package:cherry_mvp/core/widgets/star_rating.dart';
-import 'package:cherry_mvp/features/charity_page/charity_model.dart';
-import 'package:cherry_mvp/features/products/widgets/charity_details_dialog.dart';
 
 class SellerInformation extends StatelessWidget {
   final UserInformation user;
   final ImageProvider<Object>? profileImage;
-  final Widget charity;
-  final Charity? charityDetails;
   final EdgeInsets? padding;
   final VoidCallback? onAskSeller;
   final VoidCallback? onViewProfile;
@@ -21,8 +17,6 @@ class SellerInformation extends StatelessWidget {
     super.key,
     required this.user,
     this.profileImage,
-    this.charity = const SizedBox.shrink(),
-    this.charityDetails,
     this.padding,
     this.onAskSeller,
     this.onViewProfile,
@@ -94,42 +88,6 @@ class SellerInformation extends StatelessWidget {
               ),
             ),
           ),
-          if (charity is Image || charityDetails != null)
-            Container(
-              clipBehavior: Clip.antiAlias,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(8),
-                color: Theme.of(context).colorScheme.surface,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withAlpha(150),
-                    spreadRadius: 1,
-                    blurRadius: 2,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: charityDetails == null
-                  ? SizedBox(width: 56, height: 56, child: charity)
-                  : Semantics(
-                      button: true,
-                      label: 'About ${charityDetails!.name.trim().isEmpty ? 'this charity' : charityDetails!.name}',
-                      child: Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          key: const ValueKey('product-charity-details'),
-                          onTap: () => showDialog<void>(
-                            context: context,
-                            builder: (_) => CharityDetailsDialog(charity: charityDetails!),
-                          ),
-                          child: SizedBox.square(
-                            dimension: 56,
-                            child: CharityLogo(charity: charityDetails!),
-                          ),
-                        ),
-                      ),
-                    ),
-            ),
           if (FeatureFlags.showAskSeller && showAskSeller)
             Expanded(
               flex: 3,

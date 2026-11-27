@@ -7,6 +7,7 @@ import 'package:cherry_mvp/features/charity_page/charity_model.dart';
 import 'package:cherry_mvp/features/charity_page/charity_profile_args.dart';
 import 'package:cherry_mvp/features/discover/discover_repository.dart';
 import 'package:cherry_mvp/features/products/widgets/charity_details_dialog.dart';
+import 'package:cherry_mvp/features/products/widgets/product_charity_card.dart';
 import 'package:cherry_mvp/features/products/widgets/seller_information.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -52,31 +53,38 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
-          body: SellerInformation(
-            user: UserInformation(
-              username: 'Alex',
-              location: '',
-              reviewsCount: 0,
-              followersCount: 0,
-              followingCount: 0,
-              rating: 0,
-              awards: 0,
-              hasBuyerDiscounts: false,
-            ),
-            charity: const SizedBox.shrink(),
-            charityDetails: charity(),
-            onViewProfile: () => sellerTaps++,
+          body: Column(
+            children: [
+              SellerInformation(
+                user: UserInformation(
+                  username: 'Alex',
+                  location: '',
+                  reviewsCount: 0,
+                  followersCount: 0,
+                  followingCount: 0,
+                  rating: 0,
+                  awards: 0,
+                  hasBuyerDiscounts: false,
+                ),
+                onViewProfile: () => sellerTaps++,
+              ),
+              ProductCharityCard(charity: charity()),
+            ],
           ),
         ),
       ),
     );
     expect(find.bySemanticsLabel('About Example charity'), findsOneWidget);
+    expect(find.text(AppStrings.productPageDonatingTo), findsOneWidget);
+    expect(find.text(AppStrings.productPageCharityLearnMore), findsOneWidget);
     final target = find.byKey(const ValueKey('product-charity-details'));
-    expect(tester.getSize(target), const Size(56, 56));
     await tester.tap(target);
     await tester.pumpAndSettle();
     expect(find.byType(CharityDetailsDialog), findsOneWidget);
-    expect(find.text('Example charity'), findsOneWidget);
+    expect(
+      find.descendant(of: find.byType(CharityDetailsDialog), matching: find.text('Example charity')),
+      findsOneWidget,
+    );
     expect(find.text('Supporting local people.'), findsOneWidget);
     expect(find.descendant(of: find.byType(CharityDetailsDialog), matching: find.byType(Image)), findsOneWidget);
     expect(sellerTaps, 0);

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cherry_mvp/features/products/widgets/product_quality_label.dart';
+import 'package:cherry_mvp/core/config/app_colors.dart';
 import 'package:cherry_mvp/core/config/app_images.dart';
+import 'package:cherry_mvp/core/config/app_strings.dart';
 import 'package:cherry_mvp/core/config/feature_flags.dart';
 import 'package:cherry_mvp/core/models/model.dart';
 import 'package:cherry_mvp/core/utils/security_fee.dart';
@@ -16,6 +18,7 @@ class ProductInformation extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colours = Theme.of(context).colorScheme;
+    final donationColor = AppColors.donationPrice(context);
     const detailStyle = TextStyle(
       fontFamily: 'Raleway',
       fontWeight: FontWeight.w800,
@@ -45,9 +48,27 @@ class ProductInformation extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   spacing: 4,
                   children: [
-                    Text(
-                      '£${product.donation.toStringAsFixed(2)}',
-                      style: priceStyle.copyWith(color: colours.onSurfaceVariant),
+                    Wrap(
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: 5,
+                      runSpacing: 4,
+                      children: [
+                        Text(
+                          '£${product.donation.toStringAsFixed(2)}',
+                          style: priceStyle.copyWith(
+                            fontSize: 20,
+                            color: donationColor,
+                          ),
+                        ),
+                        Image.asset(
+                          AppImages.donationHeart,
+                          key: const ValueKey('product-info-donation-heart'),
+                          width: 18,
+                          height: 18,
+                          color: donationColor,
+                          excludeFromSemantics: true,
+                        ),
+                      ],
                     ),
                     Wrap(
                       crossAxisAlignment: WrapCrossAlignment.center,
@@ -58,7 +79,17 @@ class ProductInformation extends StatelessWidget {
                           '£${product.priceIncludingSecurityFee.toStringAsFixed(2)}',
                           style: priceStyle.copyWith(color: colours.primary),
                         ),
-                        Image.asset(AppImages.shieldTick, width: 20, height: 20),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              AppStrings.productIncl,
+                              style: priceStyle.copyWith(color: colours.primary),
+                            ),
+                            const SizedBox(width: 2.5),
+                            Image.asset(AppImages.shieldTick, width: 20, height: 20),
+                          ],
+                        ),
                       ],
                     ),
                   ],

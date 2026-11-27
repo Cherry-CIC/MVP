@@ -5,6 +5,9 @@ class AppColors {
   static const green = Color(0xFFB7E885);
   // White text on this green exceeds WCAG AA for normal-sized text.
   static const soldGreen = Color(0xFF176B46);
+  // Emerald green for charitable item proceeds; exceeds WCAG AA on #FAFAFA.
+  static const donationGreen = Color(0xFF216E42);
+  static const donationGreenDark = Color(0xFF5AD28C);
   static const pink = Color(0xfff5B9EC);
   static const red = Color(0xFFF90653);
   static const primaryAction = Color(0xFFCC0041);
@@ -21,6 +24,12 @@ class AppColors {
     return Theme.of(context).brightness == Brightness.dark
         ? const Color(0x33F90653)
         : pinkBackground;
+  }
+
+  static Color donationPrice(BuildContext context) {
+    return Theme.of(context).brightness == Brightness.dark
+        ? donationGreenDark
+        : donationGreen;
   }
 
   static Color onSurface(BuildContext context) {
