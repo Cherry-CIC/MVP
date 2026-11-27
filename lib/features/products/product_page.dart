@@ -18,6 +18,7 @@ import 'package:cherry_mvp/core/router/nav_routes.dart';
 import 'package:cherry_mvp/core/utils/donor_discount_state_store.dart';
 import 'package:cherry_mvp/core/utils/result.dart';
 import 'package:cherry_mvp/features/checkout/checkout_view_model.dart';
+import 'package:cherry_mvp/features/products/product_repository.dart';
 import 'package:cherry_mvp/features/products/product_viewmodel.dart';
 import 'package:cherry_mvp/features/products/edit_listing/edit_listing_page.dart';
 import 'package:cherry_mvp/features/products/edit_listing/edit_listing_repository.dart';
@@ -47,10 +48,22 @@ class _ProductPageState extends State<ProductPage> {
   Product? _initialSelectedProduct;
   Future<Result<Product>>? _productLoad;
   String? _requestedProductId;
+  String? _hydratedDetailsRequestId;
+  Product? _hydratedProduct;
+  bool _hydratedListingUnavailable = false;
   String? _sellerRequestId;
   Future<PublicUser?>? _sellerLoad;
   bool _sellerBlocked = false;
   int _productGeneration = 0;
+
+  static bool _needsDetailHydration(Product? product) {
+    if (product == null || product.charity != null) {
+      return false;
+    }
+    final productId = product.id.trim();
+    final charityId = product.charityId?.trim();
+    return productId.isNotEmpty && charityId != null && charityId.isNotEmpty;
+  }
 
   @override
   void initState() {
@@ -80,22 +93,91 @@ class _ProductPageState extends State<ProductPage> {
   void _loadProduct() {
     final productId = widget.productId;
     _requestedProductId = productId;
-    _productLoad = productId == null
-        ? null
-        : context.read<ProductViewModel>().productRepository.fetchProduct(
-            productId,
-          );
+    _hydratedDetailsRequestId = null;
+    _hydratedProduct = null;
+    _hydratedListingUnavailable = false;
+    final productRepository = context.read<ProductViewModel>().productRepository;
+    if (productId != null) {
+      _productLoad = productRepository.fetchProduct(productId);
+      return;
+    }
+    _productLoad = null;
+    _hydrateProductDetailsIfNeeded(
+      widget.product ?? _initialSelectedProduct,
+      productRepository: productRepository,
+      deletedListings: context.read<DeletedListings?>(),
+      blockedUsers: context.read<BlockedUsers?>(),
+    );
+  }
+
+  void _hydrateProductDetailsIfNeeded(
+    Product? product, {
+    required ProductRepository productRepository,
+    required DeletedListings? deletedListings,
+    required BlockedUsers? blockedUsers,
+  }) {
+    if (!_needsDetailHydration(product)) {
+      return;
+    }
+    final requestedId = product!.id.trim();
+    if (_hydratedDetailsRequestId == requestedId) {
+      return;
+    }
+    if (deletedListings?.contains(requestedId) == true) {
+      return;
+    }
+    final sellerId = NavigationProvider.publicProfileUserId(product.userId);
+    if (sellerId != null && blockedUsers?.contains(sellerId) == true) {
+      return;
+    }
+    _hydratedDetailsRequestId = requestedId;
+    final generation = _productGeneration;
+    unawaited(_runDetailHydration(productRepository, requestedId, generation));
+  }
+
+  Future<void> _runDetailHydration(
+    ProductRepository productRepository,
+    String requestedId,
+    int generation,
+  ) async {
+    final result = await productRepository.fetchProduct(requestedId);
+    if (!mounted ||
+        generation != _productGeneration ||
+        _hydratedDetailsRequestId != requestedId) {
+      return;
+    }
+    if (result.errorCode == 'LISTING_NOT_FOUND') {
+      setState(() => _hydratedListingUnavailable = true);
+      return;
+    }
+    final fetched = result.value;
+    if (result.isSuccess && fetched != null && fetched.id == requestedId) {
+      setState(() => _hydratedProduct = fetched);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final fallbackProduct = widget.product ?? _initialSelectedProduct ?? context.watch<ProductViewModel>().product;
+    final productViewModel = context.watch<ProductViewModel>();
+    final baseFallbackProduct = widget.product ?? _initialSelectedProduct ?? productViewModel.product;
     final deleted = context.watch<DeletedListings?>();
     final blockedUsers = context.watch<BlockedUsers?>();
+    if (_productLoad == null) {
+      _hydrateProductDetailsIfNeeded(
+        baseFallbackProduct,
+        productRepository: productViewModel.productRepository,
+        deletedListings: deleted,
+        blockedUsers: blockedUsers,
+      );
+    }
+    final fallbackProduct = (_hydratedProduct != null && _hydratedProduct!.id == baseFallbackProduct?.id)
+        ? _hydratedProduct
+        : baseFallbackProduct;
     final id = widget.productId ?? fallbackProduct?.id;
     final fallbackSellerId = NavigationProvider.publicProfileUserId(fallbackProduct?.userId);
     if ((id != null && deleted?.contains(id) == true) ||
         _sellerBlocked ||
+        _hydratedListingUnavailable ||
         (_productLoad == null && fallbackSellerId != null && blockedUsers?.contains(fallbackSellerId) == true)) {
       return _buildUnavailableScaffold();
     }
@@ -370,6 +452,9 @@ class _ProductPageState extends State<ProductPage> {
     if (!mounted) return;
     setState(() {
       _requestedProductId = productId;
+      _hydratedDetailsRequestId = null;
+      _hydratedProduct = null;
+      _hydratedListingUnavailable = false;
       _productLoad = context.read<ProductViewModel>().productRepository.fetchProduct(productId);
     });
   }

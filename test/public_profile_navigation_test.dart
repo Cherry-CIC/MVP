@@ -1,9 +1,13 @@
+import 'dart:async';
+
 import 'package:cherry_mvp/core/config/app_images.dart';
 import 'package:cherry_mvp/core/config/app_strings.dart';
 import 'package:cherry_mvp/core/models/product.dart';
 import 'package:cherry_mvp/core/models/user_section.dart';
 import 'package:cherry_mvp/core/router/nav_provider.dart';
 import 'package:cherry_mvp/core/router/nav_routes.dart';
+import 'package:cherry_mvp/core/services/network/api_endpoints.dart';
+import 'package:cherry_mvp/core/services/network/api_service.dart';
 import 'package:cherry_mvp/core/utils/result.dart';
 import 'package:cherry_mvp/features/checkout/checkout_repository.dart';
 import 'package:cherry_mvp/features/checkout/checkout_view_model.dart';
@@ -83,6 +87,8 @@ Product _product({
   String id = 'first-listing',
   String name = 'First jumper',
   String? userId = 'seller-1',
+  String? charityId,
+  Charity? charity,
 }) => Product(
   id: id,
   userId: userId,
@@ -97,11 +103,38 @@ Product _product({
   number: 1,
   size: 'M',
   postageSizeId: 'small',
+  charityId: charityId ?? charity?.id,
+  charity: charity,
 );
+
+class _StubProductDetailsApiService extends UnexpectedApiService {
+  _StubProductDetailsApiService(this._onGet);
+
+  final Future<Result<dynamic>> Function(String endpoint) _onGet;
+  final requestedEndpoints = <String>[];
+
+  @override
+  Future<Result<T>> get<T>(
+    String endpoint, {
+    Map<String, dynamic>? queryParameters,
+  }) async {
+    requestedEndpoints.add(endpoint);
+    final result = await _onGet(endpoint);
+    if (!result.isSuccess) {
+      return Result.failure(
+        result.error,
+        statusCode: result.statusCode,
+        errorCode: result.errorCode,
+      );
+    }
+    return Result.success(result.value as T, statusCode: result.statusCode);
+  }
+}
 
 Future<({NavigationProvider navigator, ProductViewModel products, CheckoutViewModel checkout})> _pumpApp(
   WidgetTester tester, {
   required _PublicProfileRepository repository,
+  ApiService apiService = const UnexpectedApiService(),
   Widget home = const Scaffold(body: Text('Home')),
 }) async {
   tester.view.physicalSize = const Size(800, 1600);
@@ -110,7 +143,7 @@ Future<({NavigationProvider navigator, ProductViewModel products, CheckoutViewMo
   addTearDown(tester.view.resetDevicePixelRatio);
   final navigator = NavigationProvider();
   final products = ProductViewModel(
-    productRepository: ProductRepository(const UnexpectedApiService()),
+    productRepository: ProductRepository(apiService),
     navigator: navigator,
   );
   final checkout = CheckoutViewModel(
@@ -353,4 +386,163 @@ void main() {
     await tester.tap(find.text('Alex'));
     expect(taps, 1);
   });
+
+  testWidgets(
+    'selecting a listing from PublicUserProfile hydrates missing charity details without blocking initial render',
+    (tester) async {
+      final homeCharity = Charity(
+        id: 'mind',
+        name: 'Mind',
+        imageUrl: AppImages.mind,
+        description: 'Mental health support.',
+        createdAt: DateTime(2025),
+        updatedAt: DateTime(2025),
+      );
+      final firstProduct = _product(charity: homeCharity);
+      // Public profile summary includes charityId without joined charity object.
+      final profileSummaryProduct = _product(
+        id: 'second-listing',
+        name: 'White Zara skirt',
+        charityId: 'samaritans',
+      );
+      final detailsCompleter = Completer<Result<dynamic>>();
+      final apiService = _StubProductDetailsApiService((endpoint) {
+        expect(endpoint, ApiEndpoints.productWithDetailsById('second-listing'));
+        return detailsCompleter.future;
+      });
+      final repository = _PublicProfileRepository(products: [profileSummaryProduct]);
+      final app = await _pumpApp(
+        tester,
+        repository: repository,
+        apiService: apiService,
+      );
+
+      app.products.goToProductPage(firstProduct);
+      await tester.pumpAndSettle();
+      expect(find.text('First jumper'), findsOneWidget);
+      expect(find.text('Mind'), findsOneWidget);
+
+      await tester.tap(find.text('Seller seller-1'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byType(SellerListingCard));
+      await tester.pumpAndSettle();
+
+      // Summary details render immediately while /with-details is still in flight.
+      expect(find.byType(CircularProgressIndicator), findsNothing);
+      expect(find.text('White Zara skirt'), findsOneWidget);
+      expect(find.text('White Zara skirt description'), findsOneWidget);
+      expect(find.byType(ProductCharityCard), findsNothing);
+      expect(apiService.requestedEndpoints, [
+        ApiEndpoints.productWithDetailsById('second-listing'),
+      ]);
+
+      detailsCompleter.complete(
+        Result.success({
+          'success': true,
+          'data': {
+            'id': 'second-listing',
+            'userId': 'seller-1',
+            'name': 'White Zara skirt',
+            'description': 'White Zara skirt description',
+            'quality': 'Good',
+            'product_images': [AppImages.product1],
+            'donation': 10,
+            'price': 10,
+            'securityFee': 1,
+            'likes': 1,
+            'number': 1,
+            'size': 'M',
+            'postageSize': 'small',
+            'charityId': 'samaritans',
+            'status': 'active',
+            'charity': {
+              'id': 'samaritans',
+              'name': 'Samaritans',
+              'imageUrl': AppImages.mind,
+              'description': 'Listening and supporting people around the clock.',
+              'createdAt': '2025-01-01T00:00:00.000Z',
+              'updatedAt': '2025-01-01T00:00:00.000Z',
+            },
+          },
+        }, statusCode: 200),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byType(ProductCharityCard), findsOneWidget);
+      expect(find.text(AppStrings.productPageDonatingTo), findsOneWidget);
+      expect(find.text('Samaritans'), findsOneWidget);
+      expect(find.text(AppStrings.productPageCharityLearnMore), findsOneWidget);
+      expect(apiService.requestedEndpoints, hasLength(1));
+
+      // Navigating back preserves the original product and its charity card.
+      app.navigator.goBack();
+      await tester.pumpAndSettle();
+      app.navigator.goBack();
+      await tester.pumpAndSettle();
+
+      expect(find.text('First jumper'), findsOneWidget);
+      expect(find.text('Mind'), findsOneWidget);
+      expect(find.text('Samaritans'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'failed background charity hydration keeps rendering summary listing without retrying in a loop',
+    (tester) async {
+      final profileSummaryProduct = _product(
+        id: 'second-listing',
+        name: 'White Zara skirt',
+        charityId: 'samaritans',
+      );
+      final apiService = _StubProductDetailsApiService(
+        (_) async => Result.failure('Server error', statusCode: 500),
+      );
+      final repository = _PublicProfileRepository(products: [profileSummaryProduct]);
+      final app = await _pumpApp(
+        tester,
+        repository: repository,
+        apiService: apiService,
+      );
+
+      app.products.goToProductPage(profileSummaryProduct);
+      await tester.pumpAndSettle();
+
+      expect(find.text('White Zara skirt'), findsOneWidget);
+      expect(find.text(AppStrings.productPageLoadFailed), findsNothing);
+      expect(find.byType(ProductCharityCard), findsNothing);
+      expect(apiService.requestedEndpoints, [
+        ApiEndpoints.productWithDetailsById('second-listing'),
+      ]);
+    },
+  );
+
+  testWidgets(
+    'background hydration marks summary listing unavailable on LISTING_NOT_FOUND',
+    (tester) async {
+      final profileSummaryProduct = _product(
+        id: 'deleted-listing',
+        name: 'Removed skirt',
+        charityId: 'samaritans',
+      );
+      final apiService = _StubProductDetailsApiService(
+        (_) async => Result.failure(
+          'Not found',
+          statusCode: 404,
+          errorCode: 'LISTING_NOT_FOUND',
+        ),
+      );
+      final repository = _PublicProfileRepository(products: [profileSummaryProduct]);
+      final app = await _pumpApp(
+        tester,
+        repository: repository,
+        apiService: apiService,
+      );
+
+      app.products.goToProductPage(profileSummaryProduct);
+      await tester.pumpAndSettle();
+
+      expect(find.text('This listing is no longer available.'), findsOneWidget);
+      expect(find.text('Removed skirt'), findsNothing);
+    },
+  );
 }
