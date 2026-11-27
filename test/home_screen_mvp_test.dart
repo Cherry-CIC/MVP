@@ -147,7 +147,7 @@ void main() {
   testWidgets('HomeScreen shows the slimmer global search bar', (tester) async {
     await _pumpHomeScreen(tester);
 
-    expect(find.text('Find something'), findsOneWidget);
+    expect(find.text('Find something special...'), findsOneWidget);
     expect(find.byIcon(Icons.search), findsOneWidget);
   });
 

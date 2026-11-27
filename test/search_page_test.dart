@@ -363,15 +363,15 @@ void main() {
     expect(find.text('vintage wool jacket'), findsOneWidget);
   });
 
-  testWidgets('search bar and input display Find something', (tester) async {
+  testWidgets('search bar and input display Find something special...', (tester) async {
     await _open(tester, _Items(), open: false);
-    expect(find.text('Find something'), findsOneWidget);
+    expect(find.text('Find something special...'), findsOneWidget);
 
     await tester.tap(find.byType(Search));
     await tester.pumpAndSettle();
 
     final field = tester.widget<TextField>(find.byType(TextField));
-    expect(field.decoration?.hintText, 'Find something');
+    expect(field.decoration?.hintText, 'Find something special...');
     expect(find.text('Find pre-loved items and charities across Cherry.'), findsOneWidget);
   });
 

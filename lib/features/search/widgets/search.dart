@@ -16,7 +16,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 /// Hint shown in every search entry point.
-const String searchHint = 'Find something';
+const String searchHint = 'Find something special...';
 
 /// Both shop entry points use the same search route and lifecycle.
 ///
