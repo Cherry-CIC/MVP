@@ -7,6 +7,30 @@ import 'package:cherry_mvp/core/router/nav_routes.dart';
 
 class NavigationProvider {
   final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+  ValueChanged<int>? _mainTabSelector;
+
+  void registerMainTabSelector(ValueChanged<int> selector) {
+    _mainTabSelector = selector;
+  }
+
+  void unregisterMainTabSelector(ValueChanged<int> selector) {
+    if (_mainTabSelector == selector) {
+      _mainTabSelector = null;
+    }
+  }
+
+  /// Pops pushed routes back to the root shell and switches [HomePage] to
+  /// [tabIndex], returning `true` when handled by the mounted root shell.
+  bool selectMainTab(int tabIndex, {NavigatorState? navigatorState}) {
+    final selector = _mainTabSelector;
+    final effectiveNavigator = navigatorKey.currentState ?? navigatorState;
+    if (selector == null || effectiveNavigator == null) {
+      return false;
+    }
+    effectiveNavigator.popUntil((route) => route.isFirst);
+    selector(tabIndex);
+    return true;
+  }
 
   Future<dynamic> navigateTo(String routeName, {Object? arguments}) {
     return navigatorKey.currentState!.pushNamed(routeName, arguments: arguments);

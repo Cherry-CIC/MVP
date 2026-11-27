@@ -1,7 +1,10 @@
 import 'dart:async';
 
 import 'package:cherry_mvp/core/config/app_strings.dart';
+import 'package:cherry_mvp/core/router/nav_provider.dart';
+import 'package:cherry_mvp/core/router/nav_routes.dart';
 import 'package:cherry_mvp/core/utils/result.dart';
+import 'package:cherry_mvp/features/home/widgets/bottom_nav_bar.dart';
 import 'package:cherry_mvp/features/profile/public_user_profile.dart';
 import 'package:cherry_mvp/features/profile/public_user_profile_repository.dart';
 import 'package:cherry_mvp/features/profile/widgets/seller_listing_card.dart';
@@ -47,8 +50,12 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Alex'), findsOneWidget);
     expect(find.text('No public listings at the moment.'), findsOneWidget);
+    expect(find.byType(CherryBottomNavBar), findsOneWidget);
     for (final label in ['Settings', 'Orders', 'Liked', 'Email', 'Address', 'Give']) {
-      expect(find.text(label), findsNothing);
+      expect(
+        find.descendant(of: find.byType(ListView), matching: find.text(label)),
+        findsNothing,
+      );
     }
   });
 
@@ -192,4 +199,88 @@ void main() {
     expect(find.byType(SellerListingCard), findsNothing);
     expect(find.text('Alex'), findsNothing);
   });
+
+  testWidgets('renders unselected footer navigation items on PublicUserProfile', (tester) async {
+    await pumpProfile(
+      tester,
+      FakePublicProfileRepository((_, _) => Result.success(publicProfilePage())),
+    );
+    await tester.pumpAndSettle();
+
+    final footerFinder = find.byType(CherryBottomNavBar);
+    expect(footerFinder, findsOneWidget);
+    expect(tester.widget<CherryBottomNavBar>(footerFinder).selectedIndex, isNull);
+
+    final bottomBar = tester.widget<BottomNavigationBar>(
+      find.descendant(of: footerFinder, matching: find.byType(BottomNavigationBar)),
+    );
+    expect(bottomBar.selectedItemColor, bottomBar.unselectedItemColor);
+
+    for (final label in ['Home', 'Discover', 'Give', 'Profile']) {
+      expect(
+        find.descendant(of: footerFinder, matching: find.text(label)),
+        findsOneWidget,
+      );
+    }
+  });
+
+  testWidgets(
+    'tapping Home, Discover, or Profile in PublicUserProfile footer pops intermediate routes and switches root tab',
+    (tester) async {
+      for (final target in [
+        (label: 'Home', index: CherryNavIndices.home),
+        (label: 'Discover', index: CherryNavIndices.discover),
+        (label: 'Profile', index: CherryNavIndices.profile),
+      ]) {
+        final navigator = NavigationProvider();
+        var selectedRootTab = -1;
+        navigator.registerMainTabSelector((index) {
+          selectedRootTab = index;
+        });
+
+        await tester.pumpWidget(
+          MultiProvider(
+            providers: [
+              Provider<NavigationProvider>.value(value: navigator),
+              Provider<IPublicUserProfileRepository>.value(
+                value: FakePublicProfileRepository(
+                  (_, _) => Result.success(publicProfilePage()),
+                ),
+              ),
+              Provider<FirebaseAuth>.value(value: _MockFirebaseAuth()),
+            ],
+            child: MaterialApp(
+              navigatorKey: navigator.navigatorKey,
+              onGenerateRoute: AppRoutes.generateRoute,
+              home: const Scaffold(body: Text('Root Shell')),
+            ),
+          ),
+        );
+
+        // Simulate Home -> Product -> PublicUserProfile stack.
+        navigator.navigatorKey.currentState!.push(
+          MaterialPageRoute<void>(
+            builder: (_) => const Scaffold(body: Text('Intermediate Product Page')),
+          ),
+        );
+        await tester.pumpAndSettle();
+        unawaited(navigator.openPublicUserProfile('seller'));
+        await tester.pumpAndSettle();
+        expect(find.byType(PublicUserProfile), findsOneWidget);
+
+        await tester.tap(
+          find.descendant(
+            of: find.byType(CherryBottomNavBar),
+            matching: find.text(target.label),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.byType(PublicUserProfile), findsNothing);
+        expect(find.text('Intermediate Product Page'), findsNothing);
+        expect(find.text('Root Shell'), findsOneWidget);
+        expect(selectedRootTab, target.index);
+      }
+    },
+  );
 }
