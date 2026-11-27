@@ -1,3 +1,5 @@
+import 'package:cherry_mvp/core/models/profile_photo.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cherry_mvp/core/config/config.dart';
@@ -39,7 +41,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       body: SafeArea(
         child: credentials == null
             ? const Center(child: CircularProgressIndicator())
-            : _EditProfileForm(credentials: credentials),
+            : _EditProfileForm(key: ValueKey(credentials.uid), credentials: credentials),
       ),
     );
   }
@@ -47,7 +49,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
 /// Only show once the [credentials] have loaded
 class _EditProfileForm extends StatefulWidget {
-  const _EditProfileForm({required this.credentials});
+  const _EditProfileForm({super.key, required this.credentials});
 
   final UserCredentials credentials;
 
@@ -56,6 +58,8 @@ class _EditProfileForm extends StatefulWidget {
 }
 
 class _EditProfileFormState extends State<_EditProfileForm> {
+  ProfilePhoto? _selectedPhoto;
+  bool _picking = false;
   final _formKey = GlobalKey<FormState>();
 
   late final TextEditingController _firstNameController;
@@ -106,12 +110,40 @@ class _EditProfileFormState extends State<_EditProfileForm> {
     return trimmed;
   }
 
+  Future<void> _pickPhoto() async {
+    if (_picking) return;
+    setState(() => _picking = true);
+    try {
+      final file = await ImagePicker().pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 1024,
+        maxHeight: 1024,
+        imageQuality: 85,
+        requestFullMetadata: false,
+      );
+      if (file == null || !mounted) return;
+      final result = await ProfilePhoto.read(file);
+      if (!mounted) return;
+      if (result.isSuccess) {
+        setState(() => _selectedPhoto = result.value);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(result.error!)));
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text(AppStrings.errorPickingImage)));
+      }
+    } finally {
+      if (mounted) setState(() => _picking = false);
+    }
+  }
+
   Future<void> _save() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
     final auth = context.read<AuthViewModel>();
     final uid = auth.currentUser?.uid;
-    if (uid == null) return;
+    if (uid == null || uid != widget.credentials.uid || _picking) return;
 
     final firstName = _changedValue(_firstNameController.text, _initialFirstName);
     final username = _changedValue(_usernameController.text, _initialUsername);
@@ -119,7 +151,7 @@ class _EditProfileFormState extends State<_EditProfileForm> {
 
     final navigator = context.read<NavigationProvider>();
 
-    if (firstName == null && username == null && phoneNumber == null) {
+    if (firstName == null && username == null && phoneNumber == null && _selectedPhoto == null) {
       navigator.goBack();
       return;
     }
@@ -127,6 +159,7 @@ class _EditProfileFormState extends State<_EditProfileForm> {
     final editProfile = context.read<EditProfileViewModel>();
     final result = await editProfile.saveProfile(
       uid: uid,
+      photo: _selectedPhoto,
       firstName: firstName,
       username: username,
       phoneNumber: phoneNumber,
@@ -159,7 +192,14 @@ class _EditProfileFormState extends State<_EditProfileForm> {
 
   @override
   Widget build(BuildContext context) {
-    final photoUrl = widget.credentials.photoUrl;
+    final photoUrl = widget.credentials.photoUrl?.trim();
+    final selectedPhoto = _selectedPhoto;
+    ImageProvider? image;
+    if (selectedPhoto != null) {
+      image = MemoryImage(selectedPhoto.bytes);
+    } else if (photoUrl != null && photoUrl.isNotEmpty) {
+      image = NetworkImage(photoUrl);
+    }
     final isSaving = context.watch<EditProfileViewModel>().isSaving;
 
     return SingleChildScrollView(
@@ -170,12 +210,27 @@ class _EditProfileFormState extends State<_EditProfileForm> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Center(
-              child: CircleAvatar(
-                radius: 40,
-                backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
-                backgroundImage: (photoUrl != null && photoUrl.isNotEmpty)
-                    ? NetworkImage(photoUrl)
-                    : AssetImage(AppImages.profileProfileIcon) as ImageProvider,
+              child: TextButton(
+                onPressed: isSaving || _picking ? null : _pickPhoto,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    ClipOval(
+                      child: SizedBox.square(
+                        dimension: 80,
+                        child: image == null
+                            ? Image.asset(AppImages.profileProfileIcon)
+                            : Image(
+                                image: image,
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, _, _) => Image.asset(AppImages.profileProfileIcon),
+                              ),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(image != null ? AppStrings.changeProfilePhoto : AppStrings.addProfilePhoto),
+                  ],
+                ),
               ),
             ),
             const SizedBox(height: 24),
@@ -231,7 +286,7 @@ class _EditProfileFormState extends State<_EditProfileForm> {
               child: isSaving
                   ? const Center(child: CircularProgressIndicator())
                   : FilledButton(
-                      onPressed: _save,
+                      onPressed: _picking ? null : _save,
                       child: const Text(AppStrings.editProfileSave),
                     ),
             ),

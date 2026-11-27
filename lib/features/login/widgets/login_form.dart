@@ -99,7 +99,13 @@ class LoginFormState extends State<LoginForm> {
                 isLastField: true,
               ),
 
-              const SizedBox(height: 16),
+              Align(
+                alignment: AlignmentDirectional.centerEnd,
+                child: TextButton(
+                  onPressed: () => navigator.navigateTo(AppRoutes.forgotPassword),
+                  child: const Text(AppStrings.forgotPassword),
+                ),
+              ),
 
               Consumer<LoginViewModel>(
                 builder: (context, viewModel, child) {
@@ -130,7 +136,7 @@ class LoginFormState extends State<LoginForm> {
                                     }
                                   }
                                 },
-                                child: const Text("Submit"),
+                                child: const Text(AppStrings.login),
                               ),
                             ),
                     ],
@@ -140,24 +146,17 @@ class LoginFormState extends State<LoginForm> {
 
               const SizedBox(height: 8),
 
-              SizedBox(
-                width: double.infinity,
-                child: TextButton(
-                  onPressed: () => navigator.replaceWith(AppRoutes.register),
-                  child: Text(AppStrings.createAccount),
-                ),
-              ),
-
-              SizedBox(
-                width: double.infinity,
-                child: TextButton(
-                  onPressed: () => navigator.navigateTo(AppRoutes.forgotPassword),
-                  child: Center(
-                    child: Text(
-                      AppStrings.forgotPassword,
-                      style: Theme.of(context).textTheme.labelSmall,
+              Center(
+                child: Wrap(
+                  alignment: WrapAlignment.center,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    const Text(AppStrings.noAccountPrompt),
+                    TextButton(
+                      onPressed: () => navigator.replaceWith(AppRoutes.register),
+                      child: const Text(AppStrings.createOne),
                     ),
-                  ),
+                  ],
                 ),
               ),
             ],

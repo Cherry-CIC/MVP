@@ -1,4 +1,7 @@
 import 'dart:async';
+import 'dart:io';
+
+import 'package:cherry_mvp/core/models/profile_photo.dart';
 
 import 'package:cherry_mvp/core/config/firestore_constants.dart';
 import 'package:cherry_mvp/core/models/model.dart';
@@ -72,6 +75,7 @@ class _FakeFirestoreService extends FirestoreService {
          firebaseAuth: _FakeFirebaseAuth(),
        );
 
+  Completer<Result<void>>? pendingSave;
   int saveDocumentCalls = 0;
   int fetchUserCalls = 0;
   Map<String, dynamic>? savedData;
@@ -94,6 +98,7 @@ class _FakeFirestoreService extends FirestoreService {
   }) async {
     saveDocumentCalls += 1;
     savedData = data;
+    if (pendingSave != null) return pendingSave!.future;
     return Result.success(null);
   }
 
@@ -104,18 +109,30 @@ class _FakeFirestoreService extends FirestoreService {
   }
 }
 
-RegisterRequest _request() {
+class _PhotoStorage extends StorageProvider {
+  _PhotoStorage() : super(firebaseStorage: _FakeFirebaseStorage());
+  String? path;
+
+  @override
+  Future<Result<String>> uploadProfilePhoto(String uid, ProfilePhoto photo) async {
+    path = photo.pathFor(uid);
+    return Result.success('https://example.org/registered');
+  }
+}
+
+RegisterRequest _request({File? image}) {
   return RegisterRequest(
     firstname: 'Taylor',
     email: 'taylor@example.com',
     phone: '07123456789',
     username: 'taylor',
     password: 'password123',
-    imageFile: null,
+    imageFile: image,
   );
 }
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
   late SharedPreferences prefs;
   late _FakeAuthService authService;
   late _FakeFirestoreService firestoreService;
@@ -133,6 +150,18 @@ void main() {
     );
   });
 
+  test('registration saves the photo in the new account’s own folder', () async {
+    final directory = Directory.systemTemp.createTempSync();
+    addTearDown(() => directory.deleteSync(recursive: true));
+    final image = File('assets/images/profile.png').copySync('${directory.path}/avatar.png');
+    final storage = _PhotoStorage();
+    repository = RegisterRepository(authService, firestoreService, storage);
+
+    expect((await repository.register(_request(image: image))).isSuccess, isTrue);
+    expect(storage.path, startsWith('user_images/user-123/'));
+    expect(firestoreService.savedData?[FirestoreConstants.photoUrl], 'https://example.org/registered');
+  });
+
   test('successful registration dispatches a verification email', () async {
     final result = await repository.register(_request());
 
@@ -145,6 +174,24 @@ void main() {
       firestoreService.savedData?[FirestoreConstants.email],
       'taylor@example.com',
     );
+  });
+
+  testWidgets('an unacknowledged write releases registration without treating a late save as a new success', (
+    tester,
+  ) async {
+    final pending = firestoreService.pendingSave = Completer<Result<void>>();
+    final registration = repository.register(_request());
+    await tester.pump();
+    expect(firestoreService.saveDocumentCalls, 1);
+    await tester.pump(const Duration(seconds: 30));
+    final result = await registration;
+    expect(result.isSuccess, isFalse);
+    expect(result.error, contains('Your account was created'));
+    pending.complete(Result.success(null));
+    await tester.pump();
+    expect(authService.signUpCalls, 1);
+    expect(firestoreService.fetchUserCalls, 0);
+    expect(authService.verificationEmailCalls, 0);
   });
 
   test('registration does not wait for verification email delivery', () async {

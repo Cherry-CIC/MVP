@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:fluttertoast/fluttertoast.dart';
+import 'package:cherry_mvp/features/register/verify_email_page.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:cherry_mvp/core/config/config.dart';
@@ -108,6 +108,9 @@ class _RegisterFormState extends State<RegisterForm> {
     try {
       final XFile? pickedFile = await _picker.pickImage(
         source: ImageSource.gallery,
+        maxWidth: 1024,
+        maxHeight: 1024,
+        imageQuality: 85,
         requestFullMetadata: false,
       );
       if (!mounted || pickedFile == null) return;
@@ -249,18 +252,31 @@ class _RegisterFormState extends State<RegisterForm> {
                               child: FilledButton(
                                 onPressed: () async {
                                   if (_formKey.currentState!.validate()) {
-                                    await viewModel.register(
+                                    final email = _emailController.text.trim();
+                                    final account = await viewModel.register(
                                       _firstNameController.text,
-                                      _emailController.text,
+                                      email,
                                       _userNameController.text,
                                       _phoneNumberController.text,
                                       _passwordController.text,
                                       _selectedImage,
                                     );
-                                    if (viewModel.status.type == StatusType.failure) {
-                                      Fluttertoast.showToast(msg: viewModel.status.message ?? "");
-                                    } else if (viewModel.status.type == StatusType.success) {
-                                      Fluttertoast.showToast(msg: "Registration Successful");
+                                    if (!context.mounted || ModalRoute.isCurrentOf(context) != true) return;
+                                    final uid = account?.uid;
+                                    if (uid != null) {
+                                      Navigator.of(context).pushReplacement(
+                                        MaterialPageRoute<void>(
+                                          builder: (_) => VerifyEmailPage(uid: uid, email: account?.email ?? email),
+                                        ),
+                                      );
+                                    } else if (viewModel.status.type == StatusType.failure) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            viewModel.status.message ?? 'Registration failed. Please try again.',
+                                          ),
+                                        ),
+                                      );
                                     }
                                   }
                                 },

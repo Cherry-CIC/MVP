@@ -100,6 +100,9 @@ class _PostAuthUsernameGateState extends State<PostAuthUsernameGate> {
     }
 
     if (_uid != currentUser.uid || _usernameFuture == null) {
+      // Email registration signs in before the profile is saved. Resolve the
+      // username when this route is first revealed for the new account.
+      if (ModalRoute.isCurrentOf(context) == false) return const Scaffold();
       _uid = currentUser.uid;
       _usernameFuture = _resolveUsername(currentUser.uid);
     }

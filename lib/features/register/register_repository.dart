@@ -1,5 +1,8 @@
 import 'dart:async';
 
+import 'package:cherry_mvp/core/models/profile_photo.dart';
+import 'package:image_picker/image_picker.dart';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cherry_mvp/core/config/config.dart';
 import 'package:cherry_mvp/core/models/model.dart';
@@ -21,6 +24,13 @@ class RegisterRepository {
       return Result.failure("Username is already taken.");
     }
 
+    ProfilePhoto? photo;
+    if (request.imageFile case final file?) {
+      final selection = await ProfilePhoto.read(XFile(file.path));
+      if (!selection.isSuccess) return Result.failure(selection.error);
+      photo = selection.value;
+    }
+
     final result = await _authService.signUp(request.email, request.password);
 
     if (result.isSuccess) {
@@ -28,25 +38,18 @@ class RegisterRepository {
       final userCredentials = result.value;
 
       String? photoUrl;
-      if (request.imageFile != null && request.imageFile!.existsSync()) {
-        // Upload image if a file is provided
-        final imageUploadResult = await _storage.uploadImage(
-          request.imageFile!,
-          'user_images/${request.firstname}_profile_picture.png',
-        );
-
-        if (imageUploadResult.isSuccess) {
-          photoUrl = imageUploadResult.value; // Get the download URL of the uploaded image
-        } else {
-          return Result.failure(
-            "Error uploading image: ${imageUploadResult.error}",
-          );
-        }
+      final uid = userCredentials?.uid;
+      if (uid == null || uid.isEmpty) return Result.failure(AppStrings.editProfileSaveFailed);
+      var photoUploadFailed = false;
+      if (photo != null) {
+        final upload = await _storage.uploadProfilePhoto(uid, photo);
+        photoUrl = upload.value;
+        photoUploadFailed = !upload.isSuccess;
       }
 
       // Now, create the user in Firestore
       final firestoreResult = await createUserInFirestore(
-        userCredentials?.uid ?? "",
+        uid,
         request.username,
         request.firstname,
         request.email,
@@ -56,6 +59,9 @@ class RegisterRepository {
 
       if (firestoreResult.isSuccess) {
         unawaited(_sendVerificationEmail());
+        if (photoUploadFailed) {
+          return Result.failure('Your account was created. Sign in and add your photo in Edit profile.');
+        }
         return Result.success(userCredentials);
       } else {
         return Result.failure(firestoreResult.error);
@@ -112,11 +118,19 @@ class RegisterRepository {
       FirestoreConstants.createdAt: FieldValue.serverTimestamp(),
     };
 
-    final result = await _firestoreService.saveDocument(
-      FirestoreConstants.pathUserCollection,
-      uid,
-      data,
-    );
+    // An offline Firestore write can stay queued until connectivity returns.
+    final result = await _firestoreService
+        .saveDocument(
+          FirestoreConstants.pathUserCollection,
+          uid,
+          data,
+        )
+        .timeout(
+          const Duration(seconds: 30),
+          onTimeout: () => Result.failure(
+            'Your account was created. We couldn’t confirm your profile was saved. Check your connection and use Back to continue.',
+          ),
+        );
 
     if (result.isSuccess) {
       await _firestoreService.fetchUser(uid);
