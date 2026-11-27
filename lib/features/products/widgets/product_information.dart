@@ -63,8 +63,8 @@ class ProductInformation extends StatelessWidget {
                         Image.asset(
                           AppImages.donationHeart,
                           key: const ValueKey('product-info-donation-heart'),
-                          width: 20,
-                          height: 20,
+                          width: 22,
+                          height: 22,
                           color: donationColor,
                           excludeFromSemantics: true,
                         ),
