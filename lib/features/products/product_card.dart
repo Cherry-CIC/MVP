@@ -222,7 +222,7 @@ class ProductCard extends StatelessWidget {
                           children: [
                             Wrap(
                               crossAxisAlignment: WrapCrossAlignment.center,
-                              spacing: 4,
+                              spacing: 5,
                               runSpacing: 2,
                               children: [
                                 Text(
@@ -235,8 +235,8 @@ class ProductCard extends StatelessWidget {
                                 Image.asset(
                                   AppImages.donationHeart,
                                   key: ValueKey('product-card-donation-heart-${product.id}'),
-                                  width: 18,
-                                  height: 18,
+                                  width: 15,
+                                  height: 15,
                                   color: donationColor,
                                   excludeFromSemantics: true,
                                 ),
@@ -255,15 +255,20 @@ class ProductCard extends StatelessWidget {
                                     fontSize: 16,
                                   ),
                                 ),
-                                Text(
-                                  AppStrings.productIncl,
-                                  style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                                    color: Theme.of(context).colorScheme.primary,
-                                    fontSize: 16,
-                                  ),
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      AppStrings.productIncl,
+                                      style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                                        color: Theme.of(context).colorScheme.primary,
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 3.5),
+                                    Image.asset(AppImages.shieldTick, width: 16, height: 16),
+                                  ],
                                 ),
-                                const SizedBox(width: 4),
-                                Image.asset(AppImages.shieldTick, width: 16, height: 16),
                               ],
                             ),
                           ],

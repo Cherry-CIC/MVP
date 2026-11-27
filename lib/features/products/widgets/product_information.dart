@@ -50,7 +50,7 @@ class ProductInformation extends StatelessWidget {
                   children: [
                     Wrap(
                       crossAxisAlignment: WrapCrossAlignment.center,
-                      spacing: 4,
+                      spacing: 5,
                       runSpacing: 4,
                       children: [
                         Text(
@@ -63,8 +63,8 @@ class ProductInformation extends StatelessWidget {
                         Image.asset(
                           AppImages.donationHeart,
                           key: const ValueKey('product-info-donation-heart'),
-                          width: 22,
-                          height: 22,
+                          width: 18,
+                          height: 18,
                           color: donationColor,
                           excludeFromSemantics: true,
                         ),
@@ -79,11 +79,17 @@ class ProductInformation extends StatelessWidget {
                           '£${product.priceIncludingSecurityFee.toStringAsFixed(2)}',
                           style: priceStyle.copyWith(color: colours.primary),
                         ),
-                        Text(
-                          AppStrings.productIncl,
-                          style: priceStyle.copyWith(color: colours.primary),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              AppStrings.productIncl,
+                              style: priceStyle.copyWith(color: colours.primary),
+                            ),
+                            const SizedBox(width: 2.5),
+                            Image.asset(AppImages.shieldTick, width: 20, height: 20),
+                          ],
                         ),
-                        Image.asset(AppImages.shieldTick, width: 20, height: 20),
                       ],
                     ),
                   ],
