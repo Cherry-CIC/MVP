@@ -1,3 +1,4 @@
+import 'package:cherry_mvp/features/notifications/collection_push_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -32,7 +33,13 @@ class _UsernameSetupPageState extends State<UsernameSetupPage> {
   bool get _isValid => _validateUsername() == null;
 
   Future<void> _handleBack() async {
-    await FirebaseAuth.instance.signOut();
+    final push = context.read<CollectionPushController?>();
+    await push?.beforeSignOut();
+    try {
+      await FirebaseAuth.instance.signOut();
+    } finally {
+      push?.afterSignOutAttempt();
+    }
     if (!mounted) return;
 
     context.read<NavigationProvider>().navigateToAndRemoveUntil(

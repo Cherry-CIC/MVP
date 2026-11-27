@@ -1,6 +1,9 @@
 class FeatureFlags {
   const FeatureFlags._();
 
+  // Build with this enabled once the matching backend can register devices.
+  static const bool lockerPush = bool.fromEnvironment('COLLECTION_PUSH_ENABLED');
+
   // Hide incomplete inbox and messaging UI for the MVP without removing the code.
   static const bool showInbox = false;
 

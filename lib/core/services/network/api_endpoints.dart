@@ -28,6 +28,7 @@ class ApiEndpoints {
   static const String paymentIntent = '$_apiPrefix/payment/create-payment-intent';
   static const String createOrder = '$_apiPrefix/order/create';
   static const String myOrders = '$_apiPrefix/order/my-orders';
+  static String buyerOrder(String orderId) => '$_apiPrefix/order/${Uri.encodeComponent(orderId)}';
   static String confirmOrderReceived(String orderId) {
     return '$_apiPrefix/order/${Uri.encodeComponent(orderId)}/confirm-received';
   }

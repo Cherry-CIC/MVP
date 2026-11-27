@@ -1,3 +1,7 @@
+import 'package:cherry_mvp/core/config/feature_flags.dart';
+import 'package:cherry_mvp/features/notifications/collection_push_controller.dart';
+import 'package:cherry_mvp/features/notifications/notification_device_repository.dart';
+import 'package:cherry_mvp/features/notifications/push_messaging_gateway.dart';
 import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -56,6 +60,22 @@ List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
     Provider<FirebaseAuth>(create: (_) => FirebaseAuth.instance),
     Provider<FirebaseFirestore>(create: (_) => FirebaseFirestore.instance),
     Provider(create: (_) => NavigationProvider()),
+    if (FeatureFlags.lockerPush && FirebasePushMessagingGateway().supported) ...[
+      Provider<PushMessagingGateway>(create: (_) => FirebasePushMessagingGateway()),
+      ChangeNotifierProvider<CollectionPushController>(
+        lazy: false,
+        create: (context) {
+          final auth = context.read<FirebaseAuth>();
+          return CollectionPushController(
+            gateway: context.read<PushMessagingGateway>(),
+            repository: ApiNotificationDeviceRepository(auth: auth),
+            preferences: prefs,
+            currentUserId: () => auth.currentUser?.uid,
+            accountChanges: auth.authStateChanges().map((user) => user?.uid),
+          );
+        },
+      ),
+    ],
     ChangeNotifierProvider(create: (_) => ThemeNotifier(prefs)),
 
     ChangeNotifierProvider(create: (_) => DeletedListings()),
@@ -390,6 +410,8 @@ List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
         firebaseAuth: Provider.of<FirebaseAuth>(context, listen: false),
         firestore: Provider.of<FirebaseFirestore>(context, listen: false),
         apiService: Provider.of<ApiService>(context, listen: false),
+        beforeSignOut: context.read<CollectionPushController?>()?.beforeSignOut,
+        afterSignOutAttempt: context.read<CollectionPushController?>()?.afterSignOutAttempt,
         clearUserState: () {
           Provider.of<ProductViewModel>(context, listen: false).clearUserState();
           Provider.of<BlockedUsers>(context, listen: false).clear();

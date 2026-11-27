@@ -9,6 +9,7 @@ import 'package:cherry_mvp/core/router/router.dart';
 import 'package:cherry_mvp/core/services/services.dart';
 import 'package:cherry_mvp/core/utils/utils.dart';
 import 'package:cherry_mvp/features/login/login_repository.dart';
+import 'package:cherry_mvp/features/notifications/collection_push_controller.dart';
 
 class AuthViewModel extends ChangeNotifier {
   final LoginRepository loginRepository;
@@ -17,6 +18,8 @@ class AuthViewModel extends ChangeNotifier {
   final FirebaseFirestore firestore;
   final ApiService apiService;
   final VoidCallback _clearUserState;
+  final Future<void> Function()? beforeSignOut;
+  final VoidCallback? afterSignOutAttempt;
 
   AuthViewModel({
     required this.loginRepository,
@@ -25,6 +28,8 @@ class AuthViewModel extends ChangeNotifier {
     required this.firestore,
     required this.apiService,
     VoidCallback? clearUserState,
+    this.beforeSignOut,
+    this.afterSignOutAttempt,
   }) : _clearUserState = clearUserState ?? _noop;
 
   static void _noop() {}
@@ -69,6 +74,7 @@ class AuthViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
+      await beforeSignOut?.call();
       final result = await _signOutAndClearPrefs();
 
       if (result.isSuccess) {
@@ -98,6 +104,7 @@ class AuthViewModel extends ChangeNotifier {
         ).showSnackBar(SnackBar(content: Text('Error: $e')));
       }
     } finally {
+      afterSignOutAttempt?.call();
       notifyListeners();
     }
   }
@@ -118,6 +125,8 @@ class AuthViewModel extends ChangeNotifier {
         return Result.failure('Account deletion was cancelled.');
       }
 
+      await beforeSignOut?.call();
+      final deletingUid = currentUser?.uid;
       final result = await apiService.delete<Map<String, dynamic>>(
         ApiEndpoints.deleteAccount,
       );
@@ -137,7 +146,7 @@ class AuthViewModel extends ChangeNotifier {
         return Result.failure(message);
       }
 
-      await _bestEffortSignOutAndClearPrefs();
+      await _bestEffortSignOutAndClearPrefs(deletingUid);
 
       _deleteAccountStatus = Status.success;
       notifyListeners();
@@ -153,10 +162,12 @@ class AuthViewModel extends ChangeNotifier {
       _deleteAccountStatus = Status.failure(message);
       notifyListeners();
       return Result.failure(message);
+    } finally {
+      afterSignOutAttempt?.call();
     }
   }
 
-  Future<Result<void>> _signOutAndClearPrefs() async {
+  Future<Result<void>> _signOutAndClearPrefs({String? deletedUid}) async {
     final result = await loginRepository.logout();
     if (!result.isSuccess) {
       if (firebaseAuth.currentUser == null) {
@@ -167,13 +178,13 @@ class AuthViewModel extends ChangeNotifier {
 
     _clearLocalUserState();
     final prefs = await SharedPreferences.getInstance();
-    await prefs.clear();
+    await CollectionPushController.clearSessionPreferences(prefs, deletedUid: deletedUid);
     return Result.success(null);
   }
 
-  Future<void> _bestEffortSignOutAndClearPrefs() async {
+  Future<void> _bestEffortSignOutAndClearPrefs(String? deletedUid) async {
     try {
-      final result = await _signOutAndClearPrefs();
+      final result = await _signOutAndClearPrefs(deletedUid: deletedUid);
       if (result.isSuccess) return;
     } catch (_) {}
 
@@ -183,7 +194,7 @@ class AuthViewModel extends ChangeNotifier {
 
     try {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.clear();
+      await CollectionPushController.clearSessionPreferences(prefs, deletedUid: deletedUid);
     } catch (_) {}
 
     _clearLocalUserState();
