@@ -54,7 +54,7 @@ Development uses `cherry-mvp` and `uk.org.cherry.app.dev`. Production uses `cher
 
 ### Locker collection alerts
 
-On an Android or iOS build, add `--dart-define=COLLECTION_PUSH_ENABLED=true` to enable the opt-in control in Settings and on the checkout confirmation screen. The default is off. Use a backend with device registration and the locker-arrival trigger enabled. [Backend PR #80](https://github.com/Cherry-CIC/cherry-Backend/pull/80)
+On an Android or iOS build, add `--dart-define=COLLECTION_PUSH_ENABLED=true` to enable a one-time opt-in prompt on the first signed-in Home visit and matching switches in Settings and on the checkout confirmation screen. The choice is saved per account on this device. The default is off. Use a backend with device registration and the locker-arrival trigger enabled. [Backend PR #80](https://github.com/Cherry-CIC/cherry-Backend/pull/80)
 
 For a device check, opt in as a test buyer, put the app in the background and verify that a locker-arrival alert opens the matching order. Also check a cold start, a foreground alert, denied permission and sign-out. iPhone delivery requires a push-enabled signing profile and an APNs credential configured in the corresponding Firebase project.
 

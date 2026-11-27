@@ -103,6 +103,33 @@ void main() {
     await gateway.foreground.close();
     await gateway.opened.close();
   });
+  test('declining the prompt is remembered and the switch can enable alerts later', () async {
+    await start();
+    expect(controller.needsFirstChoice('buyer'), isTrue);
+    await controller.answerPrompt('buyer', false);
+    expect(controller.enabled, isFalse);
+    expect(controller.needsFirstChoice('buyer'), isFalse);
+    expect(gateway.requests, 0);
+    await controller.setEnabled(true);
+    expect(controller.enabled, isTrue);
+    expect(controller.needsFirstChoice('buyer'), isFalse);
+  });
+  test('accepting the prompt shares the switch state and respects phone permission', () async {
+    await start();
+    await controller.answerPrompt('other', true);
+    expect(gateway.requests, 0);
+    gateway.status = PushPermission.denied;
+    await controller.answerPrompt('buyer', true);
+    expect(controller.enabled, isFalse);
+    expect(controller.needsFirstChoice('buyer'), isFalse);
+  });
+  test('accepting with permission turns on the switch', () async {
+    await start();
+    await controller.answerPrompt('buyer', true);
+    expect(controller.enabled, isTrue);
+    expect(controller.registered, isTrue);
+    expect(controller.needsFirstChoice('buyer'), isFalse);
+  });
   test('launch does not ask permission or register until buyer opts in', () async {
     await start();
     expect(gateway.requests, 0);

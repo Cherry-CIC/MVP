@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:cherry_mvp/features/notifications/collection_push_controller.dart';
+
 import 'package:cherry_mvp/features/orders/models/order_summary.dart';
 import 'package:cherry_mvp/features/orders/orders_page.dart';
 import 'package:cherry_mvp/features/orders/orders_repository.dart';
@@ -41,6 +43,8 @@ class _DeliveryReminderHostState extends State<DeliveryReminderHost> with Widget
   int _generation = 0;
   DialogRoute<DeliveryReminderAction>? _dialog;
 
+  DialogRoute<bool>? _pushPrompt;
+
   bool get _canPresent => _homeSelected && ModalRoute.of(context)?.isCurrent == true;
 
   @override
@@ -78,6 +82,7 @@ class _DeliveryReminderHostState extends State<DeliveryReminderHost> with Widget
       if (mounted &&
           _pending &&
           _dialog == null &&
+          _pushPrompt == null &&
           _canPresent &&
           WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed) {
         _pending = false;
@@ -93,6 +98,34 @@ class _DeliveryReminderHostState extends State<DeliveryReminderHost> with Widget
   }
 
   Future<void> _check(int generation) async {
+    final push = context.read<CollectionPushController?>();
+    final uid = widget.userId;
+    if (push != null && push.needsFirstChoice(uid)) {
+      final route = DialogRoute<bool>(
+        context: context,
+        builder: (dialog) => AlertDialog(
+          title: const Text('Get locker collection alerts?'),
+          content: const Text(
+            'cherry can notify you when your parcel is ready to collect. You can change this in Settings.',
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(dialog, false), child: const Text('Not now')),
+            FilledButton(onPressed: () => Navigator.pop(dialog, true), child: const Text('Allow alerts')),
+          ],
+        ),
+      );
+      _pushPrompt = route;
+      final allow = await Navigator.of(context).push(route);
+      _pushPrompt = null;
+      if (!mounted || widget.userId != uid) return;
+      await push.answerPrompt(uid, allow == true);
+      if (!mounted) return;
+      if (generation != _generation || !_canPresent) {
+        _pending = true;
+        _scheduleCheck();
+        return;
+      }
+    }
     final result = await context.read<IOrdersRepository>().fetchOrders(deliveryRemindersOnly: true);
     if (!mounted || generation != _generation) return;
     if (!result.isSuccess) {
@@ -158,6 +191,12 @@ class _DeliveryReminderHostState extends State<DeliveryReminderHost> with Widget
 
   @override
   void dispose() {
+    final prompt = _pushPrompt;
+    if (prompt != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (prompt.isActive) prompt.navigator?.removeRoute(prompt);
+      });
+    }
     _resolutionSubscription.cancel();
     WidgetsBinding.instance.removeObserver(this);
     final dialog = _dialog;

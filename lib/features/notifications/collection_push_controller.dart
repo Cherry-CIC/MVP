@@ -44,6 +44,19 @@ class CollectionPushController extends ChangeNotifier with WidgetsBindingObserve
   bool get supported => gateway.supported;
   bool get busy => _busy;
   bool get enabled => _userId != null && preferences.getBool('${preferencePrefix}enabled.$_userId') == true;
+  bool needsFirstChoice(String uid) =>
+      supported && !_busy && _active(uid, _generation) && !preferences.containsKey('${preferencePrefix}enabled.$uid');
+
+  Future<void> answerPrompt(String uid, bool allow) async {
+    if (!needsFirstChoice(uid)) return;
+    if (allow) {
+      await setEnabled(true);
+    } else {
+      await preferences.setBool('${preferencePrefix}enabled.$uid', false);
+      _notify();
+    }
+  }
+
   bool get registered => _registered;
   PushPermission get permission => _permission;
   String? get error => _error;
