@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cherry_mvp/core/models/category.dart';
 import 'package:cherry_mvp/core/models/product.dart';
 import 'package:cherry_mvp/core/router/nav_provider.dart';
@@ -19,7 +21,9 @@ import 'package:cherry_mvp/features/donation/donation_view_model.dart';
 import 'package:cherry_mvp/features/home/home_page.dart';
 import 'package:cherry_mvp/features/home/home_repository.dart';
 import 'package:cherry_mvp/features/home/home_viewmodel.dart';
+import 'package:cherry_mvp/features/home/widgets/bottom_nav_bar.dart';
 import 'package:cherry_mvp/features/home/widgets/discover_button.dart';
+import 'package:cherry_mvp/features/home/widgets/home_screen.dart';
 import 'package:cherry_mvp/features/login/login_repository.dart';
 import 'package:cherry_mvp/features/orders/models/order_summary.dart';
 import 'package:cherry_mvp/features/orders/orders_repository.dart';
@@ -33,6 +37,8 @@ import 'package:cherry_mvp/features/profile/profile_page.dart';
 import 'package:cherry_mvp/features/profile/models/seller_listing.dart';
 import 'package:cherry_mvp/features/profile/profile_listings_repository.dart';
 import 'package:cherry_mvp/features/profile/profile_listings_view_model.dart';
+import 'package:cherry_mvp/features/profile/public_user_profile.dart';
+import 'package:cherry_mvp/features/profile/public_user_profile_repository.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -151,6 +157,29 @@ class _FirebaseFirestoreMock extends Mock implements FirebaseFirestore {}
 
 class _LoginRepositoryMock extends Mock implements LoginRepository {}
 
+class _PublicProfileRepositoryStub implements IPublicUserProfileRepository {
+  @override
+  Future<Result<PublicUser>> fetchUser(String userId) async {
+    return Result.success(PublicUser(id: userId, username: 'Shelly'));
+  }
+
+  @override
+  Future<Result<PublicUserProfilePage>> fetchProfile(
+    String userId, {
+    int limit = 20,
+    String? cursor,
+  }) async {
+    return Result.success(
+      PublicUserProfilePage(
+        user: PublicUser(id: userId, username: 'Shelly'),
+        products: const [],
+        nextCursor: null,
+        hasMore: false,
+      ),
+    );
+  }
+}
+
 Future<NavigationProvider> _pumpHomePage(
   WidgetTester tester, {
   _ProfileListingsRepositoryStub? listingsRepository,
@@ -165,6 +194,10 @@ Future<NavigationProvider> _pumpHomePage(
     MultiProvider(
       providers: [
         Provider<NavigationProvider>.value(value: navigator),
+        Provider<FirebaseAuth>.value(value: firebaseAuth),
+        Provider<IPublicUserProfileRepository>(
+          create: (_) => _PublicProfileRepositoryStub(),
+        ),
         Provider<IOrdersRepository>.value(value: orders),
         ChangeNotifierProvider(create: (_) => SearchController()),
         Provider<ProductRepository>(create: (_) => _ProductRepositoryStub()),
@@ -596,4 +629,77 @@ void main() {
     expect(find.text('My Orders'), findsNothing);
     expect(find.text('Orders'), findsOneWidget);
   });
+
+  testWidgets(
+    'PublicUserProfile footer navigates back to HomePage tabs and opens Give flow',
+    (tester) async {
+      final navigator = await _pumpHomePage(tester);
+      expect(find.byType(HomeScreen), findsOneWidget);
+
+      // Push an intermediate route + PublicUserProfile, then tap Discover in footer.
+      navigator.navigatorKey.currentState!.push(
+        MaterialPageRoute<void>(
+          builder: (_) => const Scaffold(body: Text('Product Detail Route')),
+        ),
+      );
+      await tester.pumpAndSettle();
+      unawaited(navigator.openPublicUserProfile('seller-1'));
+      await tester.pumpAndSettle();
+      expect(find.byType(PublicUserProfile), findsOneWidget);
+      expect(find.text('Shelly'), findsOneWidget);
+
+      await tester.tap(
+        find.descendant(
+          of: find.byType(CherryBottomNavBar),
+          matching: find.text('Discover'),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byType(PublicUserProfile), findsNothing);
+      expect(find.text('Product Detail Route'), findsNothing);
+      expect(find.byType(DiscoverPage), findsOneWidget);
+
+      // Open PublicUserProfile again, then tap Profile in footer -> user's own ProfilePage.
+      unawaited(navigator.openPublicUserProfile('seller-1'));
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.descendant(
+          of: find.byType(CherryBottomNavBar),
+          matching: find.text('Profile'),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byType(PublicUserProfile), findsNothing);
+      expect(find.byType(ProfilePage), findsOneWidget);
+
+      // Open PublicUserProfile again, tap Give -> opens DonationPage; closing keeps PublicUserProfile, then tap Home -> HomeScreen.
+      unawaited(navigator.openPublicUserProfile('seller-1'));
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.descendant(
+          of: find.byType(CherryBottomNavBar),
+          matching: find.text('Give'),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byType(DonationPage), findsOneWidget);
+
+      navigator.goBack(false);
+      await tester.pumpAndSettle();
+      expect(find.byType(PublicUserProfile), findsOneWidget);
+
+      await tester.tap(
+        find.descendant(
+          of: find.byType(CherryBottomNavBar),
+          matching: find.text('Home'),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byType(PublicUserProfile), findsNothing);
+      expect(find.byType(HomeScreen), findsOneWidget);
+    },
+  );
 }

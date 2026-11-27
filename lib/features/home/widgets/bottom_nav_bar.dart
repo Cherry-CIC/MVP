@@ -17,7 +17,7 @@ class CherryNavIndices {
 
 /// A reusable navigation bar widget that be use across the app.
 class CherryBottomNavBar extends StatelessWidget {
-  final int selectedIndex;
+  final int? selectedIndex;
   final Function(int) onItemSelected;
   final Color? selectedColor;
   final Color? unselectedColor;
@@ -36,6 +36,7 @@ class CherryBottomNavBar extends StatelessWidget {
     final selectedColor = this.selectedColor ?? Theme.of(context).colorScheme.primary;
     final unselectedColor = this.unselectedColor ?? Theme.of(context).colorScheme.onSurfaceVariant;
     final backgroundColor = isDark ? const Color(0xFF18181B) : const Color(0xFFFFF2F6);
+    final hasSelectedTab = selectedIndex != null;
 
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -46,11 +47,11 @@ class CherryBottomNavBar extends StatelessWidget {
         color: backgroundColor,
       ),
       child: BottomNavigationBar(
-        currentIndex: selectedIndex,
+        currentIndex: hasSelectedTab ? selectedIndex! : CherryNavIndices.home,
         onTap: onItemSelected,
         type: BottomNavigationBarType.fixed,
         backgroundColor: Colors.transparent,
-        selectedItemColor: selectedColor,
+        selectedItemColor: hasSelectedTab ? selectedColor : unselectedColor,
         unselectedItemColor: unselectedColor,
         selectedFontSize: 12,
         unselectedFontSize: 12,

@@ -1,13 +1,20 @@
 import 'package:cherry_mvp/core/config/app_strings.dart';
+import 'package:cherry_mvp/core/config/feature_flags.dart';
+import 'package:cherry_mvp/core/router/nav_provider.dart';
+import 'package:cherry_mvp/core/router/nav_routes.dart';
 import 'package:cherry_mvp/core/utils/result.dart';
+import 'package:cherry_mvp/features/donation/donation_page.dart';
+import 'package:cherry_mvp/features/home/widgets/bottom_nav_bar.dart';
 import 'package:cherry_mvp/features/products/blocked_users.dart';
 import 'package:cherry_mvp/features/products/product_viewmodel.dart';
 import 'package:cherry_mvp/features/products/deleted_listings.dart';
 import 'package:cherry_mvp/features/products/widgets/product_safety_actions.dart';
 import 'package:cherry_mvp/features/profile/models/seller_listing.dart';
+import 'package:cherry_mvp/features/profile/profile_listings_view_model.dart';
 import 'package:cherry_mvp/features/profile/public_user_profile_repository.dart';
 import 'package:cherry_mvp/features/profile/public_user_profile_view_model.dart';
 import 'package:cherry_mvp/features/profile/widgets/seller_listing_card.dart';
+import 'package:cherry_mvp/features/search/widgets/search.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -75,8 +82,55 @@ class _PublicUserProfileState extends State<PublicUserProfile> {
             ),
           ),
         ),
+        bottomNavigationBar: CherryBottomNavBar(
+          selectedIndex: null,
+          onItemSelected: (index) => _handleFooterTap(context, index),
+          selectedColor: Theme.of(context).colorScheme.primary,
+          unselectedColor: Theme.of(context).colorScheme.secondary,
+        ),
       ),
     );
+  }
+
+  Future<void> _handleFooterTap(BuildContext context, int index) async {
+    if (index == CherryNavIndices.give) {
+      final posted = await showDialog<bool>(
+        context: context,
+        builder: (context) => const Dialog.fullscreen(child: DonationPage()),
+      );
+      if (posted == true && context.mounted) {
+        context.read<ProfileListingsViewModel?>()?.refreshListings();
+        _navigateToMainTab(context, CherryNavIndices.profile);
+      }
+      return;
+    }
+
+    if (FeatureFlags.showSearchNavigation && index == CherryNavIndices.search) {
+      openSearch(context);
+      return;
+    }
+
+    _navigateToMainTab(context, index);
+  }
+
+  void _navigateToMainTab(BuildContext context, int index) {
+    final navigator = context.read<NavigationProvider?>();
+    final routeNavigator = Navigator.maybeOf(context);
+    if (navigator != null &&
+        navigator.selectMainTab(index, navigatorState: routeNavigator)) {
+      return;
+    }
+    if (navigator != null && navigator.navigatorKey.currentState != null) {
+      if (index == CherryNavIndices.discover) {
+        navigator.navigateTo(AppRoutes.discover);
+      } else if (index == CherryNavIndices.profile) {
+        navigator.navigateTo(AppRoutes.myListings);
+      } else {
+        navigator.navigateToAndRemoveUntil(AppRoutes.home, (_) => false);
+      }
+      return;
+    }
+    routeNavigator?.popUntil((route) => route.isFirst);
   }
 
   List<Widget> _buildAppBarActions(BuildContext context) {

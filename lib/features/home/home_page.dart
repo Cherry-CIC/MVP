@@ -3,6 +3,7 @@ import 'package:cherry_mvp/features/search/widgets/search.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cherry_mvp/core/config/feature_flags.dart';
+import 'package:cherry_mvp/core/router/nav_provider.dart';
 import 'package:cherry_mvp/features/donation/donation_page.dart';
 import 'package:cherry_mvp/features/home/widgets/bottom_nav_bar.dart';
 import 'package:cherry_mvp/features/home/widgets/home_screen.dart';
@@ -30,6 +31,18 @@ class _HomePageState extends State<HomePage> {
   int _selectedIndex = CherryNavIndices.home;
   bool _showOrders = false;
   final PageController _pageController = PageController();
+  NavigationProvider? _navigationProvider;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final nextNavigator = context.read<NavigationProvider?>();
+    if (_navigationProvider != nextNavigator) {
+      _navigationProvider?.unregisterMainTabSelector(_onItemTapped);
+      _navigationProvider = nextNavigator;
+      _navigationProvider?.registerMainTabSelector(_onItemTapped);
+    }
+  }
 
   void _openOrders() {
     if (!_showOrders) {
@@ -115,6 +128,7 @@ class _HomePageState extends State<HomePage> {
 
   @override
   void dispose() {
+    _navigationProvider?.unregisterMainTabSelector(_onItemTapped);
     _pageController.dispose();
     super.dispose();
   }
