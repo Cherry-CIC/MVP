@@ -1,3 +1,4 @@
+import 'package:cherry_mvp/features/notifications/collection_notification_settings.dart';
 import 'package:cherry_mvp/core/config/config.dart';
 import 'package:cherry_mvp/core/theme/theme_notifier.dart';
 import 'package:flutter/material.dart';
@@ -46,6 +47,7 @@ class SettingsPageState extends State<SettingsPage> {
             toggleSwitchHide: toggleSwitchHide,
           ),
           SettingsSupport(),
+          const SliverToBoxAdapter(child: CollectionNotificationSettings()),
           SettingsPersonal(),
           SettingsShop(),
           SettingsAccount(),

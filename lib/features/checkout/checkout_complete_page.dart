@@ -1,3 +1,4 @@
+import 'package:cherry_mvp/features/notifications/collection_notification_settings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:provider/provider.dart';
@@ -80,6 +81,7 @@ class CheckoutCompletePage extends StatelessWidget {
               ),
             ),
             for (final product in basket.basketItems) BasketListItem(product: product),
+            const CollectionNotificationSettings(),
             if (showCheckoutActions)
               Container(
                 height: 160,

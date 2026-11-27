@@ -1,3 +1,7 @@
+import 'package:provider/provider.dart';
+import 'package:cherry_mvp/features/notifications/collection_push_controller.dart';
+import 'package:cherry_mvp/features/notifications/push_messaging_gateway.dart';
+import 'package:cherry_mvp/features/notifications/locker_push_host.dart';
 import 'package:cherry_mvp/core/config/config.dart';
 import 'package:cherry_mvp/core/services/google_auth_service.dart';
 import 'package:cherry_mvp/core/services/services.dart';
@@ -66,6 +70,8 @@ class _PostAuthUsernameGateState extends State<PostAuthUsernameGate> {
   }
 
   Future<void> _defaultSignOut() async {
+    final push = context.read<CollectionPushController?>();
+    await push?.beforeSignOut();
     try {
       final auth = widget.firebaseAuth ?? FirebaseAuth.instance;
       await auth.signOut();
@@ -78,8 +84,10 @@ class _PostAuthUsernameGateState extends State<PostAuthUsernameGate> {
 
     try {
       final prefs = widget.preferences ?? await SharedPreferences.getInstance();
-      await prefs.clear();
-    } catch (_) {}
+      await CollectionPushController.clearSessionPreferences(prefs);
+    } catch (_) {} finally {
+      push?.afterSignOutAttempt();
+    }
   }
 
   @override
@@ -112,13 +120,20 @@ class _PostAuthUsernameGateState extends State<PostAuthUsernameGate> {
 
         final username = result.value?.trim();
         if (username != null && username.isNotEmpty) {
-          return widget.homeBuilder != null
-              ? widget.homeBuilder!(context)
-              : DeliveryReminderHost(
-                  key: ValueKey(currentUser.uid),
-                  userId: currentUser.uid,
-                  builder: (_, timer) => HomePage(deliveryTimer: timer),
-                );
+          if (widget.homeBuilder != null) return widget.homeBuilder!(context);
+          final home = DeliveryReminderHost(
+            key: ValueKey(currentUser.uid),
+            userId: currentUser.uid,
+            builder: (_, timer) => HomePage(deliveryTimer: timer),
+          );
+          final gateway = context.read<PushMessagingGateway?>();
+          if (gateway == null) return home;
+          return LockerPushHost(
+            key: ValueKey(currentUser.uid),
+            gateway: gateway,
+            userId: currentUser.uid,
+            child: home,
+          );
         }
 
         return widget.usernameSetupBuilder != null

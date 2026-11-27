@@ -11,6 +11,8 @@ dependencies:
     sdk: flutter
   firebase_core: ^5.1.0
   firebase_auth: ^7.0.1
+  # Shares the Firebase Apple SDK 13.1.1 pin used by the other plugins.
+  firebase_messaging: 17.0.1
   firebase_storage: ^14.0.1
   cloud_firestore: ^7.1.0
   cloud_functions: ^7.0.1
