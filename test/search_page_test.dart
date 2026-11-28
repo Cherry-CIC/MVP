@@ -11,6 +11,7 @@ import 'package:cherry_mvp/features/charity_page/charity_viewmodel.dart';
 import 'package:cherry_mvp/features/discover/discover_repository.dart';
 import 'package:cherry_mvp/features/home/home_repository.dart';
 import 'package:cherry_mvp/features/home/home_viewmodel.dart';
+import 'package:cherry_mvp/features/products/product_card.dart';
 import 'package:cherry_mvp/features/products/product_repository.dart';
 import 'package:cherry_mvp/features/products/product_viewmodel.dart';
 import 'package:cherry_mvp/features/search/charity_search.dart';
@@ -511,5 +512,71 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('WaterAid'), findsOneWidget);
     expect(find.text('Water Aid'), findsNothing);
+  });
+
+  testWidgets('category and text search render items as a 2-column ProductCard grid without overflow', (
+    tester,
+  ) async {
+    final hat = Product(
+      id: 'hat',
+      name: 'Cool hat',
+      description: '',
+      quality: 'EXCELLENT',
+      productImages: const [],
+      donation: 6,
+      price: 7,
+      securityFee: 1,
+      likes: 2,
+      number: 1,
+      size: 'Small',
+      postageSizeId: 'small',
+    );
+    final shorts = Product(
+      id: 'shorts',
+      name: 'Tennis shorts',
+      description: '',
+      quality: 'GOOD',
+      productImages: const [],
+      donation: 8,
+      price: 9,
+      securityFee: 1,
+      likes: 1,
+      number: 2,
+      size: 'Medium',
+      postageSizeId: 'small',
+    );
+    final jumper = Product(
+      id: 'jumper',
+      name: 'Wool jumper',
+      description: '',
+      quality: 'VERY GOOD',
+      productImages: const [],
+      donation: 10,
+      price: 11,
+      securityFee: 1,
+      likes: 0,
+      number: 3,
+      size: 'Large',
+      postageSizeId: 'medium',
+    );
+    final items = _Items()..responses.add(_page(products: [hat, shorts, jumper]));
+    await _open(tester, items, initialCategory: _women, brightness: Brightness.dark, textScale: 2);
+
+    expect(find.byType(ProductCard), findsNWidgets(3));
+
+    final hatTopLeft = tester.getTopLeft(find.byKey(const ValueKey('hat')));
+    final shortsTopLeft = tester.getTopLeft(find.byKey(const ValueKey('shorts')));
+    final jumperTopLeft = tester.getTopLeft(find.byKey(const ValueKey('jumper')));
+
+    // First two cards sit side-by-side in row 1; third card starts row 2 underneath.
+    expect(hatTopLeft.dy, shortsTopLeft.dy);
+    expect(hatTopLeft.dx, lessThan(shortsTopLeft.dx));
+    expect(jumperTopLeft.dy, greaterThan(hatTopLeft.dy));
+    expect(jumperTopLeft.dx, hatTopLeft.dx);
+
+    // Verify narrow 320px screen + 200% text scaling does not overflow.
+    tester.view.physicalSize = const Size(320, 640);
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
   });
 }

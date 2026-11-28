@@ -10,6 +10,7 @@ import 'package:cherry_mvp/features/charity_page/charity_model.dart';
 import 'package:cherry_mvp/features/charity_page/charity_viewmodel.dart';
 import 'package:cherry_mvp/features/discover/discover_repository.dart';
 import 'package:cherry_mvp/features/home/home_viewmodel.dart';
+import 'package:cherry_mvp/features/products/product_card.dart';
 import 'package:cherry_mvp/features/products/product_viewmodel.dart';
 import 'package:cherry_mvp/features/search/charity_search.dart';
 import 'package:flutter/material.dart';
@@ -198,7 +199,7 @@ class _SearchPageState extends State<SearchPage> {
               Align(
                 alignment: Alignment.centerLeft,
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                  padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
                   child: InputChip(
                     label: Text(model.searchCategory!.name),
                     deleteButtonTooltipMessage: 'Clear category',
@@ -229,6 +230,23 @@ class _SearchBody extends StatelessWidget {
       unawaited(homeModel.recordRecentSearch(homeModel.searchText));
     }
     unawaited(NavigationProvider.openCharityProfileFromContext(context, charity.profileArgs));
+  }
+
+  void _openProduct(BuildContext context, Product product) {
+    FocusManager.instance.primaryFocus?.unfocus();
+    final homeModel = context.read<HomeViewModel>();
+    if (homeModel.searchText.isNotEmpty) {
+      unawaited(homeModel.recordRecentSearch(homeModel.searchText));
+    }
+    context.read<ProductViewModel>().goToProductPage(product);
+  }
+
+  Widget _buildProductCard(BuildContext context, Product product) {
+    return ProductCard(
+      key: ValueKey(product.id),
+      product: product,
+      onTap: () => _openProduct(context, product),
+    );
   }
 
   @override
@@ -304,13 +322,33 @@ class _SearchBody extends StatelessWidget {
         ),
       );
     } else {
+      final products = model.searchProducts;
+      final rowCount = (products.length / 2).ceil();
       content = SliverList.builder(
-        itemCount: model.searchProducts.length + 1,
+        itemCount: rowCount + 1,
         itemBuilder: (context, index) {
-          if (index < model.searchProducts.length) return _ProductSuggestionTile(product: model.searchProducts[index]);
+          if (index < rowCount) {
+            final firstIndex = index * 2;
+            final secondIndex = firstIndex + 1;
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(child: _buildProductCard(context, products[firstIndex])),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: secondIndex < products.length
+                        ? _buildProductCard(context, products[secondIndex])
+                        : const SizedBox.shrink(),
+                  ),
+                ],
+              ),
+            );
+          }
           return Column(
             children: [
-              if (model.searchProducts.isEmpty && model.searchHasMore)
+              if (products.isEmpty && model.searchHasMore)
                 const _SearchMessage(title: 'Keep looking', message: 'More listings are available to check.'),
               if (model.searchLoadMoreError != null) _SearchMessage(title: model.searchLoadMoreError!),
               if (model.isLoadingMoreSearch)
@@ -351,11 +389,27 @@ class _SearchBody extends StatelessWidget {
               child: Image.asset('assets/images/search/empty_background.png', fit: BoxFit.cover),
             ),
           ),
-        CustomScrollView(
-          key: ValueKey('${model.searchCategory?.id}/${model.searchText}'),
-          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-          physics: const AlwaysScrollableScrollPhysics(),
-          slivers: [SliverPadding(padding: const EdgeInsets.fromLTRB(16, 0, 16, 24), sliver: content)],
+        NotificationListener<ScrollNotification>(
+          onNotification: (notification) {
+            if (notification.depth == 0 &&
+                notification.metrics.axis == Axis.vertical &&
+                notification.metrics.extentAfter < 600 &&
+                model.hasActiveSearch &&
+                model.searchProducts.isNotEmpty &&
+                model.searchHasMore &&
+                !model.isSearchLoading &&
+                !model.isLoadingMoreSearch &&
+                model.searchLoadMoreError == null) {
+              unawaited(model.loadMoreSearchProducts());
+            }
+            return false;
+          },
+          child: CustomScrollView(
+            key: ValueKey('${model.searchCategory?.id}/${model.searchText}'),
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+            physics: const AlwaysScrollableScrollPhysics(),
+            slivers: [SliverPadding(padding: const EdgeInsets.fromLTRB(12, 4, 12, 24), sliver: content)],
+          ),
         ),
       ],
     );
@@ -509,6 +563,7 @@ class _CharityResultTile extends StatelessWidget {
     );
     final logoPath = charity.logoPath;
     return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 4),
       onTap: onTap,
       leading: ExcludeSemantics(
         child: Container(
@@ -531,42 +586,6 @@ class _CharityResultTile extends StatelessWidget {
       ),
       title: Text(charity.name, maxLines: 2, overflow: TextOverflow.ellipsis),
       subtitle: const Text('Charity'),
-      trailing: const Icon(Icons.chevron_right),
-    );
-  }
-}
-
-class _ProductSuggestionTile extends StatelessWidget {
-  const _ProductSuggestionTile({required this.product});
-  final Product product;
-
-  @override
-  Widget build(BuildContext context) {
-    final imageUrl = product.productImages.firstOrNull;
-    return ListTile(
-      onTap: () {
-        FocusManager.instance.primaryFocus?.unfocus();
-        final homeModel = context.read<HomeViewModel>();
-        if (homeModel.searchText.isNotEmpty) {
-          unawaited(homeModel.recordRecentSearch(homeModel.searchText));
-        }
-        context.read<ProductViewModel>().goToProductPage(product);
-      },
-      leading: ClipRRect(
-        borderRadius: BorderRadius.circular(6),
-        child: imageUrl == null
-            ? const SizedBox(width: 48, height: 48, child: Icon(Icons.image_not_supported_outlined))
-            : Image.network(
-                imageUrl,
-                width: 48,
-                height: 48,
-                fit: BoxFit.cover,
-                errorBuilder: (_, error, stack) =>
-                    const SizedBox(width: 48, height: 48, child: Icon(Icons.image_not_supported_outlined)),
-              ),
-      ),
-      title: Text(product.name),
-      subtitle: Text('${product.quality} · ${product.size}'),
       trailing: const Icon(Icons.chevron_right),
     );
   }
