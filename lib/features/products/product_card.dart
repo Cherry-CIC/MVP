@@ -105,57 +105,58 @@ class ProductCard extends StatelessWidget {
                           ),
                         ),
                       ),
-                      if (!viewModel.isOwnProduct(product)) Positioned(
-                        top: product.isSold ? 16 : null,
-                        bottom: product.isSold ? null : 16,
-                        right: 16,
-                        child: Semantics(
-                          key: ValueKey('product-like-${product.id}'),
-                          button: true,
-                          label: isLiked ? AppStrings.unlikeProduct : AppStrings.likeProduct,
-                          child: GestureDetector(
-                            onTap: onLikePressed ?? () => viewModel.toggleLike(product),
-                            child: Material(
-                              borderRadius: BorderRadius.circular(4),
-                              elevation: 2,
-                              color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                              type: MaterialType.button,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 6,
-                                  vertical: 4,
-                                ),
-                                child: Row(
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    isLiked
-                                        ? Image.asset(
-                                            AppImages.likeHeart,
-                                            height: 16,
-                                            fit: BoxFit.contain,
-                                            color: Colors.red,
-                                          )
-                                        : Icon(
-                                            Icons.favorite_outline,
-                                            size: 16,
-                                            color: Theme.of(context).colorScheme.onSurfaceVariant,
-                                          ),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      displayLikes.toString(),
-                                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                        fontWeight: FontWeight.bold,
-                                        color: isLiked ? Colors.red : Theme.of(context).colorScheme.onSurfaceVariant,
+                      if (!viewModel.isOwnProduct(product))
+                        Positioned(
+                          top: product.isSold ? 16 : null,
+                          bottom: product.isSold ? null : 16,
+                          right: 16,
+                          child: Semantics(
+                            key: ValueKey('product-like-${product.id}'),
+                            button: true,
+                            label: isLiked ? AppStrings.unlikeProduct : AppStrings.likeProduct,
+                            child: GestureDetector(
+                              onTap: onLikePressed ?? () => viewModel.toggleLike(product),
+                              child: Material(
+                                borderRadius: BorderRadius.circular(4),
+                                elevation: 2,
+                                color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                                type: MaterialType.button,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 6,
+                                    vertical: 4,
+                                  ),
+                                  child: Row(
+                                    crossAxisAlignment: CrossAxisAlignment.center,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      isLiked
+                                          ? Image.asset(
+                                              AppImages.likeHeart,
+                                              height: 16,
+                                              fit: BoxFit.contain,
+                                              color: Colors.red,
+                                            )
+                                          : Icon(
+                                              Icons.favorite_outline,
+                                              size: 16,
+                                              color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                            ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        displayLikes.toString(),
+                                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                          fontWeight: FontWeight.bold,
+                                          color: isLiked ? Colors.red : Theme.of(context).colorScheme.onSurfaceVariant,
+                                        ),
                                       ),
-                                    ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
                               ),
                             ),
                           ),
                         ),
-                      ),
                       if (product.isSold)
                         const Positioned(
                           left: 0,
@@ -171,13 +172,14 @@ class ProductCard extends StatelessWidget {
                   product.name,
                   overflow: TextOverflow.ellipsis,
                   maxLines: 1,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodySmall?.copyWith(
-                    fontFamily: 'InstrumentSansPricing',
-                    fontWeight: FontWeight.w700,
-                    fontSize: 14,
-                  ),
+                  style:
+                      Theme.of(
+                        context,
+                      ).textTheme.bodySmall?.copyWith(
+                        fontFamily: 'InstrumentSansPricing',
+                        fontWeight: FontWeight.w700,
+                        fontSize: 14,
+                      ),
                 ),
                 const SizedBox(height: 4),
                 Row(
@@ -258,11 +260,13 @@ class ProductCard extends StatelessWidget {
                                 Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    Text(
-                                      AppStrings.productIncl,
-                                      style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                                        color: Theme.of(context).colorScheme.primary,
-                                        fontSize: 16,
+                                    Flexible(
+                                      child: Text(
+                                        AppStrings.productIncl,
+                                        style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                                          color: Theme.of(context).colorScheme.primary,
+                                          fontSize: 16,
+                                        ),
                                       ),
                                     ),
                                     const SizedBox(width: 3.5),
@@ -275,8 +279,7 @@ class ProductCard extends StatelessWidget {
                         ),
                       ),
                     ),
-                    if (product.charityImage.isNotEmpty)
-                      _buildCharityLogo(context),
+                    if (product.charityImage.isNotEmpty) _buildCharityLogo(context),
                   ],
                 ),
               ],
@@ -296,18 +299,14 @@ class ProductCard extends StatelessWidget {
     );
 
     final charityName = product.charity?.name.trim() ?? '';
-    final hasCharityTarget =
-        CharityProfileArgs.safeIdentifier(product.charityId) != null ||
-        charityName.isNotEmpty;
+    final hasCharityTarget = CharityProfileArgs.safeIdentifier(product.charityId) != null || charityName.isNotEmpty;
     if (!enableCharityTap || (!hasCharityTarget && onCharityTap == null)) {
       return logo;
     }
 
     return Semantics(
       button: true,
-      label: charityName.isEmpty
-          ? AppStrings.charityProfileViewButton
-          : charityName,
+      label: charityName.isEmpty ? AppStrings.charityProfileViewButton : charityName,
       child: GestureDetector(
         key: ValueKey('product-card-charity-logo-${product.id}'),
         behavior: HitTestBehavior.opaque,

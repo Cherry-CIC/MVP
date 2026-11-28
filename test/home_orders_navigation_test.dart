@@ -1,3 +1,4 @@
+import 'package:cherry_mvp/core/config/app_images.dart';
 import 'package:cherry_mvp/core/models/category.dart';
 import 'package:cherry_mvp/core/models/product.dart';
 import 'package:cherry_mvp/core/router/nav_provider.dart';
@@ -20,11 +21,13 @@ import 'package:cherry_mvp/features/home/home_page.dart';
 import 'package:cherry_mvp/features/home/home_repository.dart';
 import 'package:cherry_mvp/features/home/home_viewmodel.dart';
 import 'package:cherry_mvp/features/home/widgets/discover_button.dart';
+import 'package:cherry_mvp/features/home/widgets/home_screen.dart';
 import 'package:cherry_mvp/features/login/login_repository.dart';
 import 'package:cherry_mvp/features/orders/models/order_summary.dart';
 import 'package:cherry_mvp/features/orders/orders_repository.dart';
 import 'package:cherry_mvp/features/orders/widgets/delivery_reminder_host.dart';
 import 'package:cherry_mvp/features/orders/widgets/delivery_timer_bubble.dart';
+import 'package:cherry_mvp/features/search/widgets/search.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cherry_mvp/features/orders/orders_view_model.dart';
 import 'package:cherry_mvp/features/products/product_repository.dart';
@@ -41,6 +44,10 @@ import 'package:mockito/mockito.dart';
 import 'package:provider/provider.dart';
 
 class _HomeRepositoryStub implements IHomeRepository {
+  _HomeRepositoryStub([this.productsForCategory]);
+
+  final List<Product> Function(String? categoryId)? productsForCategory;
+
   @override
   Future<Result<ProductPage>> fetchProducts({
     int limit = 20,
@@ -49,8 +56,8 @@ class _HomeRepositoryStub implements IHomeRepository {
     String? categoryId,
   }) async {
     return Result.success(
-      const ProductPage(
-        products: <Product>[],
+      ProductPage(
+        products: productsForCategory?.call(categoryId) ?? const <Product>[],
         limit: 20,
         nextCursor: null,
         hasMore: false,
@@ -110,8 +117,12 @@ class _ProfileListingsRepositoryStub implements IProfileListingsRepository {
 }
 
 class _CategoryRepositoryStub implements ICategoryRepository {
+  _CategoryRepositoryStub([this.categories = const []]);
+
+  final List<Category> categories;
+
   @override
-  Future<Result<List<Category>>> fetchCategories() async => Result.success([]);
+  Future<Result<List<Category>>> fetchCategories() async => Result.success(categories);
 }
 
 class _CharityRepositoryStub implements ICharityRepository {
@@ -156,6 +167,8 @@ Future<NavigationProvider> _pumpHomePage(
   _ProfileListingsRepositoryStub? listingsRepository,
   NavigatorObserver? observer,
   _OrdersRepositoryStub? ordersRepository,
+  List<Category> categories = const [],
+  List<Product> Function(String? categoryId)? productsForCategory,
 }) async {
   final navigator = NavigationProvider();
   final orders = ordersRepository ?? _OrdersRepositoryStub();
@@ -169,7 +182,7 @@ Future<NavigationProvider> _pumpHomePage(
         ChangeNotifierProvider(create: (_) => SearchController()),
         Provider<ProductRepository>(create: (_) => _ProductRepositoryStub()),
         ChangeNotifierProvider(
-          create: (_) => HomeViewModel(homeRepository: _HomeRepositoryStub()),
+          create: (_) => HomeViewModel(homeRepository: _HomeRepositoryStub(productsForCategory)),
         ),
         ChangeNotifierProvider(
           create: (context) => ProductViewModel(
@@ -196,7 +209,7 @@ Future<NavigationProvider> _pumpHomePage(
         ),
         ChangeNotifierProvider(
           create: (_) => CategoryViewModel(
-            categoryRepository: _CategoryRepositoryStub(),
+            categoryRepository: _CategoryRepositoryStub(categories),
             navigator: navigator,
           ),
         ),
@@ -595,5 +608,88 @@ void main() {
 
     expect(find.text('My Orders'), findsNothing);
     expect(find.text('Orders'), findsOneWidget);
+  });
+
+  testWidgets('tapping Home in the footer scrolls back to top and resets active Home category to All', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(430, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final women = Category(
+      id: 'women',
+      name: 'Women',
+      imageUrl: '',
+      createdAt: DateTime(2026),
+      updatedAt: DateTime(2026),
+    );
+    final products = List.generate(
+      12,
+      (index) => Product(
+        id: 'item-$index',
+        name: 'Item $index',
+        description: '',
+        quality: 'GOOD',
+        productImages: const [AppImages.product1],
+        donation: 6,
+        price: 7,
+        securityFee: 1,
+        likes: 0,
+        number: index,
+        size: 'M',
+        postageSizeId: 'small',
+      ),
+    );
+
+    await _pumpHomePage(
+      tester,
+      categories: [women],
+      productsForCategory: (_) => products,
+    );
+
+    final homeContext = tester.element(find.byType(HomeScreen));
+    final homeViewModel = homeContext.read<HomeViewModel>();
+
+    // Filter by Women and scroll far down so the floating header hides.
+    await tester.tap(find.text('Women'));
+    await tester.pumpAndSettle();
+    expect(homeViewModel.homeCategory?.id, 'women');
+
+    final homeScrollFinder = find.descendant(
+      of: find.byType(HomeScreen),
+      matching: find.byType(CustomScrollView),
+    );
+    await tester.drag(homeScrollFinder, const Offset(0, -600));
+    await tester.pumpAndSettle();
+    expect(find.byType(Search), findsNothing);
+    final scrollableState = tester.state<ScrollableState>(
+      find.descendant(of: homeScrollFinder, matching: find.byType(Scrollable)).first,
+    );
+    expect(scrollableState.position.pixels, greaterThan(0));
+
+    // Tapping Home in the footer resets both scroll position and category filter.
+    await tester.tap(find.text('Home'));
+    await tester.pumpAndSettle();
+
+    expect(homeViewModel.homeCategory, isNull);
+    expect(scrollableState.position.pixels, 0);
+    expect(find.byType(Search), findsOneWidget);
+    expect(find.byType(DiscoverButton), findsOneWidget);
+
+    // Also verify tapping Home from Discover resets an active Home category.
+    await tester.tap(find.text('Women'));
+    await tester.pumpAndSettle();
+    expect(homeViewModel.homeCategory?.id, 'women');
+
+    await tester.tap(find.text('Discover'));
+    await tester.pumpAndSettle();
+    expect(find.byType(DiscoverPage), findsOneWidget);
+
+    await tester.tap(find.text('Home'));
+    await tester.pumpAndSettle();
+    expect(homeViewModel.homeCategory, isNull);
+    expect(find.byType(HomeScreen), findsOneWidget);
   });
 }

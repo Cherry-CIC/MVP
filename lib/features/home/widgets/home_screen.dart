@@ -21,6 +21,8 @@ class HomeScreen extends StatefulWidget {
 }
 
 class HomeScreenState extends State<HomeScreen> {
+  final ScrollController _scrollController = ScrollController();
+
   @override
   void initState() {
     super.initState();
@@ -31,6 +33,27 @@ class HomeScreenState extends State<HomeScreen> {
         unawaited(categoryViewModel.ensureCategoriesLoaded());
       }
     });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  /// Scrolls the Home feed back to the very top so the search bar, category
+  /// pills, and Discover banner are immediately visible again.
+  void scrollToTop() {
+    if (!_scrollController.hasClients || _scrollController.offset <= 0) {
+      return;
+    }
+    unawaited(
+      _scrollController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOutCubic,
+      ),
+    );
   }
 
   @override
@@ -54,6 +77,7 @@ class HomeScreenState extends State<HomeScreen> {
             return false;
           },
           child: CustomScrollView(
+            controller: _scrollController,
             slivers: [
               if (FeatureFlags.showSearch)
                 SliverFloatingHeader(
@@ -76,8 +100,7 @@ class HomeScreenState extends State<HomeScreen> {
                           _HomeCategoryBar(
                             categories: categories,
                             selectedCategory: selectedCategory,
-                            onSelected: (category) =>
-                                context.read<HomeViewModel>().selectHomeCategory(category),
+                            onSelected: (category) => context.read<HomeViewModel>().selectHomeCategory(category),
                           ),
                       ],
                     ),
@@ -154,9 +177,7 @@ class _CategoryPill extends StatelessWidget {
       selected: isSelected,
       label: label,
       child: Material(
-        color: isSelected
-            ? colours.primary.withValues(alpha: 0.14)
-            : colours.surfaceContainerHighest,
+        color: isSelected ? colours.primary.withValues(alpha: 0.14) : colours.surfaceContainerHighest,
         shape: StadiumBorder(
           side: BorderSide(
             color: isSelected ? colours.primary : colours.outlineVariant,

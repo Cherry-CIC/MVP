@@ -45,6 +45,7 @@ import 'package:cherry_mvp/features/profile/profile_listings_view_model.dart';
 import 'package:cherry_mvp/features/profile/public_user_profile_repository.dart';
 import 'package:cherry_mvp/features/register/register_repository.dart';
 import 'package:cherry_mvp/features/register/register_viewmodel.dart';
+import 'package:cherry_mvp/features/search/charity_search.dart';
 import 'package:cherry_mvp/features/search/recent_searches_store.dart';
 import 'package:cherry_mvp/features/search/search_repository.dart';
 import 'package:cherry_mvp/features/search/search_viewmodel.dart';
@@ -135,6 +136,11 @@ List<SingleChildWidget> buildProviders(SharedPreferences prefs) {
       },
     ),
     Provider<DiscoverRepository>(create: (context) => DiscoverRepository()),
+    Provider<CharitySearch>(
+      create: (context) => CharitySearch(
+        discoverRepository: context.read<DiscoverRepository>(),
+      ),
+    ),
     Provider<ProductRepository>(
       create: (context) => ProductRepository(
         context.read<ApiService>(),

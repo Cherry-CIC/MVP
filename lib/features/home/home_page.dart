@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:cherry_mvp/features/discover/discover_page.dart';
+import 'package:cherry_mvp/features/home/home_viewmodel.dart';
 import 'package:cherry_mvp/features/search/widgets/search.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -30,6 +33,7 @@ class _HomePageState extends State<HomePage> {
   int _selectedIndex = CherryNavIndices.home;
   bool _showOrders = false;
   final PageController _pageController = PageController();
+  final GlobalKey<HomeScreenState> _homeScreenKey = GlobalKey<HomeScreenState>();
 
   void _openOrders() {
     if (!_showOrders) {
@@ -47,6 +51,8 @@ class _HomePageState extends State<HomePage> {
     if (index == CherryNavIndices.home) {
       _showProfileRoot();
       _pageController.jumpToPage(_homePageIndex);
+      unawaited(context.read<HomeViewModel>().selectHomeCategory(null));
+      _homeScreenKey.currentState?.scrollToTop();
       DeliveryReminderHost.setHomeSelected(context, true);
       return;
     }
@@ -133,7 +139,10 @@ class _HomePageState extends State<HomePage> {
           controller: _pageController,
           onPageChanged: _onPageChanged,
           children: [
-            HomeScreen(onOpenDiscover: () => _onItemTapped(CherryNavIndices.discover)),
+            HomeScreen(
+              key: _homeScreenKey,
+              onOpenDiscover: () => _onItemTapped(CherryNavIndices.discover),
+            ),
             const DiscoverPage(showBackButton: false),
             if (FeatureFlags.showInbox) const MessagePage(),
             Stack(

@@ -4,10 +4,17 @@ import 'package:cherry_mvp/core/config/app_theme.dart';
 import 'package:cherry_mvp/core/models/model.dart';
 import 'package:cherry_mvp/core/router/router.dart';
 import 'package:cherry_mvp/core/utils/utils.dart';
+import 'package:cherry_mvp/features/charity_page/charity_model.dart';
+import 'package:cherry_mvp/features/charity_page/charity_profile_args.dart';
+import 'package:cherry_mvp/features/charity_page/charity_repository.dart';
+import 'package:cherry_mvp/features/charity_page/charity_viewmodel.dart';
+import 'package:cherry_mvp/features/discover/discover_repository.dart';
 import 'package:cherry_mvp/features/home/home_repository.dart';
 import 'package:cherry_mvp/features/home/home_viewmodel.dart';
+import 'package:cherry_mvp/features/products/product_card.dart';
 import 'package:cherry_mvp/features/products/product_repository.dart';
 import 'package:cherry_mvp/features/products/product_viewmodel.dart';
+import 'package:cherry_mvp/features/search/charity_search.dart';
 import 'package:cherry_mvp/features/search/recent_searches_store.dart';
 import 'package:cherry_mvp/features/search/widgets/search.dart';
 import 'package:flutter/material.dart';
@@ -29,6 +36,19 @@ class _Items implements IHomeRepository {
   }) async {
     requests.add((search: search, categoryId: categoryId, cursor: cursor));
     return responses.isEmpty ? _page() : responses.removeAt(0);
+  }
+}
+
+class _Charities implements ICharityRepository {
+  _Charities(this.charities);
+
+  final List<Charity> charities;
+  int fetchCalls = 0;
+
+  @override
+  Future<Result<List<Charity>>> fetchCharities() async {
+    fetchCalls++;
+    return Result.success(charities);
   }
 }
 
@@ -63,6 +83,8 @@ Future<HomeViewModel> _open(
   WidgetTester tester,
   _Items items, {
   RecentSearchesStore? recentSearchesStore,
+  ICharityRepository? charityRepository,
+  ValueChanged<RouteSettings>? onRoutePushed,
   Category? initialCategory,
   Brightness brightness = Brightness.light,
   double textScale = 1,
@@ -73,6 +95,7 @@ Future<HomeViewModel> _open(
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.view.resetDevicePixelRatio);
   final navigator = NavigationProvider();
+  final discoverRepository = DiscoverRepository();
   final model = HomeViewModel(
     homeRepository: items,
     recentSearchesStore: recentSearchesStore ?? RecentSearchesStore.inMemory(),
@@ -81,6 +104,17 @@ Future<HomeViewModel> _open(
     MultiProvider(
       providers: [
         Provider<NavigationProvider>.value(value: navigator),
+        Provider<DiscoverRepository>.value(value: discoverRepository),
+        Provider<CharitySearch>(
+          create: (_) => CharitySearch(discoverRepository: discoverRepository),
+        ),
+        if (charityRepository != null)
+          ChangeNotifierProvider<CharityViewModel>(
+            create: (_) => CharityViewModel(
+              charityRepository: charityRepository,
+              navigator: navigator,
+            ),
+          ),
         ChangeNotifierProvider.value(value: model),
         ChangeNotifierProvider(
           create: (_) => ProductViewModel(
@@ -96,9 +130,12 @@ Future<HomeViewModel> _open(
           data: MediaQuery.of(context).copyWith(textScaler: TextScaler.linear(textScale)),
           child: child!,
         ),
-        onGenerateRoute: (settings) => MaterialPageRoute<void>(
-          builder: (_) => Scaffold(appBar: AppBar(), body: Text('Opened ${settings.name}')),
-        ),
+        onGenerateRoute: (settings) {
+          onRoutePushed?.call(settings);
+          return MaterialPageRoute<void>(
+            builder: (_) => Scaffold(appBar: AppBar(), body: Text('Opened ${settings.name}')),
+          );
+        },
         home: Scaffold(
           body: Builder(
             builder: (context) => Column(
@@ -325,5 +362,221 @@ void main() {
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
     expect(find.text('vintage wool jacket'), findsOneWidget);
+  });
+
+  testWidgets('search bar and input display Find something special...', (tester) async {
+    await _open(tester, _Items(), open: false);
+    expect(find.text('Find something special...'), findsOneWidget);
+
+    await tester.tap(find.byType(Search));
+    await tester.pumpAndSettle();
+
+    final field = tester.widget<TextField>(find.byType(TextField));
+    expect(field.decoration?.hintText, 'Find something special...');
+    expect(find.text('Find pre-loved items and charities across Cherry.'), findsOneWidget);
+  });
+
+  testWidgets('searching "water aid" shows WaterAid, records recent search, and opens CharityProfilePage', (
+    tester,
+  ) async {
+    final store = RecentSearchesStore.inMemory();
+    final pushed = <RouteSettings>[];
+    await _open(
+      tester,
+      _Items(),
+      recentSearchesStore: store,
+      onRoutePushed: pushed.add,
+    );
+
+    await tester.enterText(find.byType(TextField), 'water aid');
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Charities'), findsOneWidget);
+    expect(find.text('WaterAid'), findsOneWidget);
+    expect(find.text('Items'), findsOneWidget);
+    expect(find.text('No items found'), findsOneWidget);
+    expect(find.text('Try different words.'), findsNothing);
+    expect(
+      find.byWidgetPredicate(
+        (widget) =>
+            widget is Image &&
+            widget.image is AssetImage &&
+            (widget.image as AssetImage).assetName == 'assets/images/search/empty_background.png',
+      ),
+      findsNothing,
+    );
+
+    await tester.tap(find.text('WaterAid'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Opened ${AppRoutes.charityProfile}'), findsOneWidget);
+    expect(pushed.last.name, AppRoutes.charityProfile);
+    final args = pushed.last.arguments as CharityProfileArgs;
+    expect(args.charityId, 'ca6tjKqCRurG0hB49Dcp');
+    expect(args.charityName, 'WaterAid');
+
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    expect(find.text('WaterAid'), findsOneWidget);
+
+    await tester.tap(find.byTooltip('Clear search'));
+    await tester.pumpAndSettle();
+    expect(find.text('Recent searches'), findsOneWidget);
+    expect(find.text('water aid'), findsOneWidget);
+  });
+
+  testWidgets('unified search renders matching charities above matching items', (tester) async {
+    final bottle = Product(
+      id: 'bottle',
+      name: 'Water bottle',
+      description: '',
+      quality: 'NEW',
+      productImages: const [],
+      donation: 4,
+      price: 4,
+      securityFee: 1,
+      likes: 0,
+      number: 1,
+      size: 'One size',
+      postageSizeId: 'small',
+    );
+    final items = _Items()..responses.add(_page(products: [bottle]));
+    await _open(tester, items);
+
+    await tester.enterText(find.byType(TextField), 'water');
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Charities'), findsOneWidget);
+    expect(find.text('WaterAid'), findsOneWidget);
+    expect(find.text('Items'), findsOneWidget);
+    expect(find.text('Water bottle'), findsOneWidget);
+    expect(
+      tester.getTopLeft(find.text('WaterAid')).dy,
+      lessThan(tester.getTopLeft(find.text('Water bottle')).dy),
+    );
+  });
+
+  testWidgets('category-filtered search omits charities until category chip is cleared', (tester) async {
+    final items = _Items()
+      ..responses.addAll([
+        _page(products: [_coat]),
+        _page(),
+        _page(),
+      ]);
+    await _open(tester, items, initialCategory: _women);
+
+    await tester.enterText(find.byType(TextField), 'water aid');
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Charities'), findsNothing);
+    expect(find.text('WaterAid'), findsNothing);
+
+    await tester.tap(find.byTooltip('Clear category'));
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Charities'), findsOneWidget);
+    expect(find.text('WaterAid'), findsOneWidget);
+  });
+
+  testWidgets('SearchPage loads backend charities without duplicating Discover charities', (tester) async {
+    final charitiesRepo = _Charities([
+      Charity(
+        id: 'QVAfoZuZfIlEoQOcsZ8F',
+        name: 'Home Start',
+        imageUrl: '',
+        createdAt: DateTime(2026),
+        updatedAt: DateTime(2026),
+      ),
+      Charity(
+        id: 'ca6tjKqCRurG0hB49Dcp',
+        name: 'Water Aid',
+        imageUrl: '',
+        createdAt: DateTime(2026),
+        updatedAt: DateTime(2026),
+      ),
+    ]);
+    await _open(tester, _Items(), charityRepository: charitiesRepo);
+    expect(charitiesRepo.fetchCalls, 1);
+
+    await tester.enterText(find.byType(TextField), 'home start');
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.pumpAndSettle();
+    expect(find.text('Home Start'), findsOneWidget);
+
+    await tester.enterText(find.byType(TextField), 'water aid');
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.pumpAndSettle();
+    expect(find.text('WaterAid'), findsOneWidget);
+    expect(find.text('Water Aid'), findsNothing);
+  });
+
+  testWidgets('category and text search render items as a 2-column ProductCard grid without overflow', (
+    tester,
+  ) async {
+    final hat = Product(
+      id: 'hat',
+      name: 'Cool hat',
+      description: '',
+      quality: 'EXCELLENT',
+      productImages: const [],
+      donation: 6,
+      price: 7,
+      securityFee: 1,
+      likes: 2,
+      number: 1,
+      size: 'Small',
+      postageSizeId: 'small',
+    );
+    final shorts = Product(
+      id: 'shorts',
+      name: 'Tennis shorts',
+      description: '',
+      quality: 'GOOD',
+      productImages: const [],
+      donation: 8,
+      price: 9,
+      securityFee: 1,
+      likes: 1,
+      number: 2,
+      size: 'Medium',
+      postageSizeId: 'small',
+    );
+    final jumper = Product(
+      id: 'jumper',
+      name: 'Wool jumper',
+      description: '',
+      quality: 'VERY GOOD',
+      productImages: const [],
+      donation: 10,
+      price: 11,
+      securityFee: 1,
+      likes: 0,
+      number: 3,
+      size: 'Large',
+      postageSizeId: 'medium',
+    );
+    final items = _Items()..responses.add(_page(products: [hat, shorts, jumper]));
+    await _open(tester, items, initialCategory: _women, brightness: Brightness.dark, textScale: 2);
+
+    expect(find.byType(ProductCard), findsNWidgets(3));
+
+    final hatTopLeft = tester.getTopLeft(find.byKey(const ValueKey('hat')));
+    final shortsTopLeft = tester.getTopLeft(find.byKey(const ValueKey('shorts')));
+    final jumperTopLeft = tester.getTopLeft(find.byKey(const ValueKey('jumper')));
+
+    // First two cards sit side-by-side in row 1; third card starts row 2 underneath.
+    expect(hatTopLeft.dy, shortsTopLeft.dy);
+    expect(hatTopLeft.dx, lessThan(shortsTopLeft.dx));
+    expect(jumperTopLeft.dy, greaterThan(hatTopLeft.dy));
+    expect(jumperTopLeft.dx, hatTopLeft.dx);
+
+    // Verify narrow 320px screen + 200% text scaling does not overflow.
+    tester.view.physicalSize = const Size(320, 640);
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
   });
 }
