@@ -9,6 +9,7 @@ import 'package:cherry_mvp/features/charity_page/charity_model.dart';
 import 'package:cherry_mvp/features/discover/discover_repository.dart';
 import 'package:cherry_mvp/features/discover/widgets/discover_charity_card.dart';
 import 'package:cherry_mvp/features/donation/donation_page.dart';
+import 'package:cherry_mvp/features/home/home_viewmodel.dart';
 import 'package:cherry_mvp/features/home/widgets/bottom_nav_bar.dart';
 import 'package:cherry_mvp/features/liked_items/liked_items_view_model.dart';
 import 'package:cherry_mvp/features/products/product_card.dart';
@@ -198,9 +199,7 @@ class _LikedItemsView extends StatelessWidget {
         return const _LikedCharitiesEmptyState();
       case LikedItemsStatus.error:
         return _LikedItemsErrorState(
-          message:
-              viewModel.charitiesErrorMessage ??
-              AppStrings.likedCharitiesLoadError,
+          message: viewModel.charitiesErrorMessage ?? AppStrings.likedCharitiesLoadError,
           onRetry: viewModel.retryCharities,
         );
       case LikedItemsStatus.loaded:
@@ -212,6 +211,10 @@ class _LikedItemsView extends StatelessWidget {
     final navigator = context.read<NavigationProvider>();
 
     if (index == CherryNavIndices.home) {
+      final homeViewModel = context.read<HomeViewModel?>();
+      if (homeViewModel != null) {
+        unawaited(homeViewModel.selectHomeCategory(null));
+      }
       navigator.navigateToAndRemoveUntil(AppRoutes.home, (_) => false);
       return;
     }
@@ -294,8 +297,7 @@ class _LikedCharitiesList extends StatelessWidget {
 
   final List<Charity> charities;
 
-  static final DiscoverRepository _defaultDiscoverRepository =
-      DiscoverRepository();
+  static final DiscoverRepository _defaultDiscoverRepository = DiscoverRepository();
 
   Future<void> _handleUnlike(BuildContext context, Charity charity) async {
     final productViewModel = context.read<ProductViewModel>();
@@ -308,9 +310,7 @@ class _LikedCharitiesList extends StatelessWidget {
     final viewModel = context.read<LikedItemsViewModel>();
     final removed = await viewModel.unlikeCharity(charity);
     if (!removed && context.mounted) {
-      final message =
-          viewModel.charitiesErrorMessage ??
-          'Unable to remove this liked charity.';
+      final message = viewModel.charitiesErrorMessage ?? 'Unable to remove this liked charity.';
       final messenger = ScaffoldMessenger.maybeOf(context);
       messenger
         ?..hideCurrentSnackBar()
@@ -320,8 +320,7 @@ class _LikedCharitiesList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final discoverRepository =
-        context.read<DiscoverRepository?>() ?? _defaultDiscoverRepository;
+    final discoverRepository = context.read<DiscoverRepository?>() ?? _defaultDiscoverRepository;
     final productViewModel = context.watch<ProductViewModel>();
 
     return ListView.separated(
@@ -336,17 +335,11 @@ class _LikedCharitiesList extends StatelessWidget {
         );
         final title = discoverCharity?.charityName ?? charity.name;
         final suppliedDescription = charity.description?.trim();
-        final description =
-            (suppliedDescription != null && suppliedDescription.isNotEmpty)
+        final description = (suppliedDescription != null && suppliedDescription.isNotEmpty)
             ? suppliedDescription
             : (discoverCharity?.description ?? AppStrings.charityDescription);
-        final assetUrl = charity.imageUrl.startsWith('assets/')
-            ? charity.imageUrl
-            : null;
-        final imagePath =
-            discoverCharity?.charityImage ??
-            assetUrl ??
-            AppImages.discoverImage1;
+        final assetUrl = charity.imageUrl.startsWith('assets/') ? charity.imageUrl : null;
+        final imagePath = discoverCharity?.charityImage ?? assetUrl ?? AppImages.discoverImage1;
         final logoPath = discoverCharity?.charityLogo ?? assetUrl;
         final likes = productViewModel.getCharityLikesCount(
           charity.id,
@@ -361,8 +354,7 @@ class _LikedCharitiesList extends StatelessWidget {
           description: description,
           imagePath: imagePath,
           logoPath: logoPath,
-          logoUsesDarkBackground:
-              discoverCharity?.logoUsesDarkBackground ?? false,
+          logoUsesDarkBackground: discoverCharity?.logoUsesDarkBackground ?? false,
           likes: likes,
           isLiked: true,
           onLikePressed: () => unawaited(_handleUnlike(context, charity)),
